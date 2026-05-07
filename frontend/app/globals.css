@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f0f0f;
+  --foreground: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Animated gradient for hero section */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.4) 0%,
+    rgba(15, 15, 15, 0.95) 40%,
+    rgba(245, 158, 11, 0.2) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* Animated shimmer for the title text */
+.title-gradient {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #c4b5fd 30%,
+    #fcd34d 60%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Fade-in for results */
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered card animations */
+.card-animate {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.card-animate:nth-child(1) { animation-delay: 0.05s; }
+.card-animate:nth-child(2) { animation-delay: 0.15s; }
+.card-animate:nth-child(3) { animation-delay: 0.25s; }
+.card-animate:nth-child(4) { animation-delay: 0.35s; }
+.card-animate:nth-child(5) { animation-delay: 0.45s; }
+
+/* Loading dual-ring spinner */
+@keyframes spin-cw {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+.spinner-outer {
+  animation: spin-cw 1s linear infinite;
+}
+
+.spinner-inner {
+  animation: spin-ccw 1.5s linear infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
+}
+
+/* Focus styles */
+textarea:focus {
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
+}
+
+/* Button hover glow */
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
+}
