@@ -124,3 +124,60 @@ textarea:focus {
 .btn-primary:not(:disabled):hover {
   box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
 }
+
+/* ── Print / PDF export styles ──────────────────────────────────────────────── */
+@media print {
+  /* Flatten the dark background so it prints cleanly */
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
+  }
+
+  /* Hide anything that shouldn't be in the export */
+  header,
+  footer,
+  .print\:hidden {
+    display: none !important;
+  }
+
+  /* Let results fill the page */
+  main {
+    max-width: 100% !important;
+    padding: 24px 32px !important;
+  }
+
+  /* Lighten text that was white-on-dark */
+  .text-white\/80, .text-white\/85 { color: #1a1a1a !important; }
+  .text-white\/65, .text-white\/60 { color: #444 !important; }
+  .text-white\/35, .text-white\/30 { color: #888 !important; }
+
+  /* Keep verdict badge colors legible */
+  .text-emerald-300  { color: #059669 !important; }
+  .text-amber-300    { color: #d97706 !important; }
+  .text-orange-300   { color: #ea580c !important; }
+  .text-red-300      { color: #dc2626 !important; }
+
+  /* Fade out card bg tints so they print on white */
+  [class*="bg-emerald-500/"],
+  [class*="bg-amber-500/"],
+  [class*="bg-orange-500/"],
+  [class*="bg-red-500/"],
+  [class*="bg-violet-500/"],
+  [class*="bg-black/"],
+  [class*="bg-white/"] {
+    background-color: transparent !important;
+  }
+
+  /* Give cards a thin border so they still look structured */
+  [class*="rounded-xl"],
+  [class*="rounded-2xl"] {
+    border-color: #ddd !important;
+  }
+
+  /* No box shadows in print */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+  }
+}

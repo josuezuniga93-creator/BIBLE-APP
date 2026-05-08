@@ -25,9 +25,13 @@ if [ ! -f "$BACKEND_DIR/.env" ]; then
 fi
 
 if grep -q "PLACEHOLDER" "$BACKEND_DIR/.env" 2>/dev/null; then
-  echo "⚠  Your backend/.env still has the placeholder API key."
-  echo "   Analysis calls will return 503 until you replace it with a real key."
-  echo "   Get one at: https://console.anthropic.com"
+  echo "🔬 DEMO MODE: No Anthropic API key found."
+  echo "   The app will run but analysis results will be sample data."
+  echo "   To enable real AI analysis:"
+  echo "   1. Sign up at https://console.anthropic.com (free \$5 credit)"
+  echo "   2. Create an API key"
+  echo "   3. Replace PLACEHOLDER in backend/.env with your real key (sk-ant-...)"
+  echo "   4. Restart this script"
   echo ""
 fi
 
