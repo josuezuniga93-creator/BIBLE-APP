@@ -69,10 +69,10 @@ function YouIcon({ active }: { active: boolean }) {
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const PRIMARY_TABS = [
-  { href: "/",        label: "Home"     },
-  { href: "/lexicon", label: "Bible"    },
-  { href: "/notes",   label: "Notes"    },
-  { href: "/learn",   label: "Discover" },
+  { href: "/",        label: "Home"       },
+  { href: "/lexicon", label: "Bible"      },
+  { href: "/notes",   label: "Notes"      },
+  { href: "/learn",   label: "Historical" },
 ] as const;
 
 // ─── Sheet link SVG icons ─────────────────────────────────────────────────────
@@ -205,7 +205,7 @@ export function BottomNav() {
           );
         })}
 
-        {/* You — links to /more page */}
+        {/* Extras — links to /more page */}
         <Link
           href="/more"
           className="flex-1 flex flex-col items-center justify-center gap-[3px]"
@@ -214,7 +214,7 @@ export function BottomNav() {
           <span className={`text-[10px] font-bold tracking-wide leading-none ${
             youActive ? "text-white" : "text-white/40"
           }`}>
-            You
+            Extras
           </span>
         </Link>
 

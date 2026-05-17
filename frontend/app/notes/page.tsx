@@ -227,6 +227,7 @@ function NoteEditorModal({
   const [draft, setDraft] = useState<SermonNote>({ ...initial });
   const [detectedRefs, setDetectedRefs] = useState<string[]>([]);
   const [newRef, setNewRef] = useState("");
+  const [showDetails, setShowDetails] = useState(false);
 
   const patch = (p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p }));
 
@@ -235,6 +236,17 @@ function NoteEditorModal({
     const found = detectScriptureRefs(draft.notes);
     setDetectedRefs(found.filter((r) => !draft.scriptureRefs.includes(r)));
   }, [draft.notes]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-open details if editing an existing note with detail fields filled
+  useEffect(() => {
+    if (!isNew) {
+      const hasDetails =
+        draft.pastor || draft.church || draft.passage ||
+        draft.tags.length > 0 || draft.mainPoints.filter(Boolean).length > 0 ||
+        draft.scriptureRefs.filter(Boolean).length > 0;
+      if (hasDetails) setShowDetails(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedBook =
     BIBLE_BOOKS.find((b) => b.num === draft.bookNum) ?? BIBLE_BOOKS[39];
@@ -274,11 +286,11 @@ function NoteEditorModal({
     onSave({ ...draft, updatedAt: new Date().toISOString() });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-      <div className="rounded-2xl border border-white/[0.09] bg-[#141414] w-full max-w-2xl shadow-2xl my-6">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
+      <div className="rounded-t-3xl sm:rounded-2xl border border-white/[0.09] bg-[#141414] w-full max-w-lg shadow-2xl sm:my-6">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
-          <h3 className="text-sm font-bold text-white/75">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.07]">
+          <h3 className="text-sm font-bold text-white/70">
             {isNew ? "New Sermon Note" : "Edit Note"}
           </h3>
           <button
@@ -289,197 +301,32 @@ function NoteEditorModal({
           </button>
         </div>
 
-        <div className="p-6 space-y-5">
+        <div className="p-5 space-y-4">
+          {/* ── Essential fields ── */}
           {/* Title */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-              Sermon Title
-            </label>
-            <input
-              type="text"
-              value={draft.title}
-              onChange={(e) => patch({ title: e.target.value })}
-              placeholder="e.g. The Grace of God in Suffering"
-              autoFocus
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-            />
-          </div>
+          <input
+            type="text"
+            value={draft.title}
+            onChange={(e) => patch({ title: e.target.value })}
+            placeholder="Sermon title…"
+            autoFocus
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-base font-semibold text-white/85 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+          />
 
-          {/* Book + Chapter + Date */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            <div className="col-span-2 md:col-span-1">
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-                Bible Book
-              </label>
-              <select
-                value={draft.bookNum}
-                onChange={(e) => handleBookChange(Number(e.target.value))}
-                className="w-full bg-[#1c1c1c] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
-              >
-                <optgroup label="— Old Testament —">
-                  {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
-                    <option key={b.num} value={b.num}>{b.name}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="— New Testament —">
-                  {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
-                    <option key={b.num} value={b.num}>{b.name}</option>
-                  ))}
-                </optgroup>
-              </select>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-                Chapter
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={selectedBook.chapters}
-                value={draft.chapter}
-                onChange={(e) =>
-                  patch({
-                    chapter: Math.max(
-                      1,
-                      Math.min(selectedBook.chapters, Number(e.target.value) || 1)
-                    ),
-                  })
-                }
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-                Date
-              </label>
-              <input
-                type="date"
-                value={draft.date}
-                onChange={(e) => patch({ date: e.target.value })}
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
-              />
-            </div>
-          </div>
+          {/* Notes textarea */}
+          <textarea
+            value={draft.notes}
+            onChange={(e) => patch({ notes: e.target.value })}
+            placeholder="Write your notes here…"
+            rows={8}
+            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40 resize-none leading-relaxed"
+          />
 
-          {/* Pastor + Church */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-                Pastor / Speaker
-              </label>
-              <input
-                type="text"
-                value={draft.pastor ?? ""}
-                onChange={(e) => patch({ pastor: e.target.value })}
-                placeholder="Name"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-                Church
-              </label>
-              <input
-                type="text"
-                value={draft.church ?? ""}
-                onChange={(e) => patch({ church: e.target.value })}
-                placeholder="Church name"
-                className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-              />
-            </div>
-          </div>
-
-          {/* Passage */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-              Passage
-            </label>
-            <input
-              type="text"
-              value={draft.passage}
-              onChange={(e) => patch({ passage: e.target.value })}
-              placeholder={`e.g. ${selectedBook.name} ${draft.chapter}:1-12`}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-            />
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">
-              Tags
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {PRESET_TAGS.map((tag) => (
-                <button
-                  key={tag}
-                  type="button"
-                  onClick={() => toggleTag(tag)}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
-                    draft.tags.includes(tag)
-                      ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
-                      : "bg-white/[0.03] border-white/[0.08] text-white/35 hover:border-emerald-500/25 hover:text-white/55"
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Main Points */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">
-              Main Points
-            </label>
-            <div className="space-y-2">
-              {draft.mainPoints.map((pt, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <span className="text-emerald-400/35 text-xs flex-shrink-0">•</span>
-                  <input
-                    type="text"
-                    value={pt}
-                    onChange={(e) => updatePoint(i, e.target.value)}
-                    placeholder={`Point ${i + 1}…`}
-                    className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removePoint(i)}
-                    className="w-6 h-6 flex items-center justify-center rounded text-white/20 hover:text-red-400/60 transition-colors text-xs flex-shrink-0"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={addPoint}
-                className="text-[11px] text-emerald-400/50 hover:text-emerald-300 font-semibold transition-colors"
-              >
-                + Add Point
-              </button>
-            </div>
-          </div>
-
-          {/* Full Notes */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">
-              Full Notes
-            </label>
-            <textarea
-              value={draft.notes}
-              onChange={(e) => patch({ notes: e.target.value })}
-              placeholder="Your full sermon notes here…"
-              rows={7}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40 resize-none leading-relaxed"
-            />
-          </div>
-
-          {/* Auto-detected refs */}
+          {/* Auto-detected refs — shown right below notes */}
           {detectedRefs.length > 0 && (
-            <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 p-3.5">
+            <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 px-3.5 py-3">
               <p className="text-[11px] font-bold text-emerald-300/65 mb-2">
-                ✦ Scripture references detected — click to add
+                ✦ References detected — tap to add
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {detectedRefs.map((ref) => (
@@ -496,60 +343,232 @@ function NoteEditorModal({
             </div>
           )}
 
-          {/* Scripture Refs */}
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">
-              Scripture References
-            </label>
-            <div className="flex flex-wrap gap-1.5 min-h-[28px] mb-2">
-              {draft.scriptureRefs.filter(Boolean).length === 0 ? (
-                <span className="text-[11px] text-white/20 italic">None added yet</span>
-              ) : (
-                draft.scriptureRefs.filter(Boolean).map((ref) => (
-                  <span
-                    key={ref}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/12 text-emerald-300/75 border border-emerald-500/20"
+          {/* ── Details toggle ── */}
+          <button
+            type="button"
+            onClick={() => setShowDetails((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+          >
+            <span className="text-xs font-semibold text-white/35">
+              {showDetails ? "Hide details" : "Add details"}
+              <span className="ml-1.5 text-white/20 font-normal">
+                book, date, pastor, tags…
+              </span>
+            </span>
+            <span className={`text-white/25 text-xs transition-transform ${showDetails ? "rotate-180" : ""}`}>
+              ▾
+            </span>
+          </button>
+
+          {/* ── Collapsible details ── */}
+          {showDetails && (
+            <div className="space-y-4 pt-1">
+              {/* Book + Chapter + Date */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="col-span-3 sm:col-span-1">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                    Book
+                  </label>
+                  <select
+                    value={draft.bookNum}
+                    onChange={(e) => handleBookChange(Number(e.target.value))}
+                    className="w-full bg-[#1c1c1c] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
                   >
-                    {ref}
+                    <optgroup label="— Old Testament —">
+                      {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
+                        <option key={b.num} value={b.num}>{b.name}</option>
+                      ))}
+                    </optgroup>
+                    <optgroup label="— New Testament —">
+                      {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
+                        <option key={b.num} value={b.num}>{b.name}</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                    Chapter
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={selectedBook.chapters}
+                    value={draft.chapter}
+                    onChange={(e) =>
+                      patch({
+                        chapter: Math.max(
+                          1,
+                          Math.min(selectedBook.chapters, Number(e.target.value) || 1)
+                        ),
+                      })
+                    }
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={draft.date}
+                    onChange={(e) => patch({ date: e.target.value })}
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                  />
+                </div>
+              </div>
+
+              {/* Pastor + Church */}
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                    Pastor
+                  </label>
+                  <input
+                    type="text"
+                    value={draft.pastor ?? ""}
+                    onChange={(e) => patch({ pastor: e.target.value })}
+                    placeholder="Speaker name"
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                    Church
+                  </label>
+                  <input
+                    type="text"
+                    value={draft.church ?? ""}
+                    onChange={(e) => patch({ church: e.target.value })}
+                    placeholder="Church name"
+                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+                  />
+                </div>
+              </div>
+
+              {/* Passage */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">
+                  Passage
+                </label>
+                <input
+                  type="text"
+                  value={draft.passage}
+                  onChange={(e) => patch({ passage: e.target.value })}
+                  placeholder={`e.g. ${selectedBook.name} ${draft.chapter}:1-12`}
+                  className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+                />
+              </div>
+
+              {/* Tags */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
+                  Tags
+                </label>
+                <div className="flex flex-wrap gap-1.5">
+                  {PRESET_TAGS.map((tag) => (
                     <button
+                      key={tag}
                       type="button"
-                      onClick={() => removeRef(ref)}
-                      className="text-emerald-300/40 hover:text-emerald-300 ml-0.5 transition-colors"
+                      onClick={() => toggleTag(tag)}
+                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
+                        draft.tags.includes(tag)
+                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
+                          : "bg-white/[0.03] border-white/[0.08] text-white/30 hover:border-emerald-500/25 hover:text-white/50"
+                      }`}
                     >
-                      ✕
+                      {tag}
                     </button>
-                  </span>
-                ))
-              )}
+                  ))}
+                </div>
+              </div>
+
+              {/* Main Points */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
+                  Main Points
+                </label>
+                <div className="space-y-1.5">
+                  {draft.mainPoints.map((pt, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-emerald-400/30 text-xs flex-shrink-0">•</span>
+                      <input
+                        type="text"
+                        value={pt}
+                        onChange={(e) => updatePoint(i, e.target.value)}
+                        placeholder={`Point ${i + 1}…`}
+                        className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => removePoint(i)}
+                        className="w-6 h-6 flex items-center justify-center rounded text-white/20 hover:text-red-400/60 transition-colors text-xs flex-shrink-0"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={addPoint}
+                    className="text-[11px] text-emerald-400/45 hover:text-emerald-300 font-semibold transition-colors"
+                  >
+                    + Add Point
+                  </button>
+                </div>
+              </div>
+
+              {/* Scripture References */}
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
+                  Scripture References
+                </label>
+                {draft.scriptureRefs.filter(Boolean).length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {draft.scriptureRefs.filter(Boolean).map((ref) => (
+                      <span
+                        key={ref}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/12 text-emerald-300/75 border border-emerald-500/20"
+                      >
+                        {ref}
+                        <button
+                          type="button"
+                          onClick={() => removeRef(ref)}
+                          className="text-emerald-300/40 hover:text-emerald-300 ml-0.5 transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newRef}
+                    onChange={(e) => setNewRef(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") { addRef(newRef); setNewRef(""); }
+                    }}
+                    placeholder="e.g. Romans 8:28"
+                    className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => { addRef(newRef); setNewRef(""); }}
+                    className="px-3 py-2 rounded-lg border border-emerald-500/25 text-emerald-400/55 text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
+                  >
+                    Add
+                  </button>
+                </div>
+              </div>
             </div>
-            {/* Manual add */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newRef}
-                onChange={(e) => setNewRef(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    addRef(newRef);
-                    setNewRef("");
-                  }
-                }}
-                placeholder="e.g. Romans 8:28 (Enter to add)"
-                className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/65 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-              />
-              <button
-                type="button"
-                onClick={() => { addRef(newRef); setNewRef(""); }}
-                className="px-3 py-2 rounded-lg border border-emerald-500/25 text-emerald-400/60 text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
-              >
-                Add
-              </button>
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-white/[0.07]">
+        <div className="flex items-center justify-between px-5 py-4 border-t border-white/[0.07]">
           <button
             onClick={onCancel}
             className="px-4 py-2 rounded-lg border border-white/[0.08] text-white/35 text-sm font-semibold hover:bg-white/[0.04] transition-colors"
@@ -558,7 +577,7 @@ function NoteEditorModal({
           </button>
           <button
             onClick={handleSave}
-            className="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 transition-colors"
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 transition-colors"
           >
             Save Note
           </button>

@@ -14,12 +14,19 @@ Imported by main.py via app.include_router(lexicon.router).
 
 import json
 import re
+import sys
 import urllib.request
 import urllib.parse
 from typing import Optional
 
 import lexicon_service as _lex
 from fastapi import APIRouter, HTTPException
+
+try:
+    import requests as _requests   # already installed via youtube-transcript-api
+    _HAS_REQUESTS = True
+except ImportError:
+    _HAS_REQUESTS = False
 
 from services.bible import load_local_bible, BOOK_NUMBERS
 
@@ -37,31 +44,147 @@ _TRANSLATION_API_SLUG = {
 
 def _fetch_rv60_chapter(book_num: int, chapter: int) -> dict:
     """
-    Fetch a Reina Valera 1960 chapter from getbible.net v2 and return a
-    { 'book_chapter_verse' → text } dict matching the local-file format.
-    getbible.net returns: {"verses": {"1": {"verse": 1, "text": "..."}, ...}}
+    Fetch a Reina Valera 1960 chapter.
+    Tries bolls.life first, then getbible.net (SSL verify off) as fallback.
+    Returns { 'book_chapter_verse' → text } dict matching the local-file format.
+    NOTE: Only caches successful (non-empty) results so failures auto-retry.
     """
     cache_key = f"{book_num}_{chapter}_rv60"
     if cache_key in _chapter_api_cache:
         return _chapter_api_cache[cache_key]
 
-    url = f"https://getbible.net/v2/rvr60/{book_num}/{chapter}.json"
     result: dict = {}
+    ua = {"User-Agent": "RebuttalYourChurch/1.0"}
+
+    def _log(msg: str):
+        print(msg, flush=True)
+        sys.stdout.flush()
+
+    # ── Primary: bolls.life — try multiple translation codes ──────────────────
+    # Response: [{"pk": 43001001, "verse": 1, "text": "..."}, ...]
+    _BOLLS_CODES = ["RVR60", "RV60", "SpaRV1960"]
+    for _code in _BOLLS_CODES:
+        try:
+            url = f"https://bolls.life/get-chapter/{_code}/{book_num}/{chapter}/"
+            _log(f"[RV60] fetching {url}")
+            if _HAS_REQUESTS:
+                resp = _requests.get(url, headers=ua, timeout=12)
+                resp.raise_for_status()
+                verses_list = resp.json()
+            else:
+                req = urllib.request.Request(url, headers=ua)
+                with urllib.request.urlopen(req, timeout=12) as r:
+                    verses_list = json.loads(r.read().decode())
+            _tmp: dict = {}
+            for v in verses_list:
+                vnum = int(v.get("verse", 0))
+                text = v.get("text", "").strip().replace("\n", " ")
+                if vnum and text:
+                    _tmp[f"{book_num}_{chapter}_{vnum}"] = text
+            _log(f"[bolls.life/{_code}] fetched {len(_tmp)} RV60 verses for book {book_num} ch {chapter}")
+            if _tmp:
+                result = _tmp
+                _chapter_api_cache[cache_key] = result
+                return result
+            else:
+                _log(f"[bolls.life/{_code}] 0 verses — trying next code")
+        except Exception as exc:
+            _log(f"[bolls.life/{_code}] error: {exc}")
+    _log(f"[bolls.life] all codes exhausted — trying getbible.net")
+
+    # ── Fallback: getbible.net v2 (SSL verify disabled — cert expired) ────────
+    # Response: {"verses": {"1": {"verse": 1, "text": "..."}, ...}}
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "RebuttalYourChurch/1.0"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode())
+        import ssl as _ssl
+        url = f"https://getbible.net/v2/rvr60/{book_num}/{chapter}.json"
+        _log(f"[RV60] fetching fallback {url}")
+        if _HAS_REQUESTS:
+            resp = _requests.get(url, headers=ua, timeout=12, verify=False)
+            resp.raise_for_status()
+            data = resp.json()
+        else:
+            ctx = _ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = _ssl.CERT_NONE
+            req = urllib.request.Request(url, headers=ua)
+            with urllib.request.urlopen(req, timeout=12, context=ctx) as r:
+                data = json.loads(r.read().decode())
         for vnum_str, v in data.get("verses", {}).items():
             vnum = int(vnum_str)
             text = v.get("text", "").strip().replace("\n", " ")
             if vnum and text:
                 result[f"{book_num}_{chapter}_{vnum}"] = text
-        print(f"[getbible.net] fetched {len(result)} RV60 verses for book {book_num} ch {chapter}")
+        _log(f"[getbible.net] fetched {len(result)} RV60 verses for book {book_num} ch {chapter}")
+        if result:
+            _chapter_api_cache[cache_key] = result
     except Exception as exc:
-        print(f"[getbible.net] error fetching book {book_num} ch {chapter}: {exc}")
+        _log(f"[getbible.net] error: {exc}")
 
-    _chapter_api_cache[cache_key] = result
     return result
+
+
+@router.get("/api/test/rv60")
+def test_rv60_api(book: int = 43, chapter: int = 3):
+    """Diagnostic endpoint — tests bolls.life API with multiple translation codes and book offsets."""
+    ua = {"User-Agent": "RebuttalYourChurch/1.0"}
+    results = {"has_requests": _HAS_REQUESTS, "trials": []}
+
+    # Try a range of translation codes and book number variants
+    codes_to_try = ["RVR60", "RV60", "SpaRV1960", "SpaRV", "RVR1960"]
+    book_offsets = [0, -1, 1]  # try book_num as-is, then ±1 to catch 0-indexing
+
+    for code in codes_to_try:
+        for offset in book_offsets:
+            b = book + offset
+            if b < 1:
+                continue
+            url = f"https://bolls.life/get-chapter/{code}/{b}/{chapter}/"
+            trial: dict = {"code": code, "book": b, "url": url}
+            try:
+                if _HAS_REQUESTS:
+                    r = _requests.get(url, headers=ua, timeout=10)
+                    trial["http_status"] = r.status_code
+                    data = r.json() if r.ok else []
+                else:
+                    req = urllib.request.Request(url, headers=ua)
+                    with urllib.request.urlopen(req, timeout=10) as resp:
+                        data = json.loads(resp.read().decode())
+                    trial["http_status"] = 200
+                trial["verse_count"] = len(data)
+                trial["first_verse"] = data[0] if data else None
+                trial["status"] = "ok"
+                if data:
+                    # Found working combo — surface it prominently
+                    results["WORKING_CODE"] = code
+                    results["WORKING_BOOK_OFFSET"] = offset
+            except Exception as e:
+                trial["status"] = "error"
+                trial["message"] = str(e)
+            results["trials"].append(trial)
+            # Stop early once we find something that works
+            if trial.get("verse_count", 0) > 0:
+                break
+        if results.get("WORKING_CODE"):
+            break
+
+    # Also fetch bolls.life translation list to confirm available codes
+    try:
+        turl = "https://bolls.life/api/translations/"
+        if _HAS_REQUESTS:
+            tr = _requests.get(turl, headers=ua, timeout=10)
+            translations = tr.json()
+        else:
+            req = urllib.request.Request(turl, headers=ua)
+            with urllib.request.urlopen(req, timeout=10) as resp:
+                translations = json.loads(resp.read().decode())
+        # Filter for Spanish
+        spanish = [t for t in translations if "spa" in str(t).lower() or "rv" in str(t).lower() or "reina" in str(t).lower()]
+        results["bolls_spanish_translations"] = spanish
+        results["all_translation_codes"] = [t.get("short_name", t) if isinstance(t, dict) else t for t in translations]
+    except Exception as e:
+        results["translations_error"] = str(e)
+
+    return results
 
 
 def _fetch_chapter_from_api(book_name: str, chapter: int, translation: str) -> dict:

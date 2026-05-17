@@ -1,21 +1,17 @@
-// TULIP Bible App — Service Worker v3 (cache-bust)
+// TULIP Bible App — Service Worker v4 (no force-reload)
 
-const CACHE_NAME = 'tulip-v3';
+const CACHE_NAME = 'tulip-v4';
 
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
+  // Clear old caches and claim clients — but do NOT force-navigate (that interrupts React hydration)
   event.waitUntil(
     caches.keys()
       .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
-      .then(() =>
-        self.clients.matchAll({ type: 'window' }).then((clients) =>
-          clients.forEach((client) => client.navigate(client.url))
-        )
-      )
   );
 });
 

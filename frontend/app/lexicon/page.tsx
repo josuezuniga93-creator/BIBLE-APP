@@ -389,6 +389,13 @@ function LexiconInner() {
   const [fontSize, setFontSize]               = useState<FontSize>("lg");
   const [presentationMode, setPresentationMode] = useState(false);
 
+  // Translation picker sheet
+  const [showTranslationPicker, setShowTranslationPicker] = useState(false);
+
+  // Navigation search (type "Romans 3")
+  const [showNavSearch, setShowNavSearch]   = useState(false);
+  const [navQuery,      setNavQuery]        = useState("");
+
   // Word-level highlights (existing)
   const [highlights, setHighlights] = useState<Set<string>>(new Set());
   const [highlightMode, setHighlightMode] = useState(false);
@@ -501,6 +508,36 @@ function LexiconInner() {
       else localStorage.removeItem(CHAPTER_NOTE_KEY(book.num, ch));
     }, 600);
   }, []);
+
+  // ── Open concordance tab if URL says ?tab=search ─────────────────────────
+  useEffect(() => {
+    if (searchParams.get("tab") === "search") setActiveTab("search");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Navigation search handler (parse "Romans 3") ─────────────────────────
+  const handleNavSearch = useCallback((q: string) => {
+    const trimmed = q.trim();
+    if (!trimmed || !books.length) return;
+    // Match: BookName Chapter[:Verse] — e.g. "Romans 3", "1 Cor 13", "John 3:16"
+    const match = trimmed.match(/^(.+?)\s+(\d+)(?::\d+)?$/);
+    if (!match) return;
+    const [, rawBook, chStr] = match;
+    const bookQuery = rawBook.toLowerCase().trim();
+    const ch = parseInt(chStr, 10);
+    const found = books.find(
+      (b) =>
+        b.name.toLowerCase() === bookQuery ||
+        b.name.toLowerCase().startsWith(bookQuery) ||
+        b.name.toLowerCase().replace(/\s+/g, "").startsWith(bookQuery.replace(/\s+/g, ""))
+    );
+    if (found) {
+      setSelectedBook(found);
+      setSelectedChapter(Math.max(1, Math.min(ch, found.chapters)));
+      setActiveTab("reader");
+      setShowNavSearch(false);
+      setNavQuery("");
+    }
+  }, [books]);
 
   // ── Books + chapter loading ───────────────────────────────────────────────
   useEffect(() => {
@@ -678,6 +715,70 @@ function LexiconInner() {
       className="min-h-screen bg-[#0f0f0f] text-white"
       onClick={() => setColorPickerVerse(null)}
     >
+      {/* ── Translation picker bottom sheet ── */}
+      {showTranslationPicker && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowTranslationPicker(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div
+            className="relative bg-[#1a1a1a] rounded-t-3xl border-t border-white/[0.08] pb-8"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 px-6 mb-4">
+              Bible Translation
+            </p>
+
+            {/* English */}
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 px-6 mb-1">English</p>
+            {([
+              { key: "kjv",    name: "King James Version",   abbr: "KJV"  },
+              { key: "geneva", name: "Geneva Bible 1599",    abbr: "GNV"  },
+            ] as const).map(({ key, name, abbr }) => (
+              <button
+                key={key}
+                onClick={() => { setTranslation(key); setShowTranslationPicker(false); }}
+                className={`w-full flex items-center justify-between px-6 py-3.5 transition-colors ${
+                  translation === key ? "bg-violet-500/10" : "hover:bg-white/[0.04]"
+                }`}
+              >
+                <div className="text-left">
+                  <p className={`text-sm font-semibold ${translation === key ? "text-violet-300" : "text-white/75"}`}>{name}</p>
+                  <p className="text-[10px] text-white/30 mt-0.5">{abbr}</p>
+                </div>
+                {translation === key && (
+                  <span className="text-violet-400 text-sm">✓</span>
+                )}
+              </button>
+            ))}
+
+            {/* Divider */}
+            <div className="border-t border-white/[0.06] my-2" />
+
+            {/* Spanish */}
+            <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 px-6 mb-1">Español</p>
+            <button
+              onClick={() => { setTranslation("rv60"); setShowTranslationPicker(false); }}
+              className={`w-full flex items-center justify-between px-6 py-3.5 transition-colors ${
+                translation === "rv60" ? "bg-violet-500/10" : "hover:bg-white/[0.04]"
+              }`}
+            >
+              <div className="text-left">
+                <p className={`text-sm font-semibold ${translation === "rv60" ? "text-violet-300" : "text-white/75"}`}>Reina Valera 1960</p>
+                <p className="text-[10px] text-white/30 mt-0.5">RV60</p>
+              </div>
+              {translation === "rv60" && (
+                <span className="text-violet-400 text-sm">✓</span>
+              )}
+            </button>
+
+            <div style={{ height: "max(env(safe-area-inset-bottom), 8px)" }} />
+          </div>
+        </div>
+      )}
+
       {/* ── Minimal sticky header ── */}
       <header className="border-b border-white/[0.06] bg-[#0f0f0f]/95 backdrop-blur-sm sticky top-0 md:top-14 z-30 print:hidden">
         <div className="max-w-screen-xl mx-auto px-4 h-11 flex items-center gap-1">
@@ -695,6 +796,38 @@ function LexiconInner() {
           </button>
 
           <div className="flex-1" />
+
+          {/* Navigation search bar (shows when active) */}
+          {showNavSearch && (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
+              className="flex items-center gap-1 flex-1 max-w-[200px]"
+            >
+              <input
+                autoFocus
+                type="text"
+                value={navQuery}
+                onChange={(e) => setNavQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
+                placeholder="Romans 3, John 1…"
+                className="flex-1 bg-white/[0.07] border border-white/[0.12] rounded-lg px-2.5 py-1 text-xs text-white/80 placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
+              />
+              <button type="submit" className="text-[10px] px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">Go</button>
+              <button type="button" onClick={() => { setShowNavSearch(false); setNavQuery(""); }} className="text-white/30 hover:text-white/60 text-sm px-1">✕</button>
+            </form>
+          )}
+
+          {/* Scripture navigation search toggle 🔍 */}
+          {!showNavSearch && (
+            <button
+              onClick={() => setShowNavSearch(true)}
+              className="w-9 h-9 rounded-xl flex items-center justify-center text-white/25 hover:text-white/55 hover:bg-white/[0.07] transition-colors">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
 
           {/* Highlight toggle */}
           <button
@@ -722,21 +855,9 @@ function LexiconInner() {
             </svg>
           </button>
 
-          {/* Strong's search toggle */}
+          {/* Translation pill — opens picker */}
           <button
-            onClick={() => setActiveTab((t) => t === "search" ? "reader" : "search")}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-              activeTab === "search" ? "bg-violet-500/20 text-violet-400" : "text-white/25 hover:text-white/55 hover:bg-white/[0.07]"
-            }`}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
-              <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-            </svg>
-          </button>
-
-          {/* Translation pill — cycles KJV → GNV → RV60 */}
-          <button
-            onClick={() => setTranslation((t) => t === "kjv" ? "geneva" : t === "geneva" ? "rv60" : "kjv")}
+            onClick={() => setShowTranslationPicker(true)}
             className="ml-1 px-2.5 py-1 rounded-full border border-white/[0.12] bg-white/[0.04] text-[11px] font-bold text-white/50 hover:border-white/25 hover:text-white/70 transition-colors">
             {translation === "kjv" ? "KJV" : translation === "geneva" ? "GNV" : "RV60"}
           </button>

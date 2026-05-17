@@ -1,20 +1,101 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
+    <!-- Background gradient -->
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#1a0a3e"/>
-      <stop offset="100%" stop-color="#0f0f0f"/>
+      <stop offset="100%" stop-color="#0a0a1a"/>
     </linearGradient>
+    <!-- Center petal gradient (deep violet-pink) -->
+    <linearGradient id="petalCenter" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e879f9"/>
+      <stop offset="50%" stop-color="#c026d3"/>
+      <stop offset="100%" stop-color="#7e22ce"/>
+    </linearGradient>
+    <!-- Left petal gradient (coral-pink) -->
+    <linearGradient id="petalLeft" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#f472b6"/>
+      <stop offset="100%" stop-color="#be185d"/>
+    </linearGradient>
+    <!-- Right petal gradient (violet-blue) -->
+    <linearGradient id="petalRight" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <!-- Outer left petal (amber-orange) -->
+    <linearGradient id="petalOuterL" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#fb923c"/>
+      <stop offset="100%" stop-color="#c2410c"/>
+    </linearGradient>
+    <!-- Outer right petal (sky-teal) -->
+    <linearGradient id="petalOuterR" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <!-- Stem gradient -->
+    <linearGradient id="stemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#166534"/>
+      <stop offset="100%" stop-color="#22c55e"/>
+    </linearGradient>
+    <!-- Leaf gradient -->
+    <linearGradient id="leafGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#15803d"/>
+    </linearGradient>
+    <!-- Inner glow -->
+    <radialGradient id="glow" cx="50%" cy="40%" r="50%">
+      <stop offset="0%" stop-color="rgba(196,130,253,0.25)"/>
+      <stop offset="100%" stop-color="rgba(0,0,0,0)"/>
+    </radialGradient>
   </defs>
-  <!-- Background with rounded corners -->
+
+  <!-- Background rounded square -->
   <rect width="512" height="512" rx="110" fill="url(#bg)"/>
-  <!-- Violet glow -->
-  <ellipse cx="256" cy="256" rx="150" ry="160" fill="rgba(124,58,237,0.22)"/>
-  <!-- Cross — vertical bar -->
-  <rect x="223" y="103" width="66" height="282" rx="22" fill="#ffffff"/>
-  <!-- Cross — horizontal bar -->
-  <rect x="128" y="192" width="256" height="66" rx="22" fill="#ffffff"/>
-  <!-- TULIP text -->
-  <text x="256" y="456" text-anchor="middle"
-        font-family="Arial,sans-serif" font-size="48" font-weight="700"
-        letter-spacing="6" fill="rgba(196,181,253,0.70)">TULIP</text>
+
+  <!-- Inner glow -->
+  <ellipse cx="256" cy="200" rx="180" ry="160" fill="url(#glow)"/>
+
+  <!-- ── STEM ── -->
+  <path d="M256 480 C256 480 252 370 252 310" stroke="url(#stemGrad)" stroke-width="16" stroke-linecap="round" fill="none"/>
+
+  <!-- ── LEAVES ── -->
+  <!-- Left leaf -->
+  <path d="M252 380 C220 355 185 365 170 390 C195 390 225 375 252 390" fill="url(#leafGrad)" opacity="0.90"/>
+  <!-- Right leaf -->
+  <path d="M256 355 C288 330 323 340 338 365 C313 365 283 350 256 365" fill="url(#leafGrad)" opacity="0.90"/>
+
+  <!-- ── PETALS ── -->
+  <!-- Outer-left petal (behind) -->
+  <path d="M200 280 C175 240 165 195 180 155 C195 175 205 215 215 255 Z"
+        fill="url(#petalOuterL)" opacity="0.85"/>
+  <!-- Outer-right petal (behind) -->
+  <path d="M312 280 C337 240 347 195 332 155 C317 175 307 215 297 255 Z"
+        fill="url(#petalOuterR)" opacity="0.85"/>
+
+  <!-- Left petal -->
+  <path d="M230 295 C205 255 198 205 215 160 C232 185 242 235 248 275 Z"
+        fill="url(#petalLeft)" opacity="0.95"/>
+  <!-- Right petal -->
+  <path d="M282 295 C307 255 314 205 297 160 C280 185 270 235 264 275 Z"
+        fill="url(#petalRight)" opacity="0.95"/>
+
+  <!-- Center petal (front) -->
+  <path d="M256 300 C232 262 228 210 256 140 C284 210 280 262 256 300 Z"
+        fill="url(#petalCenter)"/>
+
+  <!-- Petal highlights (shimmer) -->
+  <path d="M256 290 C245 260 243 225 250 168"
+        stroke="rgba(255,255,255,0.25)" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <path d="M237 283 C228 253 228 218 234 172"
+        stroke="rgba(255,200,255,0.18)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+  <path d="M275 283 C284 253 284 218 278 172"
+        stroke="rgba(180,210,255,0.18)" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+
+  <!-- Stamen / pistil dot -->
+  <circle cx="256" cy="148" r="10" fill="#fef08a" opacity="0.9"/>
+  <circle cx="256" cy="148" r="5"  fill="#fde047"/>
+
+  <!-- TULIP wordmark at bottom -->
+  <text x="256" y="466" text-anchor="middle"
+        font-family="Arial,Helvetica,sans-serif" font-size="44" font-weight="800"
+        letter-spacing="8" fill="rgba(220,200,255,0.75)">TULIP</text>
 </svg>

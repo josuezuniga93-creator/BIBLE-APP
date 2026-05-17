@@ -5,14 +5,26 @@ import { LibraryIcon, TrackerIcon, FamilyIcon, PlansIcon, KidsIcon, VideosIcon, 
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 
+function ConcordanceIcon({ active }: { active: boolean }) {
+  const c = active ? "white" : "rgba(255,255,255,0.6)";
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <text x="3" y="17" fontSize="13" fontWeight="800" fill={c} fontFamily="serif">α</text>
+      <circle cx="17" cy="13" r="5" stroke={c} strokeWidth="1.6"/>
+      <path d="M21 17l3 3" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 const FEATURES = [
-  { href: "/library",        Icon: LibraryIcon, label: "Free Books",   desc: "Classic Christian literature"   },
-  { href: "/bible-tracker",  Icon: TrackerIcon, label: "Tracker",      desc: "Track your Bible reading"       },
-  { href: "/family-worship", Icon: FamilyIcon,  label: "Family",       desc: "Worship together at home"       },
-  { href: "/bible-plans",    Icon: PlansIcon,   label: "Plans",        desc: "Bible reading plans"            },
-  { href: "/kids-books",     Icon: KidsIcon,    label: "Kids Books",   desc: "Faith books for children"       },
-  { href: "/videos",         Icon: VideosIcon,  label: "Videos",       desc: "Watch sermons & teachings"      },
-  { href: "/give",           Icon: GiveIcon,    label: "Give",         desc: "Support the ministry"           },
+  { href: "/lexicon?tab=search", Icon: ConcordanceIcon, label: "Concordance",  desc: "Search Greek & Hebrew words"    },
+  { href: "/library",            Icon: LibraryIcon,     label: "Free Books",   desc: "Classic Christian literature"   },
+  { href: "/bible-tracker",      Icon: TrackerIcon,     label: "Tracker",      desc: "Track your Bible reading"       },
+  { href: "/family-worship",     Icon: FamilyIcon,      label: "Family",       desc: "Worship together at home"       },
+  { href: "/bible-plans",        Icon: PlansIcon,       label: "Plans",        desc: "Bible reading plans"            },
+  { href: "/kids-books",         Icon: KidsIcon,        label: "Kids Books",   desc: "Faith books for children"       },
+  { href: "/videos",             Icon: VideosIcon,      label: "Videos",       desc: "Watch sermons & teachings"      },
+  { href: "/give",               Icon: GiveIcon,        label: "Give",         desc: "Support the ministry"           },
 ] as const;
 
 export default function MorePage() {
@@ -22,7 +34,7 @@ export default function MorePage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <main className="max-w-lg mx-auto px-4 pt-6 pb-4 space-y-4">
-        <h1 className="text-xl font-bold text-white">More</h1>
+        <h1 className="text-xl font-bold text-white">Extras</h1>
 
         <div className="space-y-1">
           {FEATURES.map(({ href, Icon, label, desc }) => (
