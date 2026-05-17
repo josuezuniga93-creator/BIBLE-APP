@@ -33,6 +33,7 @@ from services.bible import load_local_bible, BOOK_NUMBERS
 router = APIRouter()
 
 # ── In-memory chapter cache (avoids repeat API calls per session) ─────────────
+# v3: RV60 now uses bible-api.com/rvr1960 as primary source
 _chapter_api_cache: dict = {}
 
 
