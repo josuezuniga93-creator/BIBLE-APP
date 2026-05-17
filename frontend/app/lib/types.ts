@@ -72,6 +72,7 @@ export interface ChapterData {
   bookName: string;
   chapter: number;
   testament: string;
+  translation?: string;
   verses: Verse[];
   hasStrongs: boolean;
 }
@@ -91,4 +92,38 @@ export interface StrongsEntry {
 export interface CommentaryEntry {
   verse: number;
   text: string;
+}
+
+// ─── Library / Books models ───────────────────────────────────────────────────
+
+export interface BookCatalogEntry {
+  slug: string;
+  title: string;
+  author: string;
+  year: number;
+  description: string;
+  cover_emoji: string;
+  tags: string[];
+  pg_id: number | null;
+  coming_soon?: boolean;
+}
+
+export interface BookChapterMeta {
+  number: number;
+  title: string;
+}
+
+export interface BookDetail extends BookCatalogEntry {
+  chapter_count: number;
+  chapters: BookChapterMeta[];
+}
+
+export interface BookChapter {
+  slug: string;
+  chapter_number: number;
+  chapter_title: string;
+  content: string;
+  total_chapters: number;
+  has_prev: boolean;
+  has_next: boolean;
 }

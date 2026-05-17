@@ -66,6 +66,19 @@ export interface T {
   preacherLabel: string;
   preacherPlaceholder: string;
   preacherSave: string;
+  shareBtn: string;
+  shareCopied: string;
+  sharedBadge: string;
+  translationLabel: string;
+  translationKjv: string;
+  translationEsv: string;
+  translationGeneva: string;
+  historyTab: string;
+  preachersTab: string;
+  preachersEmpty: string;
+  sermonCount: (n: number) => string;
+  worstVerdict: string;
+  stillAnalyzing: string;
   verdictLabels: Record<ClaimVerdict, string>;
   overallLabels: Record<OverallVerdict, string>;
 }
@@ -115,7 +128,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     noTranscriptHelp:
       "This video has no accessible captions. Try: (1) a different sermon video, (2) paste the transcript text manually, or (3) check that the video has CC/subtitles enabled on YouTube.",
     backendError:
-      "Cannot reach the backend server. Make sure it is running on port 8000.",
+      "Cannot reach the backend server. Please try again in a moment.",
     overallVerdictLabel: "Overall Verdict",
     summaryLabel: "Summary",
     claimsHeader: (n) => `Individual Claims — ${n} examined`,
@@ -141,7 +154,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
       "Add ANTHROPIC_API_KEY=sk-ant-… to backend/.env, then restart",
     apiSetupCta: "Open console.anthropic.com",
     keyboardHint: "Press ⌘ Enter to analyze",
-    bibleVersesLabel: "Scripture (ESV · KJV · Geneva)",
+    bibleVersesLabel: "Scripture (KJV · ESV · Geneva)",
     depthLabel: "Analysis depth",
     depth3: "Light (3 claims)",
     depth5: "Standard (5 claims)",
@@ -153,6 +166,19 @@ export const TRANSLATIONS: Record<Lang, T> = {
     preacherLabel: "Tag this preacher",
     preacherPlaceholder: "e.g. John Smith",
     preacherSave: "Save tag",
+    shareBtn: "Share",
+    shareCopied: "Link copied!",
+    sharedBadge: "Shared Analysis",
+    translationLabel: "Bible translation",
+    translationKjv: "KJV",
+    translationEsv: "ESV",
+    translationGeneva: "Geneva 1599",
+    historyTab: "History",
+    preachersTab: "Preachers",
+    preachersEmpty: "No preachers tracked yet.",
+    sermonCount: (n: number) => `${n} sermon${n === 1 ? "" : "s"}`,
+    worstVerdict: "Worst verdict",
+    stillAnalyzing: "Still analyzing…",
     verdictLabels: {
       ALIGNED: "Aligned",
       SECONDARY_DIFFERENCE: "Secondary",
@@ -209,7 +235,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     noTranscriptHelp:
       "Este video no tiene subtítulos accesibles. Prueba: (1) un video de sermón diferente, (2) pega el texto manualmente, o (3) verifica que el video tenga CC/subtítulos habilitados en YouTube.",
     backendError:
-      "No se puede conectar con el servidor. Asegúrate de que esté corriendo en el puerto 8000.",
+      "No se puede conectar con el servidor. Por favor intenta de nuevo en un momento.",
     overallVerdictLabel: "Veredicto General",
     summaryLabel: "Resumen",
     claimsHeader: (n) => `Afirmaciones Analizadas — ${n} examinadas`,
@@ -247,6 +273,19 @@ export const TRANSLATIONS: Record<Lang, T> = {
     preacherLabel: "Etiquetar predicador",
     preacherPlaceholder: "ej. Juan García",
     preacherSave: "Guardar etiqueta",
+    shareBtn: "Compartir",
+    shareCopied: "¡Enlace copiado!",
+    sharedBadge: "Análisis Compartido",
+    translationLabel: "Traducción bíblica",
+    translationKjv: "KJV",
+    translationEsv: "ESV",
+    translationGeneva: "Ginebra 1599",
+    historyTab: "Historial",
+    preachersTab: "Predicadores",
+    preachersEmpty: "Aún no hay predicadores.",
+    sermonCount: (n: number) => `${n} sermón${n === 1 ? "" : "es"}`,
+    worstVerdict: "Peor veredicto",
+    stillAnalyzing: "Aún analizando…",
     verdictLabels: {
       ALIGNED: "Alineado",
       SECONDARY_DIFFERENCE: "Secundario",

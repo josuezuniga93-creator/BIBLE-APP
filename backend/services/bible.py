@@ -295,15 +295,21 @@ def _fetch_lbla(ref: str) -> Optional[str]:
 
 # ─── Enrichment orchestrator ──────────────────────────────────────────────────
 
-def enrich_with_bible(analysis: Dict[str, Any], lang: str) -> Dict[str, Any]:
+def enrich_with_bible(analysis: Dict[str, Any], lang: str, translation: str = "kjv") -> Dict[str, Any]:
     """
     Fetch Bible verse texts for every ref cited in every scriptureCheck field
     and attach them to the analysis claims.
+
+    translation: "kjv" | "esv" | "geneva"  (ignored when lang == "es")
     """
     if lang == "es":
         fetchers = [("rvr60", _fetch_rvr60), ("lbla", _fetch_lbla)]
-    else:
-        fetchers = [("esv", _fetch_esv), ("kjv", _fetch_kjv), ("geneva", _fetch_geneva)]
+    elif translation == "geneva":
+        fetchers = [("geneva", _fetch_geneva), ("kjv", _fetch_kjv)]
+    elif translation == "esv":
+        fetchers = [("esv", _fetch_esv), ("kjv", _fetch_kjv)]
+    else:  # "kjv" default
+        fetchers = [("kjv", _fetch_kjv), ("geneva", _fetch_geneva)]
 
     all_refs: List[str] = []
     ref_set: set[str] = set()

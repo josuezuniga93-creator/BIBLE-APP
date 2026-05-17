@@ -1,0 +1,241 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0f0f0f;
+  --foreground: #ffffff;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+/* Animated gradient for hero section */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(124, 58, 237, 0.4) 0%,
+    rgba(15, 15, 15, 0.95) 40%,
+    rgba(245, 158, 11, 0.2) 100%
+  );
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50%       { background-position: 100% 50%; }
+}
+
+/* Animated shimmer for the title text */
+.title-gradient {
+  background: linear-gradient(
+    90deg,
+    #ffffff 0%,
+    #c4b5fd 30%,
+    #fcd34d 60%,
+    #ffffff 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 0% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Fade-in for results */
+.fade-in {
+  animation: fadeIn 0.5s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Staggered card animations */
+.card-animate {
+  opacity: 0;
+  animation: fadeIn 0.4s ease forwards;
+}
+
+.card-animate:nth-child(1) { animation-delay: 0.05s; }
+.card-animate:nth-child(2) { animation-delay: 0.15s; }
+.card-animate:nth-child(3) { animation-delay: 0.25s; }
+.card-animate:nth-child(4) { animation-delay: 0.35s; }
+.card-animate:nth-child(5) { animation-delay: 0.45s; }
+
+/* Loading dual-ring spinner */
+@keyframes spin-cw {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-ccw {
+  to { transform: rotate(-360deg); }
+}
+
+.spinner-outer {
+  animation: spin-cw 1s linear infinite;
+}
+
+.spinner-inner {
+  animation: spin-ccw 1.5s linear infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.7);
+}
+
+/* Focus styles */
+textarea:focus {
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
+}
+
+/* Button hover glow */
+.btn-primary:not(:disabled):hover {
+  box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
+}
+
+/* ── Print / PDF export styles ──────────────────────────────────────────────── */
+@media print {
+  /* Flatten the dark background so it prints cleanly */
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    font-size: 14px !important;
+  }
+
+  /* Print header — "Rebuttal Your Church" */
+  body::before {
+    content: "Rebuttal Your Church — Theological Analysis";
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #666;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* Hide input form, nav, banners, history drawer, and all buttons */
+  header,
+  footer,
+  nav,
+  .print\:hidden,
+  button,
+  [role="button"] {
+    display: none !important;
+  }
+
+  /* Let results fill the full page width */
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Force the claim card three-panel grid to single column */
+  .grid-cols-1.md\:grid-cols-3,
+  [class*="grid-cols-3"] {
+    display: block !important;
+  }
+
+  /* Page breaks — avoid splitting claim cards across pages */
+  [class*="rounded-xl"],
+  [class*="rounded-2xl"] {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border-radius: 0 !important;
+    border-color: #ccc !important;
+  }
+
+  /* Add spacing between cards */
+  .card-animate,
+  [class*="space-y-4"] > *,
+  [class*="space-y-6"] > * {
+    margin-bottom: 12px !important;
+  }
+
+  /* Lighten text that was white-on-dark */
+  * {
+    color: inherit !important;
+  }
+  .text-white\/85, .text-white\/80 { color: #111 !important; }
+  .text-white\/65, .text-white\/60 { color: #333 !important; }
+  .text-white\/55, .text-white\/50 { color: #555 !important; }
+  .text-white\/40, .text-white\/35, .text-white\/30 { color: #777 !important; }
+  .text-white\/25, .text-white\/20 { color: #999 !important; }
+
+  /* Keep verdict badge text colors legible on white */
+  .text-emerald-300, .text-emerald-400 { color: #059669 !important; }
+  .text-amber-300,   .text-amber-400   { color: #b45309 !important; }
+  .text-orange-300,  .text-orange-400  { color: #c2410c !important; }
+  .text-red-300,     .text-red-400     { color: #dc2626 !important; }
+  .text-violet-300,  .text-violet-400  { color: #7c3aed !important; }
+  .text-sky-300,     .text-sky-400     { color: #0284c7 !important; }
+
+  /* Remove all colored backgrounds */
+  [class*="bg-emerald-"],
+  [class*="bg-amber-"],
+  [class*="bg-orange-"],
+  [class*="bg-red-"],
+  [class*="bg-violet-"],
+  [class*="bg-sky-"],
+  [class*="bg-blue-"],
+  [class*="bg-black/"],
+  [class*="bg-white/"],
+  [class*="bg-\["] {
+    background-color: transparent !important;
+    background: none !important;
+  }
+
+  /* Links show their URL in parentheses */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 10px;
+    color: #888;
+  }
+  a[href^="#"]::after,
+  a[href^="javascript"]::after {
+    content: "";
+  }
+
+  /* No box shadows, text shadows, or animations */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}

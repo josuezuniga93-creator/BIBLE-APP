@@ -64,7 +64,7 @@ export function ClaimCard({ claim, index, videoId, t }: ClaimCardProps) {
       </div>
 
       {/* Three-panel grid */}
-      <div className="grid sm:grid-cols-3 gap-px bg-white/5 border-t border-white/10">
+      <div className="grid md:grid-cols-3 print:grid-cols-1 gap-px bg-white/5 border-t border-white/10">
         {[
           { label: t.scriptureLabel, content: claim.scriptureCheck, icon: "📖" },
           { label: t.historicFaithLabel, content: claim.historicCheck, icon: "⛪" },

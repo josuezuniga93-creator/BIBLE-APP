@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(ls \"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your church/.claude/worktrees/sweet-curran-2ab26a/frontend/\" && ls \"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your church/frontend/node_modules/.bin/\" 2>/dev/null | grep tsc | head -5)",
+      "Bash(\"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your *)",
+      "Bash(grep -v \"^$\")",
+      "Bash(cd \"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your church/frontend\" && ./node_modules/.bin/tsc --noEmit 2>&1)",
+      "Bash(rm \"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your church/.claude/worktrees/sweet-curran-2ab26a/frontend/node_modules\")",
+      "Bash(rm \"/Users/josuezuniga/Documents/Claude/Projects/Rebuttal your church/.claude/worktrees/sweet-curran-2ab26a/frontend/.next\")"
+    ]
+  }
+}
