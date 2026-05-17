@@ -30,10 +30,38 @@ _chapter_api_cache: dict = {}
 
 
 _TRANSLATION_API_SLUG = {
-    "kjv":     "kjv",
-    "geneva":  "kjv",           # Geneva not on bible-api.com, fall back to KJV
-    "rv60":    "reina-valera",  # Reina Valera 1960
+    "kjv":    "kjv",
+    "geneva": "kjv",   # Geneva not on bible-api.com, fall back to KJV
 }
+
+
+def _fetch_rv60_chapter(book_num: int, chapter: int) -> dict:
+    """
+    Fetch a Reina Valera 1960 chapter from getbible.net v2 and return a
+    { 'book_chapter_verse' → text } dict matching the local-file format.
+    getbible.net returns: {"verses": {"1": {"verse": 1, "text": "..."}, ...}}
+    """
+    cache_key = f"{book_num}_{chapter}_rv60"
+    if cache_key in _chapter_api_cache:
+        return _chapter_api_cache[cache_key]
+
+    url = f"https://getbible.net/v2/rvr60/{book_num}/{chapter}.json"
+    result: dict = {}
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "RebuttalYourChurch/1.0"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+        for vnum_str, v in data.get("verses", {}).items():
+            vnum = int(vnum_str)
+            text = v.get("text", "").strip().replace("\n", " ")
+            if vnum and text:
+                result[f"{book_num}_{chapter}_{vnum}"] = text
+        print(f"[getbible.net] fetched {len(result)} RV60 verses for book {book_num} ch {chapter}")
+    except Exception as exc:
+        print(f"[getbible.net] error fetching book {book_num} ch {chapter}: {exc}")
+
+    _chapter_api_cache[cache_key] = result
+    return result
 
 
 def _fetch_chapter_from_api(book_name: str, chapter: int, translation: str) -> dict:
@@ -92,9 +120,9 @@ def lexicon_chapter(book: int, chapter: int, translation: Optional[str] = "kjv")
     book_meta = _lex.BOOK_BY_NUMBER.get(book, {})
     book_name = book_meta.get("name", "")
 
-    # rv60 has no local file — fetch from bible-api.com directly
+    # rv60 has no local file — fetch from getbible.net (bible-api.com doesn't support rv60)
     if translation == "rv60":
-        bible_data = _fetch_chapter_from_api(book_name, chapter, "rv60") if book_name else {}
+        bible_data = _fetch_rv60_chapter(book, chapter)
     else:
         # Pick the right source file
         bible_file = "geneva1599.json" if translation == "geneva" else "kjv.json"
