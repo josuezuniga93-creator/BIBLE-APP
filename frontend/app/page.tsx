@@ -12,6 +12,12 @@ import {
   type BadgeId,
 } from "./lib/streakData";
 
+// ─── Guided Scripture video ───────────────────────────────────────────────────
+// To change the video: update GUIDED_SCRIPTURE_URL with any YouTube watch URL
+const GUIDED_SCRIPTURE_URL = "https://www.youtube.com/watch?v=e50Rgh7rGw8";
+const GUIDED_SCRIPTURE_EMBED_ID = GUIDED_SCRIPTURE_URL.split("v=")[1]?.split("&")[0] ?? "e50Rgh7rGw8";
+const GUIDED_SCRIPTURE_TITLE = "Guided Scripture — 2 Min Devotional";
+
 // ─── Verse card gradients (rotate by day) ────────────────────────────────────
 
 const GRADIENTS = [
@@ -23,14 +29,6 @@ const GRADIENTS = [
   { from: "#0f172a", via: "#0369a1", to: "#7c3aed" },
   { from: "#1c1917", via: "#92400e", to: "#7f1d1d" },
 ] as const;
-
-// Featured guided scripture video
-const GUIDED_VIDEO = {
-  id: "e50Rgh7rGw8",
-  title: "Shocking Youth Message",
-  speaker: "Paul Washer",
-  tag: "Gospel",
-};
 
 // ─── Greeting ────────────────────────────────────────────────────────────────
 
@@ -95,7 +93,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
 
-      {/* ── Video modal ───────────────────────────────────────────────────────── */}
+      {/* ── Guided Scripture video modal ──────────────────────────────────────── */}
       {videoOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
@@ -107,18 +105,15 @@ export default function Home() {
           >
             <div className="aspect-video w-full">
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${GUIDED_VIDEO.id}?autoplay=1&rel=0`}
-                title={GUIDED_VIDEO.title}
+                src={`https://www.youtube-nocookie.com/embed/${GUIDED_SCRIPTURE_EMBED_ID}?autoplay=1&rel=0`}
+                title={GUIDED_SCRIPTURE_TITLE}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
                 className="w-full h-full"
               />
             </div>
-            <div className="px-5 py-4 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs text-violet-400 font-bold mb-0.5">{GUIDED_VIDEO.speaker}</p>
-                <h2 className="text-sm font-bold text-white/90">{GUIDED_VIDEO.title}</h2>
-              </div>
+            <div className="px-5 py-4 flex items-center justify-between gap-4">
+              <p className="text-sm font-semibold text-white/75">{GUIDED_SCRIPTURE_TITLE}</p>
               <button
                 onClick={() => setVideoOpen(false)}
                 className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.07] transition-colors flex-shrink-0"
@@ -160,7 +155,7 @@ export default function Home() {
           className="relative rounded-3xl overflow-hidden shadow-xl"
           style={{
             background: `linear-gradient(160deg, ${grad.from} 0%, ${grad.via} 45%, ${grad.to} 100%)`,
-            minHeight: "260px",
+            minHeight: "185px",
           }}
         >
           <div
@@ -171,13 +166,13 @@ export default function Home() {
                 "linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, transparent 40%, rgba(0,0,0,0.50) 100%)",
             }}
           />
-          <div className="relative z-10 flex flex-col p-5" style={{ minHeight: "260px" }}>
+          <div className="relative z-10 flex flex-col p-4" style={{ minHeight: "185px" }}>
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-0.5">
               Verse of the Day
             </p>
             <p className="text-[10px] font-semibold text-white/35 mb-auto">{verse.theme}</p>
-            <div className="py-5">
-              <p className="text-base font-light text-white leading-relaxed italic drop-shadow-sm">
+            <div className="py-3">
+              <p className="text-sm font-light text-white leading-relaxed italic drop-shadow-sm">
                 &ldquo;{verse.text}&rdquo;
               </p>
             </div>
@@ -204,26 +199,26 @@ export default function Home() {
         </section>
 
         {/* ── Streak ────────────────────────────────────────────────────────── */}
-        <section className="rounded-2xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
+        <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
           {toastVisible && newBadgeIds.length > 0 && (
-            <div className="mb-2.5 flex items-center gap-2 px-3 py-2 rounded-xl border border-amber-500/30 bg-amber-500/[0.08] text-amber-300 text-xs font-semibold animate-pulse">
+            <div className="mb-2 flex items-center gap-2 px-2.5 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] text-amber-300 text-xs font-semibold animate-pulse">
               <span>{BADGES[newBadgeIds[0]].emoji}</span>
               <span>New badge: {newBadgeIds.map((id) => BADGES[id].label).join(", ")}!</span>
             </div>
           )}
-          <div className="flex items-center gap-3">
-            <span className="text-2xl">🔥</span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-lg">🔥</span>
             <div className="flex-1 min-w-0">
               {streakData && streakData.streak > 0 ? (
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-xl font-black text-white">{streakData.streak}</span>
-                  <span className="text-xs font-semibold text-white/45">day streak</span>
+                  <span className="text-base font-black text-white">{streakData.streak}</span>
+                  <span className="text-xs font-semibold text-white/40">day streak</span>
                   {streakData.longestStreak > 1 && (
                     <span className="text-[10px] text-white/20 ml-1">· best {streakData.longestStreak}</span>
                   )}
                 </div>
               ) : (
-                <span className="text-xs font-semibold text-white/40">Start your streak today!</span>
+                <span className="text-xs font-semibold text-white/35">Start your streak today!</span>
               )}
               <p className="text-[10px] text-white/20 mt-0.5">
                 {streakData
@@ -234,45 +229,24 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Guided Scripture ──────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-2 px-1">
-            Guided Scripture
-          </p>
-          <button
-            onClick={() => setVideoOpen(true)}
-            className="w-full rounded-2xl overflow-hidden border border-white/[0.07] bg-white/[0.03] hover:border-violet-500/30 transition-all active:scale-[0.99] text-left"
-          >
-            <div className="relative w-full overflow-hidden" style={{ aspectRatio: "16/9" }}>
-              <img
-                src={`https://img.youtube.com/vi/${GUIDED_VIDEO.id}/hqdefault.jpg`}
-                alt={GUIDED_VIDEO.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-white/25 backdrop-blur-sm flex items-center justify-center border border-white/30">
-                  <span className="text-white text-lg ml-1">▶</span>
-                </div>
-              </div>
-              <div className="absolute top-2 left-2">
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-violet-600/80 text-white">
-                  {GUIDED_VIDEO.tag}
-                </span>
-              </div>
-            </div>
-            <div className="px-4 py-3">
-              <p className="text-[10px] text-violet-400 font-bold mb-0.5">{GUIDED_VIDEO.speaker}</p>
-              <p className="text-sm font-bold text-white/85">{GUIDED_VIDEO.title}</p>
-              <p className="text-[10px] text-white/35 mt-0.5">Tap to play · fullscreen available</p>
-            </div>
-          </button>
-          <Link
-            href="/videos"
-            className="block mt-2 text-center text-xs text-white/25 hover:text-white/45 transition-colors py-1"
-          >
-            Browse all teachings →
-          </Link>
-        </section>
+        {/* ── Guided Scripture ─────────────────────────────────────────────── */}
+        <button
+          onClick={() => setVideoOpen(true)}
+          className="w-full flex items-center gap-4 rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] active:scale-[0.98] transition-all px-4 py-3.5 text-left"
+        >
+          <div className="w-11 h-11 rounded-xl bg-violet-600/20 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-violet-400 ml-0.5">
+              <polygon points="5 3 19 12 5 21 5 3" fill="currentColor"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-white/85 leading-tight">Guided Scripture</p>
+            <p className="text-[11px] text-white/35 mt-0.5">2 min devotional · tap to watch</p>
+          </div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white/20 flex-shrink-0">
+            <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
 
         {/* ── Badges showcase ───────────────────────────────────────────────── */}
         <section className="pt-2">

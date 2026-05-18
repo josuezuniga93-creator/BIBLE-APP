@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "TULIP",
+    title: "TULIP Bible App",
   },
   icons: {
     apple: "/icons/apple-touch-icon.png",
