@@ -229,13 +229,11 @@ export default function Home() {
     }
   };
 
-  // Weekly slice — 3 articles rotating every week
+  // Weekly pick — 1 article rotating every week
   const weeklyArticles = (() => {
     if (articles.length === 0) return [];
-    const start = (weekIndex() * 3) % articles.length;
-    const slice: MarrowArticle[] = [];
-    for (let i = 0; i < 3; i++) slice.push(articles[(start + i) % articles.length]);
-    return slice;
+    const idx = weekIndex() % articles.length;
+    return [articles[idx]];
   })();
 
   const earnedBadgeIds = ((streakData?.badges ?? []) as BadgeId[]);
@@ -438,7 +436,7 @@ export default function Home() {
             </div>
             {articleLoading ? (
               <div className="space-y-2.5">
-                {[0,1,2].map((i) => (
+                {[0].map((i) => (
                   <div key={i} className="h-[72px] rounded-2xl bg-white/[0.03] border border-white/[0.05] animate-pulse" />
                 ))}
               </div>
