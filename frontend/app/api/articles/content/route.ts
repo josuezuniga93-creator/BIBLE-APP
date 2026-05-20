@@ -66,7 +66,21 @@ export async function GET(req: NextRequest) {
       content = ps;
     }
 
-    return NextResponse.json({ title, date, content });
+    // Extract author — try common patterns
+    let author = "";
+    const authorPatterns = [
+      /<span[^>]*class="[^"]*author[^"]*"[^>]*>([\s\S]*?)<\/span>/i,
+      /<p[^>]*class="[^"]*author[^"]*"[^>]*>([\s\S]*?)<\/p>/i,
+      /<a[^>]*rel="author"[^>]*>([\s\S]*?)<\/a>/i,
+      /class="[^"]*byline[^"]*"[^>]*>([\s\S]*?)<\//i,
+      /"author"\s*:\s*\{\s*"@type"[^}]*"name"\s*:\s*"([^"]+)"/i,
+    ];
+    for (const pat of authorPatterns) {
+      const m = html.match(pat);
+      if (m) { author = stripTags(m[1]).trim(); break; }
+    }
+
+    return NextResponse.json({ title, date, content, author });
   } catch (err) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
