@@ -426,8 +426,7 @@ export default function Home() {
         </button>
 
         {/* ── Featured Articles — Marrow Ministries, rotates weekly ──────────── */}
-        {(articleLoading || weeklyArticles.length > 0) && (
-          <section>
+        <section>
             <div className="flex items-center justify-between px-1 mb-2.5">
               <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">
                 📰 This Week&rsquo;s Reading
@@ -469,8 +468,7 @@ export default function Home() {
                 ))}
               </div>
             )}
-          </section>
-        )}
+        </section>
 
         {/* ── Streak ────────────────────────────────────────────────────────── */}
         <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
