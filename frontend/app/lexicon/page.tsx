@@ -952,9 +952,9 @@ function LexiconInner() {
           {/* Chapter hero */}
           {selectedBook && (
             <div className="text-center mb-10">
-              <p className="text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{selectedBook.name}</p>
-              <p className="text-8xl font-black text-white leading-none mb-3">{selectedChapter}</p>
-              <p className="text-[11px] text-white/20 tracking-wide">
+              <p className="pn-book-name text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{selectedBook.name}</p>
+              <p className="pn-chapter-num text-8xl font-black text-white leading-none mb-3">{selectedChapter}</p>
+              <p className="pn-chapter-subtitle text-[11px] text-white/20 tracking-wide">
                 {translation === "rv60" ? "Reina Valera 1960" : `${selectedBook.testament === "OT" ? "Hebrew · Aramaic" : "Greek NT"} · ${translation === "geneva" ? "Geneva 1599" : "King James"}`}
               </p>
               {highlightedVerseCount > 0 && (

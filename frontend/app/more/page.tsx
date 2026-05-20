@@ -143,7 +143,7 @@ export default function MorePage() {
               <Link
                 key={href}
                 href={href}
-                className="flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl p-4 active:scale-95 transition-transform"
+                className="pn-app-tile flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl p-4 active:scale-95 transition-transform"
                 style={{ backgroundColor: color }}
               >
                 <Icon />

@@ -502,23 +502,23 @@ textarea:focus {
   box-shadow: 0 0 30px rgba(124, 58, 237, 0.4);
 }
 
-/* 8. Premium Neon — deep navy with electric blue */
+/* 8. Premium Neon — deep black + neon purple/cyan */
 html[data-theme="premium-neon"] {
-  --bg:          #080c13;
-  --bg-2:        rgba(59,130,246,0.07);
-  --bg-3:        rgba(59,130,246,0.13);
-  --fg:          #eef2ff;
-  --fg-hi:       rgba(238,242,255,0.93);
-  --fg-mid:      rgba(238,242,255,0.62);
-  --fg-lo:       rgba(238,242,255,0.38);
-  --fg-dim:      rgba(238,242,255,0.20);
-  --border:      rgba(59,130,246,0.18);
-  --accent:      #3b82f6;
-  --accent-soft: rgba(59,130,246,0.16);
-  --accent-text: #60a5fa;
-  --nav-bg:      #050810;
-  --nav-border:  rgba(59,130,246,0.16);
-  --input-bg:    rgba(59,130,246,0.07);
+  --bg:          #07080d;
+  --bg-2:        rgba(124,58,237,0.09);
+  --bg-3:        rgba(124,58,237,0.16);
+  --fg:          #ede8ff;
+  --fg-hi:       rgba(237,232,255,0.94);
+  --fg-mid:      rgba(237,232,255,0.65);
+  --fg-lo:       rgba(237,232,255,0.38);
+  --fg-dim:      rgba(237,232,255,0.20);
+  --border:      rgba(124,58,237,0.30);
+  --accent:      #7c3aed;
+  --accent-soft: rgba(124,58,237,0.18);
+  --accent-text: #a78bfa;
+  --nav-bg:      #040509;
+  --nav-border:  rgba(124,58,237,0.22);
+  --input-bg:    rgba(124,58,237,0.09);
 }
 
 /* Base bg */
@@ -539,94 +539,157 @@ html[data-theme="premium-neon"] [class*="bg-black/"] {
   background-color: var(--bg-3) !important;
 }
 
-/* All borders go blue-tinted */
+/* Borders get neon purple tint */
 html[data-theme="premium-neon"] [class*="border-white/"] {
   border-color: var(--border) !important;
 }
 
-/* Replace violet accent with electric blue */
+/* Violet accent → brighter neon purple */
 html[data-theme="premium-neon"] [class*="bg-violet-"] {
-  background-color: rgba(59,130,246,0.18) !important;
+  background-color: rgba(124,58,237,0.18) !important;
 }
-html[data-theme="premium-neon"] .text-violet-400,
-html[data-theme="premium-neon"] .text-violet-300,
 html[data-theme="premium-neon"] [class*="text-violet-"] {
-  color: #60a5fa !important;
+  color: #a78bfa !important;
 }
 html[data-theme="premium-neon"] [class*="border-violet-"] {
-  border-color: rgba(59,130,246,0.28) !important;
+  border-color: rgba(167,139,250,0.40) !important;
 }
 
-/* Replace emerald accent with blue */
+/* Emerald → neon magenta/pink */
 html[data-theme="premium-neon"] [class*="bg-emerald-"] {
-  background-color: rgba(59,130,246,0.15) !important;
+  background-color: rgba(232,121,249,0.14) !important;
 }
-html[data-theme="premium-neon"] .text-emerald-400,
 html[data-theme="premium-neon"] [class*="text-emerald-"] {
-  color: #60a5fa !important;
+  color: #e879f9 !important;
 }
 html[data-theme="premium-neon"] [class*="border-emerald-"] {
-  border-color: rgba(59,130,246,0.25) !important;
+  border-color: rgba(232,121,249,0.30) !important;
 }
 
-/* Blue scrollbar */
+/* ── Bible Reader: glowing chapter number (cyan→violet gradient) ─────────── */
+html[data-theme="premium-neon"] .pn-chapter-num {
+  background: linear-gradient(180deg, #38bdf8 0%, #818cf8 55%, #7c3aed 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter:
+    drop-shadow(0 0 18px rgba(56,189,248,0.65))
+    drop-shadow(0 0 38px rgba(124,58,237,0.55))
+    drop-shadow(0 0 70px rgba(124,58,237,0.30));
+}
+
+/* Book name: electric cyan */
+html[data-theme="premium-neon"] .pn-book-name {
+  color: #38bdf8 !important;
+  text-shadow: 0 0 14px rgba(56,189,248,0.55);
+  -webkit-text-fill-color: #38bdf8;
+}
+
+/* Subtitle (translation label): soft lavender */
+html[data-theme="premium-neon"] .pn-chapter-subtitle {
+  color: rgba(167,139,250,0.55) !important;
+}
+
+/* Verse numbers: neon violet */
+html[data-theme="premium-neon"] .text-violet-400\/50,
+html[data-theme="premium-neon"] [class*="text-violet-4"] {
+  color: rgba(167,139,250,0.75) !important;
+  text-shadow: 0 0 8px rgba(167,139,250,0.45);
+}
+
+/* ── App tile neon cards (Extras page) ──────────────────────────────────── */
+html[data-theme="premium-neon"] .pn-app-tile {
+  background: rgba(22,15,45,0.95) !important;
+  border: 1px solid rgba(167,139,250,0.40) !important;
+  box-shadow:
+    0 0 18px rgba(124,58,237,0.18),
+    inset 0 0 18px rgba(124,58,237,0.06) !important;
+}
+html[data-theme="premium-neon"] .pn-app-tile:nth-child(3n+2) {
+  border-color: rgba(56,189,248,0.35) !important;
+  box-shadow:
+    0 0 18px rgba(56,189,248,0.14),
+    inset 0 0 18px rgba(56,189,248,0.05) !important;
+}
+html[data-theme="premium-neon"] .pn-app-tile:nth-child(3n+3) {
+  border-color: rgba(232,121,249,0.38) !important;
+  box-shadow:
+    0 0 18px rgba(232,121,249,0.14),
+    inset 0 0 18px rgba(232,121,249,0.05) !important;
+}
+html[data-theme="premium-neon"] .pn-app-tile:active {
+  box-shadow: 0 0 30px rgba(124,58,237,0.40) !important;
+}
+
+/* ── Scrollbar: neon purple ──────────────────────────────────────────────── */
 html[data-theme="premium-neon"] ::-webkit-scrollbar-thumb {
-  background: rgba(59,130,246,0.35);
+  background: rgba(124,58,237,0.45);
 }
 html[data-theme="premium-neon"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59,130,246,0.60);
+  background: rgba(167,139,250,0.65);
 }
 
-/* Ambient blue radial glow at the top of the screen */
+/* ── Ambient dual-glow behind the whole page ─────────────────────────────── */
 html[data-theme="premium-neon"] body::before {
   content: '';
   pointer-events: none;
   position: fixed;
   top: 0; left: 0; right: 0;
-  height: 45vh;
+  height: 55vh;
   z-index: 0;
-  background: radial-gradient(
-    ellipse 80% 60% at 50% -5%,
-    rgba(59,130,246,0.10) 0%,
-    transparent 70%
-  );
+  background:
+    radial-gradient(ellipse 65% 50% at 20% -5%,  rgba(124,58,237,0.13) 0%, transparent 70%),
+    radial-gradient(ellipse 65% 50% at 80% -5%,  rgba(56,189,248,0.08) 0%, transparent 70%);
 }
 
-/* Active nav tab gets a blue dot indicator */
+/* ── Active nav indicator: neon purple dot ───────────────────────────────── */
 html[data-theme="premium-neon"] nav a[style*="var(--fg)"] {
   position: relative;
 }
 html[data-theme="premium-neon"] nav a[style*="var(--fg)"]::after {
   content: '';
   position: absolute;
-  bottom: 2px;
+  bottom: 1px;
   left: 50%;
   transform: translateX(-50%);
   width: 4px; height: 4px;
   border-radius: 50%;
-  background: #3b82f6;
-  box-shadow: 0 0 8px rgba(59,130,246,0.8), 0 0 16px rgba(59,130,246,0.4);
+  background: #a78bfa;
+  box-shadow: 0 0 8px rgba(167,139,250,0.9), 0 0 18px rgba(124,58,237,0.55);
 }
 
-/* Cards get a subtle blue inner glow on hover */
+/* ── Card hover glow ─────────────────────────────────────────────────────── */
 html[data-theme="premium-neon"] button[class*="rounded-2xl"]:hover,
 html[data-theme="premium-neon"] button[class*="rounded-3xl"]:hover {
-  box-shadow: 0 0 0 1px rgba(59,130,246,0.20), 0 4px 24px rgba(59,130,246,0.08);
+  box-shadow: 0 0 0 1px rgba(124,58,237,0.28), 0 4px 24px rgba(124,58,237,0.10);
 }
 
-/* Focus rings go blue */
+/* ── Focus rings: neon purple ────────────────────────────────────────────── */
 html[data-theme="premium-neon"] textarea:focus,
 html[data-theme="premium-neon"] input:focus {
-  box-shadow: 0 0 0 2px rgba(59,130,246,0.40) !important;
+  box-shadow: 0 0 0 2px rgba(124,58,237,0.50) !important;
 }
 
-/* Blue glow pulse animation for key elements */
-@keyframes blue-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(59,130,246,0.4), 0 0 24px rgba(59,130,246,0.2); }
-  50%       { box-shadow: 0 0 18px rgba(59,130,246,0.7), 0 0 40px rgba(59,130,246,0.3); }
+/* ── Verse of the day card: purple/cyan gradient hero ────────────────────── */
+html[data-theme="premium-neon"] .hero-gradient,
+html[data-theme="premium-neon"] [class*="from-sky-"],
+html[data-theme="premium-neon"] [class*="from-amber-"],
+html[data-theme="premium-neon"] [class*="from-violet-"],
+html[data-theme="premium-neon"] [class*="from-orange-"],
+html[data-theme="premium-neon"] [class*="from-red-"],
+html[data-theme="premium-neon"] [class*="from-emerald-"],
+html[data-theme="premium-neon"] [class*="from-indigo-"],
+html[data-theme="premium-neon"] [class*="from-teal-"] {
+  background: linear-gradient(135deg, rgba(124,58,237,0.65) 0%, rgba(7,8,13,0.95) 55%, rgba(56,189,248,0.25) 100%) !important;
+}
+
+/* Neon pulse glow */
+@keyframes pn-pulse {
+  0%, 100% { box-shadow: 0 0 12px rgba(124,58,237,0.50), 0 0 28px rgba(124,58,237,0.25); }
+  50%       { box-shadow: 0 0 22px rgba(124,58,237,0.80), 0 0 50px rgba(56,189,248,0.35); }
 }
 html[data-theme="premium-neon"] .neon-glow {
-  animation: blue-pulse 2.5s ease-in-out infinite;
+  animation: pn-pulse 2.5s ease-in-out infinite;
 }
 
 /* ── Print / PDF export styles ──────────────────────────────────────────────── */
