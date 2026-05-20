@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export type Theme = "midnight" | "ivory" | "lavender" | "sage" | "rose" | "slate" | "neon";
+export type Theme = "midnight" | "ivory" | "lavender" | "sage" | "rose" | "slate" | "neon" | "premium-neon";
 
 const THEME_KEY = "ryc-theme";
 
@@ -48,6 +48,12 @@ export const THEMES: Record<Theme, { label: string; emoji: string; desc: string;
     emoji: "⚡",
     desc: "Cyberpunk neon glow",
     preview: ["#050510", "#00ffff", "#06061a", "#e0f7ff"],
+  },
+  "premium-neon": {
+    label: "Premium Neon",
+    emoji: "💙",
+    desc: "Deep navy with electric blue",
+    preview: ["#080c13", "#3b82f6", "#10141e", "#eef2ff"],
   },
 };
 
