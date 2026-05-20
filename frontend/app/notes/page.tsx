@@ -828,7 +828,7 @@ export default function NotesPage() {
 
       <div className="min-h-screen bg-[#0f0f0f] text-white">
         {/* ── Page Header ─────────────────────────────────────────────────────── */}
-        <header className="sticky top-14 z-30 border-b border-white/[0.07] bg-[#0f0f0f]/95 backdrop-blur-sm">
+        <header className="border-b border-white/[0.07] bg-[#0f0f0f]">
           <div className="max-w-screen-xl mx-auto px-4">
             {/* Breadcrumb + action row */}
             <div className="flex items-center gap-2 py-3 flex-wrap">
@@ -863,12 +863,12 @@ export default function NotesPage() {
                   )}
                 </>
               )}
-              <button
-                onClick={() => openNewNote(selectedBookNum ?? undefined)}
-                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 transition-all shadow-sm shadow-indigo-900/30"
+              <Link
+                href="/"
+                className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white/25 text-xs font-semibold hover:text-white/45 transition-colors"
               >
-                + New Note
-              </button>
+                ← Home
+              </Link>
             </div>
 
             {/* Search */}
@@ -936,7 +936,7 @@ export default function NotesPage() {
         <div className="max-w-screen-xl mx-auto flex">
 
           {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-          <aside className="hidden md:flex flex-col w-60 lg:w-68 flex-shrink-0 border-r border-white/[0.06] min-h-[calc(100vh-160px)] bg-[#0c0c0c] sticky top-[160px] self-start max-h-[calc(100vh-160px)]">
+          <aside className="hidden md:flex flex-col w-60 lg:w-68 flex-shrink-0 border-r border-white/[0.06] min-h-[calc(100vh-56px)] bg-[#0c0c0c] sticky top-14 self-start max-h-[calc(100vh-56px)]">
             <div className="flex-1 overflow-y-auto py-2">
               {notes.length === 0 || booksWithNotes.length === 0 ? (
                 <div className="px-4 py-10 text-center">
@@ -1306,6 +1306,16 @@ export default function NotesPage() {
           </main>
         </div>
       </div>
+
+      {/* ── Floating New Note button ─────────────────────────────────────────── */}
+      <button
+        onClick={() => openNewNote(selectedBookNum ?? undefined)}
+        className="fixed bottom-6 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-bold shadow-xl shadow-indigo-900/50 hover:from-violet-500 hover:to-indigo-500 active:scale-[0.96] transition-all"
+        aria-label="New Note"
+      >
+        <span className="text-base font-black leading-none">+</span>
+        <span className="text-xs font-bold tracking-wide">New Note</span>
+      </button>
     </>
   );
 }
