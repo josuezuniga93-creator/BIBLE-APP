@@ -157,3 +157,4 @@ pip install -r requirements.txt
 > *AI-assisted analysis is a tool, not a substitute for prayerful study, your local church, or godly counsel.*
 >
 > Framework: reformed-evangelical — Scripture-first, ecumenical creeds, Reformation confessions.
+# BIBLE-APP
