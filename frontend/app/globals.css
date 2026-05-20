@@ -800,14 +800,16 @@ html[data-theme="light-elegant"] [class*="from-teal-"] {
   background: linear-gradient(135deg, rgba(155,114,40,0.20) 0%, rgba(237,232,223,0.92) 55%, rgba(200,170,100,0.15) 100%) !important;
 }
 
-/* ── Bible reader: clean dark chapter number (no gradient, no glow) ── */
+/* ── Bible reader: amber gold chapter number with warm glow ── */
 html[data-theme="light-elegant"] .pn-chapter-num {
-  background: none !important;
-  -webkit-background-clip: unset !important;
-  background-clip: unset !important;
-  -webkit-text-fill-color: var(--fg) !important;
-  color: var(--fg) !important;
-  filter: none !important;
+  background: linear-gradient(180deg, #c49a3a 0%, #9b7228 55%, #7a5a1e 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter:
+    drop-shadow(0 0 12px rgba(155,114,40,0.50))
+    drop-shadow(0 0 28px rgba(155,114,40,0.28))
+    drop-shadow(0 0 52px rgba(155,114,40,0.12)) !important;
 }
 
 /* Book name: amber gold */
