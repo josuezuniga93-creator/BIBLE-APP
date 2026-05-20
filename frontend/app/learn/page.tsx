@@ -118,10 +118,17 @@ function SectionReader({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [section.id]);
 
+  useEffect(() => {
+    if (!completed.has(section.id)) {
+      onToggle(section.id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [section.id]);
+
   return (
     <div className="min-h-screen bg-[#0f0f0f]">
       {/* Top bar */}
-      <div className="sticky top-14 z-30 bg-[#0f0f0f]/95 backdrop-blur border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-[#0f0f0f]/95 backdrop-blur border-b border-white/[0.06]">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <button
             onClick={onClose}
@@ -173,20 +180,8 @@ function SectionReader({
           />
         )}
 
-        {/* Mark complete + nav */}
-        <div className="border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-          <button
-            onClick={() => onToggle(section.id)}
-            className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all ${
-              isDone
-                ? `${accent.bg} ${accent.text} border ${accent.border}`
-                : "bg-white/[0.05] text-white/50 border border-white/10 hover:bg-white/10"
-            }`}
-          >
-            <span>{isDone ? "✓" : "○"}</span>
-            {isDone ? "Completed" : "Mark as read"}
-          </button>
-
+        {/* Nav */}
+        <div className="border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-end">
           <div className="flex gap-2">
             <button
               onClick={onPrev}

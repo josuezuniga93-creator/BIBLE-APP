@@ -5,6 +5,22 @@
 :root {
   --background: #0f0f0f;
   --foreground: #ffffff;
+  /* Theme tokens — overridden per data-theme below */
+  --bg:          #0f0f0f;
+  --bg-2:        rgba(255,255,255,0.04);
+  --bg-3:        rgba(255,255,255,0.08);
+  --fg:          #ffffff;
+  --fg-hi:       rgba(255,255,255,0.85);
+  --fg-mid:      rgba(255,255,255,0.60);
+  --fg-lo:       rgba(255,255,255,0.40);
+  --fg-dim:      rgba(255,255,255,0.22);
+  --border:      rgba(255,255,255,0.08);
+  --accent:      #7c3aed;
+  --accent-soft: rgba(124,58,237,0.15);
+  --accent-text: #a78bfa;
+  --nav-bg:      #111111;
+  --nav-border:  rgba(255,255,255,0.06);
+  --input-bg:    rgba(255,255,255,0.06);
 }
 
 /* ── Mobile safe-area support (notch, Dynamic Island, Android gesture bar) ── */
@@ -21,8 +37,8 @@ html,
 body {
   margin: 0;
   padding: 0;
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg);
 }
 
 /* Animated gradient for hero section */
@@ -40,6 +56,26 @@ body {
 @keyframes gradient-shift {
   0%, 100% { background-position: 0% 50%; }
   50%       { background-position: 100% 50%; }
+}
+
+/* Confetti fall animation */
+@keyframes confetti-fall {
+  0%   { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+  80%  { opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+.confetti-piece {
+  animation: confetti-fall 2.2s ease-in forwards;
+}
+
+/* Pop-in scale animation */
+@keyframes pop-in {
+  0%   { transform: scale(0.7); opacity: 0; }
+  70%  { transform: scale(1.1); }
+  100% { transform: scale(1);   opacity: 1; }
+}
+.animate-pop-in {
+  animation: pop-in 0.4s ease-out forwards;
 }
 
 /* Animated shimmer for the title text */
@@ -164,26 +200,297 @@ font[style]                        { background: none !important; background-col
   background-color: transparent !important;
 }
 
-/* ── Light mode ─────────────────────────────────────────────────────────────── */
-/*
-  Apply filter to html so the entire page (including html bg, fixed elements,
-  overscroll areas) is inverted uniformly — no black strips.
-*/
-html[data-theme="light"] {
-  filter: invert(1) hue-rotate(180deg);
-  background: #0f0f0f; /* inverts to near-white */
+/* ── Theme system (CSS variables) ─────────────────────────────────────────────
+   Each theme defines CSS custom properties on html[data-theme="..."].
+   Global override rules translate common Tailwind patterns to theme tokens.
+─────────────────────────────────────────────────────────────────────────── */
+
+/* 1. Midnight — deep dark (default) */
+html[data-theme="midnight"] {
+  --bg:          #0f0f0f;
+  --bg-2:        rgba(255,255,255,0.04);
+  --bg-3:        rgba(255,255,255,0.08);
+  --fg:          #ffffff;
+  --fg-hi:       rgba(255,255,255,0.85);
+  --fg-mid:      rgba(255,255,255,0.60);
+  --fg-lo:       rgba(255,255,255,0.40);
+  --fg-dim:      rgba(255,255,255,0.22);
+  --border:      rgba(255,255,255,0.08);
+  --accent:      #7c3aed;
+  --accent-soft: rgba(124,58,237,0.15);
+  --accent-text: #a78bfa;
+  --nav-bg:      #111111;
+  --nav-border:  rgba(255,255,255,0.06);
+  --input-bg:    rgba(255,255,255,0.06);
 }
 
-html[data-theme="light"] body {
-  background: #0f0f0f; /* inverts to near-white */
+/* 2. Ivory — elegant warm light */
+html[data-theme="ivory"] {
+  --bg:          #f5efe6;
+  --bg-2:        rgba(0,0,0,0.04);
+  --bg-3:        rgba(0,0,0,0.08);
+  --fg:          #1c1410;
+  --fg-hi:       rgba(28,20,16,0.88);
+  --fg-mid:      rgba(28,20,16,0.62);
+  --fg-lo:       rgba(28,20,16,0.42);
+  --fg-dim:      rgba(28,20,16,0.24);
+  --border:      rgba(0,0,0,0.10);
+  --accent:      #5b21b6;
+  --accent-soft: rgba(91,33,182,0.12);
+  --accent-text: #5b21b6;
+  --nav-bg:      #ede4d6;
+  --nav-border:  rgba(0,0,0,0.07);
+  --input-bg:    rgba(0,0,0,0.05);
 }
 
-/* Re-invert elements that should keep their natural colors */
-html[data-theme="light"] img,
-html[data-theme="light"] video,
-html[data-theme="light"] [data-no-invert] {
-  filter: invert(1) hue-rotate(180deg);
+/* 3. Lavender Mist — soft pastel purple */
+html[data-theme="lavender"] {
+  --bg:          #ede8ff;
+  --bg-2:        rgba(90,60,200,0.08);
+  --bg-3:        rgba(90,60,200,0.13);
+  --fg:          #1e1040;
+  --fg-hi:       rgba(30,16,64,0.88);
+  --fg-mid:      rgba(30,16,64,0.62);
+  --fg-lo:       rgba(30,16,64,0.42);
+  --fg-dim:      rgba(30,16,64,0.24);
+  --border:      rgba(90,60,200,0.15);
+  --accent:      #7c3aed;
+  --accent-soft: rgba(124,58,237,0.14);
+  --accent-text: #6d28d9;
+  --nav-bg:      #ddd5ff;
+  --nav-border:  rgba(90,60,200,0.12);
+  --input-bg:    rgba(90,60,200,0.07);
 }
+
+/* 4. Sage Garden — calm pastel green */
+html[data-theme="sage"] {
+  --bg:          #e8f5e8;
+  --bg-2:        rgba(22,100,64,0.07);
+  --bg-3:        rgba(22,100,64,0.12);
+  --fg:          #0d2b0d;
+  --fg-hi:       rgba(13,43,13,0.88);
+  --fg-mid:      rgba(13,43,13,0.62);
+  --fg-lo:       rgba(13,43,13,0.42);
+  --fg-dim:      rgba(13,43,13,0.24);
+  --border:      rgba(22,100,64,0.15);
+  --accent:      #16a34a;
+  --accent-soft: rgba(22,163,74,0.13);
+  --accent-text: #15803d;
+  --nav-bg:      #d1e8d1;
+  --nav-border:  rgba(22,100,64,0.10);
+  --input-bg:    rgba(22,100,64,0.06);
+}
+
+/* 5. Rose Petal — warm blush */
+html[data-theme="rose"] {
+  --bg:          #fff0f4;
+  --bg-2:        rgba(190,40,100,0.06);
+  --bg-3:        rgba(190,40,100,0.10);
+  --fg:          #3b0a1a;
+  --fg-hi:       rgba(59,10,26,0.88);
+  --fg-mid:      rgba(59,10,26,0.62);
+  --fg-lo:       rgba(59,10,26,0.42);
+  --fg-dim:      rgba(59,10,26,0.24);
+  --border:      rgba(190,40,100,0.15);
+  --accent:      #db2777;
+  --accent-soft: rgba(219,39,119,0.12);
+  --accent-text: #be185d;
+  --nav-bg:      #ffd6e4;
+  --nav-border:  rgba(190,40,100,0.10);
+  --input-bg:    rgba(190,40,100,0.06);
+}
+
+/* 6. Slate — cool grey elegant */
+html[data-theme="slate"] {
+  --bg:          #2c2c2e;
+  --bg-2:        rgba(255,255,255,0.06);
+  --bg-3:        rgba(255,255,255,0.10);
+  --fg:          #f2f2f7;
+  --fg-hi:       rgba(242,242,247,0.90);
+  --fg-mid:      rgba(242,242,247,0.60);
+  --fg-lo:       rgba(242,242,247,0.38);
+  --fg-dim:      rgba(242,242,247,0.18);
+  --border:      rgba(255,255,255,0.10);
+  --accent:      #8e8e93;
+  --accent-soft: rgba(142,142,147,0.15);
+  --accent-text: #aeaeb2;
+  --nav-bg:      #111113;
+  --nav-border:  rgba(255,255,255,0.08);
+  --input-bg:    rgba(255,255,255,0.06);
+}
+
+/* 7. Neon City — cyberpunk dark */
+html[data-theme="neon"] {
+  --bg:          #050510;
+  --bg-2:        rgba(0,255,255,0.06);
+  --bg-3:        rgba(0,255,255,0.10);
+  --fg:          #e0f7ff;
+  --fg-hi:       rgba(224,247,255,0.90);
+  --fg-mid:      rgba(224,247,255,0.60);
+  --fg-lo:       rgba(224,247,255,0.40);
+  --fg-dim:      rgba(224,247,255,0.22);
+  --border:      rgba(0,255,255,0.18);
+  --accent:      #00ffff;
+  --accent-soft: rgba(0,255,255,0.12);
+  --accent-text: #00ffff;
+  --nav-bg:      #06061a;
+  --nav-border:  rgba(0,255,255,0.15);
+  --input-bg:    rgba(0,255,255,0.06);
+}
+
+/* Neon glow effects */
+html[data-theme="neon"] .btn-primary {
+  box-shadow: 0 0 20px rgba(0,255,255,0.4), 0 0 40px rgba(0,255,255,0.2);
+}
+html[data-theme="neon"] [class*="bg-violet-6"],
+html[data-theme="neon"] .bg-violet-600 {
+  background-color: #00ffff !important;
+  box-shadow: 0 0 15px rgba(0,255,255,0.4);
+}
+html[data-theme="neon"] .text-violet-300,
+html[data-theme="neon"] .text-violet-400 {
+  color: #00ffff !important;
+}
+
+/* Scanline overlay */
+html[data-theme="neon"] body::before {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0,255,255,0.015) 0px,
+    rgba(0,255,255,0.015) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+}
+
+@keyframes neon-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(0,255,255,0.5), 0 0 20px rgba(0,255,255,0.3); }
+  50%      { box-shadow: 0 0 16px rgba(0,255,255,0.8), 0 0 40px rgba(0,255,255,0.5); }
+}
+html[data-theme="neon"] .neon-glow {
+  animation: neon-pulse 2s ease-in-out infinite;
+}
+
+/* ── Global overrides: translate Tailwind patterns to theme tokens ─────────── */
+
+/* Non-midnight themes: flip all backgrounds and text */
+/* Light themes only (not midnight or neon which are both dark) */
+html[data-theme="ivory"] body, html[data-theme="ivory"] main,
+html[data-theme="lavender"] body, html[data-theme="lavender"] main,
+html[data-theme="sage"] body, html[data-theme="sage"] main,
+html[data-theme="rose"] body, html[data-theme="rose"] main,
+html[data-theme="slate"] body, html[data-theme="slate"] main {
+  background-color: var(--bg) !important;
+}
+
+/* Space Grey — override hardcoded dark hex backgrounds */
+html[data-theme="slate"] [class*="bg-[#0"],
+html[data-theme="slate"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+html[data-theme="slate"] [class*="bg-white/"] {
+  background-color: var(--bg-2) !important;
+}
+html[data-theme="slate"] [class*="bg-black/"] {
+  background-color: var(--bg-3) !important;
+}
+
+/* Selector shorthand — targets all light themes */
+html[data-theme="ivory"],
+html[data-theme="lavender"],
+html[data-theme="sage"],
+html[data-theme="rose"] {
+  color-scheme: light;
+}
+
+/* Dark hex backgrounds → theme bg (light themes) */
+html[data-theme="ivory"] [class*="bg-[#0"], html[data-theme="ivory"] [class*="bg-[#1"],
+html[data-theme="lavender"] [class*="bg-[#0"], html[data-theme="lavender"] [class*="bg-[#1"],
+html[data-theme="sage"] [class*="bg-[#0"], html[data-theme="sage"] [class*="bg-[#1"],
+html[data-theme="rose"] [class*="bg-[#0"], html[data-theme="rose"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+
+/* White translucent → theme card tint (light themes) */
+html[data-theme="ivory"] [class*="bg-white/"],
+html[data-theme="lavender"] [class*="bg-white/"],
+html[data-theme="sage"] [class*="bg-white/"],
+html[data-theme="rose"] [class*="bg-white/"] {
+  background-color: var(--bg-2) !important;
+}
+
+/* Black translucent → theme card tint (light themes) */
+html[data-theme="ivory"] [class*="bg-black/"],
+html[data-theme="lavender"] [class*="bg-black/"],
+html[data-theme="sage"] [class*="bg-black/"],
+html[data-theme="rose"] [class*="bg-black/"] {
+  background-color: var(--bg-3) !important;
+}
+
+/* White text → theme fg — light themes only */
+html[data-theme="ivory"] .text-white, html[data-theme="lavender"] .text-white,
+html[data-theme="sage"] .text-white, html[data-theme="rose"] .text-white { color: var(--fg) !important; }
+
+html[data-theme="ivory"] [class*="text-white/9"], html[data-theme="ivory"] [class*="text-white/8"],
+html[data-theme="lavender"] [class*="text-white/9"], html[data-theme="lavender"] [class*="text-white/8"],
+html[data-theme="sage"] [class*="text-white/9"], html[data-theme="sage"] [class*="text-white/8"],
+html[data-theme="rose"] [class*="text-white/9"], html[data-theme="rose"] [class*="text-white/8"] { color: var(--fg-hi) !important; }
+
+html[data-theme="ivory"] [class*="text-white/7"], html[data-theme="ivory"] [class*="text-white/6"],
+html[data-theme="lavender"] [class*="text-white/7"], html[data-theme="lavender"] [class*="text-white/6"],
+html[data-theme="sage"] [class*="text-white/7"], html[data-theme="sage"] [class*="text-white/6"],
+html[data-theme="rose"] [class*="text-white/7"], html[data-theme="rose"] [class*="text-white/6"] { color: var(--fg-mid) !important; }
+
+html[data-theme="ivory"] [class*="text-white/5"], html[data-theme="ivory"] [class*="text-white/4"],
+html[data-theme="lavender"] [class*="text-white/5"], html[data-theme="lavender"] [class*="text-white/4"],
+html[data-theme="sage"] [class*="text-white/5"], html[data-theme="sage"] [class*="text-white/4"],
+html[data-theme="rose"] [class*="text-white/5"], html[data-theme="rose"] [class*="text-white/4"] { color: var(--fg-lo) !important; }
+
+html[data-theme="ivory"] [class*="text-white/3"], html[data-theme="ivory"] [class*="text-white/2"], html[data-theme="ivory"] [class*="text-white/1"],
+html[data-theme="lavender"] [class*="text-white/3"], html[data-theme="lavender"] [class*="text-white/2"], html[data-theme="lavender"] [class*="text-white/1"],
+html[data-theme="sage"] [class*="text-white/3"], html[data-theme="sage"] [class*="text-white/2"], html[data-theme="sage"] [class*="text-white/1"],
+html[data-theme="rose"] [class*="text-white/3"], html[data-theme="rose"] [class*="text-white/2"], html[data-theme="rose"] [class*="text-white/1"] { color: var(--fg-dim) !important; }
+
+/* White borders (light themes) */
+html[data-theme="ivory"] [class*="border-white/"], html[data-theme="lavender"] [class*="border-white/"],
+html[data-theme="sage"] [class*="border-white/"], html[data-theme="rose"] [class*="border-white/"] { border-color: var(--border) !important; }
+
+/* Violet accent (light themes) */
+html[data-theme="ivory"] .bg-violet-600, html[data-theme="ivory"] .bg-violet-500,
+html[data-theme="lavender"] .bg-violet-600, html[data-theme="lavender"] .bg-violet-500,
+html[data-theme="sage"] .bg-violet-600, html[data-theme="sage"] .bg-violet-500,
+html[data-theme="rose"] .bg-violet-600, html[data-theme="rose"] .bg-violet-500 { background-color: var(--accent) !important; }
+
+html[data-theme="ivory"] .text-violet-300, html[data-theme="ivory"] .text-violet-400, html[data-theme="ivory"] .text-violet-500,
+html[data-theme="lavender"] .text-violet-300, html[data-theme="lavender"] .text-violet-400, html[data-theme="lavender"] .text-violet-500,
+html[data-theme="sage"] .text-violet-300, html[data-theme="sage"] .text-violet-400, html[data-theme="sage"] .text-violet-500,
+html[data-theme="rose"] .text-violet-300, html[data-theme="rose"] .text-violet-400, html[data-theme="rose"] .text-violet-500 { color: var(--accent-text) !important; }
+
+html[data-theme="ivory"] [class*="border-violet-"], html[data-theme="lavender"] [class*="border-violet-"],
+html[data-theme="sage"] [class*="border-violet-"], html[data-theme="rose"] [class*="border-violet-"] { border-color: var(--accent) !important; }
+
+/* Input / textarea (light themes) */
+html[data-theme="ivory"] textarea, html[data-theme="lavender"] textarea,
+html[data-theme="sage"] textarea, html[data-theme="rose"] textarea,
+html[data-theme="ivory"] input[type="text"], html[data-theme="lavender"] input[type="text"],
+html[data-theme="sage"] input[type="text"], html[data-theme="rose"] input[type="text"],
+html[data-theme="ivory"] input[type="search"], html[data-theme="lavender"] input[type="search"],
+html[data-theme="sage"] input[type="search"], html[data-theme="rose"] input[type="search"],
+html[data-theme="ivory"] select, html[data-theme="lavender"] select,
+html[data-theme="sage"] select, html[data-theme="rose"] select {
+  background-color: var(--input-bg) !important;
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+html[data-theme="ivory"] textarea::placeholder, html[data-theme="lavender"] textarea::placeholder,
+html[data-theme="sage"] textarea::placeholder, html[data-theme="rose"] textarea::placeholder,
+html[data-theme="ivory"] input::placeholder, html[data-theme="lavender"] input::placeholder,
+html[data-theme="sage"] input::placeholder, html[data-theme="rose"] input::placeholder { color: var(--fg-lo) !important; }
 
 /* ── Focus styles */
 textarea:focus {

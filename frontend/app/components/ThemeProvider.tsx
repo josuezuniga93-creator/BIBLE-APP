@@ -9,7 +9,12 @@ export function ThemeProvider() {
         __html: `
           (function() {
             try {
-              var t = localStorage.getItem('ryc-theme') || 'dark';
+              var stored = localStorage.getItem('ryc-theme');
+              // migrate old dark/light values
+              if (stored === 'dark') stored = 'midnight';
+              if (stored === 'light') stored = 'ivory';
+              var valid = ['midnight','ivory','lavender','sage','rose','slate','neon'];
+              var t = valid.includes(stored) ? stored : 'midnight';
               document.documentElement.setAttribute('data-theme', t);
             } catch(e) {}
           })();

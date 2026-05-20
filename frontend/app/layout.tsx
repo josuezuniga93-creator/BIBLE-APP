@@ -13,12 +13,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TULIP Bible App — Theological Discernment Tool",
+  title: "Bible",
   description:
-    "Analyze sermons against historic biblical Christianity. Test every teaching against Scripture, the creeds, and the confessions of the Reformation.",
+    "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Reformed & free.",
   openGraph: {
-    title: "TULIP Bible App",
-    description: "Analyze sermons against historic biblical Christianity.",
+    title: "Bible",
+    description: "Study Scripture with Strong's Concordance and Matthew Henry Commentary.",
     type: "website",
   },
   viewport: {
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "TULIP Bible App",
+    title: "Bible",
   },
   icons: {
     apple: "/icons/apple-touch-icon.png",

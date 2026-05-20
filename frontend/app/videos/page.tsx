@@ -122,7 +122,6 @@ const VIDEOS: VideoEntry[] = [
 
 export default function VideosPage() {
   const [activeCategory, setActiveCategory] = useState("All");
-  const [activeVideo, setActiveVideo] = useState<VideoEntry | null>(null);
 
   const filtered = activeCategory === "All"
     ? VIDEOS
@@ -168,10 +167,12 @@ export default function VideosPage() {
         {/* Video grid */}
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filtered.map((video) => (
-            <div
+            <a
               key={video.id}
+              href={`https://www.youtube.com/watch?v=${video.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group rounded-2xl border border-white/[0.07] bg-white/[0.03] overflow-hidden hover:border-violet-500/30 hover:bg-white/[0.05] transition-all duration-200 cursor-pointer"
-              onClick={() => setActiveVideo(video)}
             >
               {/* Thumbnail */}
               <div className="relative aspect-video bg-black overflow-hidden">
@@ -209,7 +210,7 @@ export default function VideosPage() {
                   {video.description}
                 </p>
               </div>
-            </div>
+            </a>
           ))}
         </div>
 
@@ -234,43 +235,6 @@ export default function VideosPage() {
         </div>
       </div>
 
-      {/* Video lightbox modal */}
-      {activeVideo && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-          onClick={() => setActiveVideo(null)}
-        >
-          <div
-            className="w-full max-w-3xl rounded-2xl overflow-hidden border border-white/10 bg-[#141414] shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Embed */}
-            <div className="aspect-video w-full">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${activeVideo.id}?autoplay=1&rel=0`}
-                title={activeVideo.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="w-full h-full"
-              />
-            </div>
-            {/* Info bar */}
-            <div className="px-5 py-4 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs text-violet-400 font-bold mb-0.5">{activeVideo.speaker}</p>
-                <h2 className="text-base font-bold text-white/90">{activeVideo.title}</h2>
-                <p className="text-xs text-white/40 mt-1 leading-relaxed">{activeVideo.description}</p>
-              </div>
-              <button
-                onClick={() => setActiveVideo(null)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors flex-shrink-0"
-              >
-                ✕
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

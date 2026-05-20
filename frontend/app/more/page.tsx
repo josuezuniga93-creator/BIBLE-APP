@@ -1,83 +1,200 @@
 "use client";
 
 import Link from "next/link";
-import { LibraryIcon, TrackerIcon, FamilyIcon, PlansIcon, KidsIcon, VideosIcon, GiveIcon } from "../components/MoreIcons";
 import { useLanguage } from "../lib/useLanguage";
-import { useTheme } from "../lib/useTheme";
+import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 
-function ConcordanceIcon({ active }: { active: boolean }) {
-  const c = active ? "white" : "rgba(255,255,255,0.6)";
+// ─── App tile icon components ─────────────────────────────────────────────────
+
+function PlansAppIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <text x="3" y="17" fontSize="13" fontWeight="800" fill={c} fontFamily="serif">α</text>
-      <circle cx="17" cy="13" r="5" stroke={c} strokeWidth="1.6"/>
-      <path d="M21 17l3 3" stroke={c} strokeWidth="1.8" strokeLinecap="round"/>
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="5" stroke="white" strokeWidth="1.8" />
+      <path d="M7.5 12.5l3.5 3.5 6-7" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-const FEATURES = [
-  { href: "/lexicon?tab=search", Icon: ConcordanceIcon, label: "Concordance",  desc: "Search Greek & Hebrew words"    },
-  { href: "/library",            Icon: LibraryIcon,     label: "Free Books",   desc: "Classic Christian literature"   },
-  { href: "/bible-tracker",      Icon: TrackerIcon,     label: "Tracker",      desc: "Track your Bible reading"       },
-  { href: "/family-worship",     Icon: FamilyIcon,      label: "Family",       desc: "Worship together at home"       },
-  { href: "/bible-plans",        Icon: PlansIcon,       label: "Plans",        desc: "Bible reading plans"            },
-  { href: "/kids-books",         Icon: KidsIcon,        label: "Kids Books",   desc: "Faith books for children"       },
-  { href: "/videos",             Icon: VideosIcon,      label: "Videos",       desc: "Watch sermons & teachings"      },
-  { href: "/give",               Icon: GiveIcon,        label: "Give",         desc: "Support the ministry"           },
+function LibraryAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="4" width="4" height="16" rx="1.5" stroke="white" strokeWidth="1.7" />
+      <rect x="9" y="4" width="4" height="16" rx="1.5" stroke="white" strokeWidth="1.7" />
+      <path d="M15 4l4 16" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function TrackerAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <rect x="3" y="3" width="18" height="18" rx="4" stroke="white" strokeWidth="1.7" />
+      <path d="M7.5 12l3 3 6-6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FamilyAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.7" />
+      <circle cx="17" cy="8" r="2.2" stroke="white" strokeWidth="1.6" />
+      <path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M17 14c2.5 0 5 1.5 5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function KidsAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v12" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M2 19h20" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M9 5V3" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15 5V3" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function VideosAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <rect x="2" y="5" width="15" height="14" rx="3" stroke="white" strokeWidth="1.7" />
+      <path d="M17 9l5-3v12l-5-3V9z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GiveAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M12 21C12 21 3 15 3 9a5 5 0 0110 0 5 5 0 0110 0c0 6-9 12-9 12h-2z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FellowshipAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <circle cx="8" cy="8" r="3" stroke="white" strokeWidth="1.7" />
+      <circle cx="16" cy="8" r="3" stroke="white" strokeWidth="1.7" />
+      <path d="M2 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M14 20c0-3.5 2.7-5.5 6-5.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChurchAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2v4M10 4h4" stroke="white" strokeWidth="2" strokeLinecap="round" />
+      <path d="M3 10h18v11H3z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M9 21v-6h6v6" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M7 10V7l5-3 5 3v3" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function NotesAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <rect x="4" y="3" width="16" height="18" rx="3" stroke="white" strokeWidth="1.7" />
+      <line x1="8" y1="8" x2="16" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="16" x2="12" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// ─── App grid config ──────────────────────────────────────────────────────────
+
+const APP_TILES = [
+  { href: "/bible-plans",       Icon: PlansAppIcon,    label: "Plans",      color: "#5b21b6" },
+  { href: "/library",           Icon: LibraryAppIcon,  label: "Free Books", color: "#0369a1" },
+  { href: "/bible-tracker",     Icon: TrackerAppIcon,  label: "Tracker",    color: "#065f46" },
+  { href: "/family-worship",    Icon: FamilyAppIcon,   label: "Family",     color: "#9d174d" },
+  { href: "/kids-books",        Icon: KidsAppIcon,     label: "Kids Books", color: "#c2410c" },
+  { href: "/videos",            Icon: VideosAppIcon,   label: "Videos",     color: "#1e3a8a" },
+  { href: "/give",              Icon: GiveAppIcon,     label: "Give",       color: "#b45309" },
+  { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Gatherings", color: "#7c3aed" },
+  { href: "/church-directory",  Icon: ChurchAppIcon,   label: "Churches",   color: "#1a6b3a" },
+  { href: "/notes",             Icon: NotesAppIcon,    label: "Notes",      color: "#374151" },
 ] as const;
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
 
+  const themeKeys = Object.keys(THEMES) as Theme[];
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
-      <main className="max-w-lg mx-auto px-4 pt-6 pb-4 space-y-4">
-        <h1 className="text-xl font-bold text-white">Extras</h1>
+      <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
 
-        <div className="space-y-1">
-          {FEATURES.map(({ href, Icon, label, desc }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center gap-4 px-4 py-3.5 rounded-2xl bg-white/[0.04] active:bg-white/[0.08] transition-colors"
-            >
-              <span className="flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-white/[0.07]">
-                <Icon active={false} />
-              </span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-white">{label}</p>
-                <p className="text-xs text-white/40 mt-0.5">{desc}</p>
-              </div>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </Link>
-          ))}
-        </div>
+        <h1 className="text-xl font-bold text-white px-1">Extras</h1>
 
-        {/* Settings */}
-        <div className="space-y-3 pt-2">
-          <p className="text-xs text-white/30 font-semibold uppercase tracking-widest px-1">Settings</p>
-
-          {/* Theme toggle */}
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
-            <div>
-              <p className="text-sm font-semibold text-white">Appearance</p>
-              <p className="text-xs text-white/40 mt-0.5">{theme === "dark" ? "Dark mode" : "Light mode"}</p>
-            </div>
-            <button
-              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="flex items-center h-8 rounded-full border border-white/[0.10] bg-white/[0.04] overflow-hidden"
-            >
-              <span className={`px-3 py-1 text-xs font-bold transition-all ${theme === "dark" ? "text-white bg-white/10" : "text-white/35"}`}>🌙 Dark</span>
-              <span className="w-px h-4 bg-white/[0.10]" />
-              <span className={`px-3 py-1 text-xs font-bold transition-all ${theme === "light" ? "text-white bg-white/10" : "text-white/35"}`}>☀️ Light</span>
-            </button>
+        {/* ── App grid ──────────────────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Features</p>
+          <div className="grid grid-cols-3 gap-3">
+            {APP_TILES.map(({ href, Icon, label, color }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl p-4 active:scale-95 transition-transform"
+                style={{ backgroundColor: color }}
+              >
+                <Icon />
+                <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
+              </Link>
+            ))}
           </div>
+        </section>
 
-          {/* Language toggle */}
+        {/* ── Theme picker ──────────────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Appearance</p>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+            {themeKeys.map((t) => {
+              const meta = THEMES[t];
+              const active = theme === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all active:scale-95 ${
+                    active
+                      ? "border-white/30 bg-white/10"
+                      : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
+                  }`}
+                  style={{ minWidth: "80px" }}
+                >
+                  <div
+                    className="w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center text-lg relative overflow-hidden"
+                    style={{ background: meta.preview[0] }}
+                  >
+                    <span>{meta.emoji}</span>
+                    {active && (
+                      <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-white/90 flex items-center justify-center">
+                        <span className="text-black text-[8px] font-black">✓</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-bold ${active ? "text-white" : "text-white/50"}`}>
+                    {meta.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* ── Language ──────────────────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Language</p>
           <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
             <div>
               <p className="text-sm font-semibold text-white">Language</p>
@@ -92,7 +209,8 @@ export default function MorePage() {
               <span className={`px-3 py-1 text-xs font-bold transition-all ${lang === "es" ? "text-white bg-white/10" : "text-white/35"}`}>ES</span>
             </button>
           </div>
-        </div>
+        </section>
+
       </main>
     </div>
   );

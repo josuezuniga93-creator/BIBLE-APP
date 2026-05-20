@@ -84,3 +84,16 @@ export function GiveIcon({ active }: { active: boolean }) {
     </svg>
   );
 }
+
+export function FellowshipIcon({ active }: { active: boolean }) {
+  const c = active ? "white" : "rgba(255,255,255,0.6)";
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <circle cx="8.5" cy="6" r="3" stroke={c} strokeWidth="1.6" />
+      <circle cx="15.5" cy="6" r="3" stroke={c} strokeWidth="1.6" />
+      <path d="M2 20c0-3.3 2.7-5.5 6.5-5.5s6.5 2.2 6.5 5.5" stroke={c} strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15.5 14.5c2 0 4.5 1.3 4.5 4.5" stroke={c} strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M10 10.5c.8.3 1.6.5 2.5.5" stroke={c} strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}

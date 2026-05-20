@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { getTodayVerse } from "./lib/dailyVerses";
 import {
   loadStreak,
   recordLogin,
@@ -12,23 +11,108 @@ import {
   type BadgeId,
 } from "./lib/streakData";
 
+// ─── Church History Verses ────────────────────────────────────────────────────
+
+interface HistoryVerse {
+  reference: string;
+  book: string;
+  chapter: number;
+  text: string;
+  event: string;
+  year: string;
+  history: string;
+  color: string;
+  accent: string;
+}
+
+const HISTORY_VERSES: HistoryVerse[] = [
+  {
+    reference: "John 1:1",
+    book: "John", chapter: 1,
+    text: "In the beginning was the Word, and the Word was with God, and the Word was God.",
+    event: "Council of Nicaea",
+    year: "325 AD",
+    color: "from-sky-900/60 to-sky-950/80",
+    accent: "text-sky-400",
+    history: "When Arius taught that Christ was a created being — 'there was a time when he was not' — the church convened at Nicaea under Emperor Constantine. John 1:1 was the anchor text: if the Word was God from the beginning, he could not have had a beginning. Bishop Athanasius argued from this verse that a less-than-God Christ saves no one. The council affirmed the Son is homoousios — of the same substance as the Father — a position Athanasius would defend alone against emperors and bishops for decades, giving rise to the phrase Athanasius contra mundum: Athanasius against the world.",
+  },
+  {
+    reference: "Romans 1:17",
+    book: "Romans", chapter: 1,
+    text: "For in it the righteousness of God is revealed from faith for faith, as it is written, 'The righteous shall live by faith.'",
+    event: "Luther's Tower Experience",
+    year: "c. 1515",
+    color: "from-amber-900/60 to-amber-950/80",
+    accent: "text-amber-400",
+    history: "Martin Luther was a tormented Augustinian monk who hated the phrase 'righteousness of God' — he read it as God's punishing justice against sinners. While studying Romans in his tower cell in Wittenberg, he was struck: the righteousness Paul describes is not demanded from us but given to us, received through faith. 'I felt myself to be reborn and to have gone through open doors into paradise,' he wrote. This single verse ignited the Protestant Reformation. Two years later, Luther nailed his 95 Theses to the Wittenberg church door, and the medieval church was never the same.",
+  },
+  {
+    reference: "Galatians 2:16",
+    book: "Galatians", chapter: 2,
+    text: "A person is not justified by works of the law but through faith in Jesus Christ.",
+    event: "The Reformation Debate",
+    year: "1517–1545",
+    color: "from-orange-900/60 to-orange-950/80",
+    accent: "text-orange-400",
+    history: "This verse was the sword of the Reformation. When Rome insisted that justification required both faith and meritorious works — and condemned the Reformers at the Council of Trent (1545–1563) — Luther, Calvin, and Melanchthon all returned to Galatians. Calvin called justification 'the hinge on which all true religion turns.' The Reformers insisted: to add works to faith as the ground of justification is to preach a different gospel. The Council of Trent formally anathematized the Reformation position, a condemnation that formally stands to this day in Roman Catholic canon law.",
+  },
+  {
+    reference: "John 6:37",
+    book: "John", chapter: 6,
+    text: "All that the Father gives me will come to me, and whoever comes to me I will never cast out.",
+    event: "The Synod of Dort",
+    year: "1618–1619",
+    color: "from-violet-900/60 to-violet-950/80",
+    accent: "text-violet-400",
+    history: "After Jacobus Arminius and his followers challenged Calvinist teaching on predestination, the Dutch Reformed church convened an international council at Dordrecht with delegates from England, Germany, Switzerland, and the Netherlands. Five points were at stake: total depravity, unconditional election, limited atonement, irresistible grace, and perseverance of the saints — the TULIP doctrines. John 6:37–40 was central: 'All that the Father gives me will come' — election is the Father's act. 'I will never cast out' — preservation is Christ's promise. The Canons of Dort remain one of the most carefully argued theological documents in Christian history.",
+  },
+  {
+    reference: "Acts 5:29",
+    book: "Acts", chapter: 5,
+    text: "We must obey God rather than men.",
+    event: "Diet of Worms",
+    year: "1521",
+    color: "from-red-900/60 to-red-950/80",
+    accent: "text-red-400",
+    history: "Standing before Emperor Charles V and the full assembly of the Holy Roman Empire, Martin Luther was ordered to recant his writings. His answer has echoed for five centuries: 'Unless I am convinced by the testimony of the Scriptures or by clear reason — for I do not trust either in the pope or in councils alone, since it is well known that they have often erred and contradicted themselves — I am bound by the Scriptures I have quoted, and my conscience is captive to the Word of God. I cannot and will not recant anything, since it is neither safe nor right to go against conscience. Here I stand. I cannot do otherwise. God help me. Amen.' He was declared an outlaw of the Empire the next day.",
+  },
+  {
+    reference: "2 Timothy 3:16",
+    book: "2 Timothy", chapter: 3,
+    text: "All Scripture is breathed out by God and profitable for doctrine, for reproof, for correction, for training in righteousness.",
+    event: "Sola Scriptura",
+    year: "Reformation Era",
+    color: "from-emerald-900/60 to-emerald-950/80",
+    accent: "text-emerald-400",
+    history: "The first of the Five Solas — Scripture alone — was not an invention of the Reformers but a recovery of the early church's conviction. When Rome argued that Scripture and Church Tradition carried equal authority, the Reformers cited 2 Timothy 3:16: God breathed out Scripture; councils and popes are fallible men. Sola Scriptura does not mean 'no creeds or confessions' — Luther, Calvin, and the Westminster Divines all wrote extensive confessional documents. It means Scripture is the supreme and final authority to which all tradition must submit. This principle was the formal cause of the Reformation.",
+  },
+  {
+    reference: "Romans 8:30",
+    book: "Romans", chapter: 8,
+    text: "And those whom he predestined he also called, and those whom he called he also justified, and those whom he justified he also glorified.",
+    event: "Augustine vs. Pelagius",
+    year: "410–430 AD",
+    color: "from-indigo-900/60 to-indigo-950/80",
+    accent: "text-indigo-400",
+    history: "Pelagius, a British monk in Rome, taught that human beings have the natural ability to choose good and earn salvation — sin is imitation, not inherited corruption. Augustine of Hippo saw this as the destruction of grace. His debate with Pelagius produced some of the most important theology in Christian history: original sin, the bondage of the will, prevenient and irresistible grace, and predestination. Romans 8:29–30 — the 'golden chain' of salvation — was Augustine's anchor. The Council of Carthage (418 AD) condemned Pelagianism. Augustine's framework became the backbone of both Catholic and Protestant soteriology, though the Reformers argued Rome itself had drifted back toward Pelagius.",
+  },
+  {
+    reference: "Hebrews 4:12",
+    book: "Hebrews", chapter: 4,
+    text: "For the word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit, of joints and of marrow, and discerning the thoughts and intentions of the heart.",
+    event: "William Tyndale & the English Bible",
+    year: "1526–1536",
+    color: "from-teal-900/60 to-teal-950/80",
+    accent: "text-teal-400",
+    history: "William Tyndale believed ordinary English people deserved to read this living Word in their own language. When a church official told him 'we are better to be without God's law than the Pope's,' Tyndale replied: 'I defy the Pope, and all his laws; and if God spare my life, ere many years I will cause a boy that driveth the plough, to know more of the Scripture than thou dost.' He translated the New Testament from Greek and much of the Old Testament from Hebrew — the first printed English Bible from the original languages. He was strangled and burned at the stake in 1536. Eighty percent of the King James Bible (1611) is Tyndale's translation. His dying prayer: 'Lord, open the King of England's eyes.'",
+  },
+];
+
 // ─── Guided Scripture video ───────────────────────────────────────────────────
 // To change the video: update GUIDED_SCRIPTURE_URL with any YouTube watch URL
 const GUIDED_SCRIPTURE_URL = "https://www.youtube.com/watch?v=e50Rgh7rGw8";
 const GUIDED_SCRIPTURE_EMBED_ID = GUIDED_SCRIPTURE_URL.split("v=")[1]?.split("&")[0] ?? "e50Rgh7rGw8";
 const GUIDED_SCRIPTURE_TITLE = "Guided Scripture — 2 Min Devotional";
-
-// ─── Verse card gradients (rotate by day) ────────────────────────────────────
-
-const GRADIENTS = [
-  { from: "#2d1b69", via: "#5b21b6", to: "#d97706" },
-  { from: "#0c1445", via: "#1d4ed8", to: "#ea580c" },
-  { from: "#1a0533", via: "#7c3aed", to: "#db2777" },
-  { from: "#052e16", via: "#065f46", to: "#4338ca" },
-  { from: "#3b0764", via: "#9333ea", to: "#c2410c" },
-  { from: "#0f172a", via: "#0369a1", to: "#7c3aed" },
-  { from: "#1c1917", via: "#92400e", to: "#7f1d1d" },
-] as const;
 
 // ─── Greeting ────────────────────────────────────────────────────────────────
 
@@ -64,14 +148,15 @@ async function shareApp() {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Home() {
-  const verse = getTodayVerse();
-  const grad  = GRADIENTS[new Date().getDate() % GRADIENTS.length];
+  // Today's church history verse — rotates daily through the 8 entries
+  const todayHV = HISTORY_VERSES[new Date().getDate() % HISTORY_VERSES.length];
 
   const [streakData,   setStreakData]   = useState<StreakData | null>(null);
   const [newBadgeIds,  setNewBadgeIds]  = useState<BadgeId[]>([]);
   const [toastVisible, setToastVisible] = useState(false);
   const [greeting,     setGreeting]     = useState("Good Morning");
   const [videoOpen,    setVideoOpen]    = useState(false);
+  const [historyVerse, setHistoryVerse] = useState<HistoryVerse | null>(null);
 
   useEffect(() => { setGreeting(getGreeting()); }, []);
 
@@ -88,7 +173,7 @@ export default function Home() {
     }
   }, []);
 
-  const allBadgeIds = (Object.keys(BADGES) as BadgeId[]);
+  const earnedBadgeIds = ((streakData?.badges ?? []) as BadgeId[]);
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -125,6 +210,52 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── History verse centered modal ──────────────────────────────────────── */}
+      {historyVerse && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center px-5"
+          onClick={() => setHistoryVerse(null)}
+        >
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" />
+          <div
+            className="relative w-full max-w-sm rounded-3xl border border-white/[0.10] bg-[#161616] shadow-2xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gradient header */}
+            <div className={`bg-gradient-to-br ${historyVerse.color} px-5 pt-5 pb-4`}>
+              <div className="flex items-start justify-between gap-3 mb-3">
+                <div>
+                  <p className={`text-[9px] font-black uppercase tracking-[0.18em] ${historyVerse.accent} mb-1`}>
+                    {historyVerse.event} · {historyVerse.year}
+                  </p>
+                  <p className={`text-base font-bold ${historyVerse.accent}`}>{historyVerse.reference}</p>
+                </div>
+                <button
+                  onClick={() => setHistoryVerse(null)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.07] transition-colors flex-shrink-0 mt-0.5"
+                >✕</button>
+              </div>
+              <p className="text-sm text-white/80 italic leading-relaxed">&ldquo;{historyVerse.text}&rdquo;</p>
+            </div>
+            {/* History body */}
+            <div className="px-5 py-4 max-h-[45vh] overflow-y-auto">
+              <p className="text-[9px] font-black uppercase tracking-[0.18em] text-white/25 mb-3">Church History</p>
+              <p className="text-[13px] text-white/60 leading-relaxed">{historyVerse.history}</p>
+            </div>
+            {/* Read Chapter link */}
+            <div className="px-5 pb-5">
+              <Link
+                href={`/lexicon?book=${encodeURIComponent(historyVerse.book)}&chapter=${historyVerse.chapter}`}
+                onClick={() => setHistoryVerse(null)}
+                className={`block w-full text-center py-2.5 rounded-xl text-xs font-bold transition-all bg-white/[0.06] border border-white/[0.08] hover:bg-white/[0.10] ${historyVerse.accent}`}
+              >
+                Read {historyVerse.reference} →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-4">
 
         {/* ── Header row: greeting + share ──────────────────────────────────── */}
@@ -150,53 +281,42 @@ export default function Home() {
           </button>
         </div>
 
-        {/* ── Verse of the Day ──────────────────────────────────────────────── */}
-        <section
-          className="relative rounded-3xl overflow-hidden shadow-xl"
-          style={{
-            background: `linear-gradient(160deg, ${grad.from} 0%, ${grad.via} 45%, ${grad.to} 100%)`,
-            minHeight: "185px",
-          }}
+        {/* ── Verse of the Day — church history verse, rotates daily ──────────── */}
+        <button
+          onClick={() => setHistoryVerse(todayHV)}
+          className={`w-full text-left relative rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br ${todayHV.color} active:scale-[0.99] transition-all`}
+          style={{ minHeight: "185px" }}
         >
           <div
             className="absolute inset-0"
             style={{
               background:
-                "radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.07) 0%, transparent 60%), " +
-                "linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, transparent 40%, rgba(0,0,0,0.50) 100%)",
+                "radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06) 0%, transparent 60%), " +
+                "linear-gradient(to bottom, rgba(0,0,0,0.10) 0%, transparent 40%, rgba(0,0,0,0.55) 100%)",
             }}
           />
           <div className="relative z-10 flex flex-col p-4" style={{ minHeight: "185px" }}>
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/60 mb-0.5">
               Verse of the Day
             </p>
-            <p className="text-[10px] font-semibold text-white/35 mb-auto">{verse.theme}</p>
+            <p className={`text-[10px] font-semibold mb-auto ${todayHV.accent}`}>
+              {todayHV.event} · {todayHV.year}
+            </p>
             <div className="py-3">
               <p className="text-sm font-light text-white leading-relaxed italic drop-shadow-sm">
-                &ldquo;{verse.text}&rdquo;
+                &ldquo;{todayHV.text}&rdquo;
               </p>
             </div>
             <div>
-              <p className="text-xs font-bold text-white/80 mb-3">{verse.reference}</p>
-              <div className="flex gap-2">
-                <Link
-                  href={`/lexicon?book=${encodeURIComponent(verse.book)}&chapter=${verse.chapter}`}
-                  className="flex-1 text-center py-2.5 rounded-xl bg-white/20 backdrop-blur-sm text-white text-xs font-semibold active:bg-white/30 transition-all"
-                >
-                  📖 Read Chapter
-                </Link>
-                <a
-                  href={verse.matthewHenryUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 text-center py-2.5 rounded-xl bg-black/25 backdrop-blur-sm text-white/80 text-xs font-semibold active:bg-black/40 transition-all"
-                >
-                  📜 Commentary
-                </a>
+              <p className="text-xs font-bold text-white/80 mb-3">{todayHV.reference}</p>
+              <div className="flex">
+                <span className="flex-1 text-center py-2.5 rounded-xl bg-black/25 backdrop-blur-sm text-white/85 text-xs font-semibold">
+                  📜 Read the Full Story
+                </span>
               </div>
             </div>
           </div>
-        </section>
+        </button>
 
         {/* ── Streak ────────────────────────────────────────────────────────── */}
         <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
@@ -248,39 +368,32 @@ export default function Home() {
           </svg>
         </button>
 
-        {/* ── Badges showcase ───────────────────────────────────────────────── */}
-        <section className="pt-2">
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">
-            Badges
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            {allBadgeIds.map((id) => {
-              const earned = streakData?.badges.includes(id) ?? false;
-              const badge  = BADGES[id];
-              return (
-                <div
-                  key={id}
-                  title={badge.desc}
-                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-all ${
-                    earned
-                      ? "border-violet-500/35 bg-violet-500/10"
-                      : "border-white/[0.06] bg-white/[0.02] opacity-40"
-                  }`}
-                >
-                  <span className="text-2xl">{badge.emoji}</span>
-                  <span className={`text-[9px] font-bold text-center leading-tight ${
-                    earned ? "text-violet-300/90" : "text-white/30"
-                  }`}>
-                    {badge.label}
-                  </span>
-                  <span className={`text-[8px] font-mono ${earned ? "text-violet-400/50" : "text-white/20"}`}>
-                    {earned ? "✓ earned" : `${badge.threshold}d`}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        {/* ── Badges showcase (earned only) ─────────────────────────────────── */}
+        {earnedBadgeIds.length > 0 && (
+          <section className="pt-2">
+            <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">
+              Badges
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              {earnedBadgeIds.map((id) => {
+                const badge = BADGES[id];
+                return (
+                  <div
+                    key={id}
+                    title={badge.desc}
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-violet-500/35 bg-violet-500/10"
+                  >
+                    <span className="text-2xl">{badge.emoji}</span>
+                    <span className="text-[9px] font-bold text-center leading-tight text-violet-300/90">
+                      {badge.label}
+                    </span>
+                    <span className="text-[8px] font-mono text-violet-400/50">✓ earned</span>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
       </main>
     </div>

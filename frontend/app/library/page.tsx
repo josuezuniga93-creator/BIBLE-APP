@@ -108,6 +108,7 @@ export default function LibraryPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [inProgress, setInProgress] = useState<ProgressEntry[]>([]);
+  const [continueOpen, setContinueOpen] = useState(false);
 
   // Read progress from localStorage once books are loaded
   useEffect(() => {
@@ -165,49 +166,54 @@ export default function LibraryPage() {
           <>
             {/* ── In Progress ─────────────────────────────────────────────── */}
             {inProgress.length > 0 && (
-              <div className="mb-10">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-xs font-bold uppercase tracking-widest text-amber-400">
-                    📖 {t("lib_continue")}
-                  </span>
-                  <div className="flex-1 border-t border-white/[0.06]" />
+              <>
+                <div className="mb-8">
+                  <button
+                    onClick={() => setContinueOpen(true)}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] hover:border-amber-500/35 hover:bg-amber-500/[0.07] active:scale-[0.99] transition-all text-left"
+                  >
+                    <span className="text-xl">📖</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-bold text-white/85">Continue Reading</p>
+                      <p className="text-xs text-amber-400/60 mt-0.5">{inProgress.length} book{inProgress.length !== 1 ? "s" : ""} in progress</p>
+                    </div>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                 </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {inProgress.map(({ book, chapter, total }) => {
-                    const pct = Math.round((chapter / total) * 100);
-                    return (
-                      <Link
-                        key={book.slug}
-                        href={`/library/${book.slug}`}
-                        className="group flex items-center gap-4 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-4 hover:border-amber-500/40 hover:bg-amber-500/[0.08] transition-all"
-                      >
-                        {/* Mini cover */}
-                        <div className="w-12 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-[#111]">
-                          <BookCover book={book} />
-                        </div>
-                        {/* Info */}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs text-amber-400/70 font-bold truncate">{book.author}</p>
-                          <p className="text-sm font-bold text-white/90 leading-snug truncate group-hover:text-white transition-colors">
-                            {book.title}
-                          </p>
-                          <p className="text-xs text-white/35 mt-1">
-                            {t("lib_chapter")} {chapter} {t("lib_of")} {total}
-                          </p>
-                          {/* Progress bar */}
-                          <div className="mt-2 h-1 rounded-full bg-white/[0.08] overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-amber-400/60 transition-all"
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <p className="text-[10px] text-amber-400/50 mt-1">{pct}% complete</p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
+
+                {/* Continue Reading sheet */}
+                {continueOpen && (
+                  <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(0,0,0,0.65)" }} onClick={() => setContinueOpen(false)}>
+                    <div className="rounded-t-3xl border-t border-white/10 bg-[#181818] px-4 pt-3 pb-8" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "70vh", overflowY: "auto" }}>
+                      <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />
+                      <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4 px-1">In Progress</p>
+                      <div className="space-y-3">
+                        {inProgress.map(({ book, chapter, total }) => {
+                          const pct = Math.round((chapter / total) * 100);
+                          return (
+                            <Link key={book.slug} href={`/library/${book.slug}`} onClick={() => setContinueOpen(false)}
+                              className="flex items-center gap-4 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-3.5 hover:border-amber-500/30 active:scale-[0.99] transition-all">
+                              <div className="w-10 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-[#111]">
+                                <BookCover book={book} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs text-amber-400/60 font-bold truncate">{book.author}</p>
+                                <p className="text-sm font-bold text-white/90 leading-snug truncate">{book.title}</p>
+                                <div className="mt-1.5 h-1 rounded-full bg-white/[0.07] overflow-hidden">
+                                  <div className="h-full rounded-full bg-amber-400/50 transition-all" style={{ width: `${pct}%` }} />
+                                </div>
+                                <p className="text-[10px] text-amber-400/40 mt-1">Ch. {chapter} of {total} · {pct}%</p>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {/* Available books */}

@@ -196,15 +196,11 @@ function StrongsSheet({
     : "bg-sky-500/20 text-sky-300 border-sky-500/30";
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col justify-end lg:hidden print:hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 lg:hidden print:hidden">
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      {/* Sheet */}
-      <div className={`relative bg-[#1a1a1a] rounded-t-3xl border-t border-white/[0.08] max-h-[80vh] flex flex-col overflow-hidden border-l border-r ${bgCls}`}>
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
-        </div>
+      {/* Centered modal */}
+      <div className={`relative bg-[#1a1a1a] rounded-3xl border border-white/[0.08] max-h-[75vh] w-full max-w-sm flex flex-col overflow-hidden shadow-2xl ${bgCls}`}>
         {loading ? (
           <div className="flex items-center justify-center gap-3 py-12">
             <div className="w-5 h-5 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
@@ -221,8 +217,6 @@ function StrongsSheet({
             />
           </div>
         ) : null}
-        {/* bottom safe-area spacer */}
-        <div style={{ height: "max(env(safe-area-inset-bottom), 12px)" }} />
       </div>
     </div>
   );
@@ -350,6 +344,33 @@ function ColorPicker({
   );
 }
 
+// ─── Waking-up hint (shows after 8s of loading) ──────────────────────────────
+
+function WakingUpHint() {
+  const [phase, setPhase] = useState(0); // 0=hidden, 1=hint, 2=hint+button
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase(1), 8000);
+    const t2 = setTimeout(() => setPhase(2), 20000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, []);
+  if (phase === 0) return null;
+  return (
+    <div className="flex flex-col items-center gap-2 mt-1">
+      <p className="text-white/20 text-xs text-center max-w-xs leading-relaxed">
+        Server is waking up from sleep — this can take up to 30 seconds.
+      </p>
+      {phase >= 2 && (
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-1.5 rounded-lg bg-violet-600/30 border border-violet-500/30 text-violet-300 text-xs font-bold hover:bg-violet-600/50 transition-colors"
+        >
+          Reload Page
+        </button>
+      )}
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function LexiconPage() {
@@ -365,6 +386,8 @@ function LexiconInner() {
   const [books, setBooks]       = useState<BookMeta[]>([]);
   const [hasStrongs, setHasStrongs] = useState(false);
   const [hasMhc, setHasMhc]     = useState(false);
+  const [booksError, setBooksError] = useState(false);
+  const [booksLoading, setBooksLoading] = useState(true);
 
   const [selectedBook, setSelectedBook]       = useState<BookMeta | null>(null);
   const [selectedChapter, setSelectedChapter] = useState(1);
@@ -544,11 +567,14 @@ function LexiconInner() {
     const bookParam    = searchParams.get("book");
     const chapterParam = searchParams.get("chapter");
 
+    setBooksLoading(true);
+    setBooksError(false);
     fetchBooks()
       .then(({ books: bks, hasStrongs: hs, hasMhc: hm }) => {
         setBooks(bks);
         setHasStrongs(hs);
         setHasMhc(hm);
+        setBooksLoading(false);
 
         // If URL params specify a book, navigate there; otherwise default to John 3.
         if (bookParam) {
@@ -566,7 +592,7 @@ function LexiconInner() {
         if (john) { setSelectedBook(john); setSelectedChapter(3); }
         else if (bks.length) { setSelectedBook(bks[0]); setSelectedChapter(1); }
       })
-      .catch(() => {});
+      .catch(() => { setBooksError(true); setBooksLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -592,7 +618,6 @@ function LexiconInner() {
   }, [selectedBook, selectedChapter, hasMhc, translation]);
 
   const handleWordSelect = useCallback(async (token: WordToken) => {
-    if (highlightMode) { toggleHighlight(token.w); return; }
     setActiveToken(token);
     setLoadingStrongs(true);
     try {
@@ -606,7 +631,7 @@ function LexiconInner() {
       }
     } catch { setStrongsEntry(null); }
     finally  { setLoadingStrongs(false); }
-  }, [highlightMode, toggleHighlight, hasStrongs]);
+  }, [hasStrongs]);
 
   const handleSearch = useCallback(async () => {
     const q = searchQuery.trim();
@@ -715,6 +740,43 @@ function LexiconInner() {
       className="min-h-screen bg-[#0f0f0f] text-white"
       onClick={() => setColorPickerVerse(null)}
     >
+      {/* ── Books error banner ── */}
+      {booksError && (
+        <div className="max-w-screen-xl mx-auto px-4 pt-6">
+          <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.07] px-5 py-4 flex items-start gap-3">
+            <span className="text-xl flex-shrink-0 mt-0.5">⚠️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-red-300/90 mb-1">Couldn't connect to the Bible server</p>
+              <p className="text-xs text-red-400/60 leading-relaxed mb-3">The backend may be sleeping or unreachable. This sometimes happens after a period of inactivity — try again in a moment.</p>
+              <button
+                onClick={() => {
+                  setBooksError(false);
+                  setBooksLoading(true);
+                  fetchBooks()
+                    .then(({ books: bks, hasStrongs: hs, hasMhc: hm }) => {
+                      setBooks(bks); setHasStrongs(hs); setHasMhc(hm); setBooksLoading(false);
+                      const john = bks.find((b) => b.name === "John");
+                      if (john) { setSelectedBook(john); setSelectedChapter(3); }
+                      else if (bks.length) { setSelectedBook(bks[0]); setSelectedChapter(1); }
+                    })
+                    .catch(() => { setBooksError(true); setBooksLoading(false); });
+                }}
+                className="px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-300 text-xs font-bold hover:bg-red-500/30 transition-colors active:scale-95"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ── Books loading skeleton ── */}
+      {booksLoading && !booksError && (
+        <div className="flex flex-col items-center justify-center pt-24 gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+          <span className="text-white/30 text-sm">Loading Scripture…</span>
+          <WakingUpHint />
+        </div>
+      )}
       {/* ── Translation picker bottom sheet ── */}
       {showTranslationPicker && (
         <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowTranslationPicker(false)}>
@@ -797,38 +859,6 @@ function LexiconInner() {
 
           <div className="flex-1" />
 
-          {/* Navigation search bar (shows when active) */}
-          {showNavSearch && (
-            <form
-              onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
-              className="flex items-center gap-1 flex-1 max-w-[200px]"
-            >
-              <input
-                autoFocus
-                type="text"
-                value={navQuery}
-                onChange={(e) => setNavQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
-                placeholder="Romans 3, John 1…"
-                className="flex-1 bg-white/[0.07] border border-white/[0.12] rounded-lg px-2.5 py-1 text-xs text-white/80 placeholder:text-white/30 focus:outline-none focus:border-violet-500/50"
-              />
-              <button type="submit" className="text-[10px] px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">Go</button>
-              <button type="button" onClick={() => { setShowNavSearch(false); setNavQuery(""); }} className="text-white/30 hover:text-white/60 text-sm px-1">✕</button>
-            </form>
-          )}
-
-          {/* Scripture navigation search toggle 🔍 */}
-          {!showNavSearch && (
-            <button
-              onClick={() => setShowNavSearch(true)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center text-white/25 hover:text-white/55 hover:bg-white/[0.07] transition-colors">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
-                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
-
           {/* Highlight toggle */}
           <button
             onClick={() => setHighlightMode((v) => !v)}
@@ -841,19 +871,17 @@ function LexiconInner() {
             </svg>
           </button>
 
-          {/* Notes toggle */}
-          <button
-            onClick={() => setShowNotes((v) => !v)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-              showNotes ? "bg-emerald-500/20 text-emerald-400" : "text-white/25 hover:text-white/55 hover:bg-white/[0.07]"
-            }`}>
+          {/* Notes — go to notes page */}
+          <a
+            href="/notes"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors text-white/25 hover:text-white/55 hover:bg-white/[0.07]">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
               <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
               <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
               <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
             </svg>
-          </button>
+          </a>
 
           {/* Translation pill — opens picker */}
           <button
@@ -863,29 +891,8 @@ function LexiconInner() {
           </button>
         </div>
 
-        {/* Highlight mode banner */}
-        {highlightMode && (
-          <div className="bg-amber-500/10 border-t border-amber-500/20 px-4 py-2 flex items-center justify-between">
-            <p className="text-xs text-amber-300 font-semibold">Tap words to highlight · tap verse numbers to color</p>
-            <button onClick={() => setHighlightMode(false)} className="text-xs text-amber-400/60 hover:text-amber-400 font-bold transition-colors">Done</button>
-          </div>
-        )}
       </header>
 
-      {/* Backend warning */}
-      {!hasStrongs && (
-        <div className="max-w-screen-xl mx-auto px-4 pt-3">
-          <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-4 py-3 flex items-start gap-3">
-            <span className="text-amber-400 text-lg flex-shrink-0">⚠</span>
-            <div>
-              <p className="text-amber-300 text-sm font-bold">Backend server not running</p>
-              <p className="text-amber-200/55 text-xs mt-0.5 leading-relaxed">
-                Start the backend to enable Strong&apos;s word lookup.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Strong's Search tab ── */}
       {activeTab === "search" && (
@@ -1013,27 +1020,7 @@ function LexiconInner() {
                             />
                           )}
                         </span>
-                        {verse.words.map((token, wi) => {
-                          const nextToken = verse.words[wi + 1];
-                          const addSpace = nextToken && !isPunctuation(nextToken.w);
-                          return (
-                            <span key={wi}>
-                              <InlineWord
-                                token={token}
-                                onSelect={handleWordSelect}
-                                active={
-                                  token.s
-                                    ? activeToken?.s === token.s && activeToken?.w === token.w
-                                    : activeToken?.w === token.w && !activeToken?.s
-                                }
-                                highlighted={highlights.has(token.w)}
-                                onHighlight={toggleHighlight}
-                                testament={chapterData.testament}
-                              />
-                              {addSpace && " "}
-                            </span>
-                          );
-                        })}
+                        {verse.text}
                         {" "}
                       </span>
                     );
@@ -1041,49 +1028,11 @@ function LexiconInner() {
                 </div>
               )}
 
-              {/* Notes */}
-              {showNotes && (
-                <div className="mt-8 rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.05] overflow-hidden">
-                  <div className="px-5 py-3 border-b border-emerald-500/15 flex items-center justify-between">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-widest text-emerald-400/70">My Notes</p>
-                      <p className="text-[10px] text-emerald-300/40">{selectedBook?.name} {selectedChapter} · saved locally</p>
-                    </div>
-                    {chapterNote.trim() && (
-                      <span className="text-[10px] text-emerald-400/50 font-semibold">{chapterNote.trim().split(/\s+/).length} words</span>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <textarea
-                      value={chapterNote}
-                      onChange={(e) => handleNoteChange(e.target.value)}
-                      placeholder={`Notes for ${selectedBook?.name ?? ""} ${selectedChapter}…`}
-                      rows={8}
-                      className="w-full bg-transparent text-white/75 text-sm leading-relaxed placeholder-white/15 focus:outline-none resize-none"
-                    />
-                  </div>
-                  {chapterNote.trim() && (
-                    <div className="px-5 pb-3 flex justify-end">
-                      <button
-                        onClick={() => {
-                          setChapterNote("");
-                          if (selectedBook) localStorage.removeItem(CHAPTER_NOTE_KEY(selectedBook.num, selectedChapter));
-                        }}
-                        className="text-[10px] text-white/15 hover:text-red-400/60 font-bold transition-colors">
-                        Clear notes
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* ── Strong's + Commentary (desktop sidebar only) ── */}
-            {((strongsEntry && !loadingStrongs) || (showCommentary && commentary.length > 0)) && (
+            {/* ── Commentary (desktop sidebar only) ── */}
+            {(showCommentary && commentary.length > 0) && (
               <div className="hidden lg:block space-y-4 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
-                {!loadingStrongs && strongsEntry && (
-                  <StrongsPanel entry={strongsEntry} onClose={() => { setStrongsEntry(null); setActiveToken(null); }} />
-                )}
                 {showCommentary && commentary.length > 0 && (
                   <CommentaryPanel entries={commentary} bookName={selectedBook?.name ?? ""} chapter={selectedChapter} />
                 )}
@@ -1093,12 +1042,75 @@ function LexiconInner() {
         </div>
       )}
 
-      {/* ── Strong's bottom sheet (mobile popup) ── */}
-      <StrongsSheet
-        entry={strongsEntry}
-        loading={loadingStrongs}
-        onClose={() => { setStrongsEntry(null); setActiveToken(null); }}
-      />
+      {/* ── Notes bottom sheet ── */}
+      {showNotes && (
+        <div className="fixed inset-0 z-50 flex flex-col justify-end print:hidden" onClick={() => setShowNotes(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-[#181818] rounded-t-3xl border-t border-emerald-500/25 flex flex-col overflow-hidden" style={{ maxHeight: "65vh" }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div className="w-10 h-1 rounded-full bg-white/20" />
+            </div>
+            <div className="px-5 py-3 border-b border-emerald-500/15 flex items-center justify-between flex-shrink-0">
+              <div>
+                <p className="text-xs font-black uppercase tracking-widest text-emerald-400/70">My Notes</p>
+                <p className="text-[10px] text-emerald-300/40">{selectedBook?.name} {selectedChapter} · saved locally</p>
+              </div>
+              <div className="flex items-center gap-3">
+                {chapterNote.trim() && (
+                  <button
+                    onClick={() => { setChapterNote(""); if (selectedBook) localStorage.removeItem(CHAPTER_NOTE_KEY(selectedBook.num, selectedChapter)); }}
+                    className="text-[10px] text-white/20 hover:text-red-400/60 font-bold transition-colors">
+                    Clear
+                  </button>
+                )}
+                <button onClick={() => setShowNotes(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors text-sm">✕</button>
+              </div>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              <textarea
+                autoFocus
+                value={chapterNote}
+                onChange={(e) => handleNoteChange(e.target.value)}
+                placeholder={`Notes for ${selectedBook?.name ?? ""} ${selectedChapter}…`}
+                rows={8}
+                className="w-full bg-transparent text-white/75 text-sm leading-relaxed placeholder-white/15 focus:outline-none resize-none"
+              />
+            </div>
+            <div style={{ height: "max(env(safe-area-inset-bottom), 12px)" }} />
+          </div>
+        </div>
+      )}
+
+
+      {/* ── Floating search button (above reader bar, left) ── */}
+      {activeTab === "reader" && (
+        <div className="fixed bottom-[136px] left-4 z-40 print:hidden">
+          {showNavSearch ? (
+            <form onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
+              className="flex items-center gap-1.5 bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl border border-white/[0.08] shadow-2xl px-3 py-2">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white/40 flex-shrink-0">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+              <input autoFocus type="text" value={navQuery} onChange={(e) => setNavQuery(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
+                placeholder="John 3, Rom 8…"
+                className="bg-transparent text-xs text-white/80 placeholder:text-white/30 focus:outline-none w-32" />
+              <button type="submit" className="text-[10px] px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">Go</button>
+              <button type="button" onClick={() => { setShowNavSearch(false); setNavQuery(""); }} className="text-white/30 hover:text-white/60 text-sm">✕</button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowNavSearch(true)}
+              className="w-11 h-11 rounded-2xl bg-[#1c1c1e]/95 backdrop-blur-md border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-white transition-colors">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
 
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
