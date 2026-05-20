@@ -412,8 +412,8 @@ function NoteEditorModal({
     onSave({ ...draft, updatedAt: new Date().toISOString() });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/85 backdrop-blur-sm overflow-y-auto">
-      <div className="rounded-t-3xl sm:rounded-3xl border border-white/[0.09] bg-[#131313] w-full max-w-lg shadow-2xl sm:my-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+      <div className="rounded-3xl border border-white/[0.09] bg-[#131313] w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
           <div>
@@ -430,7 +430,7 @@ function NoteEditorModal({
           </button>
         </div>
 
-        <div className="p-5 space-y-3.5">
+        <div className="p-5 space-y-3.5 overflow-y-auto flex-1">
           {/* ── Essential fields ── */}
           {/* Title */}
           <input
