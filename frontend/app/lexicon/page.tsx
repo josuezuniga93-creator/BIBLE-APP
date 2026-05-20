@@ -1115,7 +1115,7 @@ function LexiconInner() {
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
         <div className="fixed bottom-[64px] left-0 right-0 z-40 px-4 print:hidden">
-          <div className="bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/[0.08] flex items-center h-14 px-2 gap-1">
+          <div className="le-chapter-nav bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/[0.08] flex items-center h-14 px-2 gap-1">
 
             {/* Prev chapter */}
             <button
