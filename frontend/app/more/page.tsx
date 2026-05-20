@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
-import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
 
@@ -125,9 +124,6 @@ const APP_TILES = [
 
 export default function MorePage() {
   const { lang, setLang } = useLanguage();
-  const { theme, setTheme } = useTheme();
-
-  const themeKeys = Object.keys(THEMES) as Theme[];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -150,44 +146,6 @@ export default function MorePage() {
                 <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
               </Link>
             ))}
-          </div>
-        </section>
-
-        {/* ── Theme picker ──────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Appearance</p>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-            {themeKeys.map((t) => {
-              const meta = THEMES[t];
-              const active = theme === t;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all active:scale-95 ${
-                    active
-                      ? "border-white/30 bg-white/10"
-                      : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
-                  }`}
-                  style={{ minWidth: "80px" }}
-                >
-                  <div
-                    className="w-10 h-10 rounded-xl border border-white/20 flex items-center justify-center text-lg relative overflow-hidden"
-                    style={{ background: meta.preview[0] }}
-                  >
-                    <span>{meta.emoji}</span>
-                    {active && (
-                      <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-white/90 flex items-center justify-center">
-                        <span className="text-black text-[8px] font-black">✓</span>
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-bold ${active ? "text-white" : "text-white/50"}`}>
-                    {meta.label}
-                  </span>
-                </button>
-              );
-            })}
           </div>
         </section>
 

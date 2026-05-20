@@ -1,7 +1,7 @@
 "use client";
 
-// Reads localStorage and sets data-theme on <html> before first paint
-// to avoid a flash of the wrong theme.
+// Always sets Premium Neon as the active theme.
+// Additional themes will be added here when ready.
 export function ThemeProvider() {
   return (
     <script
@@ -9,13 +9,8 @@ export function ThemeProvider() {
         __html: `
           (function() {
             try {
-              var stored = localStorage.getItem('ryc-theme');
-              // migrate old dark/light values
-              if (stored === 'dark') stored = 'midnight';
-              if (stored === 'light') stored = 'ivory';
-              var valid = ['midnight','ivory','lavender','sage','rose','slate','neon','premium-neon'];
-              var t = valid.includes(stored) ? stored : 'midnight';
-              document.documentElement.setAttribute('data-theme', t);
+              localStorage.setItem('ryc-theme', 'premium-neon');
+              document.documentElement.setAttribute('data-theme', 'premium-neon');
             } catch(e) {}
           })();
         `,
