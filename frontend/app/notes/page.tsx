@@ -915,8 +915,8 @@ export default function NotesPage() {
       )}
 
       <div className="min-h-screen bg-[#0f0f0f] text-white">
-        {/* ── Sticky action strip — breadcrumb + New Note always visible ──────── */}
-        <div className="sticky top-14 z-30 border-b border-white/[0.07] bg-[#0f0f0f]/95 backdrop-blur-sm">
+        {/* ── Action strip ─────────────────────────────────────────────────────── */}
+        <div className="border-b border-white/[0.07] bg-[#0f0f0f]">
           <div className="max-w-screen-xl mx-auto px-4">
             <div className="flex items-center gap-2 py-2.5">
               <span className="text-sm">📓</span>
