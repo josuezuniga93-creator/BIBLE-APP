@@ -193,7 +193,8 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
-              className="flex-1 flex flex-col items-center justify-center gap-[3px]"
+              data-active={active ? "true" : undefined}
+              className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
               style={{ color: active ? "var(--fg)" : "var(--fg-lo)" }}
             >
               <TabIcon href={href} active={active} />
@@ -207,7 +208,8 @@ export function BottomNav() {
         {/* Extras — links to /more page */}
         <Link
           href="/more"
-          className="flex-1 flex flex-col items-center justify-center gap-[3px]"
+          data-active={youActive ? "true" : undefined}
+          className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
           style={{ color: youActive ? "var(--fg)" : "var(--fg-lo)" }}
         >
           <YouIcon active={youActive} />

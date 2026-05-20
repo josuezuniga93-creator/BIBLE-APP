@@ -642,20 +642,23 @@ html[data-theme="premium-neon"] body::before {
     radial-gradient(ellipse 65% 50% at 80% -5%,  rgba(56,189,248,0.08) 0%, transparent 70%);
 }
 
-/* ── Active nav indicator: neon purple dot ───────────────────────────────── */
-html[data-theme="premium-neon"] nav a[style*="var(--fg)"] {
-  position: relative;
+/* ── Active nav icon: neon purple bloom glow ─────────────────────────────── */
+html[data-theme="premium-neon"] nav a[data-active="true"] {
+  color: #a78bfa !important;
 }
-html[data-theme="premium-neon"] nav a[style*="var(--fg)"]::after {
-  content: '';
-  position: absolute;
-  bottom: 1px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: #a78bfa;
-  box-shadow: 0 0 8px rgba(167,139,250,0.9), 0 0 18px rgba(124,58,237,0.55);
+/* Icon SVG gets the layered bloom */
+html[data-theme="premium-neon"] nav a[data-active="true"] svg {
+  filter:
+    drop-shadow(0 0 4px rgba(167,139,250,1.0))
+    drop-shadow(0 0 10px rgba(124,58,237,0.85))
+    drop-shadow(0 0 22px rgba(124,58,237,0.55))
+    drop-shadow(0 0 40px rgba(124,58,237,0.25));
+  transition: filter 0.2s ease;
+}
+/* Label text glows too */
+html[data-theme="premium-neon"] nav a[data-active="true"] span {
+  color: #a78bfa !important;
+  text-shadow: 0 0 10px rgba(167,139,250,0.70);
 }
 
 /* ── Card hover glow ─────────────────────────────────────────────────────── */
