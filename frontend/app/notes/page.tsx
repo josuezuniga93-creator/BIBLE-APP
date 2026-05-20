@@ -354,6 +354,7 @@ function NoteEditorModal({
   const [detectedRefs, setDetectedRefs] = useState<string[]>([]);
   const [newRef, setNewRef] = useState("");
   const [showDetails, setShowDetails] = useState(false);
+  const [chapterText, setChapterText] = useState(String(initial.chapter));
 
   const patch = (p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p }));
 
@@ -379,7 +380,7 @@ function NoteEditorModal({
 
   const handleBookChange = (num: number) => {
     const book = BIBLE_BOOKS.find((b) => b.num === num);
-    if (book) patch({ bookNum: book.num, bookName: book.name, chapter: 1 });
+    if (book) { patch({ bookNum: book.num, bookName: book.name, chapter: 1 }); setChapterText("1"); }
   };
 
   const updatePoint = (i: number, val: string) => {
@@ -459,14 +460,16 @@ function NoteEditorModal({
               <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/[0.09] rounded-xl px-3 min-w-[80px]">
                 <span className="text-[10px] text-white/30 font-semibold flex-shrink-0">Ch.</span>
                 <input
-                  type="number"
-                  min={1}
-                  max={selectedBook.chapters}
-                  value={draft.chapter}
-                  onChange={(e) =>
-                    patch({ chapter: Math.max(1, Math.min(selectedBook.chapters, Number(e.target.value) || 1)) })
-                  }
-                  className="w-full bg-transparent text-sm text-white/75 font-semibold focus:outline-none [color-scheme:dark] text-center"
+                  type="text"
+                  inputMode="numeric"
+                  value={chapterText}
+                  onChange={(e) => setChapterText(e.target.value.replace(/\D/g, ""))}
+                  onBlur={() => {
+                    const num = Math.max(1, Math.min(selectedBook.chapters, Number(chapterText) || 1));
+                    setChapterText(String(num));
+                    patch({ chapter: num });
+                  }}
+                  className="w-full bg-transparent text-sm text-white/75 font-semibold focus:outline-none text-center"
                 />
               </div>
             </div>
