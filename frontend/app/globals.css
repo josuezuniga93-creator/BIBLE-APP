@@ -760,13 +760,19 @@ html[data-theme="light-elegant"] [class*="bg-violet-"]     { background-color: v
 html[data-theme="light-elegant"] [class*="text-violet-"]   { color: var(--accent-text) !important; }
 html[data-theme="light-elegant"] [class*="border-violet-"] { border-color: rgba(155,114,40,0.30) !important; }
 
-/* Emerald / teal → amber gold (article icons, Marrow Ministries label, links) */
+/* All Tailwind accent colors → amber gold in Light Elegant */
 html[data-theme="light-elegant"] [class*="bg-emerald-"]    { background-color: rgba(155,114,40,0.12) !important; }
 html[data-theme="light-elegant"] [class*="text-emerald-"]  { color: var(--accent) !important; }
 html[data-theme="light-elegant"] [class*="border-emerald-"]{ border-color: rgba(155,114,40,0.30) !important; }
 html[data-theme="light-elegant"] [class*="bg-teal-"]       { background-color: rgba(155,114,40,0.12) !important; }
 html[data-theme="light-elegant"] [class*="text-teal-"]     { color: var(--accent) !important; }
 html[data-theme="light-elegant"] [class*="border-teal-"]   { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-red-"]        { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-red-"]      { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-red-"]    { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-indigo-"]     { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-indigo-"]   { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-indigo-"] { border-color: rgba(155,114,40,0.30) !important; }
 html[data-theme="light-elegant"] [class*="border-t-emerald-"] { border-top-color: var(--accent) !important; }
 
 /* Inputs */
