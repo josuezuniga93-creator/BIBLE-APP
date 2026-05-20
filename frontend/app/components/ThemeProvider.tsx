@@ -1,7 +1,7 @@
 "use client";
 
-// Always sets Premium Neon as the active theme.
-// Additional themes will be added here when ready.
+// Reads the saved theme from localStorage and applies it before first paint.
+// Falls back to 'premium-neon' if no valid theme is saved.
 export function ThemeProvider() {
   return (
     <script
@@ -9,8 +9,11 @@ export function ThemeProvider() {
         __html: `
           (function() {
             try {
-              localStorage.setItem('ryc-theme', 'premium-neon');
-              document.documentElement.setAttribute('data-theme', 'premium-neon');
+              var valid = ['premium-neon', 'light-elegant'];
+              var saved = localStorage.getItem('ryc-theme');
+              var theme = valid.includes(saved) ? saved : 'premium-neon';
+              localStorage.setItem('ryc-theme', theme);
+              document.documentElement.setAttribute('data-theme', theme);
             } catch(e) {}
           })();
         `,

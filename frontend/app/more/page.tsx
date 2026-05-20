@@ -2,14 +2,15 @@
 
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
 
 function PlansAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="18" height="18" rx="5" stroke="white" strokeWidth="1.8" />
-      <path d="M7.5 12.5l3.5 3.5 6-7" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M7.5 12.5l3.5 3.5 6-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -17,9 +18,9 @@ function PlansAppIcon() {
 function LibraryAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="4" width="4" height="16" rx="1.5" stroke="white" strokeWidth="1.7" />
-      <rect x="9" y="4" width="4" height="16" rx="1.5" stroke="white" strokeWidth="1.7" />
-      <path d="M15 4l4 16" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <rect x="3" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
+      <rect x="9" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M15 4l4 16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -27,8 +28,8 @@ function LibraryAppIcon() {
 function TrackerAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="18" height="18" rx="4" stroke="white" strokeWidth="1.7" />
-      <path d="M7.5 12l3 3 6-6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M7.5 12l3 3 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -36,10 +37,10 @@ function TrackerAppIcon() {
 function FamilyAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="9" cy="7" r="3" stroke="white" strokeWidth="1.7" />
-      <circle cx="17" cy="8" r="2.2" stroke="white" strokeWidth="1.6" />
-      <path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M17 14c2.5 0 5 1.5 5 5" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="17" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M17 14c2.5 0 5 1.5 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
     </svg>
   );
 }
@@ -47,11 +48,11 @@ function FamilyAppIcon() {
 function KidsAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v12" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M2 19h20" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M9 5V3" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M15 5V3" stroke="white" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M9 12l2 2 4-4" stroke="white" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M2 19h20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M9 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -59,8 +60,8 @@ function KidsAppIcon() {
 function VideosAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="5" width="15" height="14" rx="3" stroke="white" strokeWidth="1.7" />
-      <path d="M17 9l5-3v12l-5-3V9z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+      <rect x="2" y="5" width="15" height="14" rx="3" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M17 9l5-3v12l-5-3V9z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -68,7 +69,7 @@ function VideosAppIcon() {
 function GiveAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <path d="M12 21C12 21 3 15 3 9a5 5 0 0110 0 5 5 0 0110 0c0 6-9 12-9 12h-2z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M12 21C12 21 3 15 3 9a5 5 0 0110 0 5 5 0 0110 0c0 6-9 12-9 12h-2z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -76,10 +77,10 @@ function GiveAppIcon() {
 function FellowshipAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <circle cx="8" cy="8" r="3" stroke="white" strokeWidth="1.7" />
-      <circle cx="16" cy="8" r="3" stroke="white" strokeWidth="1.7" />
-      <path d="M2 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M14 20c0-3.5 2.7-5.5 6-5.5" stroke="white" strokeWidth="1.7" strokeLinecap="round" />
+      <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <circle cx="16" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M2 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+      <path d="M14 20c0-3.5 2.7-5.5 6-5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
     </svg>
   );
 }
@@ -87,10 +88,10 @@ function FellowshipAppIcon() {
 function ChurchAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2v4M10 4h4" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <path d="M3 10h18v11H3z" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M9 21v-6h6v6" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M7 10V7l5-3 5 3v3" stroke="white" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M12 2v4M10 4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M3 10h18v11H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
+      <path d="M7 10V7l5-3 5 3v3" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -98,10 +99,10 @@ function ChurchAppIcon() {
 function NotesAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-      <rect x="4" y="3" width="16" height="18" rx="3" stroke="white" strokeWidth="1.7" />
-      <line x1="8" y1="8" x2="16" y2="8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="8" y1="12" x2="16" y2="12" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="8" y1="16" x2="12" y2="16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+      <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.7" />
+      <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -124,6 +125,8 @@ const APP_TILES = [
 
 export default function MorePage() {
   const { lang, setLang } = useLanguage();
+  const { theme, setTheme } = useTheme();
+  const themeKeys = Object.keys(THEMES) as Theme[];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -146,6 +149,44 @@ export default function MorePage() {
                 <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
               </Link>
             ))}
+          </div>
+        </section>
+
+        {/* ── Theme picker ──────────────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Appearance</p>
+          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+            {themeKeys.map((t) => {
+              const meta = THEMES[t];
+              const active = theme === t;
+              return (
+                <button
+                  key={t}
+                  onClick={() => setTheme(t)}
+                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all active:scale-95 ${
+                    active
+                      ? "border-white/30 bg-white/10"
+                      : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
+                  }`}
+                  style={{ minWidth: "88px" }}
+                >
+                  <div
+                    className="w-11 h-11 rounded-xl border border-white/20 flex items-center justify-center text-xl relative overflow-hidden"
+                    style={{ background: meta.preview[0] }}
+                  >
+                    <span>{meta.emoji}</span>
+                    {active && (
+                      <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-white/90 flex items-center justify-center">
+                        <span className="text-black text-[8px] font-black">✓</span>
+                      </div>
+                    )}
+                  </div>
+                  <span className={`text-[10px] font-bold leading-tight text-center ${active ? "text-white" : "text-white/50"}`}>
+                    {meta.label}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </section>
 

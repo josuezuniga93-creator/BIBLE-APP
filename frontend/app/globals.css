@@ -695,6 +695,178 @@ html[data-theme="premium-neon"] .neon-glow {
   animation: pn-pulse 2.5s ease-in-out infinite;
 }
 
+/* ═══════════════════════════════════════════════════════════
+   9. LIGHT ELEGANT — warm parchment + amber gold
+══════════════════════════════════════════════════════════════ */
+html[data-theme="light-elegant"] {
+  --bg:          #ede8df;
+  --bg-2:        #e5dfd5;
+  --bg-3:        #f5f1eb;
+  --fg:          #1c1409;
+  --fg-hi:       rgba(28,20,9,0.94);
+  --fg-mid:      rgba(28,20,9,0.58);
+  --fg-lo:       rgba(28,20,9,0.38);
+  --fg-dim:      rgba(28,20,9,0.18);
+  --border:      rgba(28,20,9,0.09);
+  --accent:      #9b7228;
+  --accent-soft: rgba(155,114,40,0.12);
+  --accent-text: #9b7228;
+  --nav-bg:      #ede8df;
+  --nav-border:  rgba(28,20,9,0.07);
+  --input-bg:    rgba(28,20,9,0.05);
+  color-scheme: light;
+}
+
+/* Page + main backgrounds */
+html[data-theme="light-elegant"] body,
+html[data-theme="light-elegant"] main {
+  background-color: var(--bg) !important;
+  color: var(--fg) !important;
+}
+
+/* Dark hex backgrounds → parchment */
+html[data-theme="light-elegant"] [class*="bg-[#0"],
+html[data-theme="light-elegant"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+
+/* White translucent → warm card surface */
+html[data-theme="light-elegant"] [class*="bg-white/"] {
+  background-color: var(--bg-3) !important;
+}
+
+/* Black translucent → deeper warm tone */
+html[data-theme="light-elegant"] [class*="bg-black/"] {
+  background-color: var(--bg-2) !important;
+}
+
+/* Text: white → warm brown */
+html[data-theme="light-elegant"] .text-white { color: var(--fg) !important; }
+html[data-theme="light-elegant"] [class*="text-white/9"],
+html[data-theme="light-elegant"] [class*="text-white/8"] { color: var(--fg-hi) !important; }
+html[data-theme="light-elegant"] [class*="text-white/7"],
+html[data-theme="light-elegant"] [class*="text-white/6"] { color: var(--fg-mid) !important; }
+html[data-theme="light-elegant"] [class*="text-white/5"],
+html[data-theme="light-elegant"] [class*="text-white/4"] { color: var(--fg-lo) !important; }
+html[data-theme="light-elegant"] [class*="text-white/3"],
+html[data-theme="light-elegant"] [class*="text-white/2"],
+html[data-theme="light-elegant"] [class*="text-white/1"] { color: var(--fg-dim) !important; }
+
+/* Borders */
+html[data-theme="light-elegant"] [class*="border-white/"] { border-color: var(--border) !important; }
+
+/* Violet accent → amber gold */
+html[data-theme="light-elegant"] [class*="bg-violet-"]     { background-color: var(--accent-soft) !important; }
+html[data-theme="light-elegant"] [class*="text-violet-"]   { color: var(--accent-text) !important; }
+html[data-theme="light-elegant"] [class*="border-violet-"] { border-color: rgba(155,114,40,0.30) !important; }
+
+/* Inputs */
+html[data-theme="light-elegant"] textarea,
+html[data-theme="light-elegant"] input[type="text"],
+html[data-theme="light-elegant"] input[type="search"],
+html[data-theme="light-elegant"] select {
+  background-color: var(--input-bg) !important;
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+html[data-theme="light-elegant"] textarea::placeholder,
+html[data-theme="light-elegant"] input::placeholder { color: var(--fg-lo) !important; }
+
+/* Hero gradient card → warm sunrise tones */
+html[data-theme="light-elegant"] .hero-gradient,
+html[data-theme="light-elegant"] [class*="from-sky-"],
+html[data-theme="light-elegant"] [class*="from-amber-"],
+html[data-theme="light-elegant"] [class*="from-violet-"],
+html[data-theme="light-elegant"] [class*="from-orange-"],
+html[data-theme="light-elegant"] [class*="from-red-"],
+html[data-theme="light-elegant"] [class*="from-emerald-"],
+html[data-theme="light-elegant"] [class*="from-indigo-"],
+html[data-theme="light-elegant"] [class*="from-teal-"] {
+  background: linear-gradient(135deg, rgba(155,114,40,0.20) 0%, rgba(237,232,223,0.92) 55%, rgba(200,170,100,0.15) 100%) !important;
+}
+
+/* ── Bible reader: clean dark chapter number (no gradient, no glow) ── */
+html[data-theme="light-elegant"] .pn-chapter-num {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  -webkit-text-fill-color: var(--fg) !important;
+  color: var(--fg) !important;
+  filter: none !important;
+}
+
+/* Book name: amber gold */
+html[data-theme="light-elegant"] .pn-book-name {
+  color: var(--accent) !important;
+  text-shadow: none !important;
+  -webkit-text-fill-color: var(--accent) !important;
+}
+
+/* Chapter subtitle: muted warm brown */
+html[data-theme="light-elegant"] .pn-chapter-subtitle {
+  color: var(--fg-lo) !important;
+}
+
+/* Verse numbers: amber gold */
+html[data-theme="light-elegant"] .text-violet-400\/50,
+html[data-theme="light-elegant"] [class*="text-violet-4"] {
+  color: var(--accent) !important;
+  text-shadow: none !important;
+}
+
+/* ── Active nav: amber gold, no bloom ──────────────────────────────── */
+html[data-theme="light-elegant"] nav a[data-active="true"] {
+  color: var(--accent) !important;
+}
+html[data-theme="light-elegant"] nav a[data-active="true"] svg {
+  filter: none !important;
+  color: var(--accent) !important;
+}
+html[data-theme="light-elegant"] nav a[data-active="true"] span {
+  color: var(--accent) !important;
+  text-shadow: none !important;
+}
+
+/* ── App tiles: warm cream cards with line icons ─────────────────── */
+html[data-theme="light-elegant"] .pn-app-tile {
+  background: var(--bg-3) !important;
+  border: 1px solid rgba(28,20,9,0.10) !important;
+  box-shadow: 0 1px 4px rgba(28,20,9,0.07), 0 0 0 0.5px rgba(28,20,9,0.06) !important;
+  color: #6b5a42 !important; /* drives SVG currentColor */
+}
+html[data-theme="light-elegant"] .pn-app-tile:nth-child(3n+2),
+html[data-theme="light-elegant"] .pn-app-tile:nth-child(3n+3) {
+  border-color: rgba(28,20,9,0.10) !important;
+  box-shadow: 0 1px 4px rgba(28,20,9,0.07), 0 0 0 0.5px rgba(28,20,9,0.06) !important;
+}
+html[data-theme="light-elegant"] .pn-app-tile span {
+  color: #6b5a42 !important;
+}
+
+/* ── Premium Neon: keep tile icon color white (for currentColor SVGs) */
+html[data-theme="premium-neon"] .pn-app-tile {
+  color: white;
+}
+
+/* ── Scrollbar: warm amber ─────────────────────────────────────────── */
+html[data-theme="light-elegant"] ::-webkit-scrollbar-thumb {
+  background: rgba(155,114,40,0.35);
+}
+html[data-theme="light-elegant"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(155,114,40,0.55);
+}
+
+/* No ambient glow overlay (light theme is clean) */
+html[data-theme="light-elegant"] body::before {
+  display: none !important;
+}
+
+/* Focus ring: amber */
+html[data-theme="light-elegant"] textarea:focus,
+html[data-theme="light-elegant"] input:focus {
+  box-shadow: 0 0 0 2px rgba(155,114,40,0.35) !important;
+}
+
 /* ── Print / PDF export styles ──────────────────────────────────────────────── */
 @page {
   size: A4;
