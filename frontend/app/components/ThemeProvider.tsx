@@ -13,7 +13,7 @@ export function ThemeProvider() {
               // migrate old dark/light values
               if (stored === 'dark') stored = 'midnight';
               if (stored === 'light') stored = 'ivory';
-              var valid = ['midnight','ivory','lavender','sage','rose','slate','neon'];
+              var valid = ['midnight','ivory','lavender','sage','rose','slate','neon','premium-neon'];
               var t = valid.includes(stored) ? stored : 'midnight';
               document.documentElement.setAttribute('data-theme', t);
             } catch(e) {}
