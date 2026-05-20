@@ -119,7 +119,6 @@ const APP_TILES = [
   { href: "/give",              Icon: GiveAppIcon,     label: "Give",       color: "#b45309" },
   { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Gatherings", color: "#7c3aed" },
   { href: "/church-directory",  Icon: ChurchAppIcon,   label: "Churches",   color: "#1a6b3a" },
-  { href: "/notes",             Icon: NotesAppIcon,    label: "Notes",      color: "#374151" },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────

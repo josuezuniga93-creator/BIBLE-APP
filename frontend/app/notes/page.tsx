@@ -102,35 +102,182 @@ function ConfirmModal({
   );
 }
 
+// ─── Note Detail (fullscreen modal) ──────────────────────────────────────────
+
+function NoteDetail({
+  note,
+  onEdit,
+  onDelete,
+  onClose,
+}: {
+  note: SermonNote;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}) {
+  const clr = getNoteColor(note.bookNum);
+  const validPoints = note.mainPoints.filter(Boolean);
+  const validRefs = note.scriptureRefs.filter(Boolean);
+
+  return (
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#0d0d0d] overflow-y-auto">
+      {/* Gradient header */}
+      <div className={`relative flex-shrink-0 bg-gradient-to-b ${clr.bar} pt-safe`}>
+        <div className="px-4 pt-4 pb-6">
+          {/* Top row: close + actions */}
+          <div className="flex items-center justify-between mb-5">
+            <button
+              onClick={onClose}
+              className="flex items-center gap-1.5 text-white/50 text-sm font-semibold hover:text-white/80 transition-colors"
+            >
+              <span className="text-base">←</span> Back
+            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { onClose(); setTimeout(onEdit, 50); }}
+                className={`px-3.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all ${clr.accent} border-white/[0.15] hover:bg-white/[0.07]`}
+              >
+                Edit
+              </button>
+              <button
+                onClick={() => { onClose(); setTimeout(onDelete, 50); }}
+                className="w-8 h-8 rounded-xl flex items-center justify-center text-white/25 border border-white/[0.08] hover:bg-red-500/10 hover:text-red-400/70 hover:border-red-500/20 transition-all text-sm"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="text-2xl font-bold text-white leading-tight tracking-tight mb-2">
+            {note.title || "Untitled Sermon"}
+          </h2>
+
+          {/* Metadata */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-white/40">
+            <span>{formatDate(note.date)}</span>
+            {note.pastor && <><span className="text-white/20">·</span><span>{note.pastor}</span></>}
+            {note.church && <><span className="text-white/20">·</span><span>{note.church}</span></>}
+          </div>
+
+          {/* Passage + Tags */}
+          {(note.passage || note.tags.length > 0) && (
+            <div className="flex flex-wrap items-center gap-2 mt-3">
+              {note.passage && (
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-semibold ${clr.pill}`}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="opacity-60">
+                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  {note.passage}
+                </span>
+              )}
+              {note.tags.map((tag) => {
+                const tagClr = TAG_COLORS[tag] ?? "bg-white/[0.04] text-white/45 border-white/[0.09]";
+                return (
+                  <span key={tag} className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold border ${tagClr}`}>
+                    {tag}
+                  </span>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 px-4 py-6 space-y-6 max-w-2xl w-full mx-auto">
+
+        {/* Main Points */}
+        {validPoints.length > 0 && (
+          <section>
+            <p className={`text-[10px] font-black uppercase tracking-[0.14em] mb-3 ${clr.accent} opacity-70`}>
+              Main Points
+            </p>
+            <ul className={`space-y-3 pl-4 border-l-2 ${clr.border}`}>
+              {validPoints.map((pt, i) => (
+                <li key={i} className="flex gap-3 text-[14px] text-white/70 leading-relaxed">
+                  <span className={`${clr.accent} opacity-60 flex-shrink-0 mt-1 text-[8px]`}>◆</span>
+                  <span>{pt}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
+        {/* Notes body */}
+        {note.notes && (
+          <section>
+            <p className={`text-[10px] font-black uppercase tracking-[0.14em] mb-3 ${clr.accent} opacity-70`}>
+              Notes
+            </p>
+            <p className="text-[14px] text-white/60 leading-relaxed whitespace-pre-wrap">
+              {note.notes}
+            </p>
+          </section>
+        )}
+
+        {/* Scripture Refs */}
+        {validRefs.length > 0 && (
+          <section className="pt-2 border-t border-white/[0.06]">
+            <p className={`text-[10px] font-black uppercase tracking-[0.14em] mb-3 ${clr.accent} opacity-70`}>
+              Scripture References
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {validRefs.map((ref) => (
+                <Link
+                  key={ref}
+                  href={refToHref(ref)}
+                  onClick={onClose}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[12px] font-semibold border transition-colors ${clr.ref}`}
+                >
+                  {ref}
+                  <svg width="9" height="9" viewBox="0 0 24 24" fill="none">
+                    <path d="M7 17L17 7M17 7H7M17 7v10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Bottom spacer for safe area */}
+        <div className="h-8" />
+      </div>
+    </div>
+  );
+}
+
 // ─── Note Card ────────────────────────────────────────────────────────────────
 
 function NoteCard({
   note,
   onEdit,
   onDelete,
+  onView,
 }: {
   note: SermonNote;
   onEdit: () => void;
   onDelete: () => void;
+  onView: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
-  const isLong = note.notes.length > 200;
-  const validPoints = note.mainPoints.filter(Boolean);
-  const validRefs = note.scriptureRefs.filter(Boolean);
   const clr = getNoteColor(note.bookNum);
 
   return (
-    <div className="rounded-2xl border border-white/[0.08] bg-[#121212] shadow-lg transition-all duration-200 overflow-hidden hover:border-white/[0.15] hover:shadow-xl">
+    <button
+      onClick={onView}
+      className="w-full text-left rounded-2xl border border-white/[0.08] bg-[#121212] shadow-lg transition-all duration-200 overflow-hidden hover:border-white/[0.18] hover:shadow-xl hover:bg-[#161616] active:scale-[0.99]"
+    >
       {/* Colored accent bar */}
       <div className={`h-1 w-full bg-gradient-to-r ${clr.bar}`} />
 
-      <div className="p-5 space-y-3.5">
-        {/* Title + actions */}
+      <div className="p-5 space-y-3">
+        {/* Title + quick actions */}
         <div className="flex items-start justify-between gap-3">
           <h4 className="text-[15px] font-bold text-white/90 leading-snug flex-1 tracking-tight">
             {note.title || "Untitled Sermon"}
           </h4>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={onEdit}
               className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${clr.accent} border-white/[0.12] hover:bg-white/[0.07] hover:border-white/[0.22]`}
@@ -149,21 +296,11 @@ function NoteCard({
         {/* Metadata */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-white/35">
           <span className="font-medium">{formatDate(note.date)}</span>
-          {note.pastor && (
-            <>
-              <span className="text-white/15">·</span>
-              <span className="text-white/40">{note.pastor}</span>
-            </>
-          )}
-          {note.church && (
-            <>
-              <span className="text-white/15">·</span>
-              <span className="text-white/30">{note.church}</span>
-            </>
-          )}
+          {note.pastor && <><span className="text-white/15">·</span><span className="text-white/40">{note.pastor}</span></>}
+          {note.church && <><span className="text-white/15">·</span><span className="text-white/30">{note.church}</span></>}
         </div>
 
-        {/* Passage + Tags row */}
+        {/* Passage + Tags */}
         {(note.passage || note.tags.length > 0) && (
           <div className="flex flex-wrap items-center gap-2">
             {note.passage && (
@@ -186,78 +323,17 @@ function NoteCard({
           </div>
         )}
 
-        {/* Main Points */}
-        {validPoints.length > 0 && (
-          <details className="group">
-            <summary className={`cursor-pointer list-none text-[11px] font-semibold select-none flex items-center gap-1.5 transition-colors ${clr.points}`}>
-              <span className="group-open:rotate-90 inline-block transition-transform text-xs">▸</span>
-              Main Points
-              <span className="opacity-50 font-mono ml-0.5">({validPoints.length})</span>
-            </summary>
-            <ul className={`mt-2.5 space-y-2 pl-4 border-l-2 ${clr.border}`}>
-              {validPoints.map((pt, i) => (
-                <li key={i} className="flex gap-2.5 text-[12px] text-white/55 leading-relaxed">
-                  <span className={`${clr.accent} opacity-50 flex-shrink-0 mt-[3px] text-[8px]`}>◆</span>
-                  <span>{pt}</span>
-                </li>
-              ))}
-            </ul>
-          </details>
-        )}
-
-        {/* Notes text */}
+        {/* Preview snippet */}
         {note.notes && (
-          <div className="text-[13px] text-white/50 leading-relaxed">
-            {isLong && !expanded ? (
-              <>
-                <p className="whitespace-pre-wrap">{note.notes.slice(0, 200)}…</p>
-                <button
-                  onClick={() => setExpanded(true)}
-                  className={`mt-2 text-[11px] font-semibold transition-colors flex items-center gap-1 ${clr.points}`}
-                >
-                  Show more <span className="text-[9px]">▾</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <p className="whitespace-pre-wrap">{note.notes}</p>
-                {isLong && (
-                  <button
-                    onClick={() => setExpanded(false)}
-                    className={`mt-2 text-[11px] font-semibold transition-colors flex items-center gap-1 ${clr.points}`}
-                  >
-                    Show less <span className="text-[9px]">▴</span>
-                  </button>
-                )}
-              </>
-            )}
-          </div>
+          <p className="text-[12px] text-white/35 leading-relaxed line-clamp-2">
+            {note.notes}
+          </p>
         )}
 
-        {/* Scripture Refs */}
-        {validRefs.length > 0 && (
-          <div className="pt-3 border-t border-white/[0.05]">
-            <p className="text-[9px] font-black uppercase tracking-[0.15em] text-white/20 mb-2">
-              Scripture References
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {validRefs.map((ref) => (
-                <Link
-                  key={ref}
-                  href={refToHref(ref)}
-                  className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-colors ${clr.ref}`}
-                >
-                  {ref}
-                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none">
-                    <path d="M7 17L17 7M17 7H7M17 7v10" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Tap hint */}
+        <p className={`text-[10px] font-semibold ${clr.accent} opacity-40`}>Tap to read full note →</p>
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -669,6 +745,9 @@ export default function NotesPage() {
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Fullscreen note viewer
+  const [viewingNote, setViewingNote] = useState<SermonNote | null>(null);
+
   useEffect(() => {
     setNotes(loadNotes());
     setMounted(true);
@@ -826,36 +905,38 @@ export default function NotesPage() {
         />
       )}
 
+      {viewingNote && (
+        <NoteDetail
+          note={viewingNote}
+          onClose={() => setViewingNote(null)}
+          onEdit={() => { setViewingNote(null); openEditNote(viewingNote); }}
+          onDelete={() => { setViewingNote(null); setConfirmDeleteId(viewingNote.id); }}
+        />
+      )}
+
       <div className="min-h-screen bg-[#0f0f0f] text-white">
-        {/* ── Page Header ─────────────────────────────────────────────────────── */}
-        <header className="border-b border-white/[0.07] bg-[#0f0f0f]">
+        {/* ── Sticky action strip — breadcrumb + New Note always visible ──────── */}
+        <div className="sticky top-14 z-30 border-b border-white/[0.07] bg-[#0f0f0f]/95 backdrop-blur-sm">
           <div className="max-w-screen-xl mx-auto px-4">
-            {/* Breadcrumb + action row */}
-            <div className="flex items-center gap-2 py-3 flex-wrap">
-              <div className="flex items-center gap-2">
-                <span className="text-base">📓</span>
-                <button
-                  onClick={() => setSelectedBookNum(null)}
-                  className={`text-sm font-bold transition-colors ${
-                    selectedBook
-                      ? "text-white/40 hover:text-white/70"
-                      : "text-white/70"
-                  }`}
-                >
-                  Study Notes
-                </button>
-                {notes.length > 0 && !selectedBook && (
-                  <span className="text-[10px] font-mono text-white/20 ml-1">
-                    {notes.length} note{notes.length !== 1 ? "s" : ""}
-                  </span>
-                )}
-              </div>
+            <div className="flex items-center gap-2 py-2.5">
+              <span className="text-sm">📓</span>
+              <button
+                onClick={() => setSelectedBookNum(null)}
+                className={`text-sm font-bold transition-colors ${
+                  selectedBook ? "text-white/40 hover:text-white/70" : "text-white/70"
+                }`}
+              >
+                Study Notes
+              </button>
+              {notes.length > 0 && !selectedBook && (
+                <span className="text-[10px] font-mono text-white/20">
+                  {notes.length} note{notes.length !== 1 ? "s" : ""}
+                </span>
+              )}
               {selectedBook && (
                 <>
                   <span className="text-white/20 text-xs">/</span>
-                  <span className="text-sm font-bold text-emerald-300/80">
-                    {selectedBook.name}
-                  </span>
+                  <span className="text-sm font-bold text-emerald-300/80">{selectedBook.name}</span>
                   {bookNotes.length > 0 && (
                     <span className="text-[10px] font-mono text-white/20">
                       {bookNotes.length} note{bookNotes.length !== 1 ? "s" : ""}
@@ -863,32 +944,32 @@ export default function NotesPage() {
                   )}
                 </>
               )}
-              <Link
-                href="/"
-                className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-white/25 text-xs font-semibold hover:text-white/45 transition-colors"
+              <button
+                onClick={() => openNewNote(selectedBookNum ?? undefined)}
+                className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 active:scale-[0.97] transition-all shadow-sm shadow-indigo-900/30"
               >
-                ← Home
-              </Link>
+                <span className="text-sm font-black leading-none">+</span>
+                New Note
+              </button>
             </div>
+          </div>
+        </div>
 
-            {/* Search */}
-            <div className="pb-2">
-              <input
-                type="text"
-                placeholder="Search notes, pastors, passages, tags…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-              />
-            </div>
-            {/* Filters — single scrollable row on mobile */}
-            <div className="flex gap-2 pb-3 overflow-x-auto scrollbar-none">
+        {/* ── Search + Filters — scroll away naturally ─────────────────────────── */}
+        <div className="border-b border-white/[0.05] bg-[#0f0f0f]">
+          <div className="max-w-screen-xl mx-auto px-4 pt-3 pb-3 space-y-2">
+            <input
+              type="text"
+              placeholder="Search notes, pastors, passages, tags…"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40"
+            />
+            <div className="flex gap-2 overflow-x-auto scrollbar-none">
               <select
                 value={filterTestament}
-                onChange={(e) =>
-                  setFilterTestament(e.target.value as "all" | "OT" | "NT")
-                }
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                onChange={(e) => setFilterTestament(e.target.value as "all" | "OT" | "NT")}
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
               >
                 <option value="all">All Books</option>
                 <option value="OT">Old Testament</option>
@@ -898,20 +979,16 @@ export default function NotesPage() {
                 <select
                   value={filterTag}
                   onChange={(e) => setFilterTag(e.target.value)}
-                  className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                  className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
                 >
                   <option value="">All Tags</option>
-                  {allTags.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
+                  {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
               )}
               <select
                 value={filterDate}
-                onChange={(e) =>
-                  setFilterDate(e.target.value as "all" | "this-year" | "last-year")
-                }
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                onChange={(e) => setFilterDate(e.target.value as "all" | "this-year" | "last-year")}
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
               >
                 <option value="all">All Time</option>
                 <option value="this-year">This Year</option>
@@ -919,10 +996,8 @@ export default function NotesPage() {
               </select>
               <select
                 value={sortOrder}
-                onChange={(e) =>
-                  setSortOrder(e.target.value as "newest" | "oldest" | "by-book")
-                }
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-emerald-500/40 [color-scheme:dark]"
+                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "by-book")}
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
               >
                 <option value="newest">Newest First</option>
                 <option value="oldest">Oldest First</option>
@@ -930,7 +1005,7 @@ export default function NotesPage() {
               </select>
             </div>
           </div>
-        </header>
+        </div>
 
         {/* ── Layout ──────────────────────────────────────────────────────────── */}
         <div className="max-w-screen-xl mx-auto flex">
@@ -1282,6 +1357,7 @@ export default function NotesPage() {
                                     <NoteCard
                                       key={note.id}
                                       note={note}
+                                      onView={() => setViewingNote(note)}
                                       onEdit={() => openEditNote(note)}
                                       onDelete={() => setConfirmDeleteId(note.id)}
                                     />
@@ -1307,15 +1383,6 @@ export default function NotesPage() {
         </div>
       </div>
 
-      {/* ── Floating New Note button ─────────────────────────────────────────── */}
-      <button
-        onClick={() => openNewNote(selectedBookNum ?? undefined)}
-        className="fixed bottom-6 right-4 z-40 flex items-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-sm font-bold shadow-xl shadow-indigo-900/50 hover:from-violet-500 hover:to-indigo-500 active:scale-[0.96] transition-all"
-        aria-label="New Note"
-      >
-        <span className="text-base font-black leading-none">+</span>
-        <span className="text-xs font-bold tracking-wide">New Note</span>
-      </button>
     </>
   );
 }
