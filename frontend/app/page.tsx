@@ -145,6 +145,27 @@ async function shareApp() {
   }
 }
 
+// ─── Article types ────────────────────────────────────────────────────────────
+
+interface MarrowArticle {
+  title: string;
+  href: string;
+  excerpt: string;
+  date: string;
+  slug: string;
+}
+
+interface ArticleContent {
+  title: string;
+  date: string;
+  content: string;
+}
+
+// Returns a stable week number so the same 3 articles show all week
+function weekIndex() {
+  return Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -157,6 +178,13 @@ export default function Home() {
   const [greeting,     setGreeting]     = useState("Good Morning");
   const [videoOpen,    setVideoOpen]    = useState(false);
   const [historyVerse, setHistoryVerse] = useState<HistoryVerse | null>(null);
+
+  // Articles
+  const [articles,        setArticles]        = useState<MarrowArticle[]>([]);
+  const [articleLoading,  setArticleLoading]  = useState(false);
+  const [openArticle,     setOpenArticle]     = useState<MarrowArticle | null>(null);
+  const [articleContent,  setArticleContent]  = useState<ArticleContent | null>(null);
+  const [contentLoading,  setContentLoading]  = useState(false);
 
   useEffect(() => { setGreeting(getGreeting()); }, []);
 
@@ -172,6 +200,43 @@ export default function Home() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Fetch articles once on mount
+  useEffect(() => {
+    setArticleLoading(true);
+    fetch("/api/articles")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.articles?.length) setArticles(data.articles);
+      })
+      .catch(() => {})
+      .finally(() => setArticleLoading(false));
+  }, []);
+
+  // Open an article and fetch its content
+  const openArticleModal = async (article: MarrowArticle) => {
+    setOpenArticle(article);
+    setArticleContent(null);
+    setContentLoading(true);
+    try {
+      const r = await fetch(`/api/articles/content?url=${encodeURIComponent(article.href)}`);
+      const data = await r.json();
+      setArticleContent(data);
+    } catch {
+      setArticleContent({ title: article.title, date: article.date, content: "Could not load article." });
+    } finally {
+      setContentLoading(false);
+    }
+  };
+
+  // Weekly slice — 3 articles rotating every week
+  const weeklyArticles = (() => {
+    if (articles.length === 0) return [];
+    const start = (weekIndex() * 3) % articles.length;
+    const slice: MarrowArticle[] = [];
+    for (let i = 0; i < 3; i++) slice.push(articles[(start + i) % articles.length]);
+    return slice;
+  })();
 
   const earnedBadgeIds = ((streakData?.badges ?? []) as BadgeId[]);
 
@@ -256,6 +321,50 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── Article reader modal ─────────────────────────────────────────────── */}
+      {openArticle && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setOpenArticle(null)}>
+          <div className="relative w-full max-w-lg bg-[#141414] rounded-3xl border border-white/[0.09] shadow-2xl flex flex-col max-h-[88vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div className="px-5 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-400/70">
+                  Marrow Ministries
+                </p>
+                <button onClick={() => setOpenArticle(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.07] transition-colors flex-shrink-0 -mt-0.5">✕</button>
+              </div>
+              <h2 className="text-[16px] font-bold text-white/90 leading-snug">
+                {articleContent?.title || openArticle.title}
+              </h2>
+              {(articleContent?.date || openArticle.date) && (
+                <p className="text-[11px] text-white/30 mt-1">
+                  {new Date((articleContent?.date || openArticle.date) + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                </p>
+              )}
+            </div>
+            {/* Body */}
+            <div className="flex-1 overflow-y-auto px-5 py-4">
+              {contentLoading ? (
+                <div className="flex items-center justify-center py-16">
+                  <span className="text-white/20 text-sm">Loading…</span>
+                </div>
+              ) : (
+                <p className="text-[14px] text-white/60 leading-relaxed whitespace-pre-wrap">
+                  {articleContent?.content || openArticle.excerpt}
+                </p>
+              )}
+            </div>
+            {/* Footer link */}
+            <div className="px-5 pb-5 pt-3 border-t border-white/[0.06] flex-shrink-0">
+              <a href={openArticle.href} target="_blank" rel="noopener noreferrer"
+                className="block w-full text-center py-2.5 rounded-xl text-xs font-bold bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.09] text-emerald-400 transition-all">
+                Open on Marrow Ministries →
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-4">
 
         {/* ── Header row: greeting + share ──────────────────────────────────── */}
@@ -317,6 +426,53 @@ export default function Home() {
             </div>
           </div>
         </button>
+
+        {/* ── Featured Articles — Marrow Ministries, rotates weekly ──────────── */}
+        {(articleLoading || weeklyArticles.length > 0) && (
+          <section>
+            <div className="flex items-center justify-between px-1 mb-2.5">
+              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">
+                📰 This Week&rsquo;s Reading
+              </p>
+              <p className="text-[9px] text-white/15 font-semibold">marrowministries.org</p>
+            </div>
+            {articleLoading ? (
+              <div className="space-y-2.5">
+                {[0,1,2].map((i) => (
+                  <div key={i} className="h-[72px] rounded-2xl bg-white/[0.03] border border-white/[0.05] animate-pulse" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                {weeklyArticles.map((article) => (
+                  <button
+                    key={article.slug}
+                    onClick={() => openArticleModal(article)}
+                    className="w-full text-left rounded-2xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.05] active:scale-[0.99] transition-all px-4 py-3.5 flex items-center gap-3.5"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600/20 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
+                        <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold text-white/80 leading-snug line-clamp-2">{article.title}</p>
+                      {article.date && (
+                        <p className="text-[10px] text-white/25 mt-0.5">
+                          {new Date(article.date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="text-white/15 flex-shrink-0">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         {/* ── Streak ────────────────────────────────────────────────────────── */}
         <section className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
