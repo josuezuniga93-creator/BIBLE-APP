@@ -56,8 +56,9 @@ export async function GET(req: NextRequest) {
         const date = item.publishOn
           ? new Date(item.publishOn).toISOString().slice(0, 10)
           : "";
+        const isVideoOnly = content.length < 200 && /youtube\.com|youtu\.be/i.test(body);
         if (content.length > 100) {
-          return NextResponse.json({ title, date, content, author, source: "json" });
+          return NextResponse.json({ title, date, content, author, source: "json", isVideoOnly });
         }
       }
     }

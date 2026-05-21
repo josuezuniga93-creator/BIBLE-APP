@@ -242,11 +242,18 @@ export default function Home() {
     }
   };
 
-  // Weekly pick — 1 article rotating every week
+  // Weekly pick — 1 article rotating every week, skipping video-only posts
   const weeklyArticles = (() => {
     if (articles.length === 0) return [];
-    const idx = weekIndex() % articles.length;
-    return [articles[idx]];
+    const base = weekIndex() % articles.length;
+    // Try up to articles.length candidates starting from base
+    for (let i = 0; i < articles.length; i++) {
+      const candidate = articles[(base + i) % articles.length];
+      // Skip anything whose title/excerpt hints at a video embed
+      if (/youtube\.com|youtu\.be/i.test(candidate.excerpt + candidate.href)) continue;
+      return [candidate];
+    }
+    return [articles[base]];
   })();
 
   const earnedBadgeIds = ((streakData?.badges ?? []) as BadgeId[]);
