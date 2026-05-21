@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 
@@ -110,15 +111,15 @@ function NotesAppIcon() {
 // ─── App grid config ──────────────────────────────────────────────────────────
 
 const APP_TILES = [
-  { href: "/bible-plans",       Icon: PlansAppIcon,    label: "Plans",      color: "#5b21b6" },
-  { href: "/library",           Icon: LibraryAppIcon,  label: "Free Books", color: "#0369a1" },
-  { href: "/bible-tracker",     Icon: TrackerAppIcon,  label: "Tracker",    color: "#065f46" },
-  { href: "/family-worship",    Icon: FamilyAppIcon,   label: "Family",     color: "#9d174d" },
-  { href: "/kids-books",        Icon: KidsAppIcon,     label: "Kids Books", color: "#c2410c" },
-  { href: "/videos",            Icon: VideosAppIcon,   label: "Videos",     color: "#1e3a8a" },
-  { href: "/give",              Icon: GiveAppIcon,     label: "Give",       color: "#b45309" },
-  { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Gatherings", color: "#7c3aed" },
-  { href: "/church-directory",  Icon: ChurchAppIcon,   label: "Churches",   color: "#1a6b3a" },
+  { href: "/bible-plans",       Icon: PlansAppIcon,      label: "Plans",              color: "#5b21b6" },
+  { href: "/library",           Icon: LibraryAppIcon,    label: "Free Books",         color: "#0369a1" },
+  { href: "/bible-tracker",     Icon: TrackerAppIcon,    label: "Bible Tracker",      color: "#065f46" },
+  { href: "/family-worship",    Icon: FamilyAppIcon,     label: "Family Worship",     color: "#9d174d" },
+  { href: "/kids-books",        Icon: KidsAppIcon,       label: "Kids Books",         color: "#c2410c" },
+  { href: "/videos",            Icon: VideosAppIcon,     label: "Videos",             color: "#1e3a8a" },
+  { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Fellowship Tracker", color: "#7c3aed" },
+  { href: "/church-directory",  Icon: ChurchAppIcon,     label: "Churches",           color: "#1a6b3a" },
+  { href: "/give",              Icon: GiveAppIcon,       label: "Give",               color: "#b45309" },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -127,6 +128,44 @@ export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
   const themeKeys = Object.keys(THEMES) as Theme[];
+
+  // ── Notification state ──────────────────────────────────────────────────────
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<"default"|"granted"|"denied">("default");
+
+  useEffect(() => {
+    if (typeof Notification !== "undefined") {
+      setNotifStatus(Notification.permission as "default"|"granted"|"denied");
+    }
+    try {
+      setNotifEnabled(localStorage.getItem("tulip_notif_enabled") === "true");
+    } catch { /**/ }
+  }, []);
+
+  async function handleNotifToggle() {
+    if (notifEnabled) {
+      // Turn off
+      setNotifEnabled(false);
+      try { localStorage.setItem("tulip_notif_enabled", "false"); } catch { /**/ }
+      return;
+    }
+    // Request permission
+    if (typeof Notification === "undefined") return;
+    let perm = Notification.permission;
+    if (perm === "default") {
+      perm = await Notification.requestPermission();
+      setNotifStatus(perm as "default"|"granted"|"denied");
+    }
+    if (perm === "granted") {
+      setNotifEnabled(true);
+      try { localStorage.setItem("tulip_notif_enabled", "true"); } catch { /**/ }
+      // Tell the service worker to start scheduling
+      if ("serviceWorker" in navigator) {
+        const reg = await navigator.serviceWorker.ready;
+        reg.active?.postMessage({ type: "SCHEDULE_NOTIFICATIONS" });
+      }
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -205,6 +244,36 @@ export default function MorePage() {
               <span className={`px-3 py-1 text-xs font-bold transition-all ${lang === "en" ? "text-white bg-white/10" : "text-white/35"}`}>EN</span>
               <span className="w-px h-4 bg-white/[0.10]" />
               <span className={`px-3 py-1 text-xs font-bold transition-all ${lang === "es" ? "text-white bg-white/10" : "text-white/35"}`}>ES</span>
+            </button>
+          </div>
+        </section>
+
+        {/* ── Notifications ─────────────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Notifications</p>
+          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
+            <div>
+              <p className="text-sm font-semibold text-white">Daily Bible Verse</p>
+              <p className="text-xs text-white/40 mt-0.5">
+                {notifStatus === "denied"
+                  ? "Blocked — enable in device settings"
+                  : notifEnabled
+                    ? "Sent every morning at 8 am"
+                    : "Get a new verse each morning at 8 am"}
+              </p>
+            </div>
+            <button
+              onClick={handleNotifToggle}
+              disabled={notifStatus === "denied"}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+                notifEnabled ? "bg-white/25" : "bg-white/[0.08]"
+              } ${notifStatus === "denied" ? "opacity-30 cursor-not-allowed" : ""}`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
+                  notifEnabled ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
             </button>
           </div>
         </section>

@@ -1,4 +1,4 @@
-export type DocumentCategory = "theses" | "confession" | "catechism" | "creed" | "solas" | "council" | "debate";
+export type DocumentCategory = "theses" | "confession" | "catechism" | "creed" | "solas" | "council" | "debate" | "history";
 export type DocumentSection = "A" | "B" | "C" | "D" | "E" | "F";
 
 export interface LearnSection {
@@ -350,9 +350,323 @@ const monergismDebate: LearnSection[] = [
   },
 ];
 
+// ─── Jerusalem Council (AD 49) ───────────────────────────────────────────────
+
+const jerusalemCouncil: LearnSection[] = [
+  {
+    id: "jc1", label: "The Crisis", title: "The First Council: Circumcision and the Gentiles",
+    content: `The Jerusalem Council (c. AD 49) was the first formal council in church history and one of the most decisive. The question before it was urgent: must Gentile believers be circumcised and keep the Mosaic law to be saved?\n\n**The Controversy**\nAs the gospel spread into the Gentile world through Paul and Barnabas, certain men from Judea came to Antioch teaching: "Unless you are circumcised according to the custom of Moses, you cannot be saved" (Acts 15:1). Paul and Barnabas opposed them sharply. The church decided to send them to Jerusalem to have the apostles and elders settle the matter.\n\n**What Was at Stake**\nThis was not a peripheral dispute. If circumcision was required for salvation, then Christ's work was insufficient — something must be added to it. The gospel of grace alone would be overthrown before it reached the nations.\n\n**The Council Convenes**\nIn Jerusalem, "the apostles and the elders were gathered together to consider this matter" (Acts 15:6). Peter spoke from experience: God gave the Holy Spirit to the Gentiles just as to the Jews — "making no distinction between us and them, having cleansed their hearts by faith" (Acts 15:9). Why, then, impose a yoke that neither the fathers nor they could bear?\n\nJames summarized the consensus: the Gentiles should not be troubled with the Mosaic law. They should only abstain from things polluted by idols, sexual immorality, strangled animals, and blood — not as requirements for salvation, but as minimal guidelines for fellowship with Jewish believers.\n\n**The Significance**\nThis council established that salvation is by faith alone, not by law-keeping. It set the pattern for how the church resolves doctrinal disputes: through Scripture, apostolic witness, and godly deliberation — not by individual authority alone. The Protestant Reformers would look back to this council as a precedent for the gospel's freeing of conscience from human traditions.`,
+  },
+  {
+    id: "jc2", label: "Peter's Speech", title: "Peter's Argument and the Heart of the Decision",
+    content: `Peter's speech at the Jerusalem Council (Acts 15:7–11) is one of the clearest statements of grace in Acts. It is worth examining carefully.\n\n**"God Made a Choice"**\n"Brothers, you know that in the early days God made a choice among you, that by my mouth the Gentiles should hear the word of the gospel and believe." (Acts 15:7)\n\nGod initiated it. God chose to send the gospel to Cornelius through Peter (Acts 10). The church didn't strategize their way there — God opened the door. The Gentile mission is God's idea from the beginning.\n\n**"God Who Knows the Heart Bore Witness"**\n"God, who knows the heart, bore witness to them, by giving them the Holy Spirit just as he did to us, and he made no distinction between us and them, having cleansed their hearts by faith." (Acts 15:8–9)\n\nThe proof that Gentiles were accepted was God's own act — the gift of the Holy Spirit. God did not wait for circumcision; he gave the Spirit at the moment of faith. This is Paul's argument in Galatians 3:2: "Did you receive the Spirit by works of the law or by hearing with faith?"\n\n**"A Yoke That Neither We Nor Our Fathers Could Bear"**\n"Why are you putting God to the test by placing a yoke on the neck of the disciples that neither our fathers nor we have been able to bear?" (Acts 15:10)\n\nPeter makes a remarkable concession: the law was never a bearable yoke for Israel either. Salvation was always by grace through faith, not by legal merit — even in the Old Testament. The law revealed sin; it never provided a righteousness adequate for God's standard.\n\n**"We Will Be Saved Through the Grace of the Lord Jesus"**\n"But we believe that we will be saved through the grace of the Lord Jesus, just as they will." (Acts 15:11)\n\nJews and Gentiles stand on the same ground: the grace of the Lord Jesus. This is the heart of the council's decision — and the heart of the gospel.`,
+  },
+  {
+    id: "jc3", label: "Legacy", title: "The Council's Lasting Significance",
+    content: `The Jerusalem Council established several principles that would shape church history for two millennia.\n\n**1. The Gospel Is for All Nations Without Precondition**\nSalvation requires no ethnic, cultural, or ceremonial preparation. Circumcision, dietary laws, feast days — these are not conditions of God's acceptance. "For in Christ Jesus neither circumcision nor uncircumcision counts for anything, but only faith working through love." (Gal. 5:6)\n\n**2. Councils Are Authoritative When Grounded in Scripture and the Spirit**\nThe council's letter reads: "It has seemed good to the Holy Spirit and to us" (Acts 15:28). This is a remarkable claim — but it is rooted in apostolic authority, Scripture, and the evident work of God among the Gentiles. The Reformers would cite this pattern: councils are not above Scripture but serve Scripture.\n\n**3. Human Traditions Cannot Bind Conscience**\nRequiring circumcision was a human imposition on divine grace. The Reformers applied this principle broadly: anything added to Christ as a condition or contribution to salvation contradicts the gospel. This is why Luther fought so fiercely against indulgences — they were a form of the same error: human works added to divine grace.\n\n**4. The Pattern for Resolving Doctrinal Disputes**\nThe church didn't split; it deliberated. Leaders gathered, Scripture was consulted, testimony was heard, and a conclusion was reached together. The pattern established here — apostolic consultation, scriptural reasoning, consensus — is the model for all subsequent councils.\n\n**Its Importance for Baptist Theology**\nThe Jerusalem Council's affirmation of salvation by grace alone apart from ceremonial law is foundational to Baptist theology. The Second London Baptist Confession (1689) would later articulate this with precision: justification is "not for any thing wrought in them, or done by them, but for Christ's sake alone... not by imputing faith itself, the act of believing, or any other evangelical obedience... but by imputing Christ's active obedience unto the whole law, and passive obedience in his death."`,
+  },
+];
+
+// ─── Augustine: Grace & Election (AD 397–430) ───────────────────────────────
+
+const augustineGrace: LearnSection[] = [
+  {
+    id: "ag1", label: "The Man", title: "Augustine of Hippo: Doctor of Grace",
+    content: `Augustine of Hippo (354–430 AD) is the most influential theologian in Western church history after Paul. His thought shaped Roman Catholicism, the Protestant Reformation, and virtually all subsequent Western theology. On the doctrine of grace and election, he stands at a watershed — his conclusions set the terms for every major debate that followed.\n\n**Early Life and Conversion**\nAugustine was born in North Africa to a pagan father (Patricius) and a devout Christian mother (Monica). He was brilliant, restless, and morally undisciplined — he himself would say, "Lord, grant me chastity and self-control, but not yet." He pursued philosophy and rhetoric through his twenties, affiliated with the Manichaean sect, then fell under the influence of Neoplatonism. His mother prayed for him without ceasing for decades.\n\nIn Milan in 386, Augustine read Paul's letter to the Romans: "Put on the Lord Jesus Christ, and make no provision for the flesh, to gratify its desires" (Rom. 13:14). He was instantly and completely converted. His *Confessions* (c. 397 AD) — the world's first genuine autobiography — is the record of that journey.\n\n**The Donatist and Pelagian Controversies**\nAugustine spent his adult ministry as Bishop of Hippo fighting two great heresies that forced him to articulate his theology of grace more precisely than anyone before him:\n\n1. The *Donatists* (a schismatic group in North Africa) who taught the validity of sacraments depended on the worthiness of the minister\n2. The *Pelagians* (followers of Pelagius, a British monk) who taught that the human will, by its natural capacity, could choose good without divine grace\n\nIt was against Pelagius that Augustine developed his most powerful and lasting contributions to Christian theology.`,
+  },
+  {
+    id: "ag2", label: "Against Pelagius", title: "The Pelagian Controversy and Total Grace",
+    content: `Pelagius (c. 354–420 AD) was a British monk in Rome who was shocked by the moral laxity he observed. His remedy was to insist on human moral capacity and responsibility. His core teaching:\n\n1. Adam's sin injured only Adam — it was not transmitted to his descendants\n2. All people are born with the same freedom and capacity Adam had\n3. Grace is external — it helps, teaches, and encourages — but the will makes the decisive choice\n4. God's election is based on foreknown faith\n\n**Augustine's Response**\nAugustine saw immediately that Pelagianism destroyed the gospel. If human beings retain the capacity to choose God without divine transformation of the will, then:\n- Prayer for someone's conversion is meaningless (they can do it themselves)\n- Salvation depends ultimately on the human will (God saves those who let him)\n- No one can be certain of their salvation (we might not "choose correctly" tomorrow)\n- The grace of Christ is useful but not necessary\n\nAugustine's counter-arguments from Scripture:\n\n*On Original Sin:* "Therefore, just as sin came into the world through one man, and death through sin, and so death spread to all men because all sinned." (Rom. 5:12)\n\n*On Total Depravity:* "None is righteous, no, not one; no one understands; no one seeks for God." (Rom. 3:10–11)\n\n*On Sovereign Grace:* "For who makes you different from anyone else? What do you have that you did not receive? And if you did receive it, why do you boast as if you did not?" (1 Cor. 4:7)\n\n*On Effectual Calling:* "You did not choose me, but I chose you." (John 15:16)`,
+  },
+  {
+    id: "ag3", label: "Key Doctrines", title: "Augustine's Theology of Grace in Summary",
+    content: `Augustine's doctrine of grace, as developed against Pelagius and later in his mature works like *On Predestination of the Saints* and *On the Gift of Perseverance*, includes these core convictions:\n\n**1. Total Depravity (the full ruin of the will)**\nFallen humanity is not merely weakened but enslaved. The will does not simply need assistance — it is "inclined to evil continually" (Gen. 6:5). Augustine coined the phrase *non posse non peccare* — "not able not to sin" — to describe the natural state of humanity after Adam's fall. In regeneration, the Spirit restores the power to do good (*posse non peccare*). In glorification, believers will be confirmed in goodness (*non posse peccare*).\n\n**2. Sovereign, Prevenient Grace**\nGrace must *precede* the will's good choice — it doesn't respond to the will, it creates the willing. God "prepared the will" and "works in you both to will and to work for his good pleasure" (Phil. 2:13). The famous phrase *gratia praeveniens* — "preventing" or "going before" grace — is Augustine's: God's grace goes before and awakens the dead will.\n\n**3. Unconditional Election**\nGod's choice of individuals for salvation is not based on foreseen faith or merit. He chooses "according to the purpose of his will" (Eph. 1:5). If election were based on foreseen faith, the deciding factor would be in the person, not in God — and Paul says "it depends not on human will or exertion, but on God, who has mercy" (Rom. 9:16).\n\n**4. Perseverance of the Saints**\nThose whom God has truly elected will be preserved to the end. The gift of perseverance (*donum perseverantiae*) is itself a gift of grace — not a human achievement. Augustine's pastoral concern here is profound: assurance rests not on our grip on God but on God's grip on us.\n\n**Augustine's Legacy**\nThe Council of Carthage (418) and the Council of Orange (529) formally condemned Pelagianism and vindicated the Augustinian doctrine of grace. Luther, Calvin, and the entire Reformed tradition stand in this stream. The Second London Baptist Confession (1689) summarizes Augustine's essential convictions: effectual grace, unconditional election, and perseverance — and traces them not to Augustine but to Scripture.`,
+  },
+];
+
+// ─── Wycliffe & Pre-Reformation Seeds (1378) ─────────────────────────────────
+
+const wycliffe: LearnSection[] = [
+  {
+    id: "wy1", label: "The Morning Star", title: "John Wycliffe: Reformer Before the Reformation",
+    content: `John Wycliffe (c. 1320–1384) is rightly called the "Morning Star of the Reformation" — a scholar and priest who challenged papal authority and championed Scripture more than a century before Luther. Working from Oxford, Wycliffe laid intellectual and theological foundations that would eventually bear fruit in the Protestant Reformation.\n\n**Attacks on Papal Authority**\nWycliffe argued that civil and ecclesiastical authority depended on righteousness, not on office. A corrupt pope or bishop had no legitimate authority. He attacked the wealth of the institutional church, arguing that the church should return to apostolic poverty and simplicity. These arguments made him powerful enemies in the hierarchy.\n\n**Denial of Transubstantiation**\nWycliffe rejected the Roman Catholic doctrine that the bread and wine of the Mass are physically transformed into the body and blood of Christ. This was his most dangerous heresy in Rome's eyes — and it cost him his Oxford position. He argued that Christ's body is present spiritually but that the bread remains bread. His view anticipated the Reformed position that Calvin would later articulate.\n\n**Scripture as Supreme Authority**\nWycliffe's most enduring contribution was his insistence that Scripture, not the pope or councils, is the final authority for all Christians. He wrote: "The Bible is for the government of the people, by the people, and for the people." This principle — *sola scriptura* avant la lettre — would become the formal principle of the Reformation.\n\n**His English Bible**\nAround 1382–1384, Wycliffe and his associates completed the first complete English Bible translation from the Latin Vulgate. This made Scripture accessible to ordinary English people for the first time — an act with enormous practical and symbolic significance. Wycliffe's translation was handwritten (Gutenberg's press was still 70 years away), so copies were expensive and precious.`,
+  },
+  {
+    id: "wy2", label: "The Lollards", title: "The Wycliffite Movement and Its Legacy",
+    content: `Wycliffe died peacefully in 1384 — one of the very few reformers of his age who died in bed rather than at the stake. But the movement he started outlived him, and his enemies made sure to honor him with a posthumous condemnation.\n\n**The Council of Constance (1415)**\nThe Council of Constance condemned Wycliffe posthumously as a heretic. They ordered his bones exhumed and burned — a posthumous execution that showed how seriously the hierarchy took his threat. His ashes were cast into the River Swift near Lutterworth. As one later writer memorably put it: "Thus this brook conveyed his ashes into Avon; Avon into Severn; Severn into the narrow seas; and they into the main ocean. And thus the ashes of Wycliffe are the emblem of his doctrine which now is dispersed the world over."\n\n**The Lollards**\nWycliffe's followers were called Lollards (possibly from a Dutch word meaning "mumblers" — used mockingly). They carried his teachings throughout England and into Scotland, preaching in English, distributing Wycliffe's Bible, and challenging the authority of the clergy. They were persecuted severely — burned at the stake under King Henry IV's law *De Heretico Comburendo* (1401).\n\n**The Bohemian Connection**\nWycliffe's writings reached Bohemia through English-Czech connections at Oxford. Jan Hus read Wycliffe carefully and was profoundly influenced. The Hussite movement in Bohemia would be a direct link between Wycliffe and Luther — a pre-Reformation reform that cost Hus his life but spread the seeds further.\n\n**What Wycliffe Established**\nBy the time Luther nailed his theses in 1517, Wycliffe had already established these principles:\n- Scripture's supremacy over tradition and papal authority\n- The priesthood's accountability to Scripture\n- The right and duty of ordinary people to read and know Scripture\n- The theological bankruptcy of merits-based religion\n\nThe tree Luther felled had been cut at the roots by Wycliffe a century and a half before.`,
+  },
+];
+
+// ─── Jan Hus (1415) ───────────────────────────────────────────────────────────
+
+const janHus: LearnSection[] = [
+  {
+    id: "jh1", label: "The Man", title: "Jan Hus: Reformer, Preacher, Martyr",
+    content: `Jan Hus (c. 1369–1415) was a Czech theologian, reformer, and rector of Charles University in Prague. His life and death were a direct link between Wycliffe's Oxford scholarship and Luther's Reformation. He was burned at the stake by order of the Council of Constance on July 6, 1415 — making him one of the most significant martyrs in church history.\n\n**Hus and Wycliffe**\nHus read Wycliffe's philosophical and theological writings extensively. While he did not adopt all of Wycliffe's positions (he held a more traditional view of the Eucharist, for instance), he absorbed and preached Wycliffe's core commitments:\n- Scripture over tradition\n- The church as the body of the elect, not the institutional hierarchy\n- The corruption of the papacy and the necessity of reform\n\n**Preaching in Czech**\nHus preached at the Bethlehem Chapel in Prague — in the Czech language rather than Latin — to enormous congregations. He was a gifted preacher who made theology accessible to ordinary people. His sermons challenged clerical corruption, preached the gospel of grace, and called the church back to Scripture.\n\n**The Breaking Point**\nWhen Pope John XXIII declared a crusade (and sold indulgences to fund it), Hus publicly opposed it. He was excommunicated. The crisis escalated until Hus was summoned to the Council of Constance to defend his views. He went under an imperial safe-conduct promise.\n\n**The Council and the Betrayal**\nThe Council violated the safe-conduct and arrested Hus. He was given a show trial in which he was not allowed to explain his positions — he could only recant or be condemned. When he refused to recant teachings he had never held, he was condemned as a heretic and handed over to the secular authorities for execution. His famous words as the flames rose: "You are burning a goose" (Hus means "goose" in Czech), "but in a century you will have a swan whom you cannot burn" — many took this as a prophecy of Luther.`,
+  },
+  {
+    id: "jh2", label: "Legacy", title: "The Fire That Lit a Continent",
+    content: `The burning of Jan Hus in 1415 did not extinguish the reform movement — it ignited it across Bohemia and eventually Europe.\n\n**The Hussite Wars (1419–1436)**\nHus's death sparked a popular uprising in Bohemia. His followers — the Hussites — took up arms to defend their faith and defeat five crusades launched against them by the Holy Roman Emperor. The Hussites fought for:\n- Communion in both kinds (bread AND cup for the laity)\n- Freedom to preach the gospel\n- Church poverty and accountability\n- Civil punishment for mortal sins among clergy\n\nThey defeated the crusades — a stunning military and theological triumph. The Council of Basel eventually granted the Hussites limited rights, including communion in both kinds.\n\n**The Moravian Brethren**\nFrom the Hussite tradition emerged the Bohemian Brethren (Unitas Fratrum), a reform movement that emphasized simple, scriptural Christianity. A century later, the survivors of persecution became the Moravian Brethren under Count Zinzendorf — pioneers of Protestant missions who would deeply influence John Wesley and, through Wesley, the entire evangelical world.\n\n**Luther and Hus**\nWhen Luther was challenged at the Leipzig Debate (1519) and accused of following Hus, he initially denied it. Then he investigated Hus's actual teachings — and concluded that Hus had been right. "We are all Hussites," Luther said, "without knowing it." The Council had burned a man for teaching what Scripture taught.\n\n**The Moral of the Council**\nThe burning of Hus revealed the deep corruption of the conciliar church. A council that violated its own safe-conduct, condemned a man without a fair hearing, and burned him for teachings he never held — had forfeited its claim to represent Christ's church. When Luther faced the same council system a century later, he knew what to expect. The Reformation's challenge to conciliar authority drew directly on the lesson of Hus.`,
+  },
+];
+
+// ─── Gutenberg Bible (1455) ───────────────────────────────────────────────────
+
+const gutenberg: LearnSection[] = [
+  {
+    id: "gb1", label: "The Press", title: "Gutenberg's Press and the Spread of Scripture",
+    content: `Johannes Gutenberg's invention of the movable-type printing press (c. 1440) and the publication of the Gutenberg Bible (c. 1455) is arguably the most consequential technological development in Western history. Its impact on the Reformation — and therefore on Baptist and Reformed theology — can scarcely be overstated.\n\n**Before the Press**\nBefore Gutenberg, books were handwritten by scribes — mostly monks in monasteries. A Bible could take months to copy and cost the equivalent of years of a craftsman's wages. Literacy was limited. Knowledge was controlled by those who could afford or produce books — principally the institutional church.\n\nWycliffe's English Bible (c. 1382) had to be copied by hand. Copies were precious and dangerous — owning one could mark you as a Lollard. Information moved at the speed of a scribal hand and a horse.\n\n**The Gutenberg Press**\nGutenberg developed a practical system of movable metal type that could be arranged, inked, and pressed against paper rapidly. A page that took a scribe hours to copy could now be printed in minutes. And then printed again. And again. Thousands of identical copies.\n\n**The Gutenberg Bible (1455)**\nGutenberg's first major printing project was a Latin Bible — the Vulgate. He printed approximately 180 copies, of which 49 survive. By the standards of the time, this was a flood of Bibles. The quality was exquisite — Gutenberg took pains to produce a book as beautiful as the finest manuscripts.\n\n**The Revolutionary Impact**\nWithin decades of Gutenberg's invention, printing presses spread across Europe. Books multiplied. Literacy increased. Ideas — including radical theological ideas — could spread faster than the hierarchy could suppress them. When Luther nailed his 95 Theses in 1517, they were printed and distributed across Germany within weeks. Without the press, the Reformation would have been local and suppressible. With it, it was unstoppable.`,
+  },
+  {
+    id: "gb2", label: "Bible & Reformation", title: "Print, Scripture, and the Protestant Reformation",
+    content: `The connection between the printing press and the Protestant Reformation is direct and decisive. Luther's success where Wycliffe and Hus had not succeeded was in large part a technological advantage: the press.\n\n**Luther's Use of Print**\nLuther was the first great media communicator of the modern age. He wrote prolifically, in clear German as well as scholarly Latin. His pamphlets, sermons, and treatises poured from the presses. In 1520 alone — the year he wrote *The Freedom of a Christian*, *On the Babylonian Captivity of the Church*, and *To the Christian Nobility* — he published works that were read across Germany, France, England, and beyond.\n\nLuther's German New Testament (1522) was printed in an edition of 3,000 — sold out in two weeks. His complete German Bible (1534) is one of the monuments of German literature as well as a theological landmark.\n\n**Tyndale's English New Testament**\nWilliam Tyndale's English New Testament (1526) was printed at Worms and smuggled into England in bales of cloth and barrels of grain. The church bought up and burned as many copies as they could find — inadvertently funding Tyndale's next edition. The press made suppression impossible.\n\n**The Reformed Confessions**\nThe great Reformed confessions of the 16th and 17th centuries — Belgic, Heidelberg, Westminster, Dort, Second London — were all print documents. They spread, were read, were debated, and became the theological backbone of Protestant communities across Europe and eventually the world. Without the press, confessional Reformed theology is inconceivable.\n\n**The Democratization of Scripture**\nMost fundamentally, print put the Bible into ordinary hands. The Reformation's insistence on *sola scriptura* was not merely an academic principle — it became a lived reality because ordinary people could now own, read, and study Scripture. The Second London Baptist Confession's confidence in Scripture's perspicuity — its clarity to ordinary readers — presupposes a world in which ordinary readers can access Scripture. Gutenberg made that world possible.`,
+  },
+];
+
+// ─── Diet of Worms (1521) ─────────────────────────────────────────────────────
+
+const dietOfWorms: LearnSection[] = [
+  {
+    id: "dw1", label: "The Stand", title: "Luther Before Emperor and Empire",
+    content: `The Diet of Worms (April 1521) was one of the most dramatic moments in Western history. Martin Luther — a German Augustinian friar and professor of biblical theology — stood before the Holy Roman Emperor Charles V, the princes of Germany, and the representatives of the Pope and refused to recant. His refusal launched what we now call the Protestant Reformation.\n\n**Background**\nLuther had published his 95 Theses in October 1517, sparking a controversy over indulgences that rapidly expanded into a challenge to the entire authority structure of the medieval church. By 1520, Pope Leo X had issued the bull *Exsurge Domine* demanding Luther recant 41 propositions or be excommunicated. Luther burned the bull in public. He was formally excommunicated in January 1521.\n\nThe next step was the civil authorities. Emperor Charles V summoned Luther to appear before the Diet of Worms to answer for his writings. Luther was given a safe-conduct — a promise of physical protection — though he knew what had happened to Hus under similar circumstances.\n\n**The Diet**\nOn April 17, 1521, Luther appeared before the assembled Diet. He was shown a pile of his books and asked two questions:\n1. Are these your writings?\n2. Do you recant them?\n\nLuther asked for time to consider. He was given one day.\n\n**The Second Day**\nOn April 18, Luther returned. He acknowledged the books were his. Then he distinguished between different types of writings — some were basic Christian teaching, some attacked papal abuses, some were polemical. To recant any of them without showing error from Scripture would be unconscionable.\n\nThe famous words (in the earliest account): "Unless I am convinced by the testimony of the Scriptures or by clear reason — for I do not trust either in the pope or in councils alone, since it is well known that they have often erred and contradicted themselves — I am bound by the Scriptures I have quoted and my conscience is captive to the Word of God. I cannot and I will not retract anything, since it is neither safe nor right to go against conscience. Here I stand. I can do no other. God help me. Amen."`,
+  },
+  {
+    id: "dw2", label: "The Legacy", title: "What Worms Established and Why It Still Matters",
+    content: `The Diet of Worms established several principles that remain foundational for Reformed and Baptist theology.\n\n**1. Scripture Over Tradition and Ecclesiastical Authority**\nLuther's appeal to Scripture and conscience over pope and councils was not merely a rhetorical move — it was a precise theological claim: the Word of God is the final authority for all Christian doctrine and practice. No council, no bishop, no tradition can legitimately bind conscience against Scripture.\n\nThis is the formal principle of the Reformation: *sola scriptura*. The Westminster Confession (1646) would later articulate it systematically. The Second London Baptist Confession (1689) opens with the same conviction: "The Holy Scripture is the only sufficient, certain, and infallible rule of all saving knowledge, faith, and obedience."\n\n**2. The Conscience Must Be Free**\nLuther's appeal to conscience — "my conscience is captive to the Word of God" — established the principle of religious liberty in Western thought. A conscience coerced against Scripture's clear teaching is not merely inconvenienced; it is spiritually violated. The Baptist tradition, more than almost any other, has championed this principle: no state, no church, no authority may coerce religious conviction.\n\n**3. The Empire Could Not Stop It**\nCharles V declared Luther an outlaw under the Edict of Worms. Luther was to be arrested on sight; his writings were to be destroyed. It was too late. The press had done its work. Luther was hidden at Wartburg Castle by Elector Frederick of Saxony, where he translated the New Testament into German in eleven weeks.\n\nThe empire tried to suppress the Reformation for another thirty years. It failed. The Peace of Augsburg (1555) recognized Lutheran territories as legitimate. The principle that a conscience grounded in Scripture cannot be permanently suppressed was vindicated.`,
+  },
+];
+
+// ─── Tyndale's New Testament (1526) ─────────────────────────────────────────
+
+const tyndaleNT: LearnSection[] = [
+  {
+    id: "tn1", label: "The Translation", title: "William Tyndale: Father of the English Bible",
+    content: `William Tyndale (c. 1494–1536) translated the New Testament and much of the Old Testament from their original Greek and Hebrew into English — the first person since Jerome (who made the Latin Vulgate) to do so directly from the original languages. His work became the foundation of English Bible translation for centuries, with 83% of the King James Version derived from Tyndale's wording.\n\n**The Mission**\nTyndale's goal was stated famously in a confrontation with a clergyman who dismissed the need for Scripture in English: "If God spare my life, ere many years I will cause a boy that driveth the plough shall know more of the Scripture than thou dost."\n\nThis was not mere democratization of information — it was a theological commitment: Scripture belongs to every believer, not to a clerical class. The right and duty of every Christian to read, understand, and obey the Word of God is a Reformed conviction rooted in the clarity (*perspicuity*) of Scripture.\n\n**The Translation Itself**\nTyndale was a brilliant linguist — fluent in eight languages, trained at Oxford and Cambridge. He translated from Erasmus's Greek New Testament (1516) and Luther's German translation, producing an English text of extraordinary beauty and accuracy. His 1526 New Testament was printed at Worms (where Luther had stood five years earlier) and smuggled into England.\n\n**Key Innovations**\nTyndale coined or popularized many words we still use:\n- "Passover" (instead of "Phase")\n- "Scapegoat"\n- "Atonement"\n- "Long-suffering"\n- "Beautiful"\n\nHis phrase "the Lord's anointed" (for the Messiah), "the salt of the earth," "a law unto themselves," "fight the good fight" — all Tyndale.`,
+  },
+  {
+    id: "tn2", label: "The Martyrdom", title: "Betrayed, Strangled, and Burned",
+    content: `Tyndale was eventually captured through betrayal. After years of clandestine work in Europe, he was arrested near Brussels in 1535 by agents of King Henry VIII's government (despite Henry having once supported Reformation ideas). He was imprisoned for sixteen months in Vilvoorde Castle.\n\n**The Trial**\nTyndale was tried for heresy — specifically for denying the doctrine of purgatory and for his translation of certain theological terms. His key "heresies":\n\n1. He translated *presbuteros* as "elder" rather than "priest" — implying no separate clerical caste\n2. He translated *ekklesia* as "congregation" rather than "church" — implying the church is the people, not the institution\n3. He translated *metanoeite* as "repent" rather than "do penance" — eliminating the sacramental system of merit\n\nThese were not innocent linguistic choices — they were theological claims about what the New Testament actually taught. The hierarchy understood this perfectly.\n\n**The Execution**\nOn October 6, 1536, Tyndale was strangled and then burned at the stake in Vilvoorde, Belgium. His last words, reportedly: "Lord! Open the King of England's eyes."\n\nWithin four years, the Great Bible (largely Tyndale's translation, completed by Miles Coverdale) was placed in every church in England by order of the Crown — the very king whose agents had burned Tyndale. His prayer was answered.\n\n**The Legacy**\nEvery English-speaking person who has read a Bible in the last 500 years has read Tyndale's words. The King James Bible (1611) retained ~83% of his New Testament and ~76% of his Old Testament. When Jonathan Edwards preached, when Charles Spurgeon quoted Scripture, when Baptist churches across the world opened God's Word — they were hearing Tyndale's voice. He is the most significant translator in the English language.`,
+  },
+];
+
+// ─── Calvin's Institutes (1536) ──────────────────────────────────────────────
+
+const calvinsInstitutes: LearnSection[] = [
+  {
+    id: "ci1", label: "The Work", title: "Institutes of the Christian Religion: The Masterwork of Reformed Theology",
+    content: `John Calvin's *Institutes of the Christian Religion* (first edition 1536; final Latin edition 1559; final French edition 1560) is the most important work of systematic theology produced by the Protestant Reformation. It shaped Reformed orthodoxy across Europe, defined the theology that became Presbyterianism, and directly informed the Westminster Confession (1647) and the Second London Baptist Confession (1689).\n\n**Calvin the Man**\nJean Calvin (1509–1564) was born in Noyon, France, trained in law and classical learning, and converted to Protestantism around 1533–34. He intended a life of quiet scholarship. Instead, passing through Geneva in 1536, he was confronted by William Farel: "If you refuse to devote yourself with us to this work of God," Farel thundered, "God will punish you for seeking your own interests rather than his." Calvin stayed. Geneva became the center of the Reformed world.\n\n**The Scope of the Institutes**\nThe final edition of the Institutes contains four books and 80 chapters:\n\n*Book I: Knowledge of God the Creator* — The knowledge of God revealed in creation and Scripture; the doctrine of Scripture; the Trinity\n\n*Book II: Knowledge of God the Redeemer* — The fall, sin, the law, Christ's person and work\n\n*Book III: How We Receive the Grace of Christ* — The Holy Spirit, faith, justification, sanctification, election, prayer\n\n*Book IV: The External Means or Aids by Which God Invites Us into Fellowship* — The church, the sacraments, civil government\n\nThe logical structure is magnificent — everything hangs together, each doctrine supporting the others, all centered on the glory of God and the grace of Christ.`,
+  },
+  {
+    id: "ci2", label: "Key Doctrines", title: "What the Institutes Teach: Sovereignty, Grace, and Scripture",
+    content: `**On Knowledge of God**\n"Our wisdom, in so far as it ought to be deemed true and solid wisdom, consists almost entirely of two parts: the knowledge of God and of ourselves. But as these are connected together by many ties, it is not easy to determine which of the two precedes and gives birth to the other." The famous opening sets Calvin's distinctive method: theology is not speculation about God's inner nature but knowledge of God in his relationship to us.\n\n**On Scripture**\nCalvin's doctrine of Scripture is the formal principle of Reformed theology. Scripture is self-authenticating (*autopiston*) — it does not derive its authority from the church. The Holy Spirit's internal testimony (*testimonium internum Spiritus Sancti*) assures believers of Scripture's divine origin and authority. No external authority — pope, council, or tradition — stands above Scripture.\n\n**On the Sovereignty of God**\nCalvin is famous for his doctrine of providence and predestination. God's sovereignty is absolute — "Not a drop of rain falls but at the express command of God." This is not fatalism but pastoral comfort: the same God who governs the universe is the God who governs my life, and he is good.\n\n**On Justification**\nJustification is "the main hinge on which religion turns." It is forensic — a declaration of righteousness, not an infusion of righteousness. It is by faith alone (*sola fide*) — faith is the *instrument* of justification, not the *basis*. The basis is Christ's righteousness imputed to the believer.\n\n**On Election**\n"Predestination we call the eternal decree of God, by which he determined with himself whatever he wished to happen with regard to every man. All are not created on equal terms, but some are preordained to eternal life, others to eternal damnation." Calvin followed Augustine and Paul (Rom. 9) rigorously — election is unconditional, based on God's sovereign will alone.\n\n**Its Influence on the 1689 LBC**\nThe Second London Baptist Confession (1689) is essentially the Westminster Confession (1647) with Baptist modifications — and the Westminster Confession is the most thorough systematization of Calvin's theology in confessional form. Every page of the 1689 LBC breathes Calvinian air.`,
+  },
+];
+
+// ─── Geneva Bible (1560) ─────────────────────────────────────────────────────
+
+const genevaBible: LearnSection[] = [
+  {
+    id: "gv1", label: "The Bible", title: "The Geneva Bible: Scripture for the People",
+    content: `The Geneva Bible (1560) was the most significant English Bible of the Reformation era and the Bible that shaped Puritan, Presbyterian, and early Baptist theology. It was the Bible the Pilgrims brought to America, the Bible Shakespeare read, and the Bible that was being supplanted only by the King James Version (1611) by the time the Second London Baptist Confession was written.\n\n**Origins in Exile**\nThe Geneva Bible was produced by English Protestant exiles who had fled to Geneva during the reign of the Catholic Queen Mary I ("Bloody Mary," r. 1553–1558). Mary executed nearly 300 Protestants, including Thomas Cranmer (Archbishop of Canterbury), Hugh Latimer, and Nicholas Ridley. The exiles gathered in Calvin's Geneva, the intellectual capital of the Reformed world.\n\nLed by William Whittingham (who later became a minister in Scotland under Knox), the exile community produced the most accurate and readable English Bible yet made.\n\n**What Made It Revolutionary**\n1. **Verse numbers** — The Geneva Bible was the first English Bible to divide the text into numbered verses (following the pattern of Robert Estienne's Greek New Testament of 1551). This made Scripture easy to cite, cross-reference, and memorize.\n\n2. **Marginal notes** — The Geneva Bible included extensive marginal notes explaining difficult passages from a Reformed theological perspective. These notes are doctrinally rich — and were deeply controversial. They challenged royal authority in some places, which is why King James I refused to endorse this Bible (preferring instead a version "without any marginal notes" — hence the KJV).\n\n3. **Roman type** — Earlier Bibles used Gothic "black letter" script, which was harder to read. Geneva used Roman type, making it more accessible.\n\n4. **Size** — The Geneva Bible was printed in a portable octavo format, unlike the large folio Bibles that sat on church lecterns. Ordinary people could own and carry it.`,
+  },
+  {
+    id: "gv2", label: "Legacy", title: "The Bible of the Puritans and Baptists",
+    content: `The Geneva Bible shaped English-speaking Reformed and Baptist theology for nearly a century. Understanding its influence helps explain why the Puritan and Baptist movements were so thoroughly grounded in the text of Scripture.\n\n**The Puritans and the Geneva Bible**\nThe Puritan movement — which would eventually produce the Westminster Assembly (1643–49) and deeply influence the Particular Baptists — was formed almost entirely on the Geneva Bible. The Puritans were people of the Book, and the Book they read was the Geneva Bible. Its marginal notes educated a generation in Reformed theology: election, grace, covenant, the sovereignty of God, the sufficiency of Scripture.\n\n**John Bunyan's Geneva Bible**\nJohn Bunyan (1628–1688) — the Bedford tinker who wrote *Pilgrim's Progress* (1678) and was a leading Particular Baptist — was formed by the Geneva Bible. *Pilgrim's Progress* is saturated in Geneva Bible language and theology. The Christian's journey from the City of Destruction to the Celestial City maps perfectly onto the ordo salutis (order of salvation) taught by the Geneva Bible's notes.\n\n**The Baptists**\nThe Particular Baptists who produced the First London Baptist Confession (1644) and the Second London Baptist Confession (1689) were thoroughly Geneva Bible people. Their theology of sovereignty, grace, election, and Scripture's sufficiency came directly from the tradition the Geneva Bible represented. When they wrote in the 1689 Confession that "the Holy Scripture is the only sufficient, certain, and infallible rule of all saving knowledge, faith, and obedience," they were voicing what the Geneva Bible had planted.\n\n**The Bridge to the KJV**\nThe King James Version (1611) drew heavily on the Geneva Bible's translation while eliminating its Calvinist marginal notes. The language of the KJV is significantly Geneva Bible language. The theological heritage of the Geneva Bible flowed into the KJV and from there into the entire English Protestant tradition.`,
+  },
+];
+
+// ─── King James Bible (1611) ─────────────────────────────────────────────────
+
+const kjvBible: LearnSection[] = [
+  {
+    id: "kjv1", label: "The Commission", title: "The Authorized Version: A Bible for an Empire",
+    content: `The King James Version (KJV), also called the Authorized Version, was commissioned at the Hampton Court Conference in 1604 by King James I and completed in 1611. It was the work of 47 scholars organized into six committees working at Westminster, Cambridge, and Oxford — the most comprehensive and collaborative Bible translation project in English history.\n\n**Why a New Translation?**\nKing James's motives were partly theological but largely political. The Geneva Bible, beloved by Puritans, contained marginal notes he found politically threatening (some notes questioned the divine right of kings). He wanted a Bible without "any marginal notes" that would serve all factions of the church and reinforce royal authority.\n\n**The Translators**\nThe translators were the finest Hebrew and Greek scholars of their age. They were instructed to follow the Bishop's Bible (1568) as the base text, departing from it only when other authorized translations (Tyndale, Coverdale, the Great Bible, the Geneva Bible, the Bishop's Bible) were more accurate. In practice, they drew heavily on all of them — especially Tyndale.\n\n**The Translation Method**\nEach committee translated a section of Scripture independently. Then one company from each group reviewed the others' work. Two revisers from each company reviewed the compiled draft. Then a final editorial committee polished the whole. The result was a translation of extraordinary literary quality and scholarly rigor.\n\n**The Language**\nThe KJV was slightly archaic even when published — the translators deliberately chose dignified, formal English rather than contemporary colloquial speech. This gave it an elevated register that made it feel like "the word of God" in a way casual translation might not. Its cadences became the sound of Scripture in English: "In the beginning was the Word... The Lord is my shepherd... In the beginning God created the heaven and the earth."`,
+  },
+  {
+    id: "kjv2", label: "Significance", title: "The KJV and Reformed Baptist Heritage",
+    content: `The King James Version became the dominant Bible of English-speaking Protestantism for more than 350 years. It was the Bible in which the Westminster Assembly (1643–49) conducted its deliberations, the Bible from which the Particular Baptists preached, and the Bible that was read in every English-speaking Reformed and Baptist church when the Second London Baptist Confession was published in 1689.\n\n**The KJV and the Westminster Confession**\nThe Westminster Confession of Faith (1647) — the theological template for the Second London Baptist Confession (1689) — was written in KJV English. Its proof texts are drawn from the KJV. Its theological vocabulary — justification, sanctification, election, effectual calling — is defined in KJV terms.\n\n**The KJV and Puritan Preaching**\nThe Puritan tradition — which shaped the Particular Baptists more than any other influence — preached from the KJV. John Owen, Richard Baxter, Thomas Goodwin, Thomas Watson — the giants of 17th-century Puritan theology — all preached from the KJV. Their commentaries and sermons assumed KJV language and used it to illuminate doctrine.\n\n**The KJV and the 1689 LBC**\nThe Second London Baptist Confession (1689) was written in KJV England. When it says "The Holy Scripture is the only sufficient, certain, and infallible rule of all saving knowledge, faith, and obedience," the Scripture it refers to is the KJV. The proof texts it cites throughout are KJV citations. The doctrinal vocabulary is KJV vocabulary.\n\n**The Enduring Legacy**\nThe KJV established the theological vocabulary of English-speaking Christianity. Words like "grace," "justification," "sanctification," "propitiation," "covenant" — all carry specific theological freight because of how they were used in the KJV and the confessions that drew on it. Understanding the 1689 LBC requires understanding the KJV world in which it was written.`,
+  },
+];
+
+// ─── First London Baptist Confession (1644) ──────────────────────────────────
+
+const firstLondon: LearnSection[] = [
+  {
+    id: "fl1", label: "Origins", title: "The First London Baptist Confession (1644)",
+    content: `The First London Baptist Confession of Faith (1644) is the founding document of the Particular Baptist movement in England. Produced by seven London Particular Baptist churches during one of the most turbulent periods in English history (the opening of the Civil War), it was the first major confessional statement of English Baptists — and it was explicitly and emphatically Reformed.\n\n**The Context**\nIn the 1640s, religious dissent was exploding in England. The Westminster Assembly was meeting to reform the Church of England. Separatists, Presbyterians, Anglicans, and Independents were debating the future of English Christianity. In this context, several groups calling themselves "Baptists" were appearing — but they were theologically diverse, ranging from Calvinist Particular Baptists to Arminian General Baptists to various radical sects.\n\nThe Particular Baptists needed to distinguish themselves from both the Arminian General Baptists and from the radical antinomian sects that were giving all dissent a bad name. The 1644 Confession was their answer.\n\n**The Seven Churches**\nThe confession was produced by representatives of seven London churches. Their leaders included Hanserd Knollys, William Kiffin, and others who would become the leading figures of English Particular Baptist life for a generation.\n\n**The Theological Position**\nThe 1644 Confession is thoroughly Calvinist:\n- Election: God "hath chosen in Christ Jesus our Lord... the means also are chosen, not left to chance"\n- Total depravity: Man is "altogether dead in sins and trespasses"\n- Particular redemption: Christ "died for... his Church"\n- Effectual grace: God works "by the power of the Spirit upon the elect"\n- Perseverance: The elect "shall certainly persevere to the end"`,
+  },
+  {
+    id: "fl2", label: "Distinctives", title: "Believer's Baptism: The Defining Baptist Conviction",
+    content: `The 1644 Confession's most distinctive contribution is its articulation of believer's baptism — the conviction that baptism is properly administered only to those who have professed faith in Christ.\n\n**The Argument from Scripture**\n"Baptism is an ordinance of the New Testament, given by Christ, to be dispensed only upon persons professing faith, or that are disciples, or taught, who upon a profession of faith, ought to be baptized." (Article 39)\n\nThe Particular Baptists argued that the New Testament pattern is clear:\n- John baptized those who "confessed their sins" (Matt. 3:6)\n- The Great Commission is: "Go and make disciples... baptizing them" — disciples, not infants (Matt. 28:19)\n- The pattern of Acts is: "those who received his word were baptized" (Acts 2:41) — reception of the word comes before baptism\n- Philip and the Ethiopian: "If you believe with all your heart, you may" — belief precedes baptism (Acts 8:37)\n\n**By Immersion**\nThe 1644 Confession specifies that baptism is "by dipping or plunging the whole body under water" — distinguishing Particular Baptists from Separatists and Presbyterians who practiced sprinkling.\n\n**The Covenantal Argument**\nThe Baptists argued that circumcision (the Old Testament sign of the covenant) was properly administered to the children of believing parents because infants were physically born into Israel. But the New Covenant is different: its sign (baptism) marks those who have been spiritually born anew. Regeneration is the prerequisite for the covenant sign in the New Testament, not physical birth into a covenant household.\n\n**The Significance for 1689**\nThe First London Baptist Confession laid the theological groundwork for the Second London Baptist Confession (1689). The 1689 LBC is more systematic and draws more heavily on the Westminster Confession of Faith, but its Baptist distinctives — especially believer's baptism by immersion — are continuous with the 1644 position. The 1689 LBC is, in a real sense, the maturation of what the 1644 Confession began.`,
+  },
+  {
+    id: "fl3", label: "Bridge to 1689", title: "From First London to Second London",
+    content: `The decades between the 1644 and 1689 confessions were turbulent — the Civil War, the Protectorate under Cromwell, the Restoration of the monarchy under Charles II, and the severe persecution of nonconformists under the Clarendon Code. The Particular Baptists survived these decades and emerged stronger.\n\n**The 1677 Revision**\nIn 1677, a group of Particular Baptist leaders — meeting during the period when nonconformist worship was technically illegal under the Conventicle Act — drafted a revised confession. This confession closely followed the Westminster Confession of Faith (1647) in structure and largely in substance, making Baptist modifications particularly in ecclesiology and baptism.\n\nThe 1677 draft was circulated privately during the period of persecution. It was not officially published until conditions allowed.\n\n**The Glorious Revolution and the 1689 Publication**\nWhen William III (William of Orange) overthrew James II in the Glorious Revolution of 1688, the climate changed. The Toleration Act (1689) gave nonconformists legal protection for their worship for the first time. The Particular Baptists seized the moment: representatives of 107 churches from England and Wales met and formally adopted the revised confession — now known as the Second London Baptist Confession of 1689.\n\n**The Continuity**\nThe 1689 LBC is in direct continuity with:\n- The 1644 First London Baptist Confession\n- The theological legacy of Calvin and the Reformed tradition\n- The Westminster Confession of Faith (adopted as a template)\n- The English Puritan heritage\n\nIt is not an innovation but a consolidation — the mature expression of Reformed Baptist theology, standing at the end of the road that runs through Nicaea, Augustine, Hus, Wycliffe, Luther, Calvin, Westminster, and the London Baptist tradition.`,
+  },
+];
+
 // ─── Document Registry ────────────────────────────────────────────────────────
 
 export const LEARN_DOCUMENTS: LearnDocument[] = [
+  // ── Early Church ──────────────────────────────────────────────────────────
+  {
+    id: "jerusalem-council",
+    title: "The Jerusalem Council",
+    shortTitle: "Jerusalem Council",
+    year: 49,
+    origin: "Jerusalem — Acts 15",
+    category: "council",
+    section: "B",
+    description: "The first church council, settling whether Gentiles must be circumcised. Peter, James, and Paul establish that salvation is by grace alone through faith.",
+    icon: "🏛",
+    color: "teal",
+    sections: jerusalemCouncil,
+  },
+  {
+    id: "apostles-creed",
+    title: "The Apostles' Creed",
+    shortTitle: "Apostles' Creed",
+    year: 140,
+    origin: "Rome — Baptismal Symbol",
+    category: "creed",
+    section: "A",
+    description: "The oldest summary of Christian faith still in common use — a Trinitarian baptismal confession affirming Father, Son, and Holy Spirit.",
+    icon: "✦",
+    color: "blue",
+    sections: apostlesCreed,
+  },
+  {
+    id: "council-nicaea",
+    title: "Council of Nicaea",
+    shortTitle: "Nicaea 325",
+    year: 325,
+    origin: "Nicaea, Asia Minor — Emperor Constantine",
+    category: "council",
+    section: "B",
+    description: "The first ecumenical council, convened to answer Arius. It affirmed that the Son is homoousios — of the same substance as the Father.",
+    icon: "⚡",
+    color: "amber",
+    sections: nicaea325,
+  },
+  {
+    id: "nicene-creed",
+    title: "The Nicene Creed",
+    shortTitle: "Nicene Creed",
+    year: 381,
+    origin: "Constantinople — Ecumenical Council",
+    category: "creed",
+    section: "A",
+    description: "The most universally affirmed statement of Christian faith — defining the full deity of Christ and the Holy Spirit against Arianism.",
+    icon: "✦",
+    color: "green",
+    sections: niceneCreed,
+  },
+  {
+    id: "athanasian-creed",
+    title: "Athanasian Creed",
+    shortTitle: "Athanasian Creed",
+    year: 500,
+    origin: "Western Church — c. 5th Century",
+    category: "creed",
+    section: "A",
+    description: "The most detailed and precise statement of Trinitarian doctrine, opening: 'Whoever desires to be saved must above all things hold the catholic faith.'",
+    icon: "α",
+    color: "purple",
+    sections: athanasianCreed,
+  },
+  {
+    id: "council-chalcedon",
+    title: "Council of Chalcedon",
+    shortTitle: "Chalcedon 451",
+    year: 451,
+    origin: "Chalcedon, Asia Minor — Emperor Marcian",
+    category: "council",
+    section: "B",
+    description: "The fourth ecumenical council, defining Christ as one Person in two natures — fully God and fully man — without confusion, change, division, or separation.",
+    icon: "🏛",
+    color: "violet",
+    sections: chalcedon451,
+  },
+  {
+    id: "augustine-grace",
+    title: "Augustine on Grace & Election",
+    shortTitle: "Augustine: Grace",
+    year: 397,
+    origin: "Hippo, North Africa — Bishop Augustine",
+    category: "history",
+    section: "C",
+    description: "Augustine's anti-Pelagian theology established the doctrines of total depravity, sovereign grace, and unconditional election that the Reformation would recover.",
+    icon: "⚖️",
+    color: "orange",
+    sections: augustineGrace,
+  },
+  {
+    id: "council-carthage",
+    title: "Council of Carthage",
+    shortTitle: "Carthage 418",
+    year: 418,
+    origin: "Carthage, North Africa",
+    category: "council",
+    section: "C",
+    description: "Formally condemned Pelagianism, affirming Augustine's doctrines of original sin, total depravity, and the necessity of prevenient grace.",
+    icon: "⚖️",
+    color: "teal",
+    sections: carthage418,
+  },
+  {
+    id: "council-orange",
+    title: "Second Council of Orange",
+    shortTitle: "Orange 529",
+    year: 529,
+    origin: "Orange, Gaul — Church Council",
+    category: "council",
+    section: "C",
+    description: "Decisively condemned semi-Pelagianism, affirming that even the beginning of faith is God's gift — a vindication of Augustinian grace.",
+    icon: "⚖️",
+    color: "amber",
+    sections: orange529,
+  },
+  // ── Pre-Reformation ───────────────────────────────────────────────────────
+  {
+    id: "wycliffe",
+    title: "Wycliffe & the Pre-Reformation",
+    shortTitle: "Wycliffe",
+    year: 1378,
+    origin: "Oxford, England — John Wycliffe",
+    category: "history",
+    section: "D",
+    description: "The 'Morning Star of the Reformation' — Wycliffe translated the Bible into English and challenged papal authority, planting the seeds of reform 140 years before Luther.",
+    icon: "📜",
+    color: "amber",
+    sections: wycliffe,
+  },
+  {
+    id: "jan-hus",
+    title: "Jan Hus — Martyr of Bohemia",
+    shortTitle: "Jan Hus",
+    year: 1415,
+    origin: "Constance, Germany — Council of Constance",
+    category: "history",
+    section: "D",
+    description: "Burned at the stake for preaching Scripture's authority over the papacy, Hus was the direct theological link between Wycliffe and Luther.",
+    icon: "🔥",
+    color: "orange",
+    sections: janHus,
+  },
+  {
+    id: "gutenberg",
+    title: "Gutenberg Bible & the Printing Press",
+    shortTitle: "Gutenberg Bible",
+    year: 1455,
+    origin: "Mainz, Germany — Johannes Gutenberg",
+    category: "history",
+    section: "D",
+    description: "The movable-type press that made mass Bible distribution possible — the technological revolution without which the Protestant Reformation could not have succeeded.",
+    icon: "📖",
+    color: "teal",
+    sections: gutenberg,
+  },
+  // ── Protestant Reformation ────────────────────────────────────────────────
   {
     id: "95theses",
     title: "The 95 Theses",
@@ -360,34 +674,103 @@ export const LEARN_DOCUMENTS: LearnDocument[] = [
     year: 1517,
     origin: "Martin Luther — Wittenberg, Germany",
     category: "theses",
+    section: "D",
     description: "Luther's challenge to the Roman Catholic Church's sale of indulgences, sparking the Protestant Reformation.",
     icon: "📜",
     color: "amber",
     sections: theses95,
   },
   {
-    id: "five-solas",
-    title: "The Five Solas of the Reformation",
-    shortTitle: "Five Solas",
-    year: 1517,
-    origin: "Protestant Reformers — 16th Century",
-    category: "solas",
-    description: "The five Latin phrases that summarize the core theological convictions of the Protestant Reformation.",
-    icon: "✝",
-    color: "violet",
-    sections: fiveSolas,
+    id: "diet-of-worms",
+    title: "Diet of Worms",
+    shortTitle: "Diet of Worms",
+    year: 1521,
+    origin: "Worms, Germany — Emperor Charles V",
+    category: "history",
+    section: "D",
+    description: "'Here I stand.' Luther refuses to recant before the Emperor, establishing Scripture and conscience as supreme over pope and council.",
+    icon: "⚔",
+    color: "orange",
+    sections: dietOfWorms,
   },
   {
-    id: "westminster-shorter",
-    title: "Westminster Shorter Catechism",
-    shortTitle: "WSC",
-    year: 1647,
-    origin: "Westminster Assembly — London, England",
-    category: "catechism",
-    description: "107 questions and answers covering the chief doctrines of the Christian faith, written for children and new believers.",
-    icon: "📋",
+    id: "tyndale",
+    title: "Tyndale's New Testament",
+    shortTitle: "Tyndale NT",
+    year: 1526,
+    origin: "Worms, Germany — William Tyndale",
+    category: "history",
+    section: "D",
+    description: "The first English New Testament translated from Greek — 83% of the King James Bible comes from Tyndale's wording. He died for it.",
+    icon: "📖",
     color: "blue",
-    sections: wsc,
+    sections: tyndaleNT,
+  },
+  {
+    id: "calvins-institutes",
+    title: "Calvin's Institutes of the Christian Religion",
+    shortTitle: "Institutes",
+    year: 1536,
+    origin: "Basel, Switzerland — John Calvin",
+    category: "history",
+    section: "D",
+    description: "The masterwork of Reformed theology — the systematic foundation for the Westminster Confession, the Canons of Dort, and the 1689 Baptist Confession.",
+    icon: "📚",
+    color: "purple",
+    sections: calvinsInstitutes,
+  },
+  {
+    id: "augsburg-confession",
+    title: "Augsburg Confession",
+    shortTitle: "Augsburg",
+    year: 1530,
+    origin: "Augsburg, Germany — Philip Melanchthon",
+    category: "confession",
+    section: "E",
+    description: "The primary confession of the Lutheran Reformation — presented to Emperor Charles V, affirming justification by faith alone and Scripture's authority.",
+    icon: "✦",
+    color: "amber",
+    sections: augsburgConfession,
+  },
+  {
+    id: "smalcald-articles",
+    title: "Smalcald Articles",
+    shortTitle: "Smalcald Articles",
+    year: 1537,
+    origin: "Wittenberg, Germany — Martin Luther",
+    category: "confession",
+    section: "E",
+    description: "Luther's final theological testament — identifying justification as 'the first and chief article' and the mass as the great offense against it.",
+    icon: "⚡",
+    color: "orange",
+    sections: smalcaldArticles,
+  },
+  {
+    id: "geneva-bible",
+    title: "The Geneva Bible",
+    shortTitle: "Geneva Bible",
+    year: 1560,
+    origin: "Geneva, Switzerland — English Exiles",
+    category: "history",
+    section: "D",
+    description: "The Bible of the Puritans and early Baptists — the first English Bible with verse numbers and marginal notes, shaping Reformed theology in English.",
+    icon: "📖",
+    color: "green",
+    sections: genevaBible,
+  },
+  // ── Reformed Confessions ──────────────────────────────────────────────────
+  {
+    id: "belgic-confession",
+    title: "Belgic Confession",
+    shortTitle: "Belgic Confession",
+    year: 1561,
+    origin: "Guido de Brès — Southern Netherlands (Belgium)",
+    category: "confession",
+    section: "E",
+    description: "Written under persecution, this 37-article confession presents the Reformed faith with clarity and warmth.",
+    icon: "🕊",
+    color: "teal",
+    sections: belgicConfession,
   },
   {
     id: "heidelberg",
@@ -396,10 +779,24 @@ export const LEARN_DOCUMENTS: LearnDocument[] = [
     year: 1563,
     origin: "Zacharias Ursinus & Caspar Olevianus — Heidelberg, Germany",
     category: "catechism",
+    section: "E",
     description: "One of the most beloved catechisms of the Reformation, organized around comfort, misery, and gratitude.",
     icon: "📖",
     color: "green",
     sections: heidelberg,
+  },
+  {
+    id: "thirty-nine-articles",
+    title: "Thirty-Nine Articles",
+    shortTitle: "39 Articles",
+    year: 1563,
+    origin: "Church of England — Archbishop Matthew Parker",
+    category: "confession",
+    section: "E",
+    description: "The doctrinal standard of the Church of England — strongly Reformed in its doctrine of justification, predestination, and the authority of Scripture.",
+    icon: "✦",
+    color: "blue",
+    sections: thirtyNineArticles,
   },
   {
     id: "canons-of-dort",
@@ -408,10 +805,51 @@ export const LEARN_DOCUMENTS: LearnDocument[] = [
     year: 1619,
     origin: "Synod of Dort — Dordrecht, Netherlands",
     category: "confession",
+    section: "E",
     description: "The Reformed response to Arminianism, articulating the five points of Calvinist soteriology (TULIP).",
     icon: "⚓",
     color: "orange",
     sections: canonsOfDort,
+  },
+  // ── Baptist & Puritan Era ─────────────────────────────────────────────────
+  {
+    id: "king-james-bible",
+    title: "King James Bible",
+    shortTitle: "KJV 1611",
+    year: 1611,
+    origin: "London, England — King James I",
+    category: "history",
+    section: "D",
+    description: "The Authorized Version — the Bible of the Westminster Assembly, the Puritans, and the Particular Baptists who wrote the 1689 Confession.",
+    icon: "📖",
+    color: "amber",
+    sections: kjvBible,
+  },
+  {
+    id: "five-solas",
+    title: "The Five Solas of the Reformation",
+    shortTitle: "Five Solas",
+    year: 1517,
+    origin: "Protestant Reformers — 16th Century",
+    category: "solas",
+    section: "D",
+    description: "The five Latin phrases that summarize the core theological convictions of the Protestant Reformation.",
+    icon: "✝",
+    color: "violet",
+    sections: fiveSolas,
+  },
+  {
+    id: "first-london-baptist",
+    title: "First London Baptist Confession",
+    shortTitle: "1LBC 1644",
+    year: 1644,
+    origin: "Seven Particular Baptist Churches — London, England",
+    category: "confession",
+    section: "E",
+    description: "The founding document of the Particular Baptist movement — fully Calvinist in soteriology, affirming believer's baptism by immersion.",
+    icon: "🛡",
+    color: "teal",
+    sections: firstLondon,
   },
   {
     id: "westminster-confession",
@@ -420,22 +858,64 @@ export const LEARN_DOCUMENTS: LearnDocument[] = [
     year: 1646,
     origin: "Westminster Assembly — London, England",
     category: "confession",
+    section: "E",
     description: "The most comprehensive Reformed confession, covering all major loci of systematic theology in 33 chapters.",
     icon: "🏛",
     color: "purple",
     sections: wcf,
   },
   {
-    id: "belgic-confession",
-    title: "Belgic Confession",
-    shortTitle: "Belgic Confession",
-    year: 1561,
-    origin: "Guido de Brès — Southern Netherlands (Belgium)",
+    id: "westminster-shorter",
+    title: "Westminster Shorter Catechism",
+    shortTitle: "WSC",
+    year: 1647,
+    origin: "Westminster Assembly — London, England",
+    category: "catechism",
+    section: "E",
+    description: "107 questions and answers covering the chief doctrines of the Christian faith, written for children and new believers.",
+    icon: "📋",
+    color: "blue",
+    sections: wsc,
+  },
+  {
+    id: "westminster-larger",
+    title: "Westminster Larger Catechism",
+    shortTitle: "WLC",
+    year: 1648,
+    origin: "Westminster Assembly — London, England",
+    category: "catechism",
+    section: "E",
+    description: "The comprehensive companion to the Shorter Catechism — 196 questions expounding the Ten Commandments, the Apostles' Creed, and the Lord's Prayer in depth.",
+    icon: "📋",
+    color: "violet",
+    sections: westminsterLarger,
+  },
+  {
+    id: "1689-lbc",
+    title: "Second London Baptist Confession of Faith",
+    shortTitle: "1689 LBC",
+    year: 1689,
+    origin: "107 Particular Baptist Churches — London, England",
     category: "confession",
-    description: "Written under persecution, this 37-article confession presents the Reformed faith with clarity and warmth.",
-    icon: "🕊",
-    color: "teal",
-    sections: belgicConfession,
+    section: "E",
+    description: "The definitive confession of Reformed Baptist theology — affirming sovereign grace, Scripture alone, and believer's baptism by immersion. The crown of the Reformation's Baptist line.",
+    icon: "✦",
+    color: "amber",
+    sections: secondLondon,
+  },
+  // ── Doctrinal Debates ────────────────────────────────────────────────────
+  {
+    id: "monergism-debate",
+    title: "Monergism vs. Synergism",
+    shortTitle: "Monergism Debate",
+    year: 1525,
+    origin: "Luther vs. Erasmus — and every century since",
+    category: "debate",
+    section: "F",
+    description: "Is salvation the work of God alone, or does it require human cooperation? The most important debate in Protestant history, from Augustine to Dort to today.",
+    icon: "⚔️",
+    color: "orange",
+    sections: monergismDebate,
   },
 ];
 

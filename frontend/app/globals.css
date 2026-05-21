@@ -775,6 +775,38 @@ html[data-theme="light-elegant"] [class*="text-indigo-"]   { color: var(--accent
 html[data-theme="light-elegant"] [class*="border-indigo-"] { border-color: rgba(155,114,40,0.30) !important; }
 html[data-theme="light-elegant"] [class*="border-t-emerald-"] { border-top-color: var(--accent) !important; }
 
+/* All remaining Tailwind accent colors → amber gold in Light Elegant */
+html[data-theme="light-elegant"] [class*="bg-yellow-"]    { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-yellow-"]  { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-yellow-"]{ border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-lime-"]      { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-lime-"]    { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-lime-"]  { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-blue-"]      { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-blue-"]    { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-blue-"]  { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-sky-"]       { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-sky-"]     { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-sky-"]   { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-pink-"]      { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-pink-"]    { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-pink-"]  { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-orange-"]    { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-orange-"]  { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-orange-"]{ border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-rose-"]      { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-rose-"]    { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-rose-"]  { border-color: rgba(155,114,40,0.30) !important; }
+html[data-theme="light-elegant"] [class*="bg-stone-"]     { background-color: rgba(155,114,40,0.09) !important; }
+html[data-theme="light-elegant"] [class*="text-stone-"]   { color: var(--fg-mid) !important; }
+html[data-theme="light-elegant"] [class*="border-stone-"] { border-color: rgba(155,114,40,0.25) !important; }
+html[data-theme="light-elegant"] [class*="bg-slate-"]     { background-color: rgba(155,114,40,0.09) !important; }
+html[data-theme="light-elegant"] [class*="text-slate-"]   { color: var(--fg-mid) !important; }
+html[data-theme="light-elegant"] [class*="border-slate-"] { border-color: rgba(155,114,40,0.25) !important; }
+html[data-theme="light-elegant"] [class*="bg-amber-"]     { background-color: rgba(155,114,40,0.12) !important; }
+html[data-theme="light-elegant"] [class*="text-amber-"]   { color: var(--accent) !important; }
+html[data-theme="light-elegant"] [class*="border-amber-"] { border-color: rgba(155,114,40,0.30) !important; }
+
 /* Inputs */
 html[data-theme="light-elegant"] textarea,
 html[data-theme="light-elegant"] input[type="text"],
@@ -787,7 +819,7 @@ html[data-theme="light-elegant"] select {
 html[data-theme="light-elegant"] textarea::placeholder,
 html[data-theme="light-elegant"] input::placeholder { color: var(--fg-lo) !important; }
 
-/* Hero gradient card → warm sunrise tones */
+/* Hero gradient card → very light warm tones (light-elegant) */
 html[data-theme="light-elegant"] .hero-gradient,
 html[data-theme="light-elegant"] [class*="from-sky-"],
 html[data-theme="light-elegant"] [class*="from-amber-"],
@@ -797,19 +829,16 @@ html[data-theme="light-elegant"] [class*="from-red-"],
 html[data-theme="light-elegant"] [class*="from-emerald-"],
 html[data-theme="light-elegant"] [class*="from-indigo-"],
 html[data-theme="light-elegant"] [class*="from-teal-"] {
-  background: linear-gradient(135deg, rgba(155,114,40,0.20) 0%, rgba(237,232,223,0.92) 55%, rgba(200,170,100,0.15) 100%) !important;
+  background: linear-gradient(135deg, rgba(155,114,40,0.07) 0%, rgba(249,246,242,0.99) 60%, rgba(210,185,130,0.05) 100%) !important;
 }
 
-/* ── Bible reader: amber gold chapter number with warm glow ── */
+/* ── Bible reader: amber gold chapter number (no glow in light-elegant) ── */
 html[data-theme="light-elegant"] .pn-chapter-num {
   background: linear-gradient(180deg, #c49a3a 0%, #9b7228 55%, #7a5a1e 100%) !important;
   -webkit-background-clip: text !important;
   background-clip: text !important;
   -webkit-text-fill-color: transparent !important;
-  filter:
-    drop-shadow(0 0 12px rgba(155,114,40,0.50))
-    drop-shadow(0 0 28px rgba(155,114,40,0.28))
-    drop-shadow(0 0 52px rgba(155,114,40,0.12)) !important;
+  filter: none !important;
 }
 
 /* Book name: amber gold */

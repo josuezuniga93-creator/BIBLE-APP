@@ -10,6 +10,11 @@ import {
   type StreakData,
   type BadgeId,
 } from "./lib/streakData";
+import {
+  loadDevotionalProgress,
+  DEVOTIONAL_BADGES,
+  type DevotionalBadgeId,
+} from "./lib/devotionalProgress";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
 
@@ -173,10 +178,11 @@ export default function Home() {
   // Today's church history verse — rotates daily through the 8 entries
   const todayHV = HISTORY_VERSES[new Date().getDate() % HISTORY_VERSES.length];
 
-  const [streakData,   setStreakData]   = useState<StreakData | null>(null);
-  const [newBadgeIds,  setNewBadgeIds]  = useState<BadgeId[]>([]);
-  const [toastVisible, setToastVisible] = useState(false);
-  const [greeting,     setGreeting]     = useState("Good Morning");
+  const [streakData,        setStreakData]        = useState<StreakData | null>(null);
+  const [newBadgeIds,       setNewBadgeIds]       = useState<BadgeId[]>([]);
+  const [toastVisible,      setToastVisible]      = useState(false);
+  const [greeting,          setGreeting]          = useState("Good Morning");
+  const [devotionalBadges,  setDevotionalBadges]  = useState<DevotionalBadgeId[]>([]);
   const [videoOpen,    setVideoOpen]    = useState(false);
   const [historyVerse, setHistoryVerse] = useState<HistoryVerse | null>(null);
 
@@ -188,6 +194,12 @@ export default function Home() {
   const [contentLoading,  setContentLoading]  = useState(false);
 
   useEffect(() => { setGreeting(getGreeting()); }, []);
+
+  useEffect(() => {
+    // Load devotional badges
+    const dp = loadDevotionalProgress();
+    setDevotionalBadges(dp.badges as DevotionalBadgeId[]);
+  }, []);
 
   useEffect(() => {
     const prev = loadStreak();
@@ -521,7 +533,7 @@ export default function Home() {
         </button>
 
         {/* ── Badges showcase (earned only) ─────────────────────────────────── */}
-        {earnedBadgeIds.length > 0 && (
+        {(earnedBadgeIds.length > 0 || devotionalBadges.length > 0) && (
           <section className="pt-1">
             <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">
               Badges
@@ -543,6 +555,22 @@ export default function Home() {
                   </div>
                 );
               })}
+              {devotionalBadges.map((id) => {
+                const badge = DEVOTIONAL_BADGES[id];
+                return (
+                  <div
+                    key={`dev-${id}`}
+                    title={badge.desc}
+                    className="flex flex-col items-center gap-1.5 p-2.5 rounded-xl border border-amber-600/35 bg-amber-600/10"
+                  >
+                    <span className="text-2xl">{badge.emoji}</span>
+                    <span className="text-[9px] font-bold text-center leading-tight text-amber-300/90">
+                      {badge.label}
+                    </span>
+                    <span className="text-[8px] font-mono text-amber-400/50">✓ earned</span>
+                  </div>
+                );
+              })}
             </div>
           </section>
         )}
@@ -561,15 +589,9 @@ export default function Home() {
               {streakData && streakData.streak > 0 ? (
                 <span className="text-[11px] text-white/25 font-semibold">
                   {streakData.streak}-day streak
-                  {streakData.longestStreak > 1 && (
-                    <span className="text-white/15 font-normal"> · best {streakData.longestStreak}</span>
-                  )}
                 </span>
               ) : (
                 <span className="text-[11px] text-white/20">Start your streak today</span>
-              )}
-              {streakData && (
-                <span className="text-[10px] text-white/12 ml-1">· {streakData.totalLogins} visit{streakData.totalLogins !== 1 ? "s" : ""}</span>
               )}
             </div>
           )}

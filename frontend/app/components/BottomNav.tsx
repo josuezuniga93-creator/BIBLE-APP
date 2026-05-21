@@ -149,15 +149,30 @@ function GiveIcon({ active }: { active: boolean }) {
   );
 }
 
+function TimelineIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <line x1="12" y1="2" x2="12" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <circle cx="12" cy="5"  r="2.2" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="12" cy="12" r="2.2" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5"/>
+      <circle cx="12" cy="19" r="2.2" fill={active ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.5"/>
+      <line x1="12" y1="5"  x2="18" y2="5"  stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <line x1="12" y1="12" x2="7"  y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+      <line x1="12" y1="19" x2="18" y2="19" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 const MORE_LINKS = [
-  { href: "/library",        Icon: LibraryIcon, label: "Free Books"  },
-  { href: "/bible-tracker",  Icon: TrackerIcon, label: "Tracker"     },
-  { href: "/family-worship", Icon: FamilyIcon,  label: "Family"      },
-  { href: "/bible-plans",    Icon: PlansIcon,   label: "Plans"       },
-  { href: "/kids-books",     Icon: KidsIcon,    label: "Kids Books"  },
-  { href: "/videos",         Icon: VideosIcon,  label: "Videos"      },
-  { href: "/give",           Icon: GiveIcon,    label: "Give"        },
-  { href: "/fellowship",    Icon: GiveIcon,    label: "Fellowship"  },
+  { href: "/timeline",       Icon: TimelineIcon, label: "Timeline"        },
+  { href: "/library",        Icon: LibraryIcon,  label: "Free Books"      },
+  { href: "/bible-tracker",  Icon: TrackerIcon,  label: "Bible Tracker"   },
+  { href: "/family-worship", Icon: FamilyIcon,   label: "Family Worship"  },
+  { href: "/bible-plans",    Icon: PlansIcon,    label: "Plans"           },
+  { href: "/kids-books",     Icon: KidsIcon,     label: "Kids Books"      },
+  { href: "/videos",         Icon: VideosIcon,   label: "Videos"          },
+  { href: "/give",           Icon: GiveIcon,     label: "Give"            },
+  { href: "/fellowship",     Icon: GiveIcon,     label: "Fellowship"      },
 ] as const;
 
 function TabIcon({ href, active }: { href: string; active: boolean }) {

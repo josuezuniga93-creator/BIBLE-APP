@@ -316,31 +316,35 @@ function ColorPicker({
   onClose: () => void;
 }) {
   return (
-    <div className="absolute z-50 left-0 top-6 bg-[#1a1a1a] border border-white/[0.12] rounded-2xl shadow-xl p-3 flex flex-col gap-2.5 min-w-[200px]" onClick={(e) => e.stopPropagation()}>
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Highlight v.{verseNum}</p>
-        <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors text-sm">✕</button>
-      </div>
-      <div className="flex gap-2">
-        {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
+    <>
+      {/* Backdrop */}
+      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); onClose(); }} />
+      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1a1a] border border-white/[0.12] rounded-2xl shadow-2xl p-4 flex flex-col gap-3 min-w-[220px]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Highlight v.{verseNum}</p>
+          <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors text-sm">✕</button>
+        </div>
+        <div className="flex gap-2 justify-center">
+          {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
+            <button
+              key={key}
+              onClick={() => { onSelect(key); onClose(); }}
+              title={val.label}
+              className={`w-9 h-9 rounded-full transition-transform hover:scale-110 border-2 ${current === key ? "border-white/60 scale-110" : "border-transparent"}`}
+              style={{ backgroundColor: val.dot }}
+            />
+          ))}
+        </div>
+        {current && (
           <button
-            key={key}
-            onClick={() => { onSelect(key); onClose(); }}
-            title={val.label}
-            className={`w-8 h-8 rounded-full transition-transform hover:scale-110 border-2 ${current === key ? "border-white/60 scale-110" : "border-transparent"}`}
-            style={{ backgroundColor: val.dot }}
-          />
-        ))}
+            onClick={() => { onClear(); onClose(); }}
+            className="text-[10px] text-white/25 hover:text-white/50 font-bold text-center transition-colors"
+          >
+            Remove highlight
+          </button>
+        )}
       </div>
-      {current && (
-        <button
-          onClick={() => { onClear(); onClose(); }}
-          className="text-[10px] text-white/25 hover:text-white/50 font-bold text-left mt-0.5 transition-colors"
-        >
-          Remove highlight
-        </button>
-      )}
-    </div>
+    </>
   );
 }
 
@@ -966,7 +970,6 @@ function LexiconInner() {
                       v.{vn}
                     </span>
                   ))}
-                  <button onClick={() => setVerseColors({})} className="text-[10px] text-white/15 hover:text-white/40 font-bold ml-1 transition-colors">clear</button>
                 </div>
               )}
             </div>
@@ -1020,7 +1023,16 @@ function LexiconInner() {
                             />
                           )}
                         </span>
-                        {verse.text}
+                        <span
+                          className="cursor-pointer select-text"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setColorPickerVerse((v) => v === verse.verse ? null : verse.verse);
+                          }}
+                          title="Tap to highlight this verse"
+                        >
+                          {verse.text}
+                        </span>
                         {" "}
                       </span>
                     );

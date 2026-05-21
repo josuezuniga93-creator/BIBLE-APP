@@ -1,37 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import type { BookCatalogEntry } from "../lib/types";
 import { STATIC_BOOK_CATALOG } from "../lib/bookCatalog";
-import { useLanguage } from "../lib/useLanguage";
-
-const TAG_COLORS: Record<string, string> = {
-  Allegory:        "bg-violet-500/10 text-violet-400 border-violet-500/20",
-  Puritan:         "bg-amber-500/10 text-amber-400 border-amber-500/20",
-  Foundational:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-  Autobiography:   "bg-blue-500/10 text-blue-400 border-blue-500/20",
-  Grace:           "bg-pink-500/10 text-pink-400 border-pink-500/20",
-  Patristic:       "bg-orange-500/10 text-orange-400 border-orange-500/20",
-  "Church Father": "bg-orange-500/10 text-orange-300 border-orange-500/20",
-  "Spiritual Memoir": "bg-teal-500/10 text-teal-400 border-teal-500/20",
-  Devotional:      "bg-rose-500/10 text-rose-400 border-rose-500/20",
-  Medieval:        "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  Classic:         "bg-slate-500/10 text-slate-300 border-slate-500/20",
-  Reformed:        "bg-violet-500/10 text-violet-300 border-violet-500/20",
-  Theology:        "bg-indigo-500/10 text-indigo-400 border-indigo-500/20",
-  Calvin:          "bg-indigo-500/10 text-indigo-300 border-indigo-500/20",
-  Sanctification:  "bg-emerald-500/10 text-emerald-300 border-emerald-500/20",
-  Victorian:       "bg-stone-500/10 text-stone-300 border-stone-500/20",
-  Practical:       "bg-lime-500/10 text-lime-400 border-lime-500/20",
-  Spurgeon:        "bg-amber-500/10 text-amber-300 border-amber-500/20",
-  Daily:           "bg-sky-500/10 text-sky-400 border-sky-500/20",
-  Sermons:         "bg-red-500/10 text-red-400 border-red-500/20",
-  "Great Awakening": "bg-yellow-500/10 text-yellow-300 border-yellow-500/20",
-  Edwards:         "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-};
-
-const DEFAULT_TAG_CLASS = "bg-white/5 text-white/40 border-white/10";
+import { useTheme } from "../lib/useTheme";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -48,271 +21,436 @@ const COVER_STYLES: Record<string, { from: string; via: string; to: string; acce
 
 const DEFAULT_COVER = { from: "#0d0d1a", via: "#1a1a3b", to: "#0a0a0f", accent: "#a78bfa", ornament: "✦" };
 
-function BookCover({
-  book,
-  grayscale = false,
-}: {
-  book: BookCatalogEntry;
-  grayscale?: boolean;
-}) {
+function BookCover({ book, size = "full" }: { book: BookCatalogEntry; size?: "full" | "small" }) {
   const style = COVER_STYLES[book.slug] ?? DEFAULT_COVER;
-
+  const isSmall = size === "small";
   return (
     <div
-      className={`w-full h-full flex flex-col justify-between p-4 transition-transform duration-200 group-hover:scale-[1.02] ${grayscale ? "opacity-40" : ""}`}
-      style={{ background: `linear-gradient(160deg, ${style.from}, ${style.via} 50%, ${style.to})` }}
+      className="w-full h-full flex flex-col justify-between"
+      style={{
+        background: `linear-gradient(160deg, ${style.from}, ${style.via} 50%, ${style.to})`,
+        padding: isSmall ? "6px" : "16px",
+      }}
     >
-      {/* Top ornament */}
       <div className="flex justify-between items-start">
-        <div className="w-px self-stretch opacity-30" style={{ background: style.accent }} />
-        <span className="text-lg opacity-40" style={{ color: style.accent }}>{style.ornament}</span>
+        <div className="w-px self-stretch opacity-25" style={{ background: style.accent }} />
+        <span style={{ color: style.accent, opacity: 0.4, fontSize: isSmall ? "8px" : "18px" }}>
+          {style.ornament}
+        </span>
       </div>
-
-      {/* Center: title + author */}
-      <div className="text-center px-1">
+      <div className="text-center" style={{ padding: isSmall ? "0 2px" : "0 4px" }}>
+        {!isSmall && (
+          <p
+            className="font-black uppercase leading-tight"
+            style={{ color: style.accent, opacity: 0.7, fontSize: "9px", letterSpacing: "0.15em", marginBottom: "6px" }}
+          >
+            {book.author}
+          </p>
+        )}
         <p
-          className="text-[11px] font-black uppercase tracking-[0.2em] mb-3 leading-tight"
-          style={{ color: style.accent, opacity: 0.75 }}
+          className="text-white font-bold leading-snug"
+          style={{ fontSize: isSmall ? "8px" : "13px", WebkitLineClamp: isSmall ? 3 : 4, display: "-webkit-box", WebkitBoxOrient: "vertical", overflow: "hidden" }}
         >
-          {book.author}
-        </p>
-        <p className="text-white font-bold text-sm leading-snug line-clamp-4">
           {book.title}
         </p>
-        <p className="text-white/25 text-[10px] mt-2 font-medium">{book.year}</p>
       </div>
-
-      {/* Bottom rule */}
-      <div className="h-px w-12 mx-auto opacity-25" style={{ background: style.accent }} />
+      <div className="h-px w-8 mx-auto opacity-20" style={{ background: style.accent }} />
     </div>
   );
 }
 
-function TagPill({ tag }: { tag: string }) {
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-        TAG_COLORS[tag] ?? DEFAULT_TAG_CLASS
-      }`}
-    >
-      {tag}
-    </span>
-  );
-}
+// ─── Categories ────────────────────────────────────────────────────────────────
+
+const CATEGORY_ICONS: Record<string, string> = {
+  "All":        "📚",
+  "Puritan":    "✝️",
+  "Patristic":  "🏛",
+  "Reformed":   "⛪",
+  "Devotional": "🕯️",
+  "Theology":   "📖",
+  "Classic":    "🏺",
+  "Allegory":   "🌿",
+};
+
+const CATEGORIES = [
+  "All", "Puritan", "Patristic", "Reformed", "Devotional", "Theology", "Classic", "Allegory",
+];
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
 
 type ProgressEntry = { book: BookCatalogEntry; chapter: number; total: number };
+type LibTab = "books" | "reading" | "completed";
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LibraryPage() {
-  const { t } = useLanguage();
-  const [books, setBooks] = useState<BookCatalogEntry[]>(STATIC_BOOK_CATALOG);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [inProgress, setInProgress] = useState<ProgressEntry[]>([]);
-  const [continueOpen, setContinueOpen] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === "light-elegant";
 
-  // Read progress from localStorage once books are loaded
+  const th = {
+    pageBg:            isLight ? "#f5f1eb"                              : "#0e0e18",
+    textPrimary:       isLight ? "#1c1409"                              : "rgba(255,255,255,0.92)",
+    textSecondary:     isLight ? "#6b5226"                              : "rgba(255,255,255,0.38)",
+    textMuted:         isLight ? "#9b8560"                              : "rgba(255,255,255,0.4)",
+    textFaint:         isLight ? "#b09878"                              : "rgba(255,255,255,0.25)",
+    textVeryFaint:     isLight ? "#c4b090"                              : "rgba(255,255,255,0.22)",
+    accent:            isLight ? "#9b7228"                              : "#a78bfa",
+    accentLight:       isLight ? "#c4973a"                              : "#c4b5fd",
+    primary:           isLight ? "#9b7228"                              : "#7c3aed",
+    heroBg:            isLight ? "linear-gradient(135deg,#6b4a10 0%,#9b7228 55%,#4a3010 100%)"
+                               : "linear-gradient(135deg,#1a0845 0%,#2d1b69 55%,#0f0a2a 100%)",
+    heroAccentText:    isLight ? "#f5e6c8"                              : "#c084fc",
+    heroSubtext:       isLight ? "rgba(245,230,200,0.8)"                : "rgba(255,255,255,0.4)",
+    heroGlow:          isLight ? "none"                                 : "radial-gradient(circle,#c084fc 0%,transparent 70%)",
+    cardBg:            isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.03)",
+    cardBorder:        isLight ? "rgba(155,114,40,0.20)"                : "rgba(255,255,255,0.07)",
+    searchBg:          isLight ? "rgba(155,114,40,0.08)"                : "rgba(255,255,255,0.06)",
+    searchBorder:      isLight ? "rgba(155,114,40,0.22)"                : "rgba(255,255,255,0.08)",
+    catActiveBg:       isLight ? "rgba(155,114,40,0.15)"                : "rgba(124,58,237,0.25)",
+    catActiveBorder:   isLight ? "rgba(155,114,40,0.5)"                 : "rgba(167,139,250,0.5)",
+    catInactiveBg:     isLight ? "rgba(155,114,40,0.04)"                : "rgba(255,255,255,0.04)",
+    catInactiveBorder: isLight ? "rgba(155,114,40,0.14)"                : "rgba(255,255,255,0.08)",
+    progressTrack:     isLight ? "rgba(155,114,40,0.15)"                : "rgba(255,255,255,0.08)",
+    progressBar:       isLight ? "linear-gradient(90deg,#c4973a,#9b7228)": "linear-gradient(90deg,#ec4899,#a855f7)",
+    tabStripBorder:    isLight ? "rgba(155,114,40,0.18)"                : "rgba(255,255,255,0.07)",
+    tabActiveBorder:   isLight ? "#9b7228"                              : "#7c3aed",
+    tabInactiveColor:  isLight ? "#9b8560"                              : "rgba(255,255,255,0.3)",
+    startReading:      isLight ? "#9b7228"                              : "rgba(167,139,250,0.65)",
+    comingSoonLabel:   isLight ? "rgba(155,114,40,0.7)"                 : "rgba(167,139,250,0.5)",
+    footerCardBg:      isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.03)",
+    footerCardBorder:  isLight ? "rgba(155,114,40,0.18)"                : "rgba(255,255,255,0.06)",
+    footerText:        isLight ? "#4a3010"                              : "rgba(255,255,255,0.6)",
+    footerSubtext:     isLight ? "#9b8560"                              : "rgba(255,255,255,0.25)",
+    iconMuted:         isLight ? "#9b8560"                              : "rgba(255,255,255,0.4)",
+    star:              isLight ? "#c4973a"                              : "#fbbf24",
+  };
+
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeTab, setActiveTab] = useState<LibTab>("books");
+  const [inProgress, setInProgress] = useState<ProgressEntry[]>([]);
+  const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(new Set());
+
+  const available = STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon);
+  const comingSoon = STATIC_BOOK_CATALOG.filter((b) => b.coming_soon);
+
+  // Load progress from localStorage
   useEffect(() => {
-    if (books.length === 0) return;
     const entries: ProgressEntry[] = [];
-    for (const book of books) {
+    const done = new Set<string>();
+    for (const book of available) {
       const raw = localStorage.getItem(`axiom-progress-${book.slug}`);
       if (!raw) continue;
       try {
         const { chapter, total } = JSON.parse(raw);
-        if (chapter && total) entries.push({ book, chapter, total });
+        if (chapter && total) {
+          entries.push({ book, chapter, total });
+          if (chapter >= total) done.add(book.slug);
+        }
       } catch {}
     }
     setInProgress(entries);
-  }, [books]);
+    setCompletedSlugs(done);
+  }, []);
 
-  const available = books.filter((b) => !b.coming_soon);
-  const comingSoon = books.filter((b) => b.coming_soon);
+  // Filtered books
+  const filteredBooks = useMemo(() => {
+    return available.filter((b) => activeCategory === "All" || b.tags.includes(activeCategory));
+  }, [available, activeCategory]);
+
+  const tabBooks = useMemo(() => {
+    if (activeTab === "reading") return inProgress.filter((e) => !completedSlugs.has(e.book.slug)).map((e) => e.book);
+    if (activeTab === "completed") return inProgress.filter((e) => completedSlugs.has(e.book.slug)).map((e) => e.book);
+    return filteredBooks;
+  }, [activeTab, filteredBooks, inProgress, completedSlugs]);
+
+  function getProgress(slug: string) {
+    return inProgress.find((e) => e.book.slug === slug);
+  }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
-      {/* Hero */}
-      <div className="relative overflow-hidden border-b border-white/[0.06]">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-transparent to-violet-900/10" />
-        <div className="relative max-w-7xl mx-auto px-4 py-16 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs font-bold uppercase tracking-widest mb-6">
-            📚 {t("lib_badge")}
-          </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-4 bg-gradient-to-r from-white via-amber-200 to-violet-200 bg-clip-text text-transparent">
-            {t("lib_heading")}
-          </h1>
-          <p className="text-white/50 text-lg max-w-xl mx-auto">
-            {t("lib_sub")}
-          </p>
-          <p className="mt-2 text-white/25 text-xs italic">
-            "All freely, freely given." — Calvin
-          </p>
+    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+
+      {/* ── Header ────────────────────────────────────────────────────────────── */}
+      <div className="flex items-center justify-between px-4 pt-5 pb-2">
+        <h1 className="text-lg font-bold" style={{ color: th.textPrimary }}>
+          Free Books <span style={{ color: th.accent }}>Library</span>
+        </h1>
+        <div className="flex items-center gap-4">
+          <button className="transition-colors text-lg" style={{ color: th.iconMuted }}>🔍</button>
+          <button className="transition-colors text-lg" style={{ color: th.iconMuted }}>🔔</button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-10">
-        {loading && (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-violet-400 animate-spin" />
+      {/* ── Hero banner ──────────────────────────────────────────────────────── */}
+      <div
+        className="mx-4 mb-6 rounded-2xl overflow-hidden relative"
+        style={{ background: th.heroBg, minHeight: "120px" }}
+      >
+        <div className="absolute right-6 top-1/2 -translate-y-1/2 text-7xl opacity-20 select-none pointer-events-none">
+          📚
+        </div>
+        {!isLight && (
+          <div
+            className="absolute right-4 top-4 w-20 h-20 rounded-full opacity-15 pointer-events-none"
+            style={{ background: th.heroGlow }}
+          />
+        )}
+        <div className="relative px-5 py-5">
+          <h2 className="text-xl font-black leading-tight mb-1">
+            <span style={{ color: th.heroAccentText }}>Read More.</span>
+            <br />
+            <span className="text-white">Grow More.</span>
+          </h2>
+          <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
+            Thousands of free books at your fingertips.
+          </p>
+          <button
+            className="px-5 py-2 rounded-full text-xs font-bold text-white active:scale-95 transition-transform"
+            style={{ backgroundColor: th.primary }}
+            onClick={() => document.getElementById("my-library")?.scrollIntoView({ behavior: "smooth" })}
+          >
+            Explore Now
+          </button>
+        </div>
+      </div>
+
+      {/* ── Categories ───────────────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Categories</p>
+          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+        </div>
+        <div className="flex gap-2.5 px-4 overflow-x-auto pb-1 scrollbar-none">
+          {CATEGORIES.map((cat) => {
+            const active = activeCategory === cat;
+            return (
+              <button
+                key={cat}
+                onClick={() => { setActiveCategory(cat); setActiveTab("books"); }}
+                className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-2xl transition-all active:scale-95"
+                style={{
+                  border: active ? `1px solid ${th.catActiveBorder}` : `1px solid ${th.catInactiveBorder}`,
+                  backgroundColor: active ? th.catActiveBg : th.catInactiveBg,
+                  color: active ? th.accentLight : th.textMuted,
+                }}
+              >
+                <span className="text-lg leading-none">{CATEGORY_ICONS[cat] ?? "📖"}</span>
+                <span className="text-[10px] font-bold whitespace-nowrap">{cat}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* ── Popular Books ────────────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Popular Books</p>
+          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
+          {filteredBooks.slice(0, 8).map((book) => (
+            <Link
+              key={book.slug}
+              href={`/library/${book.slug}`}
+              className="flex-shrink-0 w-28 active:scale-95 transition-transform"
+            >
+              <div className="w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40">
+                <BookCover book={book} />
+              </div>
+              <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
+                {book.title}
+              </p>
+              <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span style={{ color: th.star, fontSize: "10px" }}>★</span>
+                <span style={{ color: th.textSecondary, fontSize: "10px" }}>4.8</span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Coming Soon ──────────────────────────────────────────────────────── */}
+      {comingSoon.length > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-4 mb-3">
+            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Coming Soon</p>
+            <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+          </div>
+          <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
+            {comingSoon.map((book) => (
+              <div key={book.slug} className="flex-shrink-0 w-28 opacity-50">
+                <div className="w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40">
+                  <BookCover book={book} />
+                </div>
+                <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textMuted }}>
+                  {book.title}
+                </p>
+                <p className="text-[10px] mt-0.5 font-bold uppercase tracking-wide" style={{ color: th.comingSoonLabel }}>
+                  In preparation
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── My Library ───────────────────────────────────────────────────────── */}
+      <div id="my-library" className="px-4 pb-10">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-base font-bold" style={{ color: th.textPrimary }}>My Library</p>
+          <div className="flex items-center gap-3">
+            <button className="transition-colors" style={{ color: th.iconMuted }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </button>
+            <button className="transition-colors" style={{ color: th.iconMuted }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Tab strip */}
+        <div className="flex mb-5" style={{ borderBottom: `1px solid ${th.tabStripBorder}` }}>
+          {(["books", "reading", "completed"] as const).map((tab) => {
+            const labels: Record<LibTab, string> = { books: "All Books", reading: "Reading", completed: "Completed" };
+            const active = activeTab === tab;
+            return (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className="flex-1 py-2.5 text-xs font-bold transition-all"
+                style={{
+                  borderBottom: active ? `2px solid ${th.tabActiveBorder}` : "2px solid transparent",
+                  color: active ? th.accentLight : th.tabInactiveColor,
+                  marginBottom: "-1px",
+                }}
+              >
+                {labels[tab]}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Empty states */}
+        {tabBooks.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-4xl mb-3">{activeTab === "completed" ? "🎉" : activeTab === "reading" ? "📖" : "📚"}</p>
+            <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>
+              {activeTab === "completed" ? "No books completed yet" : activeTab === "reading" ? "No books in progress" : "No books found"}
+            </p>
+            <p className="text-xs" style={{ color: th.textFaint }}>
+              {activeTab === "books" ? "Try selecting a different category" : "Start reading a book to see it here"}
+            </p>
           </div>
         )}
 
-        {error && (
-          <div className="text-center py-20 text-red-400 text-sm">
-            Could not load books: {error}
-          </div>
-        )}
+        {/* Book list rows */}
+        <div className="space-y-3">
+          {tabBooks.map((book) => {
+            const prog = getProgress(book.slug);
+            const pct = prog ? Math.round((prog.chapter / prog.total) * 100) : 0;
+            const isDone = completedSlugs.has(book.slug);
+            return (
+              <Link
+                key={book.slug}
+                href={`/library/${book.slug}`}
+                className="flex items-center gap-3 p-3 rounded-2xl transition-all active:scale-[0.99]"
+                style={{
+                  backgroundColor: th.cardBg,
+                  border: `1px solid ${th.cardBorder}`,
+                }}
+              >
+                {/* Thumbnail */}
+                <div className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden shadow-lg shadow-black/40">
+                  <BookCover book={book} size="small" />
+                </div>
 
-        {!loading && !error && (
-          <>
-            {/* ── In Progress ─────────────────────────────────────────────── */}
-            {inProgress.length > 0 && (
-              <>
-                <div className="mb-8">
-                  <button
-                    onClick={() => setContinueOpen(true)}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] hover:border-amber-500/35 hover:bg-amber-500/[0.07] active:scale-[0.99] transition-all text-left"
+                {/* Info */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>
+                    {book.title}
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
+
+                  {isDone ? (
+                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>Completed</p>
+                  ) : prog ? (
+                    <>
+                      <div className="mt-2.5 flex items-center gap-2">
+                        <div
+                          className="flex-1 h-1.5 rounded-full overflow-hidden"
+                          style={{ backgroundColor: th.progressTrack }}
+                        >
+                          <div
+                            className="h-full rounded-full transition-all"
+                            style={{ width: `${pct}%`, background: th.progressBar }}
+                          />
+                        </div>
+                        <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>
+                          {pct}%
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>
+                      Start reading →
+                    </p>
+                  )}
+                </div>
+
+                {/* Right side: checkmark for completed, or ⋮ */}
+                {isDone ? (
+                  <div
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center"
+                    style={{ border: "2px solid #34d399" }}
                   >
-                    <span className="text-xl">📖</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-white/85">Continue Reading</p>
-                      <p className="text-xs text-amber-400/60 mt-0.5">{inProgress.length} book{inProgress.length !== 1 ? "s" : ""} in progress</p>
-                    </div>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 18l6-6-6-6" stroke="rgba(255,255,255,0.3)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </div>
+                ) : (
+                  <button
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
+                    style={{ color: th.textVeryFaint }}
+                    onClick={(e) => e.preventDefault()}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="1.8" />
+                      <circle cx="12" cy="12" r="1.8" />
+                      <circle cx="12" cy="19" r="1.8" />
                     </svg>
                   </button>
-                </div>
-
-                {/* Continue Reading sheet */}
-                {continueOpen && (
-                  <div className="fixed inset-0 z-50 flex flex-col justify-end" style={{ background: "rgba(0,0,0,0.65)" }} onClick={() => setContinueOpen(false)}>
-                    <div className="rounded-t-3xl border-t border-white/10 bg-[#181818] px-4 pt-3 pb-8" onClick={(e) => e.stopPropagation()} style={{ maxHeight: "70vh", overflowY: "auto" }}>
-                      <div className="w-10 h-1 rounded-full bg-white/20 mx-auto mb-4" />
-                      <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4 px-1">In Progress</p>
-                      <div className="space-y-3">
-                        {inProgress.map(({ book, chapter, total }) => {
-                          const pct = Math.round((chapter / total) * 100);
-                          return (
-                            <Link key={book.slug} href={`/library/${book.slug}`} onClick={() => setContinueOpen(false)}
-                              className="flex items-center gap-4 rounded-2xl border border-amber-500/15 bg-amber-500/[0.03] p-3.5 hover:border-amber-500/30 active:scale-[0.99] transition-all">
-                              <div className="w-10 h-14 flex-shrink-0 rounded-lg overflow-hidden bg-[#111]">
-                                <BookCover book={book} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs text-amber-400/60 font-bold truncate">{book.author}</p>
-                                <p className="text-sm font-bold text-white/90 leading-snug truncate">{book.title}</p>
-                                <div className="mt-1.5 h-1 rounded-full bg-white/[0.07] overflow-hidden">
-                                  <div className="h-full rounded-full bg-amber-400/50 transition-all" style={{ width: `${pct}%` }} />
-                                </div>
-                                <p className="text-[10px] text-amber-400/40 mt-1">Ch. {chapter} of {total} · {pct}%</p>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </div>
                 )}
-              </>
-            )}
-
-            {/* Available books */}
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 mb-12">
-              {available.map((book) => (
-                <Link
-                  key={book.slug}
-                  href={`/library/${book.slug}`}
-                  className="group rounded-2xl border border-white/[0.07] bg-white/[0.03] overflow-hidden hover:border-amber-500/30 hover:bg-white/[0.05] transition-all duration-200 flex flex-col"
-                >
-                  {/* Cover image */}
-                  <div className="relative h-52 overflow-hidden bg-[#111]">
-                    <BookCover book={book} />
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-gradient-to-t from-black/50 to-transparent" />
-                    {/* Subtle left-edge spine shadow */}
-                    <div className="absolute inset-y-0 left-0 w-3 bg-gradient-to-r from-black/40 to-transparent pointer-events-none" />
-                  </div>
-
-                  {/* Info */}
-                  <div className="p-4 flex flex-col gap-2 flex-1">
-                    <div>
-                      <p className="text-xs text-amber-400/80 font-bold mb-0.5">{book.author}</p>
-                      <h3 className="text-sm font-bold text-white/90 leading-snug group-hover:text-white transition-colors">
-                        {book.title}
-                      </h3>
-                      <p className="text-[11px] text-white/30 mt-0.5">{book.year}</p>
-                    </div>
-                    <p className="text-xs text-white/40 leading-relaxed line-clamp-3 flex-1">
-                      {book.description}
-                    </p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {book.tags.map((t) => (
-                        <TagPill key={t} tag={t} />
-                      ))}
-                    </div>
-                    <div className="pt-2 mt-auto">
-                      <span className="text-xs font-bold text-amber-400/70 group-hover:text-amber-400 transition-colors">
-                        {t("lib_read")} →
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Coming soon */}
-            {comingSoon.length > 0 && (
-              <>
-                <div className="flex items-center gap-3 mb-5">
-                  <div className="flex-1 border-t border-white/[0.06]" />
-                  <p className="text-xs font-bold uppercase tracking-widest text-white/20">
-                    {t("lib_coming_soon")}
-                  </p>
-                  <div className="flex-1 border-t border-white/[0.06]" />
-                </div>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 opacity-50">
-                  {comingSoon.map((book) => (
-                    <div
-                      key={book.slug}
-                      className="rounded-2xl border border-white/[0.05] bg-white/[0.02] overflow-hidden flex flex-col cursor-not-allowed"
-                    >
-                      <div className="relative h-52 overflow-hidden bg-[#111]">
-                        <BookCover book={book} grayscale />
-                      </div>
-                      <div className="p-4 flex flex-col gap-1">
-                        <p className="text-xs text-white/30 font-bold">{book.author}</p>
-                        <h3 className="text-sm font-bold text-white/50 leading-snug">{book.title}</h3>
-                        <p className="text-[11px] text-white/20">{book.year}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {book.tags.map((t) => (
-                            <TagPill key={t} tag={t} />
-                          ))}
-                        </div>
-                        <p className="text-[10px] text-white/20 mt-2 font-bold uppercase tracking-widest">
-                          In preparation
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-
-            {/* Suggest a book */}
-            <div className="mt-14 rounded-2xl border border-white/[0.07] bg-white/[0.03] p-8 text-center">
-              <p className="text-lg font-bold text-white/70 mb-2">Missing a classic?</p>
-              <p className="text-white/35 text-sm max-w-md mx-auto mb-5">
-                We prioritize books that are in the public domain and doctrinally sound. Community members vote on what comes next.
-              </p>
-              <Link
-                href="/give"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-amber-600/80 text-white text-sm font-bold hover:bg-amber-500 transition-colors"
-              >
-                🤝 Join Community to Vote
               </Link>
-            </div>
-          </>
-        )}
+            );
+          })}
+        </div>
+
+        {/* Suggest a book */}
+        <div
+          className="mt-10 p-6 rounded-2xl text-center"
+          style={{ backgroundColor: th.footerCardBg, border: `1px solid ${th.footerCardBorder}` }}
+        >
+          <p className="text-sm font-bold mb-1" style={{ color: th.footerText }}>Missing a classic?</p>
+          <p className="text-xs mb-4" style={{ color: th.footerSubtext }}>
+            Public domain, doctrinally sound. Community votes on what comes next.
+          </p>
+          <Link
+            href="/give"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-xs font-bold active:scale-95 transition-transform"
+            style={{ backgroundColor: th.primary }}
+          >
+            🤝 Join Community to Vote
+          </Link>
+        </div>
       </div>
+
     </div>
   );
 }

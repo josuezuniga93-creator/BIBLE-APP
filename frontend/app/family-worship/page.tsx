@@ -11,7 +11,7 @@ import {
   markDevotionalComplete,
   isDevotionalComplete,
   DEVOTIONAL_BADGES,
-  DevotionalBadgeId,
+  type DevotionalBadgeId,
 } from "../lib/devotionalProgress";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -95,10 +95,10 @@ function ConfettiOverlay() {
 
 function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
   return (
-    <div className="rounded-2xl border border-violet-500/20 bg-violet-500/[0.04] overflow-hidden">
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "rgba(139,100,69,0.28)", backgroundColor: "rgba(139,100,69,0.05)" }}>
       {/* Passage reference banner */}
-      <div className="px-6 pt-6 pb-4 border-b border-violet-500/10">
-        <p className="text-[10px] text-violet-400 font-black uppercase tracking-widest mb-2">
+      <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(139,100,69,0.12)" }}>
+        <p className="text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: "#a07850" }}>
           📖 Expository Thoughts on the Gospels · J.C. Ryle
         </p>
         <p className="text-2xl font-black text-white leading-tight">
@@ -108,12 +108,12 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
       </div>
 
       {/* Scripture blockquote */}
-      <div className="px-6 py-5 border-b border-violet-500/10 bg-violet-500/[0.03]">
-        <blockquote className="border-l-4 border-violet-500/50 pl-4">
+      <div className="px-6 py-5" style={{ borderBottom: "1px solid rgba(139,100,69,0.12)", backgroundColor: "rgba(139,100,69,0.03)" }}>
+        <blockquote className="pl-4" style={{ borderLeft: "4px solid rgba(139,100,69,0.45)" }}>
           <p className="text-white/90 leading-8 text-[16px] italic">
             &ldquo;{entry.scripture.text}&rdquo;
           </p>
-          <p className="text-violet-300 font-bold text-sm mt-3">
+          <p className="font-bold text-sm mt-3" style={{ color: "#c4924e" }}>
             — {entry.scripture.reference}
           </p>
         </blockquote>
@@ -136,7 +136,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
 
       {/* Attribution */}
       <div className="px-6 pb-6">
-        <p className="text-white/20 text-xs italic border-t border-violet-500/10 pt-4">
+        <p className="text-white/20 text-xs italic pt-4" style={{ borderTop: "1px solid rgba(139,100,69,0.10)" }}>
           — Adapted from J.C. Ryle,{" "}
           <em>Expository Thoughts on the Gospels</em> (1856–1869)
         </p>
@@ -152,10 +152,10 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
   const [audioOpen, setAudioOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-sky-500/20 bg-sky-500/[0.03] overflow-hidden">
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "rgba(196,168,130,0.25)", backgroundColor: "rgba(196,168,130,0.04)" }}>
       {/* Header */}
-      <div className="px-6 pt-6 pb-4 border-b border-sky-500/10">
-        <p className="text-[10px] text-sky-400 font-black mb-2 uppercase tracking-widest">
+      <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid rgba(196,168,130,0.12)" }}>
+        <p className="text-[10px] font-black mb-2 uppercase tracking-widest" style={{ color: "#b89464" }}>
           🎵 Hymn
         </p>
         <div className="flex items-start justify-between gap-3">
@@ -172,7 +172,8 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             onClick={() => {
               setAudioOpen(!audioOpen);
             }}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-sky-500/15 border border-sky-500/25 text-sky-300 text-xs font-bold hover:bg-sky-500/25 active:scale-95 transition-all"
+            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all"
+            style={{ backgroundColor: "rgba(196,168,130,0.15)", border: "1px solid rgba(196,168,130,0.30)", color: "#c4a882" }}
           >
             {audioOpen ? "▼ Close" : "▶ Listen"}
           </button>
@@ -181,7 +182,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
 
       {/* YouTube embed panel */}
       {audioOpen && (
-        <div className="px-6 py-4 border-b border-sky-500/10 bg-sky-500/[0.04]">
+        <div className="px-6 py-4" style={{ borderBottom: "1px solid rgba(196,168,130,0.10)", backgroundColor: "rgba(196,168,130,0.05)" }}>
           <p className="text-xs text-white/40 mb-3 leading-5">
             Tap below to find this hymn on YouTube and sing along together as a family.
           </p>
@@ -208,7 +209,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
           <div className="space-y-5">
             {lyrics.verses.map((verse, i) => (
               <div key={i}>
-                <p className="text-[11px] text-sky-400/50 font-bold uppercase tracking-widest mb-2">
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(184,148,100,0.55)" }}>
                   Verse {i + 1}
                 </p>
                 <p className="text-white/70 text-[15px] leading-8 italic whitespace-pre-line">
@@ -217,8 +218,8 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
               </div>
             ))}
             {lyrics.chorus && (
-              <div className="border-t border-sky-500/15 pt-4">
-                <p className="text-[11px] text-sky-400/50 font-bold uppercase tracking-widest mb-2">
+              <div className="pt-4" style={{ borderTop: "1px solid rgba(196,168,130,0.15)" }}>
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(184,148,100,0.55)" }}>
                   Chorus
                 </p>
                 <p className="text-white/70 text-[15px] leading-8 italic whitespace-pre-line">
@@ -265,12 +266,12 @@ function CompletionCard({
 
   if (done) {
     return (
-      <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.06] px-6 py-5 flex items-center gap-4">
-        <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-xl">
+      <div className="rounded-2xl px-6 py-5 flex items-center gap-4" style={{ border: "1px solid rgba(139,100,69,0.30)", backgroundColor: "rgba(139,100,69,0.08)" }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl" style={{ backgroundColor: "rgba(139,100,69,0.20)" }}>
           ✅
         </div>
         <div>
-          <p className="text-emerald-300 font-bold text-sm">Devotional Completed!</p>
+          <p className="font-bold text-sm" style={{ color: "#c4924e" }}>Devotional Completed!</p>
           <p className="text-white/30 text-xs mt-0.5">Well done, faithful family. Come back tomorrow.</p>
         </div>
       </div>
@@ -278,7 +279,7 @@ function CompletionCard({
   }
 
   return (
-    <div className="rounded-2xl border border-violet-500/25 bg-violet-500/[0.05] px-6 py-6 text-center space-y-4">
+    <div className="rounded-2xl px-6 py-6 text-center space-y-4" style={{ border: "1px solid rgba(155,114,40,0.28)", backgroundColor: "rgba(155,114,40,0.06)" }}>
       <div className="text-3xl">🙏</div>
       <div>
         <p className="text-white font-bold text-base">Did you complete today&apos;s devotional?</p>
@@ -288,7 +289,8 @@ function CompletionCard({
       </div>
       <button
         onClick={handleComplete}
-        className="w-full py-3.5 rounded-xl bg-violet-600 hover:bg-violet-500 active:scale-[0.98] transition-all text-white font-bold text-sm shadow-lg shadow-violet-500/20"
+        className="w-full py-3.5 rounded-xl active:scale-[0.98] transition-all text-white font-bold text-sm"
+        style={{ backgroundColor: "#8b6345", boxShadow: "0 4px 20px rgba(139,100,69,0.25)" }}
       >
         Yes, we completed it! 🎉
       </button>
@@ -303,10 +305,10 @@ function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
   const badge = DEVOTIONAL_BADGES[badges[0]];
   return (
     <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 animate-pop-in">
-      <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-[#1a1a2e] border border-violet-500/40 shadow-2xl shadow-violet-500/20">
+      <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl" style={{ backgroundColor: "#1a1510", border: "1px solid rgba(155,114,40,0.50)", boxShadow: "0 8px 32px rgba(155,114,40,0.20)" }}>
         <span className="text-3xl">{badge.emoji}</span>
         <div>
-          <p className="text-violet-300 font-black text-sm">New Badge Earned!</p>
+          <p className="font-black text-sm" style={{ color: "#c4924e" }}>New Badge Earned!</p>
           <p className="text-white/60 text-xs mt-0.5">{badge.label} — {badge.desc}</p>
         </div>
       </div>
@@ -326,6 +328,15 @@ export default function FamilyWorshipPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [showConfetti, setShowConfetti] = useState(false);
   const [newBadges, setNewBadges] = useState<DevotionalBadgeId[]>([]);
+  const [earnedBadges, setEarnedBadges] = useState<DevotionalBadgeId[]>([]);
+
+  // Load earned devotional badges
+  useEffect(() => {
+    try {
+      const progress = loadDevotionalProgress();
+      setEarnedBadges(progress.badges as DevotionalBadgeId[]);
+    } catch { /* ignore */ }
+  }, []);
 
   // Restore last-viewed date from localStorage
   useEffect(() => {
@@ -356,6 +367,11 @@ export default function FamilyWorshipPage() {
     if (earned.length > 0) setNewBadges(earned);
     setTimeout(() => setShowConfetti(false), 2500);
     setTimeout(() => setNewBadges([]), 4000);
+    // Refresh badge list
+    try {
+      const progress = loadDevotionalProgress();
+      setEarnedBadges(progress.badges as DevotionalBadgeId[]);
+    } catch { /* ignore */ }
   }, []);
 
   const isToday =
@@ -378,7 +394,7 @@ export default function FamilyWorshipPage() {
       {/* Hero */}
       <div className="max-w-2xl mx-auto px-4 pt-12 pb-6">
         <div className="mb-2">
-          <span className="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full">
+          <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full" style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.12)", border: "1px solid rgba(139,100,69,0.25)" }}>
             Family Worship
           </span>
         </div>
@@ -392,22 +408,24 @@ export default function FamilyWorshipPage() {
 
       {/* Date navigator */}
       <div className="max-w-2xl mx-auto px-4 mb-6">
-        <div className="bg-white/[0.02] border border-violet-500/20 rounded-2xl px-4 py-4">
+        <div className="rounded-2xl px-4 py-4" style={{ backgroundColor: "rgba(139,100,69,0.05)", border: "1px solid rgba(139,100,69,0.18)" }}>
           <div className="flex items-center gap-3">
             <button
               onClick={() => goToDate(addDays(selectedDate, -1))}
-              className="w-9 h-9 flex items-center justify-center rounded-xl border border-violet-500/20 text-violet-400 hover:text-violet-200 hover:bg-violet-500/10 transition-all"
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all"
+              style={{ border: "1px solid rgba(139,100,69,0.22)", color: "#c4924e" }}
               aria-label="Previous day"
             >
               ←
             </button>
             <div className="flex-1 text-center">
               <p className="text-white font-bold text-base">{formatDateDisplay(selectedDate)}</p>
-              <p className="text-violet-400/50 text-xs mt-0.5">Day {dayOfYear}</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(196,146,78,0.55)" }}>Day {dayOfYear}</p>
             </div>
             <button
               onClick={() => goToDate(addDays(selectedDate, 1))}
-              className="w-9 h-9 flex items-center justify-center rounded-xl border border-violet-500/20 text-violet-400 hover:text-violet-200 hover:bg-violet-500/10 transition-all"
+              className="w-9 h-9 flex items-center justify-center rounded-xl transition-all"
+              style={{ border: "1px solid rgba(139,100,69,0.22)", color: "#c4924e" }}
               aria-label="Next day"
             >
               →
@@ -417,7 +435,8 @@ export default function FamilyWorshipPage() {
             <div className="text-center mt-3">
               <button
                 onClick={goToToday}
-                className="text-xs text-violet-400 hover:text-violet-300 transition-colors bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full"
+                className="text-xs transition-colors px-3 py-1 rounded-full"
+                style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.10)", border: "1px solid rgba(139,100,69,0.22)" }}
               >
                 Back to Today
               </button>
@@ -432,11 +451,13 @@ export default function FamilyWorshipPage() {
           <>
             {/* Theme badge */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full">
+              <span className="text-xs font-bold uppercase tracking-widest px-3 py-1 rounded-full"
+                style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.10)", border: "1px solid rgba(139,100,69,0.25)" }}>
                 {dailyEntry.theme}
               </span>
               {isToday && (
-                <span className="text-xs font-bold text-violet-300 bg-violet-500/15 border border-violet-500/25 px-2.5 py-1 rounded-full">
+                <span className="text-xs font-bold px-2.5 py-1 rounded-full"
+                  style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.08)", border: "1px solid rgba(139,100,69,0.20)" }}>
                   Today
                 </span>
               )}
@@ -461,10 +482,34 @@ export default function FamilyWorshipPage() {
             </p>
             <button
               onClick={goToToday}
-              className="mt-4 px-4 py-2 rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-300 text-sm font-semibold hover:bg-violet-600/30 transition-colors"
+              className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
+              style={{ backgroundColor: "rgba(139,100,69,0.15)", border: "1px solid rgba(139,100,69,0.30)", color: "#c4924e" }}
             >
               Go to Today
             </button>
+          </div>
+        )}
+
+        {/* Devotional Badges */}
+        {earnedBadges.length > 0 && (
+          <div className="rounded-2xl px-5 py-5 space-y-3" style={{ border: "1px solid rgba(155,114,40,0.18)", backgroundColor: "rgba(155,114,40,0.04)" }}>
+            <p className="text-[10px] font-black tracking-widest uppercase" style={{ color: "rgba(155,114,40,0.55)" }}>
+              Faithfulness Badges
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {earnedBadges.map((id) => {
+                const badge = DEVOTIONAL_BADGES[id];
+                return (
+                  <div key={id} title={badge.desc}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl"
+                    style={{ border: "1px solid rgba(155,114,40,0.25)", backgroundColor: "rgba(155,114,40,0.08)" }}>
+                    <span className="text-2xl">{badge.emoji}</span>
+                    <span className="text-[9px] font-bold text-center leading-tight" style={{ color: "#c4924e" }}>{badge.label}</span>
+                    <span className="text-[8px] font-mono" style={{ color: "rgba(155,114,40,0.50)" }}>✓ earned</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 

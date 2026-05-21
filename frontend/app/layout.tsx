@@ -61,7 +61,18 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').catch(function() {});
+                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    // Re-schedule notifications if previously enabled
+                    try {
+                      if (localStorage.getItem('tulip_notif_enabled') === 'true' &&
+                          typeof Notification !== 'undefined' &&
+                          Notification.permission === 'granted') {
+                        navigator.serviceWorker.ready.then(function(r) {
+                          if (r.active) r.active.postMessage({ type: 'SCHEDULE_NOTIFICATIONS' });
+                        });
+                      }
+                    } catch(e) {}
+                  }).catch(function() {});
                 });
               }
             `,

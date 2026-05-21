@@ -131,10 +131,9 @@ export async function fetchBooks(): Promise<BooksResponse> {
   return { books: STATIC_BOOKS, hasStrongs: false, hasMhc: false };
 }
 
-// ─── Chapter fallback via bible-api.com (public domain, no key) ───────────────
+// ─── Shared helpers ───────────────────────────────────────────────────────────
 
 function tokenize(text: string): WordToken[] {
-  // Split on whitespace, keep punctuation attached to words
   return text
     .trim()
     .split(/\s+/)
@@ -142,7 +141,112 @@ function tokenize(text: string): WordToken[] {
     .map((w) => ({ w, s: null }));
 }
 
-// Map book names to bible-api.com URL-friendly slugs
+// ─── bible.helloao.org — primary source for all translations ─────────────────
+//     Free, AWS-hosted, 1000+ translations, no API key required.
+//     URL: https://bible.helloao.org/api/{translationId}/{bookCode}/{chapter}.json
+
+// Map our internal translation keys to helloao.org translation IDs
+const HELLOAO_TRANSLATION_ID: Record<string, string> = {
+  kjv:    "KJV",
+  rv60:   "RVR1960",
+  geneva: "GNVA",   // Geneva Bible 1599
+};
+
+// Map bibleBooks.ts abbr codes → USFM codes expected by helloao.org
+// Most are just .toUpperCase(); a handful differ.
+const ABBR_USFM_EXCEPTIONS: Record<string, string> = {
+  Eze: "EZK",
+  Joe: "JOL",
+  Nah: "NAM",
+  Mar: "MRK",
+  Joh: "JHN",
+};
+
+function toUSFM(abbr: string): string {
+  return ABBR_USFM_EXCEPTIONS[abbr] ?? abbr.toUpperCase();
+}
+
+// Flatten a helloao verse content array into a plain string
+type AnyContent = string | { text?: string; type?: string; content?: AnyContent[] };
+function extractText(content: AnyContent[]): string {
+  return content
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (item.text) return item.text;
+      if (item.content) return extractText(item.content);
+      return "";
+    })
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+interface HelloAOChapter {
+  book: { shortName?: string; name?: string };
+  chapter: {
+    number: number;
+    content: Array<{ type: string; number?: number; content?: AnyContent[] }>;
+  };
+}
+
+async function fetchChapterHelloAO(
+  bookNum: number,
+  chapter: number,
+  appTranslation: string
+): Promise<ChapterData> {
+  const meta = STATIC_BOOKS.find((b) => b.num === bookNum);
+  if (!meta) throw new Error(`Unknown book ${bookNum}`);
+
+  const translId = HELLOAO_TRANSLATION_ID[appTranslation];
+  if (!translId) throw new Error(`No helloao mapping for translation "${appTranslation}"`);
+
+  const bookCode = toUSFM(meta.abbr);
+  const url = `https://bible.helloao.org/api/${translId}/${bookCode}/${chapter}.json`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+
+  if (!res.ok) throw new Error(`helloao error ${res.status}`);
+
+  const data = (await res.json()) as HelloAOChapter;
+
+  // Extract only verse items from the content array
+  const verses: Verse[] = data.chapter.content
+    .filter((item) => item.type === "verse" && typeof item.number === "number")
+    .map((item) => {
+      const text = extractText((item.content ?? []) as AnyContent[]);
+      return {
+        verse: item.number as number,
+        text,
+        words: tokenize(text),
+        hasStrongs: false,
+      };
+    });
+
+  const bookName = data.book?.name ?? data.book?.shortName ?? meta.name;
+
+  return {
+    book: bookNum,
+    bookName,
+    chapter,
+    testament: meta.testament,
+    translation: appTranslation,
+    verses,
+    hasStrongs: false,
+  };
+}
+
+// ─── Legacy fallback via bible-api.com (public domain, no key) ───────────────
+//     Used only if helloao.org is unreachable.
+
 function toBibleApiSlug(bookName: string): string {
   return bookName.toLowerCase().replace(/\s+/g, "+");
 }
@@ -154,15 +258,19 @@ interface BibleApiVerse {
   text: string;
 }
 
+const BIBLE_API_SUPPORTED = new Set(["kjv", "kjv1611", "geneva", "bbe", "web", "darby", "ylt", "webster"]);
+
 async function fetchChapterFallback(
   bookNum: number,
-  chapter: number
+  chapter: number,
+  translation = "kjv"
 ): Promise<ChapterData> {
   const meta = STATIC_BOOKS.find((b) => b.num === bookNum);
   if (!meta) throw new Error(`Unknown book ${bookNum}`);
 
+  const trans = BIBLE_API_SUPPORTED.has(translation) ? translation : "kjv";
   const slug = toBibleApiSlug(meta.name);
-  const url = `https://bible-api.com/${slug}+${chapter}?translation=kjv`;
+  const url = `https://bible-api.com/${slug}+${chapter}?translation=${trans}`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 15_000);
@@ -181,12 +289,7 @@ async function fetchChapterFallback(
 
   const verses: Verse[] = data.verses.map(({ verse, text }) => {
     const clean = text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
-    return {
-      verse,
-      text: clean,
-      words: tokenize(clean),
-      hasStrongs: false,
-    };
+    return { verse, text: clean, words: tokenize(clean), hasStrongs: false };
   });
 
   return {
@@ -194,7 +297,7 @@ async function fetchChapterFallback(
     bookName: meta.name,
     chapter,
     testament: meta.testament,
-    translation: "kjv",
+    translation: trans,
     verses,
     hasStrongs: false,
   };
@@ -222,8 +325,8 @@ function writeChapterCache(data: ChapterData): void {
 /**
  * Chapter loading strategy:
  *  1. Return cached version instantly if available (localStorage).
- *  2. For KJV: race Railway vs bible-api.com — whichever responds first wins.
- *  3. For other translations: try Railway, fall back to KJV.
+ *  2. For KJV / Geneva / RVR1960: race Railway vs bible.helloao.org (AWS, 1000+ translations).
+ *  3. If both fail, fall back to bible-api.com (legacy, KJV + Geneva only).
  *  4. Write result to cache so next visit is instant.
  */
 export async function fetchChapter(
@@ -237,7 +340,7 @@ export async function fetchChapter(
   const cached = readChapterCache(bookNum, chapter, trans);
   if (cached) return cached;
 
-  // ── 2/3. Fetch ──────────────────────────────────────────────────────────────
+  // ── 2. Fetch ────────────────────────────────────────────────────────────────
   let result: ChapterData;
 
   const t = translation ? `&translation=${encodeURIComponent(translation)}` : "";
@@ -245,12 +348,17 @@ export async function fetchChapter(
     `/api/lexicon/chapter?book=${bookNum}&chapter=${chapter}${t}`
   );
 
-  if (trans === "kjv") {
-    // Race Railway vs public fallback — use whichever is faster
-    result = await Promise.any([railwayPromise, fetchChapterFallback(bookNum, chapter)]);
+  if (trans in HELLOAO_TRANSLATION_ID) {
+    // KJV, RVR1960, Geneva — race Railway vs helloao.org, fall back to bible-api.com
+    const helloAOPromise = fetchChapterHelloAO(bookNum, chapter, trans);
+    try {
+      result = await Promise.any([railwayPromise, helloAOPromise]);
+    } catch {
+      result = await fetchChapterFallback(bookNum, chapter, trans);
+    }
   } else {
     try { result = await railwayPromise; }
-    catch { result = await fetchChapterFallback(bookNum, chapter); }
+    catch { result = await fetchChapterFallback(bookNum, chapter, "kjv"); }
   }
 
   // ── 4. Cache for next visit ─────────────────────────────────────────────────
