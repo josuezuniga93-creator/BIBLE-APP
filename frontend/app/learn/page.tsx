@@ -109,6 +109,7 @@ const TIMELINE: { year: string; label: string; docId?: string }[] = [
   { year: "AD 325",   label: "Council of Nicaea",        docId: "council-nicaea"     },
   { year: "AD 381",   label: "Nicene Creed",             docId: "nicene-creed"       },
   { year: "AD 397",   label: "Augustine: Grace",         docId: "augustine-grace"    },
+  { year: "AD 418",   label: "Monergism vs Synergism",   docId: "monergism-debate"   },
   { year: "AD 451",   label: "Council of Chalcedon",     docId: "council-chalcedon"  },
   // Pre-Reformation — seeds of reform
   { year: "1378",     label: "Wycliffe's Bible",         docId: "wycliffe"           },
