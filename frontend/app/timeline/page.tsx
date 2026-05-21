@@ -260,8 +260,44 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
       {
         year: "1689",
         label: "Second London Baptist Confession",
-        detail: "Following the Glorious Revolution and the Toleration Act, 107 Particular Baptist churches from England and Wales formally adopt the confession. The crown of the Reformed Baptist tradition — standing at the end of a line that runs through Nicaea, Augustine, Wycliffe, Hus, Luther, Calvin, Westminster, and the London Baptist churches.",
+        detail: "Following the Glorious Revolution and the Toleration Act, 107 Particular Baptist churches from England and Wales formally adopt the confession — identical in soteriology to Westminster, Baptist in ecclesiology and baptism.",
         docId: "1689-lbc",
+      },
+    ],
+  },
+  {
+    id: "awakening",
+    title: "The Great Awakening",
+    subtitle: "1700 – 1741",
+    icon: "🔥",
+    color: "#fb923c",
+    borderColor: "#7c2d12",
+    events: [
+      {
+        year: "1726",
+        label: "Frelinghuysen & the New Jersey Revival",
+        detail: "Dutch Reformed pastor Theodore Frelinghuysen preaches experimental Reformed religion in New Jersey, sparking the first stirrings of what will become the Great Awakening. His emphasis on genuine conversion and the new birth precedes the wider revival by a decade.",
+      },
+      {
+        year: "1734–35",
+        label: "Northampton Revival — Jonathan Edwards",
+        detail: "Jonathan Edwards's congregation in Northampton, Massachusetts experiences a sudden and remarkable awakening. Edwards documents it in 'A Faithful Narrative of the Surprising Work of God' — the first major account of revival in the colonies, read on both sides of the Atlantic.",
+      },
+      {
+        year: "1739–40",
+        label: "George Whitefield's American Tour",
+        detail: "The English evangelist George Whitefield preaches to tens of thousands across the colonies — crowds of 20,000–40,000 in the open air. His Calvinist gospel of the new birth carries the Awakening from Georgia to New England. Edwards and Whitefield meet and become mutual admirers.",
+      },
+      {
+        year: "1740",
+        label: "The Great Awakening Peaks",
+        detail: "The revival reaches its height throughout New England and the middle colonies. Thousands are converted. New churches are planted. The social fabric of colonial America is transformed. Critics and supporters alike recognize something extraordinary is happening.",
+      },
+      {
+        year: "1741",
+        label: "Sinners in the Hands of an Angry God",
+        detail: "Jonathan Edwards preaches to an unmoved congregation in Enfield, Connecticut. Before he finishes, people are crying out, clutching the pews, weeping for their souls. The most famous sermon in American history — total depravity, sovereign grace, and an open door of mercy pressed home with terrible urgency.",
+        docId: "sinners-in-hands",
         isTarget: true,
       },
     ],
@@ -276,6 +312,7 @@ const SECTION_DOT_COLORS: Record<string, { dot: string; glow: string; line: stri
   "reformation":     { dot: "#fb923c", glow: "rgba(251,146,60,0.4)",  line: "rgba(251,146,60,0.2)"  },
   "confessional":    { dot: "#c084fc", glow: "rgba(192,132,252,0.4)", line: "rgba(192,132,252,0.2)" },
   "baptist":         { dot: "#f0c060", glow: "rgba(240,192,96,0.5)",  line: "rgba(240,192,96,0.2)"  },
+  "awakening":       { dot: "#fb923c", glow: "rgba(251,146,60,0.5)",  line: "rgba(251,146,60,0.2)"  },
 };
 
 // ─── Components ───────────────────────────────────────────────────────────────
@@ -477,13 +514,13 @@ export default function TimelinePage() {
           </p>
 
           <h1 className="text-2xl font-black text-white leading-tight mb-2">
-            Road to the<br />
-            <span style={{ color: "#f0c060" }}>1689 Confession</span>
+            From Jerusalem to<br />
+            <span style={{ color: "#fb923c" }}>Sinners in God's Hands</span>
           </h1>
 
           <p className="text-xs leading-relaxed mb-5 opacity-70 text-amber-100">
-            From the Jerusalem Council to the Second London Baptist Confession —
-            every event, every document, every martyr who shaped the Reformed Baptist faith.
+            From the Jerusalem Council to Jonathan Edwards's Great Awakening —
+            every event, every document, every martyr who shaped the Reformed faith.
           </p>
 
           {/* stat pills */}
@@ -491,7 +528,7 @@ export default function TimelinePage() {
             {[
               { label: "Events", value: TIMELINE_SECTIONS.reduce((n, s) => n + s.events.length, 0).toString() },
               { label: "Sections", value: TIMELINE_SECTIONS.length.toString() },
-              { label: "Years", value: "~1,640" },
+              { label: "Years", value: "~1,692" },
               { label: "Documents", value: "Tap to read" },
             ].map(({ label, value }) => (
               <div key={label} className="px-3 py-1.5 rounded-full text-[10px]"
@@ -562,31 +599,31 @@ export default function TimelinePage() {
           <div
             className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
             style={{
-              background: "linear-gradient(135deg,#f0c060,#c9a227)",
-              boxShadow: "0 0 0 6px rgba(240,192,96,0.15), 0 0 24px rgba(240,192,96,0.4)",
+              background: "linear-gradient(135deg,#fb923c,#c2410c)",
+              boxShadow: "0 0 0 6px rgba(251,146,60,0.15), 0 0 24px rgba(251,146,60,0.4)",
             }}
           >
             ✦
           </div>
-          <p className="font-black text-base" style={{ color: "#f0c060" }}>
-            1689
+          <p className="font-black text-base" style={{ color: "#fb923c" }}>
+            1741
           </p>
           <p className="font-bold text-sm" style={{ color: textPrimary }}>
-            Second London Baptist Confession of Faith
+            Sinners in the Hands of an Angry God
           </p>
           <p className="text-xs max-w-xs leading-relaxed" style={{ color: textMuted }}>
-            The crown of the Reformed Baptist tradition — adopted by 107 churches,
-            standing on the shoulders of 1,640 years of faithful witnesses.
+            Jonathan Edwards — Enfield, Connecticut. The most famous sermon in American history,
+            standing on 1,692 years of Reformed doctrine and faithful witnesses.
           </p>
           <Link
-            href="/learn?doc=1689-lbc"
+            href="/learn?doc=sinners-in-hands"
             className="mt-2 px-6 py-3 rounded-full font-bold text-sm no-underline active:scale-95 transition-transform"
             style={{
-              background: "linear-gradient(135deg,#f0c060,#c9a227)",
-              color: "#1a0e00",
+              background: "linear-gradient(135deg,#fb923c,#c2410c)",
+              color: "#fff",
             }}
           >
-            Read the 1689 Confession →
+            Read the Sermon →
           </Link>
         </div>
 
