@@ -130,15 +130,7 @@ const TIMELINE: { year: string; label: string; docId?: string }[] = [
   { year: "1689",     label: "1689 LBC",                 docId: "1689-lbc"           },
   // Reformed Revival
   { year: "1730s",    label: "Great Awakening",                                     },
-  { year: "1741",     label: "Sinners in God's Hands",   docId: "sinners-in-hands-edwards" },
-  { year: "1793",     label: "William Carey — Missions",                            },
-  { year: "1834",     label: "Charles Spurgeon Born",                               },
-  { year: "1910–15",  label: "The Fundamentals",                                    },
-  // Modern Reformed
-  { year: "1923",     label: "Machen Defends Orthodoxy",                            },
-  { year: "1946",     label: "OPC Founded",                                         },
-  { year: "1978",     label: "Chicago Statement on Inerrancy",                      },
-  { year: "Today",    label: "Reformed Church Global",                              },
+  { year: "1741",     label: "Sinners in God's Hands",   docId: "sinners-in-hands"  },
 ];
 
 // ─── Type categories ──────────────────────────────────────────────────────────
