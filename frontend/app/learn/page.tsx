@@ -51,10 +51,29 @@ const DOC_COVERS: Record<string, { bg: string; border: string; accent: string; y
 
 const DEFAULT_DOC_COVER = { bg: "linear-gradient(160deg,#0d0d1a,#1a1a3b,#080810)", border: "#7070c0", accent: "#a0a0e0", year: "", ornament: "📜" };
 
+// Custom photo covers — image overrides the gradient entirely
+const DOC_IMAGES: Record<string, string> = {
+  "jerusalem-council": "/covers/jerusalem-council.png",
+};
+
 function DocCover({ doc, size = "full" }: { doc: LearnDocument; size?: "full" | "small" | "featured" }) {
   const style = DOC_COVERS[doc.id] ?? DEFAULT_DOC_COVER;
+  const imageSrc = DOC_IMAGES[doc.id];
   const isSmall = size === "small";
   const isFeatured = size === "featured";
+
+  // If a custom photo exists, render it as a full-bleed cover image
+  if (imageSrc) {
+    return (
+      <div className="w-full h-full" style={{ position: "relative", overflow: "hidden" }}>
+        <img
+          src={imageSrc}
+          alt={doc.title}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
