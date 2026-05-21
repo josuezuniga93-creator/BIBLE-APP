@@ -768,6 +768,50 @@ function LearnPageInner() {
         </div>
       </div>
 
+      {/* Timeline Highlights */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Timeline Highlights</p>
+          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+        </div>
+        <div className="px-4 overflow-x-auto pb-2 scrollbar-none">
+          <div className="flex items-start gap-0 relative" style={{ minWidth: "max-content" }}>
+            {/* Connector line */}
+            <div className="absolute top-[9px] left-4 right-4 h-px" style={{ background: th.timelineLine, zIndex: 0 }} />
+            {TIMELINE.map((item, i) => {
+              const hasDoc = !!item.docId && LEARN_DOCUMENTS.some(d => d.id === item.docId);
+              const dot = (
+                <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{
+                    background: hasDoc ? (i % 2 === 0 ? th.timelineDotEven : th.timelineDotOdd) : (isLight ? "rgba(155,114,40,0.25)" : "rgba(255,255,255,0.12)"),
+                    boxShadow: hasDoc ? th.timelineDotShadow : "none",
+                  }}>
+                  <div className="w-2 h-2 rounded-full opacity-80" style={{ backgroundColor: hasDoc ? "white" : (isLight ? "rgba(155,114,40,0.6)" : "rgba(255,255,255,0.4)") }} />
+                </div>
+              );
+              const label = (
+                <div className="text-center">
+                  <p className="text-xs font-black" style={{ color: hasDoc ? th.timelineYear : (isLight ? "#b09878" : "rgba(255,255,255,0.3)") }}>{item.year}</p>
+                  <p className="text-[9px] leading-tight text-center" style={{ color: hasDoc ? th.timelineLabel : (isLight ? "#c4b090" : "rgba(255,255,255,0.22)"), maxWidth: "80px" }}>{item.label}</p>
+                </div>
+              );
+              return hasDoc ? (
+                <button key={item.year} onClick={() => setSelected(item.docId!)}
+                  className="flex flex-col items-center gap-2 active:scale-95 transition-transform relative z-10"
+                  style={{ minWidth: "90px", padding: "0 8px" }}>
+                  {dot}{label}
+                </button>
+              ) : (
+                <div key={item.year} className="flex flex-col items-center gap-2 relative z-10 pointer-events-none"
+                  style={{ minWidth: "90px", padding: "0 8px" }}>
+                  {dot}{label}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       {/* Browse by Type */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-4 mb-3">
@@ -812,50 +856,6 @@ function LearnPageInner() {
               </button>
             );
           })}
-        </div>
-      </div>
-
-      {/* Timeline Highlights */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Timeline Highlights</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
-        </div>
-        <div className="px-4 overflow-x-auto pb-2 scrollbar-none">
-          <div className="flex items-start gap-0 relative" style={{ minWidth: "max-content" }}>
-            {/* Connector line */}
-            <div className="absolute top-[9px] left-4 right-4 h-px" style={{ background: th.timelineLine, zIndex: 0 }} />
-            {TIMELINE.map((item, i) => {
-              const hasDoc = !!item.docId && LEARN_DOCUMENTS.some(d => d.id === item.docId);
-              const dot = (
-                <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: hasDoc ? (i % 2 === 0 ? th.timelineDotEven : th.timelineDotOdd) : (isLight ? "rgba(155,114,40,0.25)" : "rgba(255,255,255,0.12)"),
-                    boxShadow: hasDoc ? th.timelineDotShadow : "none",
-                  }}>
-                  <div className="w-2 h-2 rounded-full opacity-80" style={{ backgroundColor: hasDoc ? "white" : (isLight ? "rgba(155,114,40,0.6)" : "rgba(255,255,255,0.4)") }} />
-                </div>
-              );
-              const label = (
-                <div className="text-center">
-                  <p className="text-xs font-black" style={{ color: hasDoc ? th.timelineYear : (isLight ? "#b09878" : "rgba(255,255,255,0.3)") }}>{item.year}</p>
-                  <p className="text-[9px] leading-tight text-center" style={{ color: hasDoc ? th.timelineLabel : (isLight ? "#c4b090" : "rgba(255,255,255,0.22)"), maxWidth: "80px" }}>{item.label}</p>
-                </div>
-              );
-              return hasDoc ? (
-                <button key={item.year} onClick={() => setSelected(item.docId!)}
-                  className="flex flex-col items-center gap-2 active:scale-95 transition-transform relative z-10"
-                  style={{ minWidth: "90px", padding: "0 8px" }}>
-                  {dot}{label}
-                </button>
-              ) : (
-                <div key={item.year} className="flex flex-col items-center gap-2 relative z-10 pointer-events-none"
-                  style={{ minWidth: "90px", padding: "0 8px" }}>
-                  {dot}{label}
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
 
