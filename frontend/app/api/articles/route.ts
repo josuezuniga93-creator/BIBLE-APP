@@ -83,11 +83,13 @@ async function tryRss(url: string): Promise<Article[]> {
 
     const slug = href.split("/").filter(Boolean).pop() ?? "";
 
-    // Skip video-only posts — description contains a YouTube link or is bare-minimum text
+    // Skip video/episode posts — YouTube embeds, show episodes, or bare video descriptions
     const rawDesc = descMatch ? descMatch[1] : "";
     const isVideoOnly =
       /youtube\.com|youtu\.be/i.test(rawDesc) ||
-      (excerpt.length < 80 && /youtube\.com|youtu\.be/i.test(href + rawDesc));
+      /marrow\s*show|the\s*marrow\s*show|episode\s*\d|in this episode/i.test(title + rawDesc) ||
+      /\/marrow-show|\/episodes?\//i.test(href) ||
+      (excerpt.length < 120 && /youtube\.com|youtu\.be/i.test(rawDesc));
 
     if (title && href && href.includes("marrowministries.org") && !isVideoOnly) {
       articles.push({ title, href, excerpt, date, slug });

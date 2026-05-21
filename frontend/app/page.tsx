@@ -249,8 +249,9 @@ export default function Home() {
     // Try up to articles.length candidates starting from base
     for (let i = 0; i < articles.length; i++) {
       const candidate = articles[(base + i) % articles.length];
-      // Skip anything whose title/excerpt hints at a video embed
-      if (/youtube\.com|youtu\.be/i.test(candidate.excerpt + candidate.href)) continue;
+      // Skip video/episode posts
+      const combined = candidate.title + candidate.excerpt + candidate.href;
+      if (/youtube\.com|youtu\.be|marrow\s*show|in this episode|\/marrow-show/i.test(combined)) continue;
       return [candidate];
     }
     return [articles[base]];
