@@ -753,7 +753,7 @@ function LearnPageInner() {
             <br /><span className="text-white">Lasting Impact.</span>
           </h2>
           <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
-            Explore the confessions, debates, and declarations that shaped Reformed theology.
+            Explore the confessions, debates, and declarations that shaped history in Christianity.
           </p>
           <div className="flex gap-2 flex-wrap">
             <button className="px-5 py-2 rounded-full text-xs font-bold text-white active:scale-95 transition-transform"
@@ -761,12 +761,6 @@ function LearnPageInner() {
               onClick={() => document.getElementById("my-documents")?.scrollIntoView({ behavior: "smooth" })}>
               Explore Docs
             </button>
-            <a
-              href="/timeline"
-              className="px-4 py-2 rounded-full text-xs font-bold active:scale-95 transition-transform no-underline"
-              style={{ background: "rgba(240,192,96,0.2)", color: "#f0c060", border: "1px solid rgba(240,192,96,0.4)" }}>
-              📜 Road to 1689
-            </a>
           </div>
         </div>
       </div>
