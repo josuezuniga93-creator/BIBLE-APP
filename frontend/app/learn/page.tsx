@@ -595,7 +595,9 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
               <button key={section.id} onClick={() => setReading(section.id)}
                 className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all active:scale-[0.99]"
                 style={{ backgroundColor: th.sectionRowBg, border: `1px solid ${th.sectionRowBorder}` }}>
-                <div className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center"
+                <div
+                  className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                  onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
                   style={{ backgroundColor: done ? th.sectionDoneBg : th.sectionPendingBg, border: done ? `1px solid ${th.sectionDoneBorder}` : `1px solid ${th.sectionPendingBorder}` }}>
                   {done ? <span style={{ color: th.sectionDoneNum, fontSize: "11px", fontWeight: "bold" }}>✓</span>
                          : <span style={{ color: th.sectionPendingNum, fontSize: "11px" }}>{idx + 1}</span>}
