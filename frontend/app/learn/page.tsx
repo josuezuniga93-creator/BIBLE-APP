@@ -730,14 +730,10 @@ function LearnPageInner() {
     <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-5 pb-2">
+      <div className="flex items-center px-4 pt-5 pb-2">
         <h1 className="text-lg font-bold" style={{ color: th.textPrimary }}>
           Historical <span style={{ color: th.accent }}>Documents</span>
         </h1>
-        <div className="flex items-center gap-4">
-          <button style={{ color: th.iconMuted, fontSize: "18px" }}>🔍</button>
-          <button style={{ color: th.iconMuted, fontSize: "18px" }}>🔔</button>
-        </div>
       </div>
 
       {/* Hero banner */}
