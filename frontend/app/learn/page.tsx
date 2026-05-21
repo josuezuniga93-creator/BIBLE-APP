@@ -54,6 +54,7 @@ const DEFAULT_DOC_COVER = { bg: "linear-gradient(160deg,#0d0d1a,#1a1a3b,#080810)
 // Custom photo covers — image overrides the gradient entirely
 const DOC_IMAGES: Record<string, string> = {
   "jerusalem-council": "/covers/jerusalem-council.png",
+  "apostles-creed":    "/covers/apostles-creed.png",
 };
 
 function DocCover({ doc, size = "full" }: { doc: LearnDocument; size?: "full" | "small" | "featured" }) {
