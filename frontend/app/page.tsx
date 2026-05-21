@@ -472,7 +472,7 @@ export default function Home() {
         <section>
             <div className="flex items-center justify-between px-1 mb-2.5">
               <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">
-                📰 This Week&rsquo;s Reading
+                Featured
               </p>
               <p className="text-[9px] text-white/15 font-semibold">marrowministries.org</p>
             </div>
