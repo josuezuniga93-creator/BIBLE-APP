@@ -860,6 +860,42 @@ html[data-theme="light-elegant"] [class*="text-violet-4"] {
   text-shadow: none !important;
 }
 
+/* ── Bible reader: chapter nav arrows → amber gold ──────────────── */
+html[data-theme="light-elegant"] .le-nav-arrow {
+  color: var(--accent) !important;
+}
+html[data-theme="light-elegant"] .le-nav-arrow:hover {
+  color: #7a5a1e !important;
+  background-color: rgba(155,114,40,0.12) !important;
+}
+
+/* ── Home: Verse of the Day card → warm parchment in Light Elegant ── */
+html[data-theme="light-elegant"] .home-votd-card {
+  background: linear-gradient(135deg, rgba(155,114,40,0.18) 0%, #f0e9da 60%, #ede4ce 100%) !important;
+  border: 1px solid rgba(155,114,40,0.30) !important;
+  box-shadow: 0 2px 16px rgba(155,114,40,0.12) !important;
+}
+/* Remove the dark overlay */
+html[data-theme="light-elegant"] .home-votd-overlay {
+  background: none !important;
+}
+/* Adjust text colors for light background */
+html[data-theme="light-elegant"] .home-votd-card .text-white {
+  color: var(--fg) !important;
+}
+html[data-theme="light-elegant"] .home-votd-card [class*="text-white\/8"] {
+  color: var(--fg-mid) !important;
+}
+html[data-theme="light-elegant"] .home-votd-card [class*="text-white\/6"] {
+  color: var(--fg-lo) !important;
+}
+/* "Read the Full Story" button in the card */
+html[data-theme="light-elegant"] .home-votd-card [class*="bg-black\/"] {
+  background-color: rgba(155,114,40,0.18) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(155,114,40,0.30) !important;
+}
+
 /* ── Active nav: amber gold, no bloom ──────────────────────────────── */
 html[data-theme="light-elegant"] nav a[data-active="true"] {
   color: var(--accent) !important;

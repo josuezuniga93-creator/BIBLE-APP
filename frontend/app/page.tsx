@@ -442,11 +442,11 @@ export default function Home() {
         {/* ── Verse of the Day — church history verse, rotates daily ──────────── */}
         <button
           onClick={() => setHistoryVerse(todayHV)}
-          className={`w-full text-left relative rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br ${todayHV.color} active:scale-[0.99] transition-all`}
+          className={`home-votd-card w-full text-left relative rounded-3xl overflow-hidden shadow-xl bg-gradient-to-br ${todayHV.color} active:scale-[0.99] transition-all`}
           style={{ minHeight: "185px" }}
         >
           <div
-            className="absolute inset-0"
+            className="home-votd-overlay absolute inset-0"
             style={{
               background:
                 "radial-gradient(ellipse at 70% 20%, rgba(255,255,255,0.06) 0%, transparent 60%), " +

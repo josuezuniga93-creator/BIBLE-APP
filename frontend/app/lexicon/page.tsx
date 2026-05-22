@@ -1132,7 +1132,7 @@ function LexiconInner() {
             {/* Prev chapter */}
             <button
               onClick={goPrev}
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
+              className="le-nav-arrow w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
@@ -1168,7 +1168,7 @@ function LexiconInner() {
             {/* Next chapter */}
             <button
               onClick={goNext}
-              className="w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
+              className="le-nav-arrow w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
