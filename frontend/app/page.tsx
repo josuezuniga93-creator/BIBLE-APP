@@ -195,6 +195,21 @@ export default function Home() {
 
   useEffect(() => { setGreeting(getGreeting()); }, []);
 
+  // Lock body scroll when article modal is open
+  useEffect(() => {
+    if (openArticle) {
+      document.body.style.overflow = "hidden";
+      document.body.style.touchAction = "none";
+    } else {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.touchAction = "";
+    };
+  }, [openArticle]);
+
   useEffect(() => {
     // Load devotional badges
     const dp = loadDevotionalProgress();
@@ -342,8 +357,8 @@ export default function Home() {
 
       {/* ── Article reader modal ─────────────────────────────────────────────── */}
       {openArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" style={{ touchAction: "none" }} onClick={() => setOpenArticle(null)}>
-          <div className="relative w-full max-w-lg bg-[#141414] rounded-3xl border border-white/[0.09] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden" style={{ touchAction: "pan-y" }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setOpenArticle(null)}>
+          <div className="relative w-full max-w-lg bg-[#141414] rounded-3xl border border-white/[0.09] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="px-5 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
               <div className="flex items-start justify-between gap-3 mb-2.5">
