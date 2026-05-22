@@ -97,10 +97,10 @@ export default function LibraryPage() {
     accent:            isLight ? "#9b7228"                              : "#a78bfa",
     accentLight:       isLight ? "#c4973a"                              : "#c4b5fd",
     primary:           isLight ? "#9b7228"                              : "#7c3aed",
-    heroBg:            isLight ? "linear-gradient(135deg,#6b4a10 0%,#9b7228 55%,#4a3010 100%)"
+    heroBg:            isLight ? "linear-gradient(135deg,rgba(196,151,58,0.28) 0%,rgba(237,228,205,0.96) 55%,rgba(215,196,148,0.22) 100%)"
                                : "linear-gradient(135deg,#1a0845 0%,#2d1b69 55%,#0f0a2a 100%)",
-    heroAccentText:    isLight ? "#f5e6c8"                              : "#c084fc",
-    heroSubtext:       isLight ? "rgba(245,230,200,0.8)"                : "rgba(255,255,255,0.4)",
+    heroAccentText:    isLight ? "#9b7228"                              : "#c084fc",
+    heroSubtext:       isLight ? "rgba(107,82,38,0.85)"                 : "rgba(255,255,255,0.4)",
     heroGlow:          isLight ? "none"                                 : "radial-gradient(circle,#c084fc 0%,transparent 70%)",
     cardBg:            isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.03)",
     cardBorder:        isLight ? "rgba(155,114,40,0.20)"                : "rgba(255,255,255,0.07)",
