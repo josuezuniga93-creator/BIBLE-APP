@@ -9,8 +9,9 @@ import { useTheme } from "../lib/useTheme";
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
 const COVER_IMAGES: Record<string, string> = {
-  "pilgrims-progress": "/covers/pilgrims-progress.png",
-  "grace-abounding":   "/covers/grace-abounding.png",
+  "pilgrims-progress":     "/covers/pilgrims-progress.png",
+  "grace-abounding":       "/covers/grace-abounding.png",
+  "confessions-augustine": "/covers/confessions-augustine.png",
 };
 
 const COVER_STYLES: Record<string, { from: string; via: string; to: string; accent: string; ornament: string }> = {

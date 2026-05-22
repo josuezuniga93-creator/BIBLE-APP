@@ -62,8 +62,9 @@ function renderChapterContent(
 
 // ─── Photo cover overrides (slug → public/covers/ image) ─────────────────────
 const COVER_IMAGES: Record<string, string> = {
-  "pilgrims-progress": "/covers/pilgrims-progress.png",
-  "grace-abounding":   "/covers/grace-abounding.png",
+  "pilgrims-progress":     "/covers/pilgrims-progress.png",
+  "grace-abounding":       "/covers/grace-abounding.png",
+  "confessions-augustine": "/covers/confessions-augustine.png",
 };
 
 // ─── Book cover for detail header ─────────────────────────────────────────────
