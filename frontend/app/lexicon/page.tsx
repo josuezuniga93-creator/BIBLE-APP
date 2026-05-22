@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { RemoveHighlightBubble } from "../components/RemoveHighlightBubble";
+import { useTheme } from "../lib/useTheme";
 import type {
   BookMeta,
   WordToken,
@@ -386,6 +387,8 @@ export default function LexiconPage() {
 }
 
 function LexiconInner() {
+  const { theme } = useTheme();
+  const isLight = theme === "light-elegant";
   const searchParams = useSearchParams();
   const [books, setBooks]       = useState<BookMeta[]>([]);
   const [hasStrongs, setHasStrongs] = useState(false);
@@ -1026,7 +1029,9 @@ function LexiconInner() {
                         <span
                           className={`cursor-pointer select-text transition-all ${
                             colorPickerVerse === verse.verse
-                              ? "underline decoration-violet-400/60 underline-offset-4 decoration-2"
+                              ? isLight
+                                ? "underline decoration-yellow-600/70 underline-offset-4 decoration-2"
+                                : "underline decoration-violet-400/60 underline-offset-4 decoration-2"
                               : ""
                           }`}
                           onClick={(e) => {
