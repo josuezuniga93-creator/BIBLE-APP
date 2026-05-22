@@ -387,10 +387,10 @@ export default function Home() {
                 {articleContent?.title || openArticle.title}
               </h1>
               <div className="flex items-center gap-2 flex-wrap mb-6">
-                {articleContent?.author && (
+                {articleContent?.author && !/guest|marrow ministries|free content/i.test(articleContent.author) && (
                   <p className="text-[12px] text-white/45 font-medium">By {articleContent.author}</p>
                 )}
-                {articleContent?.author && (articleContent?.date || openArticle.date) && (
+                {articleContent?.author && !/guest|marrow ministries|free content/i.test(articleContent.author) && (articleContent?.date || openArticle.date) && (
                   <span className="text-white/15 text-[11px]">·</span>
                 )}
                 {(articleContent?.date || openArticle.date) && (
@@ -413,7 +413,10 @@ export default function Home() {
                   </p>
                   <div className="mt-8 pt-5 border-t border-white/[0.06]">
                     <p className="text-[11px] text-white/20 leading-relaxed">
-                      Article by <span className="text-white/35 font-semibold">{articleContent?.author || "Marrow Ministries"}</span> — originally published at{" "}
+                      {articleContent?.author && !/guest|marrow ministries|free content/i.test(articleContent.author)
+                        ? <>Article by <span className="text-white/35 font-semibold">{articleContent.author}</span> — originally published at{" "}</>
+                        : <>Originally published at{" "}</>
+                      }
                       <a href="https://marrowministries.org/articles" target="_blank" rel="noopener noreferrer" className="text-emerald-500/60 underline underline-offset-2">
                         marrowministries.org
                       </a>. All rights reserved.
