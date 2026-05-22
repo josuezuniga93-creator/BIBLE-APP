@@ -51,7 +51,16 @@ export async function GET(req: NextRequest) {
         const title  = item.title ? stripTags(item.title) : "";
         const body   = item.body ?? item.systemDataVariants?.[0]?.body ?? "";
         const content = body ? stripTags(body) : "";
-        const author = item.author?.displayName ?? item.author?.firstName ?? "";
+
+        // Only credit the author if the article wasn't written by a guest.
+        // Squarespace always returns the account owner; "Guest Writers" is a category.
+        const categories: string[] = (item.categories ?? []).map((c: unknown) =>
+          typeof c === "string" ? c : (c as { title?: string })?.title ?? ""
+        );
+        const isGuest = categories.some((c) => /guest/i.test(c));
+        const rawAuthor = item.author?.displayName ?? item.author?.firstName ?? "";
+        const author = isGuest ? "" : rawAuthor;
+
         // publishOn is a Unix timestamp in milliseconds
         const date = item.publishOn
           ? new Date(item.publishOn).toISOString().slice(0, 10)
