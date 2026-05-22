@@ -243,6 +243,150 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
   );
 }
 
+// ─── Prayer Card ──────────────────────────────────────────────────────────────
+
+interface PrayerItem {
+  id: string;
+  text: string;
+}
+
+function PrayerCard() {
+  const [items, setItems] = useState<PrayerItem[]>([]);
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("axiom-fw-prayers");
+      if (stored) setItems(JSON.parse(stored));
+    } catch { /* ignore */ }
+  }, []);
+
+  function save(next: PrayerItem[]) {
+    setItems(next);
+    try { localStorage.setItem("axiom-fw-prayers", JSON.stringify(next)); } catch { /**/ }
+  }
+
+  function addItem() {
+    const text = draft.trim();
+    if (!text) { setAdding(false); setDraft(""); return; }
+    save([...items, { id: Date.now().toString(), text }]);
+    setDraft("");
+    setAdding(false);
+  }
+
+  function deleteItem(id: string) {
+    save(items.filter((i) => i.id !== id));
+  }
+
+  function startEdit(item: PrayerItem) {
+    setEditingId(item.id);
+    setEditDraft(item.text);
+  }
+
+  function commitEdit() {
+    const text = editDraft.trim();
+    if (!text) { deleteItem(editingId!); }
+    else { save(items.map((i) => i.id === editingId ? { ...i, text } : i)); }
+    setEditingId(null);
+    setEditDraft("");
+  }
+
+  return (
+    <div className="rounded-2xl border overflow-hidden" style={{ borderColor: "rgba(139,100,69,0.28)", backgroundColor: "rgba(139,100,69,0.04)" }}>
+      {/* Header */}
+      <div className="px-6 pt-6 pb-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(139,100,69,0.12)" }}>
+        <div>
+          <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "#a07850" }}>
+            🙏 Prayer
+          </p>
+          <p className="text-white font-bold text-base leading-snug">Family Prayer Intentions</p>
+          <p className="text-white/30 text-xs mt-0.5 leading-5">
+            What your family will bring before God today.
+          </p>
+        </div>
+      </div>
+
+      {/* Prayer items list */}
+      <div className="px-6 py-5 space-y-3">
+        {items.length === 0 && !adding && (
+          <p className="text-white/25 text-sm italic text-center py-2">
+            No prayer requests yet — add one below.
+          </p>
+        )}
+
+        {items.map((item) =>
+          editingId === item.id ? (
+            <div key={item.id} className="flex gap-2 items-start">
+              <textarea
+                autoFocus
+                value={editDraft}
+                onChange={(e) => setEditDraft(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); commitEdit(); } if (e.key === "Escape") { setEditingId(null); } }}
+                rows={2}
+                className="flex-1 bg-black/30 text-white/90 text-sm leading-6 px-3 py-2 rounded-xl outline-none resize-none"
+                style={{ border: "1px solid rgba(196,146,78,0.45)" }}
+              />
+              <div className="flex flex-col gap-1.5 pt-0.5">
+                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>Save</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+              </div>
+            </div>
+          ) : (
+            <div key={item.id} className="flex items-start gap-3 group">
+              <div className="flex-shrink-0 mt-[3px] w-5 h-5 rounded-full flex items-center justify-center" style={{ backgroundColor: "rgba(139,100,69,0.18)", border: "1px solid rgba(139,100,69,0.35)" }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#c4924e" }} />
+              </div>
+              <p className="flex-1 text-white/80 text-sm leading-7">{item.text}</p>
+              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
+                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg text-xs active:scale-90 transition-all" style={{ color: "rgba(196,146,78,0.60)", backgroundColor: "rgba(139,100,69,0.12)" }} title="Edit">✏️</button>
+                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg text-xs active:scale-90 transition-all" style={{ color: "rgba(239,68,68,0.55)", backgroundColor: "rgba(239,68,68,0.08)" }} title="Remove">✕</button>
+              </div>
+            </div>
+          )
+        )}
+
+        {/* Inline add form */}
+        {adding && (
+          <div className="flex gap-2 items-start pt-1">
+            <textarea
+              autoFocus
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addItem(); } if (e.key === "Escape") { setAdding(false); setDraft(""); } }}
+              placeholder="e.g. Pray for Grandpa's health…"
+              rows={2}
+              className="flex-1 bg-black/30 text-white/90 text-sm leading-6 px-3 py-2 rounded-xl outline-none resize-none placeholder:text-white/20"
+              style={{ border: "1px solid rgba(196,146,78,0.45)" }}
+            />
+            <div className="flex flex-col gap-1.5 pt-0.5">
+              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>Add</button>
+              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Footer: Add button */}
+      {!adding && (
+        <div className="px-6 pb-5">
+          <button
+            onClick={() => setAdding(true)}
+            className="w-full py-3 rounded-xl text-sm font-bold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            style={{ backgroundColor: "rgba(139,100,69,0.12)", border: "1px solid rgba(139,100,69,0.28)", color: "#c4924e" }}
+          >
+            <span className="text-base leading-none">+</span>
+            Add Prayer Request
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Completion Card ──────────────────────────────────────────────────────────
 
 function CompletionCard({
@@ -469,7 +613,10 @@ export default function FamilyWorshipPage() {
             {/* 2. Hymn */}
             <HymnCard entry={dailyEntry} />
 
-            {/* 3. Completion prompt */}
+            {/* 3. Prayer requests */}
+            <PrayerCard />
+
+            {/* 4. Completion prompt */}
             <CompletionCard dateStr={dateStr} onComplete={handleComplete} />
           </>
         ) : (
