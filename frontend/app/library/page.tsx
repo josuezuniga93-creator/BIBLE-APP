@@ -8,6 +8,11 @@ import { useTheme } from "../lib/useTheme";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
+const COVER_IMAGES: Record<string, string> = {
+  "pilgrims-progress": "/covers/pilgrims-progress.png",
+  "grace-abounding":   "/covers/grace-abounding.png",
+};
+
 const COVER_STYLES: Record<string, { from: string; via: string; to: string; accent: string; ornament: string }> = {
   "pilgrims-progress":      { from: "#1a0a2e", via: "#2d1b5e", to: "#0f0a1a", accent: "#a78bfa", ornament: "✦" },
   "grace-abounding":        { from: "#1a0d0d", via: "#3b1414", to: "#0f0a0a", accent: "#f87171", ornament: "†" },
@@ -22,6 +27,18 @@ const COVER_STYLES: Record<string, { from: string; via: string; to: string; acce
 const DEFAULT_COVER = { from: "#0d0d1a", via: "#1a1a3b", to: "#0a0a0f", accent: "#a78bfa", ornament: "✦" };
 
 function BookCover({ book, size = "full" }: { book: BookCatalogEntry; size?: "full" | "small" }) {
+  const imageSrc = COVER_IMAGES[book.slug];
+  if (imageSrc) {
+    return (
+      <div className="w-full h-full" style={{ position: "relative", overflow: "hidden" }}>
+        <img
+          src={imageSrc}
+          alt={book.title}
+          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+        />
+      </div>
+    );
+  }
   const style = COVER_STYLES[book.slug] ?? DEFAULT_COVER;
   const isSmall = size === "small";
   return (
