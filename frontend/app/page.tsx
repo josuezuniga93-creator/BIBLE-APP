@@ -355,60 +355,64 @@ export default function Home() {
         </div>
       )}
 
-      {/* ── Article reader modal ─────────────────────────────────────────────── */}
+      {/* ── Article reader — full screen ─────────────────────────────────────── */}
       {openArticle && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setOpenArticle(null)}>
-          <div className="relative w-full max-w-lg bg-[#141414] rounded-3xl border border-white/[0.09] shadow-2xl flex flex-col max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            {/* Header */}
-            <div className="px-5 pt-5 pb-4 border-b border-white/[0.07] flex-shrink-0">
-              <div className="flex items-start justify-between gap-3 mb-2.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 rounded-md bg-emerald-600/30 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
-                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-400/80">
-                    Marrow Ministries
-                  </p>
-                </div>
-                <button onClick={() => setOpenArticle(null)} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.07] transition-colors flex-shrink-0 -mt-0.5">✕</button>
+        <div className="fixed inset-0 z-50 flex flex-col bg-[#0e0e18]" style={{ WebkitOverflowScrolling: "touch" }}>
+          {/* Top bar */}
+          <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-12 pb-4 border-b border-white/[0.07]">
+            <button
+              onClick={() => setOpenArticle(null)}
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-white/[0.06] active:bg-white/[0.12] transition-colors"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white/70">
+                <path d="M15 19l-7-7 7-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-5 h-5 rounded-md bg-emerald-600/30 border border-emerald-500/30 flex items-center justify-center flex-shrink-0">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-emerald-400">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
-              <h2 className="text-[15px] font-bold text-white/90 leading-snug">
+              <p className="text-[10px] font-black uppercase tracking-[0.15em] text-emerald-400/80 truncate">Marrow Ministries</p>
+            </div>
+          </div>
+
+          {/* Scrollable body */}
+          <div className="flex-1 overflow-y-auto overscroll-contain" style={{ minHeight: 0, WebkitOverflowScrolling: "touch" }}>
+            <div className="px-5 pt-6 pb-4">
+              {/* Title block */}
+              <h1 className="text-[20px] font-bold text-white/92 leading-snug mb-3">
                 {articleContent?.title || openArticle.title}
-              </h2>
-              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+              </h1>
+              <div className="flex items-center gap-2 flex-wrap mb-6">
                 {articleContent?.author && (
-                  <p className="text-[11px] text-white/45 font-medium">
-                    By {articleContent.author}
-                  </p>
+                  <p className="text-[12px] text-white/45 font-medium">By {articleContent.author}</p>
                 )}
                 {articleContent?.author && (articleContent?.date || openArticle.date) && (
-                  <span className="text-white/15 text-[10px]">·</span>
+                  <span className="text-white/15 text-[11px]">·</span>
                 )}
                 {(articleContent?.date || openArticle.date) && (
-                  <p className="text-[11px] text-white/25">
+                  <p className="text-[12px] text-white/25">
                     {new Date((articleContent?.date || openArticle.date) + "T00:00:00").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
                   </p>
                 )}
               </div>
-            </div>
-            {/* Body */}
-            <div className="overflow-y-auto overscroll-contain px-5 py-4" style={{ flex: "1 1 0", minHeight: 0, WebkitOverflowScrolling: "touch" }}>
+
+              {/* Content */}
               {contentLoading ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                <div className="flex flex-col items-center justify-center py-24 gap-3">
                   <div className="w-6 h-6 rounded-full border-2 border-emerald-500/30 border-t-emerald-400 animate-spin" />
                   <span className="text-white/20 text-xs">Loading article…</span>
                 </div>
               ) : (
                 <>
-                  <p className="text-[14px] text-white/65 leading-[1.75] whitespace-pre-wrap">
+                  <p className="text-[15px] text-white/70 leading-[1.8] whitespace-pre-wrap">
                     {articleContent?.content || openArticle.excerpt}
                   </p>
-                  {/* Attribution footer inside body */}
-                  <div className="mt-6 pt-4 border-t border-white/[0.06]">
-                    <p className="text-[10px] text-white/20 leading-relaxed">
+                  <div className="mt-8 pt-5 border-t border-white/[0.06]">
+                    <p className="text-[11px] text-white/20 leading-relaxed">
                       Article by <span className="text-white/35 font-semibold">{articleContent?.author || "Marrow Ministries"}</span> — originally published at{" "}
                       <a href="https://marrowministries.org/articles" target="_blank" rel="noopener noreferrer" className="text-emerald-500/60 underline underline-offset-2">
                         marrowministries.org
@@ -418,13 +422,18 @@ export default function Home() {
                 </>
               )}
             </div>
-            {/* Footer link */}
-            <div className="px-5 pb-5 pt-3 border-t border-white/[0.06] flex-shrink-0">
-              <a href={openArticle.href} target="_blank" rel="noopener noreferrer"
-                className="block w-full text-center py-2.5 rounded-xl text-xs font-bold bg-white/[0.04] border border-white/[0.07] hover:bg-white/[0.09] text-emerald-400/80 transition-all">
-                Open on Marrow Ministries →
-              </a>
-            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex-shrink-0 px-5 py-4 border-t border-white/[0.07]">
+            <a
+              href={openArticle.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full text-center py-3 rounded-2xl text-sm font-bold bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 active:bg-emerald-600/30 transition-all"
+            >
+              Open on Marrow Ministries →
+            </a>
           </div>
         </div>
       )}
