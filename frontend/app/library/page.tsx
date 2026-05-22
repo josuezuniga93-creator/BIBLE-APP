@@ -175,10 +175,6 @@ export default function LibraryPage() {
         <h1 className="text-lg font-bold" style={{ color: th.textPrimary }}>
           Free Books <span style={{ color: th.accent }}>Library</span>
         </h1>
-        <div className="flex items-center gap-4">
-          <button className="transition-colors text-lg" style={{ color: th.iconMuted }}>🔍</button>
-          <button className="transition-colors text-lg" style={{ color: th.iconMuted }}>🔔</button>
-        </div>
       </div>
 
       {/* ── Hero banner ──────────────────────────────────────────────────────── */}
