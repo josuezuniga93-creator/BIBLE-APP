@@ -860,6 +860,12 @@ html[data-theme="light-elegant"] [class*="text-violet-4"] {
   text-shadow: none !important;
 }
 
+/* ── Bible reader: "New/Old Testament" label → amber gold ───────── */
+html[data-theme="light-elegant"] .le-testament-label {
+  color: var(--accent) !important;
+  opacity: 0.75;
+}
+
 /* ── Bible reader: chapter nav arrows → amber gold ──────────────── */
 html[data-theme="light-elegant"] .le-nav-arrow {
   color: var(--accent) !important;

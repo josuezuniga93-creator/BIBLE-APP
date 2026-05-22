@@ -1142,7 +1142,7 @@ function LexiconInner() {
             <button
               onClick={() => { setPickerView("books"); setPickerBook(selectedBook); setShowBookPicker(true); }}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 h-full rounded-xl hover:bg-white/[0.05] transition-colors">
-              <span className="text-[10px] font-semibold text-white/25 tracking-widest uppercase leading-none">
+              <span className="le-testament-label text-[10px] font-semibold text-white/25 tracking-widest uppercase leading-none">
                 {selectedBook?.testament === "OT" ? "Old Testament" : "New Testament"}
               </span>
               <span className="text-white font-bold text-sm leading-none mt-1">
