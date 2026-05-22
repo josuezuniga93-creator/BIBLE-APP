@@ -1024,7 +1024,11 @@ function LexiconInner() {
                           )}
                         </span>
                         <span
-                          className="cursor-pointer select-text"
+                          className={`cursor-pointer select-text transition-all ${
+                            colorPickerVerse === verse.verse
+                              ? "underline decoration-violet-400/60 underline-offset-4 decoration-2"
+                              : ""
+                          }`}
                           onClick={(e) => {
                             e.stopPropagation();
                             setColorPickerVerse((v) => v === verse.verse ? null : verse.verse);
