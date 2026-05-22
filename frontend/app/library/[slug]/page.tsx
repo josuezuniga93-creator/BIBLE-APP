@@ -60,6 +60,12 @@ function renderChapterContent(
   );
 }
 
+// ─── Photo cover overrides (slug → public/covers/ image) ─────────────────────
+const COVER_IMAGES: Record<string, string> = {
+  "pilgrims-progress": "/covers/pilgrims-progress.png",
+  "grace-abounding":   "/covers/grace-abounding.png",
+};
+
 // ─── Book cover for detail header ─────────────────────────────────────────────
 const COVER_STYLES: Record<string, { from: string; via: string; to: string; accent: string; ornament: string }> = {
   "pilgrims-progress":      { from: "#1a0a2e", via: "#2d1b5e", to: "#0f0a1a", accent: "#a78bfa", ornament: "✦" },
@@ -74,6 +80,14 @@ const COVER_STYLES: Record<string, { from: string; via: string; to: string; acce
 const DEFAULT_COVER = { from: "#0d0d1a", via: "#1a1a3b", to: "#0a0a0f", accent: "#a78bfa", ornament: "✦" };
 
 function DetailBookCover({ slug, title, author }: { slug: string; title: string; author: string }) {
+  const imageSrc = COVER_IMAGES[slug];
+  if (imageSrc) {
+    return (
+      <div className="w-full h-full" style={{ position: "relative", overflow: "hidden" }}>
+        <img src={imageSrc} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      </div>
+    );
+  }
   const style = COVER_STYLES[slug] ?? DEFAULT_COVER;
   return (
     <div
