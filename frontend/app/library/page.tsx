@@ -204,13 +204,6 @@ export default function LibraryPage() {
           <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
             Thousands of free books at your fingertips.
           </p>
-          <button
-            className="px-5 py-2 rounded-full text-xs font-bold text-white active:scale-95 transition-transform"
-            style={{ backgroundColor: th.primary }}
-            onClick={() => document.getElementById("my-library")?.scrollIntoView({ behavior: "smooth" })}
-          >
-            Explore Now
-          </button>
         </div>
       </div>
 

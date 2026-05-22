@@ -772,13 +772,6 @@ function LearnPageInner() {
           <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
             Explore the confessions, debates, and declarations that shaped history in Christianity.
           </p>
-          <div className="flex gap-2 flex-wrap">
-            <button className="px-5 py-2 rounded-full text-xs font-bold text-white active:scale-95 transition-transform"
-              style={{ backgroundColor: th.primary }}
-              onClick={() => document.getElementById("my-documents")?.scrollIntoView({ behavior: "smooth" })}>
-              Explore Docs
-            </button>
-          </div>
         </div>
       </div>
 
