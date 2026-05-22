@@ -357,7 +357,7 @@ export default function Home() {
 
       {/* ── Article reader — full screen ─────────────────────────────────────── */}
       {openArticle && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-[#0e0e18]" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="fixed inset-0 z-[200] flex flex-col bg-[#0e0e18]" style={{ WebkitOverflowScrolling: "touch" }}>
           {/* Top bar */}
           <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-12 pb-4 border-b border-white/[0.07]">
             <button
