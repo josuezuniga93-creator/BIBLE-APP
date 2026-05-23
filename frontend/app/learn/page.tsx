@@ -8,6 +8,8 @@ import { applyHighlightsToHtml } from "../lib/highlights";
 import { HighlightToolbar } from "../components/HighlightToolbar";
 import { RemoveHighlightBubble } from "../components/RemoveHighlightBubble";
 import { useTheme } from "../lib/useTheme";
+import { BookmarkModal } from "../components/BookmarkModal";
+import { isAnySaved } from "../lib/collections";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -265,7 +267,13 @@ function SectionReader({
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [showToc, setShowToc] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [showBookmark, setShowBookmark] = useState(false);
+
+  const itemId = `learn::${doc.id}::${section.id}`;
+  const [bookmarked, setBookmarked] = useState(() => isAnySaved(itemId));
+
+  // Refresh bookmarked state when section changes
+  useEffect(() => { setBookmarked(isAnySaved(itemId)); }, [itemId]);
 
   const hlContext = `learn-${doc.id}-${section.id}`;
   const { highlights, selection, addHighlight, removeHighlight, dismissSelection } = useHighlights(hlContext);
@@ -301,7 +309,7 @@ function SectionReader({
             style={{ color: showToc ? th.accent : th.textFaint }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
           </button>
-          <button onClick={() => setBookmarked((v) => !v)} className="w-9 h-9 flex items-center justify-center rounded-lg"
+          <button onClick={() => setShowBookmark(true)} className="w-9 h-9 flex items-center justify-center rounded-lg"
             style={{ color: bookmarked ? "#c4973a" : th.textFaint }}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"}>
               <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
@@ -428,6 +436,20 @@ function SectionReader({
 
       {selection && <HighlightToolbar x={selection.x} y={selection.y} onHighlight={addHighlight} onDismiss={dismissSelection} />}
       {pendingRemove && <RemoveHighlightBubble x={pendingRemove.x} y={pendingRemove.y} onConfirm={() => { removeHighlight(pendingRemove.id); setPendingRemove(null); }} onDismiss={() => setPendingRemove(null)} />}
+
+      {showBookmark && (
+        <BookmarkModal
+          item={{
+            id: itemId,
+            type: "learn",
+            title: section.title,
+            subtitle: doc.shortTitle,
+            preview: section.content.replace(/[#*_`>]/g, "").slice(0, 120).trim(),
+          }}
+          label={`${doc.shortTitle} — ${section.title}`}
+          onClose={() => { setShowBookmark(false); setBookmarked(isAnySaved(itemId)); }}
+        />
+      )}
     </div>
   );
 }

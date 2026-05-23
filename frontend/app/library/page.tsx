@@ -5,6 +5,8 @@ import Link from "next/link";
 import type { BookCatalogEntry } from "../lib/types";
 import { STATIC_BOOK_CATALOG } from "../lib/bookCatalog";
 import { useTheme } from "../lib/useTheme";
+import { BookmarkModal } from "../components/BookmarkModal";
+import { isAnySaved } from "../lib/collections";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -147,9 +149,19 @@ export default function LibraryPage() {
   const [activeTab, setActiveTab] = useState<LibTab>("books");
   const [inProgress, setInProgress] = useState<ProgressEntry[]>([]);
   const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(new Set());
+  const [bookmarkTarget, setBookmarkTarget] = useState<BookCatalogEntry | null>(null);
+  const [savedBooks, setSavedBooks] = useState<Set<string>>(new Set());
+
+  // Refresh saved state whenever modal closes
+  function refreshSaved() {
+    const s = new Set(available.map((b) => b.slug).filter((slug) => isAnySaved(`book::${slug}`)));
+    setSavedBooks(s);
+  }
 
   const available = STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon);
   const comingSoon = STATIC_BOOK_CATALOG.filter((b) => b.coming_soon);
+
+  useEffect(() => { refreshSaved(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load progress from localStorage
   useEffect(() => {
@@ -186,6 +198,7 @@ export default function LibraryPage() {
   }
 
   return (
+    <>
     <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* ── Header ────────────────────────────────────────────────────────────── */}
@@ -424,13 +437,11 @@ export default function LibraryPage() {
                 ) : (
                   <button
                     className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-                    style={{ color: th.textVeryFaint }}
-                    onClick={(e) => e.preventDefault()}
+                    style={{ color: savedBooks.has(book.slug) ? "#c4973a" : th.textVeryFaint }}
+                    onClick={(e) => { e.preventDefault(); setBookmarkTarget(book); }}
                   >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="5" r="1.8" />
-                      <circle cx="12" cy="12" r="1.8" />
-                      <circle cx="12" cy="19" r="1.8" />
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={savedBooks.has(book.slug) ? "currentColor" : "none"}>
+                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
                     </svg>
                   </button>
                 )}
@@ -459,5 +470,21 @@ export default function LibraryPage() {
       </div>
 
     </div>
+
+    {/* Bookmark modal */}
+    {bookmarkTarget && (
+      <BookmarkModal
+        item={{
+          id: `book::${bookmarkTarget.slug}`,
+          type: "book",
+          title: bookmarkTarget.title,
+          subtitle: bookmarkTarget.author,
+          preview: bookmarkTarget.description?.slice(0, 120) ?? undefined,
+        }}
+        label={bookmarkTarget.title}
+        onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
+      />
+    )}
+    </>
   );
 }

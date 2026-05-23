@@ -108,18 +108,28 @@ function NotesAppIcon() {
   );
 }
 
+function CollectionsAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+      <path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 // ─── App grid config ──────────────────────────────────────────────────────────
 
 const APP_TILES = [
-  { href: "/bible-plans",       Icon: PlansAppIcon,      label: "Plans",              color: "#5b21b6" },
-  { href: "/library",           Icon: LibraryAppIcon,    label: "Free Books",         color: "#0369a1" },
-  { href: "/bible-tracker",     Icon: TrackerAppIcon,    label: "Bible Tracker",      color: "#065f46" },
-  { href: "/family-worship",    Icon: FamilyAppIcon,     label: "Family Worship",     color: "#9d174d" },
-  { href: "/kids-books",        Icon: KidsAppIcon,       label: "Kids Books",         color: "#c2410c" },
-  { href: "/videos",            Icon: VideosAppIcon,     label: "Videos",             color: "#1e3a8a" },
-  { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Fellowship Tracker", color: "#7c3aed" },
-  { href: "/church-directory",  Icon: ChurchAppIcon,     label: "Find a Church",      color: "#1a6b3a" },
-  { href: "/give",              Icon: GiveAppIcon,       label: "Give",               color: "#b45309" },
+  { href: "/bible-plans",       Icon: PlansAppIcon,        label: "Plans",              color: "#5b21b6" },
+  { href: "/library",           Icon: LibraryAppIcon,      label: "Free Books",         color: "#0369a1" },
+  { href: "/bible-tracker",     Icon: TrackerAppIcon,      label: "Bible Tracker",      color: "#065f46" },
+  { href: "/family-worship",    Icon: FamilyAppIcon,       label: "Family Worship",     color: "#9d174d" },
+  { href: "/kids-books",        Icon: KidsAppIcon,         label: "Kids Books",         color: "#c2410c" },
+  { href: "/videos",            Icon: VideosAppIcon,       label: "Videos",             color: "#1e3a8a" },
+  { href: "/collections",       Icon: CollectionsAppIcon,  label: "Collections",        color: "#92400e" },
+  { href: "/fellowship",        Icon: FellowshipAppIcon,   label: "Fellowship",         color: "#7c3aed" },
+  { href: "/church-directory",  Icon: ChurchAppIcon,       label: "Find a Church",      color: "#1a6b3a" },
+  { href: "/give",              Icon: GiveAppIcon,         label: "Give",               color: "#b45309" },
 ] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
