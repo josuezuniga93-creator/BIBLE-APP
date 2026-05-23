@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { LEARN_DOCUMENTS, ACCENT_CLASSES, LearnDocument, LearnSection } from "../lib/learnData";
 import { useHighlights } from "../lib/useHighlights";
@@ -270,21 +270,22 @@ function SectionReader({
   const hlContext = `learn-${doc.id}-${section.id}`;
   const { highlights, selection, addHighlight, removeHighlight, dismissSelection } = useHighlights(hlContext);
   const [pendingRemove, setPendingRemove] = useState<{ id: string; x: number; y: number } | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const sectionIndex = doc.sections.findIndex((s) => s.id === section.id);
   const progressPct = doc.sections.length > 0 ? Math.round(((sectionIndex + 1) / doc.sections.length) * 100) : 0;
 
   const sliderCss = `.hist-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.hist-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};${th.sliderThumbShadow}border:2px solid rgba(255,255,255,0.3)}.hist-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};border:2px solid rgba(255,255,255,0.3)}`;
 
-  useEffect(() => { window.scrollTo({ top: 0, behavior: "smooth" }); }, [section.id]);
+  useEffect(() => { contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }, [section.id]);
   useEffect(() => { if (!completed.has(section.id)) onToggle(section.id); }, [section.id]);
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+    <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* Top bar */}
       <div
-        className="sticky top-0 z-30 flex items-center justify-between px-4 h-12"
+        className="flex-shrink-0 flex items-center justify-between px-4 h-12"
         style={{ backgroundColor: th.topBarBg, backdropFilter: "blur(12px)", borderBottom: `1px solid ${th.topBarBorder}` }}
       >
         <button onClick={onClose} className="flex items-center gap-1 min-w-[40px]" style={{ color: th.textMuted }}>
@@ -359,43 +360,45 @@ function SectionReader({
       )}
 
       {/* Reading content */}
-      <main className="max-w-2xl mx-auto px-5 pt-8 pb-40">
-        <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-          {section.label}
-        </p>
-        <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
-          {section.title}
-        </h2>
-        <div className={`space-y-1 ${FONT_SIZES[fontSize]}`}>
-          {renderContent(section.content, th.textContent, highlights, (id, x, y) => setPendingRemove({ id, x, y }))}
-        </div>
+      <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
+        <main className="max-w-2xl mx-auto px-5 pt-8 pb-8">
+          <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
+            {section.label}
+          </p>
+          <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
+            {section.title}
+          </h2>
+          <div className={`space-y-1 ${FONT_SIZES[fontSize]}`}>
+            {renderContent(section.content, th.textContent, highlights, (id, x, y) => setPendingRemove({ id, x, y }))}
+          </div>
 
-        {/* Nav buttons */}
-        <div className="flex items-center justify-between gap-4 mt-14 pt-8" style={{ borderTop: `1px solid ${th.dividerColor}` }}>
-          <button disabled={!hasPrev} onClick={onPrev} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-            style={{ backgroundColor: hasPrev ? th.navBtnBg : "transparent", color: hasPrev ? th.navBtnColor : th.textMuted, border: `1px solid ${th.navBtnBorder}`, cursor: hasPrev ? "pointer" : "not-allowed" }}>
-            ← Previous
-          </button>
-          {hasNext ? (
-            <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{ background: th.navNextGradient, color: "white" }}>
-              Next →
+          {/* Nav buttons */}
+          <div className="flex items-center justify-between gap-4 mt-14 pt-8" style={{ borderTop: `1px solid ${th.dividerColor}` }}>
+            <button disabled={!hasPrev} onClick={onPrev} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+              style={{ backgroundColor: hasPrev ? th.navBtnBg : "transparent", color: hasPrev ? th.navBtnColor : th.textMuted, border: `1px solid ${th.navBtnBorder}`, cursor: hasPrev ? "pointer" : "not-allowed" }}>
+              ← Previous
             </button>
-          ) : (
-            <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}>
-              Finish ✓
-            </button>
-          )}
-        </div>
-        <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-          All documents are public domain • Free to read, share, and distribute
-        </p>
-      </main>
+            {hasNext ? (
+              <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+                style={{ background: th.navNextGradient, color: "white" }}>
+                Next →
+              </button>
+            ) : (
+              <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+                style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}>
+                Finish ✓
+              </button>
+            )}
+          </div>
+          <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
+            All documents are public domain • Free to read, share, and distribute
+          </p>
+        </main>
+      </div>
 
       {/* Fixed bottom bar */}
-      <div className="fixed bottom-0 left-0 right-0 z-30"
-        style={{ backgroundColor: th.bottomBarBg, backdropFilter: "blur(16px)", borderTop: `1px solid ${th.bottomBarBorder}`, paddingBottom: "max(env(safe-area-inset-bottom),8px)" }}>
+      <div className="flex-shrink-0"
+        style={{ backgroundColor: th.bottomBarBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
         <div className="px-5 pt-3 pb-2">
           <style>{sliderCss}</style>
           <input type="range" min={0} max={Math.max(1, doc.sections.length - 1)} value={sectionIndex}
