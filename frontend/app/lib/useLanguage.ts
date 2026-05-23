@@ -40,8 +40,12 @@ export function useLanguage() {
   const [lang, setLangState] = useState<Lang>("en");
   const pathname = usePathname();
 
-  // On mount: read language from cookie
+  // On mount: read language — check localStorage first (faster), then cookie
   useEffect(() => {
+    try {
+      const ls = localStorage.getItem("ryc-lang") as Lang | null;
+      if (ls === "es" || ls === "en") { setLangState(ls); return; }
+    } catch {}
     const stored = readLangFromCookie();
     setLangState(stored);
   }, []);
@@ -57,8 +61,21 @@ export function useLanguage() {
 
   const setLang = useCallback((next: Lang) => {
     setGTCookie(next);
-    // Hard reload so Google Translate reads the cookie cleanly before React hydrates
-    window.location.reload();
+    try { localStorage.setItem("ryc-lang", next); } catch {}
+    setLangState(next);
+    if (next === "es") {
+      // Re-trigger GT without a full reload so translation feels instant
+      setTimeout(() => triggerGT(), 300);
+    } else {
+      // Reset GT back to English
+      const select = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
+      if (select) {
+        select.value = "en";
+        select.dispatchEvent(new Event("change"));
+      } else {
+        window.location.reload();
+      }
+    }
   }, []);
 
   const t = useCallback(

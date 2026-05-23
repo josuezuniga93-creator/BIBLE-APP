@@ -180,6 +180,12 @@ body {
 .axiom-hl-blue   { background-color: rgba(56, 189, 248, 0.28); }
 .axiom-hl-pink   { background-color: rgba(244, 114, 182, 0.30); }
 
+/* Premium Neon — brighter highlights on dark background */
+html[data-theme="premium-neon"] .axiom-hl-yellow { background-color: rgba(253, 224, 71, 0.72); color: #000; }
+html[data-theme="premium-neon"] .axiom-hl-green  { background-color: rgba(52, 211, 153, 0.65); color: #000; }
+html[data-theme="premium-neon"] .axiom-hl-blue   { background-color: rgba(56, 189, 248, 0.65); color: #000; }
+html[data-theme="premium-neon"] .axiom-hl-pink   { background-color: rgba(244, 114, 182, 0.70); color: #000; }
+
 /* ── Google Translate — hide all default UI chrome ──────────────────────────── */
 #google_translate_element          { display: none !important; }
 .goog-te-banner-frame              { display: none !important; }

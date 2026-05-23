@@ -15,6 +15,7 @@ import {
   DEVOTIONAL_BADGES,
   type DevotionalBadgeId,
 } from "./lib/devotionalProgress";
+import { useLanguage } from "./lib/useLanguage";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
 
@@ -113,11 +114,17 @@ const HISTORY_VERSES: HistoryVerse[] = [
   },
 ];
 
-// ─── Guided Scripture video ───────────────────────────────────────────────────
-// To change the video: update GUIDED_SCRIPTURE_URL with any YouTube watch URL
-const GUIDED_SCRIPTURE_URL = "https://www.youtube.com/watch?v=e50Rgh7rGw8";
-const GUIDED_SCRIPTURE_EMBED_ID = GUIDED_SCRIPTURE_URL.split("v=")[1]?.split("&")[0] ?? "e50Rgh7rGw8";
-const GUIDED_SCRIPTURE_TITLE = "Guided Scripture — 2 Min Devotional";
+// ─── Featured Meditation videos (language-specific) ────────────────────────────
+// English video: place file at /public/videos/featured-en.mp4
+// Spanish video: place file at /public/videos/featured-es.mp4
+// Or set YouTube IDs below as a fallback while local files are not yet uploaded.
+const FEATURED_VIDEOS = {
+  en: { file: "/videos/featured-en.mp4", youtubeId: "e50Rgh7rGw8", title: "Featured Meditation of Scripture" },
+  es: { file: "/videos/featured-es.mp4", youtubeId: "",             title: "Meditación Destacada de la Escritura" },
+};
+
+// Legacy alias (used by older code paths)
+const GUIDED_SCRIPTURE_TITLE = "Featured Meditation of Scripture";
 
 // ─── Greeting ────────────────────────────────────────────────────────────────
 
@@ -185,6 +192,8 @@ export default function Home() {
   const [devotionalBadges,  setDevotionalBadges]  = useState<DevotionalBadgeId[]>([]);
   const [videoOpen,    setVideoOpen]    = useState(false);
   const [historyVerse, setHistoryVerse] = useState<HistoryVerse | null>(null);
+  const { lang } = useLanguage();
+  const featuredVideo = FEATURED_VIDEOS[lang as "en" | "es"] ?? FEATURED_VIDEOS.en;
 
   // Articles
   const [articles,        setArticles]        = useState<MarrowArticle[]>([]);
@@ -277,34 +286,48 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
 
-      {/* ── Guided Scripture video modal ──────────────────────────────────────── */}
+      {/* ── Featured Meditation video modal — full-screen, language-aware ──────── */}
       {videoOpen && (
         <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          className="fixed inset-0 z-[300] bg-black flex flex-col"
           onClick={() => setVideoOpen(false)}
         >
-          <div
-            className="w-full max-w-2xl rounded-2xl overflow-hidden border border-white/10 bg-[#141414] shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+          {/* Close button */}
+          <button
+            onClick={() => setVideoOpen(false)}
+            className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-colors"
           >
-            <div className="aspect-video w-full">
+            ✕
+          </button>
+          <div className="flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+            {/* Try local file first; if unavailable, fall back to YouTube embed */}
+            <video
+              src={featuredVideo.file}
+              autoPlay
+              controls
+              playsInline
+              className="w-full h-full object-contain"
+              onError={(e) => {
+                // Fallback: hide video, show iframe
+                (e.target as HTMLVideoElement).style.display = "none";
+                const iframe = document.getElementById("featured-yt-fallback");
+                if (iframe) iframe.style.display = "block";
+              }}
+            />
+            {featuredVideo.youtubeId && (
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${GUIDED_SCRIPTURE_EMBED_ID}?autoplay=1&rel=0`}
-                title={GUIDED_SCRIPTURE_TITLE}
+                id="featured-yt-fallback"
+                style={{ display: "none" }}
+                src={`https://www.youtube-nocookie.com/embed/${featuredVideo.youtubeId}?autoplay=1&rel=0`}
+                title={featuredVideo.title}
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
                 allowFullScreen
                 className="w-full h-full"
               />
-            </div>
-            <div className="px-5 py-4 flex items-center justify-between gap-4">
-              <p className="text-sm font-semibold text-white/75">{GUIDED_SCRIPTURE_TITLE}</p>
-              <button
-                onClick={() => setVideoOpen(false)}
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-white/70 hover:bg-white/[0.07] transition-colors flex-shrink-0"
-              >
-                ✕
-              </button>
-            </div>
+            )}
+          </div>
+          <div className="px-5 py-4 bg-black/80 flex-shrink-0">
+            <p className="text-sm font-semibold text-white/75 text-center">{featuredVideo.title}</p>
           </div>
         </div>
       )}

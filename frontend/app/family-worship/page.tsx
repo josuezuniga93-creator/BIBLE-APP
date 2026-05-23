@@ -444,6 +444,100 @@ function CompletionCard({
 
 // ─── Badge Toast ──────────────────────────────────────────────────────────────
 
+// ─── Daily Reminder Card ──────────────────────────────────────────────────────
+
+const REMINDER_KEY = "axiom-fw-reminder";
+
+function ReminderCard() {
+  const [enabled, setEnabled] = useState(false);
+  const [time, setTime] = useState("19:00");
+  const [permissionState, setPermissionState] = useState<NotificationPermission>("default");
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(REMINDER_KEY);
+      if (stored) {
+        const { enabled: e, time: t } = JSON.parse(stored);
+        setEnabled(!!e);
+        if (t) setTime(t);
+      }
+    } catch {}
+    if (typeof Notification !== "undefined") setPermissionState(Notification.permission);
+  }, []);
+
+  async function handleToggle() {
+    if (!enabled) {
+      // Request permission first
+      if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
+        const result = await Notification.requestPermission();
+        setPermissionState(result);
+        if (result !== "granted") return;
+      }
+      setEnabled(true);
+      save(true, time);
+    } else {
+      setEnabled(false);
+      save(false, time);
+    }
+  }
+
+  function handleTimeChange(t: string) {
+    setTime(t);
+    if (enabled) save(enabled, t);
+  }
+
+  function save(e: boolean, t: string) {
+    try { localStorage.setItem(REMINDER_KEY, JSON.stringify({ enabled: e, time: t })); } catch {}
+    setSaved(true);
+    setTimeout(() => setSaved(false), 1500);
+  }
+
+  const [h, m] = time.split(":").map(Number);
+  const ampm = h < 12 ? "AM" : "PM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  const displayTime = `${h12}:${String(m).padStart(2, "0")} ${ampm}`;
+
+  return (
+    <div className="rounded-2xl px-5 py-5 space-y-4" style={{ border: "1px solid rgba(139,100,69,0.22)", backgroundColor: "rgba(139,100,69,0.04)" }}>
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-bold text-white">Daily Reminder</p>
+          <p className="text-xs text-white/35 mt-0.5">Get reminded to do family worship</p>
+        </div>
+        <button
+          onClick={handleToggle}
+          className={`relative w-12 h-6 rounded-full transition-colors ${enabled ? "bg-amber-600" : "bg-white/10"}`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-6" : ""}`} />
+        </button>
+      </div>
+
+      {enabled && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Reminder Time</p>
+          <div className="flex items-center gap-3">
+            <input
+              type="time"
+              value={time}
+              onChange={(e) => handleTimeChange(e.target.value)}
+              className="flex-1 bg-white/[0.06] border border-white/10 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-amber-500/50"
+            />
+            <span className="text-sm font-bold text-amber-500/80">{displayTime}</span>
+          </div>
+          {permissionState === "denied" && (
+            <p className="text-xs text-red-400/80">Notifications are blocked. Please allow them in your browser settings.</p>
+          )}
+          {saved && <p className="text-xs text-emerald-400/70">Reminder saved ✓</p>}
+          <p className="text-[11px] text-white/25 leading-relaxed">
+            Note: Browser notifications require the app to be open or installed as a PWA. For best results, add this app to your home screen.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
   if (badges.length === 0) return null;
   const badge = DEVOTIONAL_BADGES[badges[0]];
@@ -618,6 +712,9 @@ export default function FamilyWorshipPage() {
 
             {/* 4. Completion prompt */}
             <CompletionCard dateStr={dateStr} onComplete={handleComplete} />
+
+            {/* 5. Daily reminder */}
+            <ReminderCard />
           </>
         ) : (
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-8 text-center">

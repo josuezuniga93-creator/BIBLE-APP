@@ -35,6 +35,17 @@ const FONT_SIZE_CLASSES: Record<FontSize, string> = {
 const HIGHLIGHT_KEY    = (book: number, ch: number) => `ryc-highlight-${book}-${ch}`;
 const VERSE_COLOR_KEY  = (book: number, ch: number) => `ryc-vcolor-${book}-${ch}`;
 const CHAPTER_NOTE_KEY = (book: number, ch: number) => `ryc-chapter-note-${book}-${ch}`;
+const LAST_POSITION_KEY = "ryc-last-position";
+
+function saveLastPosition(bookName: string, chapter: number) {
+  try { localStorage.setItem(LAST_POSITION_KEY, JSON.stringify({ bookName, chapter })); } catch {}
+}
+function loadLastPosition(): { bookName: string; chapter: number } | null {
+  try {
+    const raw = localStorage.getItem(LAST_POSITION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+}
 
 const HIGHLIGHT_COLORS = {
   yellow: { bg: "bg-yellow-400/30",  text: "text-yellow-100", dot: "#ca8a04",  label: "Yellow"  },
@@ -521,6 +532,11 @@ function LexiconInner() {
   useEffect(() => { selectedBookRef.current = selectedBook; }, [selectedBook]);
   useEffect(() => { selectedChapterRef.current = selectedChapter; }, [selectedChapter]);
 
+  // Save last reading position whenever book or chapter changes
+  useEffect(() => {
+    if (selectedBook) saveLastPosition(selectedBook.name, selectedChapter);
+  }, [selectedBook, selectedChapter]);
+
   useEffect(() => {
     if (!selectedBook) return;
     const saved = localStorage.getItem(CHAPTER_NOTE_KEY(selectedBook.num, selectedChapter));
@@ -595,9 +611,17 @@ function LexiconInner() {
           }
         }
 
-        const john = bks.find((b) => b.name === "John");
-        if (john) { setSelectedBook(john); setSelectedChapter(3); }
-        else if (bks.length) { setSelectedBook(bks[0]); setSelectedChapter(1); }
+        // Restore last reading position from localStorage, fall back to John 3
+        const saved = loadLastPosition();
+        const restored = saved ? bks.find((b) => b.name === saved.bookName) : null;
+        if (restored) {
+          setSelectedBook(restored);
+          setSelectedChapter(Math.max(1, Math.min(saved!.chapter, restored.chapters)));
+        } else {
+          const john = bks.find((b) => b.name === "John");
+          if (john) { setSelectedBook(john); setSelectedChapter(3); }
+          else if (bks.length) { setSelectedBook(bks[0]); setSelectedChapter(1); }
+        }
       })
       .catch(() => { setBooksError(true); setBooksLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps

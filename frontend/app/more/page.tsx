@@ -118,7 +118,7 @@ const APP_TILES = [
   { href: "/kids-books",        Icon: KidsAppIcon,       label: "Kids Books",         color: "#c2410c" },
   { href: "/videos",            Icon: VideosAppIcon,     label: "Videos",             color: "#1e3a8a" },
   { href: "/fellowship",        Icon: FellowshipAppIcon, label: "Fellowship Tracker", color: "#7c3aed" },
-  { href: "/church-directory",  Icon: ChurchAppIcon,     label: "Churches",           color: "#1a6b3a" },
+  { href: "/church-directory",  Icon: ChurchAppIcon,     label: "Find a Church",      color: "#1a6b3a" },
   { href: "/give",              Icon: GiveAppIcon,       label: "Give",               color: "#b45309" },
 ] as const;
 
