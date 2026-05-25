@@ -47,6 +47,12 @@ export default function RootLayout({
     <html lang="en" className={inter.variable}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
+        {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'premium-neon');}catch(e){}})();`,
+          }}
+        />
       </head>
       <body className="antialiased bg-[#0f0f0f] text-white">
         <ThemeProvider />
