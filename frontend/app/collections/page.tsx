@@ -6,18 +6,20 @@ import {
   COLLECTION_COLORS, COLLECTION_EMOJIS,
   type Collection, type SavedItem,
 } from "../lib/collections";
+import { useLanguage } from "../lib/useLanguage";
+import { t } from "../lib/i18n";
 
 // ─── Empty state ───────────────────────────────────────────────────────────────
 
-function EmptyState() {
+function EmptyState({ lang }: { lang: import("../lib/i18n").Lang }) {
   return (
     <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
       <div className="w-20 h-20 rounded-3xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-4xl mb-5">
         🔖
       </div>
-      <p className="text-base font-bold text-white/70 mb-2">No Collections Yet</p>
+      <p className="text-base font-bold text-white/70 mb-2">{t(lang, "col_empty_title")}</p>
       <p className="text-sm text-white/30 max-w-xs leading-relaxed">
-        Tap the bookmark icon on any section in the historic documents or free books library to save it here.
+        {t(lang, "col_empty_sub")}
       </p>
     </div>
   );
@@ -25,7 +27,7 @@ function EmptyState() {
 
 // ─── Collection detail view ────────────────────────────────────────────────────
 
-function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClose: () => void; onUpdated: () => void }) {
+function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; onClose: () => void; onUpdated: () => void; lang: import("../lib/i18n").Lang }) {
   const [editing, setEditing]   = useState(false);
   const [name, setName]         = useState(col.name);
   const [emoji, setEmoji]       = useState(col.emoji);
@@ -64,7 +66,7 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
           onClick={() => setEditing(!editing)}
           className="text-xs font-bold px-3 py-1.5 rounded-full border border-white/10 text-white/50"
         >
-          {editing ? "Done" : "Edit"}
+          {editing ? t(lang, "col_done") : t(lang, "col_edit")}
         </button>
       </div>
 
@@ -101,18 +103,18 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
             {!confirmDelete ? (
               <button onClick={() => setConfirmDelete(true)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-bold text-red-400 border border-red-400/20">
-                Delete Collection
+                {t(lang, "col_delete")}
               </button>
             ) : (
               <>
-                <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 border border-white/10">Cancel</button>
-                <button onClick={handleDelete} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600">Confirm Delete</button>
+                <button onClick={() => setConfirmDelete(false)} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 border border-white/10">{t(lang, "col_cancel")}</button>
+                <button onClick={handleDelete} className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white bg-red-600">{t(lang, "col_confirm_delete")}</button>
               </>
             )}
             <button onClick={handleSaveEdit}
               className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
               style={{ backgroundColor: color }}>
-              Save
+              {t(lang, "col_save")}
             </button>
           </div>
         </div>
@@ -123,13 +125,13 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
         {col.items.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-3xl mb-3">{col.emoji}</p>
-            <p className="text-sm text-white/40">This collection is empty.</p>
-            <p className="text-xs text-white/25 mt-1">Bookmark sections and books to add them here.</p>
+            <p className="text-sm text-white/40">{t(lang, "col_empty_col")}</p>
+            <p className="text-xs text-white/25 mt-1">{t(lang, "col_bookmark_hint")}</p>
           </div>
         ) : (
           <div className="px-4 py-4 space-y-2">
             <p className="text-[10px] font-black tracking-widest text-white/25 uppercase mb-3">
-              {col.items.length} {col.items.length === 1 ? "item" : "items"}
+              {col.items.length} {col.items.length === 1 ? t(lang, "col_item") : t(lang, "col_items")}
             </p>
             {[...col.items].sort((a, b) => b.savedAt - a.savedAt).map((item) => (
               <div
@@ -143,7 +145,7 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
                       className="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest mb-1.5"
                       style={{ backgroundColor: `${col.color}20`, color: col.color }}
                     >
-                      {item.type === "learn" ? "📜 Historic" : item.type === "book" ? "📖 Book" : "✝️ Verse"}
+                      {item.type === "learn" ? t(lang, "col_historic") : item.type === "book" ? t(lang, "col_book") : item.type === "video" ? t(lang, "col_video") : t(lang, "col_verse")}
                     </span>
                     {item.subtitle && (
                       <p className="text-[10px] text-white/35 mb-0.5">{item.subtitle}</p>
@@ -154,7 +156,8 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
                     className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
                     style={{ backgroundColor: `${col.color}25` }}
                   >
-                    {item.type === "learn" ? "📜" : item.type === "book" ? "📖" : "✝️"}
+                    {item.type === "learn" ? "📜" : item.type === "book" ? "📖" : item.type === "video" ? "▶️" : "✝️"}
+
                   </div>
                 </div>
                 {item.preview && (
@@ -163,7 +166,7 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
                   </p>
                 )}
                 <p className="text-[9px] text-white/20 mt-2">
-                  Saved {new Date(item.savedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                  {t(lang, "col_saved")} {new Date(item.savedAt).toLocaleDateString(lang === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
               </div>
             ))}
@@ -176,7 +179,7 @@ function CollectionDetail({ col, onClose, onUpdated }: { col: Collection; onClos
 
 // ─── Collection card ───────────────────────────────────────────────────────────
 
-function CollectionCard({ col, onClick }: { col: Collection; onClick: () => void }) {
+function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () => void; lang: import("../lib/i18n").Lang }) {
   const topItem = col.items.sort((a, b) => b.savedAt - a.savedAt)[0];
   return (
     <button
@@ -200,7 +203,7 @@ function CollectionCard({ col, onClick }: { col: Collection; onClick: () => void
         {topItem ? (
           <p className="text-[10px] text-white/35 line-clamp-1">{topItem.title}</p>
         ) : (
-          <p className="text-[10px] text-white/25">Empty</p>
+          <p className="text-[10px] text-white/25">{t(lang, "col_empty")}</p>
         )}
       </div>
     </button>
@@ -210,6 +213,7 @@ function CollectionCard({ col, onClick }: { col: Collection; onClick: () => void
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CollectionsPage() {
+  const { lang } = useLanguage();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selected, setSelected]       = useState<Collection | null>(null);
 
@@ -226,27 +230,27 @@ export default function CollectionsPage() {
 
       {/* Header */}
       <div className="px-4 pt-6 pb-2">
-        <h1 className="text-xl font-bold">Collections</h1>
-        <p className="text-xs text-white/30 mt-0.5">Your saved sections, books, and verses</p>
+        <h1 className="text-xl font-bold">{t(lang, "col_heading")}</h1>
+        <p className="text-xs text-white/30 mt-0.5">{t(lang, "col_sub")}</p>
       </div>
 
       {/* Grid */}
       <main className="max-w-lg mx-auto px-4 pb-24">
         {collections.length === 0 ? (
-          <EmptyState />
+          <EmptyState lang={lang} />
         ) : (
           <div className="grid grid-cols-2 gap-3 mt-4">
             {collections.map((col) => (
-              <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} />
+              <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} lang={lang} />
             ))}
           </div>
         )}
 
         {collections.length > 0 && (
           <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
-            <p className="text-sm font-bold text-white/40 mb-1">Add more to your collections</p>
+            <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
             <p className="text-xs text-white/25 leading-relaxed">
-              Tap the bookmark icon while reading any historic document or free book to save it here.
+              {t(lang, "col_add_more_sub")}
             </p>
           </div>
         )}
@@ -258,6 +262,7 @@ export default function CollectionsPage() {
           col={activeCol}
           onClose={() => setSelected(null)}
           onUpdated={refresh}
+          lang={lang}
         />
       )}
     </div>

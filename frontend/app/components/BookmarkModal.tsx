@@ -6,6 +6,8 @@ import {
   COLLECTION_COLORS, COLLECTION_EMOJIS,
   type Collection, type SavedItem,
 } from "../lib/collections";
+import { useLanguage } from "../lib/useLanguage";
+import { t } from "../lib/i18n";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -19,6 +21,7 @@ interface BookmarkModalProps {
 // ─── Component ─────────────────────────────────────────────────────────────────
 
 export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
+  const { lang } = useLanguage();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [checkedIds, setCheckedIds]   = useState<Set<string>>(new Set());
   const [showCreate, setShowCreate]   = useState(false);
@@ -55,10 +58,10 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
     const count = checkedIds.size;
     if (count > 0) {
       const col = cols.find((c) => checkedIds.has(c.id));
-      setToast(`Saved to ${col?.name ?? "collection"}`);
+      setToast(`${t(lang, "bm_saved_to")} ${col?.name ?? ""}`);
       setTimeout(onClose, 900);
     } else {
-      setToast("Removed from all collections");
+      setToast(t(lang, "bm_removed"));
       setTimeout(onClose, 900);
     }
   }
@@ -96,7 +99,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
 
         {/* Header */}
         <div className="px-5 py-3 border-b border-white/[0.07]">
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-0.5">Save to Collection</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-0.5">{t(lang, "bm_save_to")}</p>
           <p
             className="text-sm font-bold leading-snug"
             style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.85)" }}
@@ -108,7 +111,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
         {/* Collection list */}
         <div className="overflow-y-auto" style={{ maxHeight: "42vh" }}>
           {collections.length === 0 && !showCreate && (
-            <p className="text-center text-xs text-white/30 py-6">No collections yet. Create one below.</p>
+            <p className="text-center text-xs text-white/30 py-6">{t(lang, "bm_no_collections")}</p>
           )}
           {collections.map((col) => {
             const checked = checkedIds.has(col.id);
@@ -123,7 +126,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                 <div className="flex-1 text-left">
                   <p className="text-sm font-bold text-white/85">{col.name}</p>
                   <p className="text-[10px] text-white/30">
-                    {col.items.length} {col.items.length === 1 ? "item" : "items"}
+                    {col.items.length} {col.items.length === 1 ? t(lang, "col_item") : t(lang, "col_items")}
                   </p>
                 </div>
                 {/* Checkmark */}
@@ -165,7 +168,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
-                placeholder="Collection name…"
+                placeholder={t(lang, "bm_col_name_placeholder")}
                 className="w-full px-3 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
                 style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
               />
@@ -190,7 +193,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   onClick={() => { setShowCreate(false); setNewName(""); }}
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 border border-white/10"
                 >
-                  Cancel
+                  {t(lang, "bm_cancel")}
                 </button>
                 <button
                   onClick={handleCreate}
@@ -198,7 +201,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity"
                   style={{ backgroundColor: newColor, opacity: newName.trim() ? 1 : 0.4 }}
                 >
-                  Create
+                  {t(lang, "bm_create")}
                 </button>
               </div>
             </div>
@@ -211,7 +214,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               className="w-full flex items-center gap-3 px-5 py-3.5 text-left border-t border-white/[0.07] active:bg-white/[0.04] transition-colors"
             >
               <div className="w-8 h-8 rounded-full bg-white/[0.07] flex items-center justify-center text-white/50 text-lg">+</div>
-              <p className="text-sm font-bold text-white/50">New Collection</p>
+              <p className="text-sm font-bold text-white/50">{t(lang, "bm_new_collection")}</p>
             </button>
           )}
         </div>
@@ -224,7 +227,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               className="w-full py-3.5 rounded-2xl text-sm font-black text-white transition-all active:scale-[0.98]"
               style={{ background: "linear-gradient(135deg,#ec4899,#7c3aed)" }}
             >
-              {toast || "Save"}
+              {toast || t(lang, "bm_save")}
             </button>
           </div>
         )}

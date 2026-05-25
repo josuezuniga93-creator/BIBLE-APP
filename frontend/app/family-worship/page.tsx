@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
+import { useLanguage } from "../lib/useLanguage";
+import { t, type Lang } from "../lib/i18n";
 import {
   getDevotionalForDate,
   DailyDevotional,
@@ -148,6 +150,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
 // ─── Hymn Card ────────────────────────────────────────────────────────────────
 
 function HymnCard({ entry }: { entry: DailyDevotional }) {
+  const { lang } = useLanguage();
   const lyrics = getHymnLyrics(entry.hymn.title);
   const [audioOpen, setAudioOpen] = useState(false);
 
@@ -175,7 +178,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             className="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all"
             style={{ backgroundColor: "rgba(196,168,130,0.15)", border: "1px solid rgba(196,168,130,0.30)", color: "#c4a882" }}
           >
-            {audioOpen ? "▼ Close" : "▶ Listen"}
+            {audioOpen ? t(lang, "family_close") : t(lang, "family_listen")}
           </button>
         </div>
       </div>
@@ -197,7 +200,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             </svg>
             <div>
               <p className="text-white/80 font-bold text-sm">{entry.hymn.title}</p>
-              <p className="text-white/35 text-xs">Open in YouTube →</p>
+              <p className="text-white/35 text-xs">{t(lang, "family_open_youtube")}</p>
             </div>
           </a>
         </div>
@@ -210,7 +213,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             {lyrics.verses.map((verse, i) => (
               <div key={i}>
                 <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(184,148,100,0.55)" }}>
-                  Verse {i + 1}
+                  {t(lang, "family_verse_label")} {i + 1}
                 </p>
                 <p className="text-white/70 text-[15px] leading-8 italic whitespace-pre-line">
                   {verse}
@@ -220,7 +223,7 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             {lyrics.chorus && (
               <div className="pt-4" style={{ borderTop: "1px solid rgba(196,168,130,0.15)" }}>
                 <p className="text-[11px] font-bold uppercase tracking-widest mb-2" style={{ color: "rgba(184,148,100,0.55)" }}>
-                  Chorus
+                  {t(lang, "family_chorus_label")}
                 </p>
                 <p className="text-white/70 text-[15px] leading-8 italic whitespace-pre-line">
                   {lyrics.chorus}
@@ -251,6 +254,7 @@ interface PrayerItem {
 }
 
 function PrayerCard() {
+  const { lang } = useLanguage();
   const [items, setItems] = useState<PrayerItem[]>([]);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
@@ -303,9 +307,9 @@ function PrayerCard() {
           <p className="text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "#a07850" }}>
             🙏 Prayer
           </p>
-          <p className="text-white font-bold text-base leading-snug">Family Prayer Intentions</p>
+          <p className="text-white font-bold text-base leading-snug">{t(lang, "family_prayer_title")}</p>
           <p className="text-white/30 text-xs mt-0.5 leading-5">
-            What your family will bring before God today.
+            {t(lang, "family_prayer_sub")}
           </p>
         </div>
       </div>
@@ -314,7 +318,7 @@ function PrayerCard() {
       <div className="px-6 py-5 space-y-3">
         {items.length === 0 && !adding && (
           <p className="text-white/25 text-sm italic text-center py-2">
-            No prayer requests yet — add one below.
+            {t(lang, "family_no_prayers")}
           </p>
         )}
 
@@ -331,8 +335,8 @@ function PrayerCard() {
                 style={{ border: "1px solid rgba(196,146,78,0.45)" }}
               />
               <div className="flex flex-col gap-1.5 pt-0.5">
-                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>Save</button>
-                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>{t(lang, "family_save")}</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>{t(lang, "family_cancel")}</button>
               </div>
             </div>
           ) : (
@@ -357,14 +361,14 @@ function PrayerCard() {
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); addItem(); } if (e.key === "Escape") { setAdding(false); setDraft(""); } }}
-              placeholder="e.g. Pray for Grandpa's health…"
+              placeholder={t(lang, "family_prayer_placeholder")}
               rows={2}
               className="flex-1 bg-black/30 text-white/90 text-sm leading-6 px-3 py-2 rounded-xl outline-none resize-none placeholder:text-white/20"
               style={{ border: "1px solid rgba(196,146,78,0.45)" }}
             />
             <div className="flex flex-col gap-1.5 pt-0.5">
-              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>Add</button>
-              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>Cancel</button>
+              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "rgba(139,100,69,0.35)", color: "#c4924e", border: "1px solid rgba(139,100,69,0.40)" }}>{t(lang, "family_add")}</button>
+              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "rgba(255,255,255,0.30)", border: "1px solid rgba(255,255,255,0.08)" }}>{t(lang, "family_cancel")}</button>
             </div>
           </div>
         )}
@@ -379,7 +383,7 @@ function PrayerCard() {
             style={{ backgroundColor: "rgba(139,100,69,0.12)", border: "1px solid rgba(139,100,69,0.28)", color: "#c4924e" }}
           >
             <span className="text-base leading-none">+</span>
-            Add Prayer Request
+            {t(lang, "family_add_prayer")}
           </button>
         </div>
       )}
@@ -396,6 +400,7 @@ function CompletionCard({
   dateStr: string;
   onComplete: (newBadges: DevotionalBadgeId[]) => void;
 }) {
+  const { lang } = useLanguage();
   const [done, setDone] = useState(false);
 
   useEffect(() => {
@@ -415,8 +420,8 @@ function CompletionCard({
           ✅
         </div>
         <div>
-          <p className="font-bold text-sm" style={{ color: "#c4924e" }}>Devotional Completed!</p>
-          <p className="text-white/30 text-xs mt-0.5">Well done, faithful family. Come back tomorrow.</p>
+          <p className="font-bold text-sm" style={{ color: "#c4924e" }}>{t(lang, "family_completed_title")}</p>
+          <p className="text-white/30 text-xs mt-0.5">{t(lang, "family_completed_msg")}</p>
         </div>
       </div>
     );
@@ -426,7 +431,7 @@ function CompletionCard({
     <div className="rounded-2xl px-6 py-6 text-center space-y-4" style={{ border: "1px solid rgba(155,114,40,0.28)", backgroundColor: "rgba(155,114,40,0.06)" }}>
       <div className="text-3xl">🙏</div>
       <div>
-        <p className="text-white font-bold text-base">Did you complete today&apos;s devotional?</p>
+        <p className="text-white font-bold text-base">{t(lang, "family_did_complete")}</p>
         <p className="text-white/35 text-sm mt-1">
           Scripture, meditation, and hymn as a family.
         </p>
@@ -436,7 +441,7 @@ function CompletionCard({
         className="w-full py-3.5 rounded-xl active:scale-[0.98] transition-all text-white font-bold text-sm"
         style={{ backgroundColor: "#8b6345", boxShadow: "0 4px 20px rgba(139,100,69,0.25)" }}
       >
-        Yes, we completed it! 🎉
+        {t(lang, "family_yes_completed")}
       </button>
     </div>
   );
@@ -449,6 +454,7 @@ function CompletionCard({
 const REMINDER_KEY = "axiom-fw-reminder";
 
 function ReminderCard() {
+  const { lang } = useLanguage();
   const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState("19:00");
   const [permissionState, setPermissionState] = useState<NotificationPermission>("default");
@@ -502,8 +508,8 @@ function ReminderCard() {
     <div className="rounded-2xl px-5 py-5 space-y-4" style={{ border: "1px solid rgba(139,100,69,0.22)", backgroundColor: "rgba(139,100,69,0.04)" }}>
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-sm font-bold text-white">Daily Reminder</p>
-          <p className="text-xs text-white/35 mt-0.5">Get reminded to do family worship</p>
+          <p className="text-sm font-bold text-white">{t(lang, "family_daily_reminder")}</p>
+          <p className="text-xs text-white/35 mt-0.5">{t(lang, "family_reminder_desc")}</p>
         </div>
         <button
           onClick={handleToggle}
@@ -515,7 +521,7 @@ function ReminderCard() {
 
       {enabled && (
         <div className="space-y-2">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Reminder Time</p>
+          <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{t(lang, "family_reminder_time")}</p>
           <div className="flex items-center gap-3">
             <input
               type="time"
@@ -526,9 +532,9 @@ function ReminderCard() {
             <span className="text-sm font-bold text-amber-500/80">{displayTime}</span>
           </div>
           {permissionState === "denied" && (
-            <p className="text-xs text-red-400/80">Notifications are blocked. Please allow them in your browser settings.</p>
+            <p className="text-xs text-red-400/80">{t(lang, "family_notif_blocked")}</p>
           )}
-          {saved && <p className="text-xs text-emerald-400/70">Reminder saved ✓</p>}
+          {saved && <p className="text-xs text-emerald-400/70">{t(lang, "family_reminder_saved")}</p>}
           <p className="text-[11px] text-white/25 leading-relaxed">
             Note: Browser notifications require the app to be open or installed as a PWA. For best results, add this app to your home screen.
           </p>
@@ -539,6 +545,7 @@ function ReminderCard() {
 }
 
 function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
+  const { lang } = useLanguage();
   if (badges.length === 0) return null;
   const badge = DEVOTIONAL_BADGES[badges[0]];
   return (
@@ -546,7 +553,7 @@ function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
       <div className="flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl" style={{ backgroundColor: "#1a1510", border: "1px solid rgba(155,114,40,0.50)", boxShadow: "0 8px 32px rgba(155,114,40,0.20)" }}>
         <span className="text-3xl">{badge.emoji}</span>
         <div>
-          <p className="font-black text-sm" style={{ color: "#c4924e" }}>New Badge Earned!</p>
+          <p className="font-black text-sm" style={{ color: "#c4924e" }}>{t(lang, "family_new_badge")}</p>
           <p className="text-white/60 text-xs mt-0.5">{badge.label} — {badge.desc}</p>
         </div>
       </div>
@@ -557,6 +564,7 @@ function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function FamilyWorshipPage() {
+  const { lang } = useLanguage();
   const today = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -658,7 +666,7 @@ export default function FamilyWorshipPage() {
             </button>
             <div className="flex-1 text-center">
               <p className="text-white font-bold text-base">{formatDateDisplay(selectedDate)}</p>
-              <p className="text-xs mt-0.5" style={{ color: "rgba(196,146,78,0.55)" }}>Day {dayOfYear}</p>
+              <p className="text-xs mt-0.5" style={{ color: "rgba(196,146,78,0.55)" }}>{t(lang, "family_day")} {dayOfYear}</p>
             </div>
             <button
               onClick={() => goToDate(addDays(selectedDate, 1))}
@@ -676,7 +684,7 @@ export default function FamilyWorshipPage() {
                 className="text-xs transition-colors px-3 py-1 rounded-full"
                 style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.10)", border: "1px solid rgba(139,100,69,0.22)" }}
               >
-                Back to Today
+                {t(lang, "family_back_today")}
               </button>
             </div>
           )}
@@ -696,7 +704,7 @@ export default function FamilyWorshipPage() {
               {isToday && (
                 <span className="text-xs font-bold px-2.5 py-1 rounded-full"
                   style={{ color: "#c4924e", backgroundColor: "rgba(139,100,69,0.08)", border: "1px solid rgba(139,100,69,0.20)" }}>
-                  Today
+                  {t(lang, "family_today")}
                 </span>
               )}
             </div>
@@ -719,17 +727,16 @@ export default function FamilyWorshipPage() {
         ) : (
           <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-8 text-center">
             <p className="text-4xl mb-3">📖</p>
-            <p className="text-white/60 font-semibold mb-1">No devotional for this date yet</p>
+            <p className="text-white/60 font-semibold mb-1">{t(lang, "family_no_devotional")}</p>
             <p className="text-white/30 text-sm leading-6">
-              The devotional calendar is being built out for the full year.
-              Try today&apos;s entry or browse nearby dates.
+              {t(lang, "family_no_devotional_sub")}
             </p>
             <button
               onClick={goToToday}
               className="mt-4 px-4 py-2 rounded-xl text-sm font-semibold transition-colors"
               style={{ backgroundColor: "rgba(139,100,69,0.15)", border: "1px solid rgba(139,100,69,0.30)", color: "#c4924e" }}
             >
-              Go to Today
+              {t(lang, "family_go_today")}
             </button>
           </div>
         )}
@@ -738,7 +745,7 @@ export default function FamilyWorshipPage() {
         {earnedBadges.length > 0 && (
           <div className="rounded-2xl px-5 py-5 space-y-3" style={{ border: "1px solid rgba(155,114,40,0.18)", backgroundColor: "rgba(155,114,40,0.04)" }}>
             <p className="text-[10px] font-black tracking-widest uppercase" style={{ color: "rgba(155,114,40,0.55)" }}>
-              Faithfulness Badges
+              {t(lang, "family_faithfulness")}
             </p>
             <div className="grid grid-cols-3 gap-2">
               {earnedBadges.map((id) => {

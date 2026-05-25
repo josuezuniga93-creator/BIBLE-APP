@@ -2,6 +2,8 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useLanguage } from "../lib/useLanguage";
+import { t } from "../lib/i18n";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -107,6 +109,7 @@ function matchesFilter(c: Church, f: ConfessionFilter): boolean {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ChurchDirectoryPage() {
+  const { lang } = useLanguage();
   const [cityInput, setCityInput] = useState("");
   const [radius, setRadius] = useState<number>(50);
   const [confessionFilter, setConfessionFilter] = useState<ConfessionFilter>("all");
@@ -181,14 +184,14 @@ export default function ChurchDirectoryPage() {
             </svg>
           </Link>
           <div>
-            <h1 className="text-xl font-bold text-white">Find a Church</h1>
-            <p className="text-xs text-white/35 mt-0.5">Confessional Reformed & Baptist churches nationwide</p>
+            <h1 className="text-xl font-bold text-white">{t(lang, "church_heading")}</h1>
+            <p className="text-xs text-white/35 mt-0.5">{t(lang, "church_sub")}</p>
           </div>
         </div>
 
         {/* ── Location search ────────────────────────────────────────────────── */}
         <section className="space-y-3">
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">Your Location</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "church_your_location")}</p>
 
           {/* GPS button */}
           <button
@@ -201,12 +204,12 @@ export default function ChurchDirectoryPage() {
               <path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
             </svg>
-            {locationLoading ? "Getting location…" : "Use My Current Location"}
+            {locationLoading ? t(lang, "church_getting_location") : t(lang, "church_use_location")}
           </button>
 
           <div className="flex items-center gap-2 text-white/20 text-xs">
             <div className="flex-1 h-px bg-white/10" />
-            <span>or enter city</span>
+            <span>{t(lang, "church_or_city")}</span>
             <div className="flex-1 h-px bg-white/10" />
           </div>
 
@@ -217,7 +220,7 @@ export default function ChurchDirectoryPage() {
               value={cityInput}
               onChange={(e) => setCityInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleCitySearch()}
-              placeholder="City or city, state — e.g. Austin TX"
+              placeholder={t(lang, "church_city_placeholder")}
               className="flex-1 bg-white/[0.06] border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white placeholder:text-white/25 focus:outline-none focus:border-violet-500/50"
             />
             <button
@@ -225,13 +228,13 @@ export default function ChurchDirectoryPage() {
               disabled={locationLoading}
               className="px-4 py-2.5 rounded-xl bg-violet-600 text-white font-bold text-sm hover:bg-violet-500 transition-colors active:scale-95 disabled:opacity-50"
             >
-              Search
+              {t(lang, "church_search")}
             </button>
           </div>
 
           {locationError && <p className="text-xs text-red-400">{locationError}</p>}
           {userCoords && !locationError && (
-            <p className="text-xs text-emerald-400/70">📍 Location set — showing churches within {radius} miles</p>
+            <p className="text-xs text-emerald-400/70">📍 {t(lang, "church_location_set")} {radius} {t(lang, "church_miles")}</p>
           )}
 
           {/* Radius selector — only show when we have coords */}
@@ -256,7 +259,7 @@ export default function ChurchDirectoryPage() {
 
         {/* ── Confession filter ──────────────────────────────────────────────── */}
         <section className="space-y-2">
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">Filter by Confession</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "church_filter")}</p>
           <div className="flex flex-wrap gap-1.5">
             {CONFESSION_FILTERS.map(({ key, label }) => (
               <button
@@ -277,15 +280,15 @@ export default function ChurchDirectoryPage() {
         {/* ── Results ────────────────────────────────────────────────────────── */}
         <div>
           <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3">
-            {churches.length} {churches.length === 1 ? "Church" : "Churches"} Found
-            {!userCoords && " — Nationwide"}
+            {churches.length} {churches.length === 1 ? t(lang, "church_found") : t(lang, "church_found_pl")} Found
+            {!userCoords && ` — ${t(lang, "church_found_nationwide")}`}
           </p>
 
           {churches.length === 0 ? (
             <div className="text-center py-12 space-y-2">
               <div className="text-4xl">⛪</div>
-              <p className="text-white/40 text-sm font-semibold">No churches found</p>
-              <p className="text-white/25 text-xs">Try expanding your radius or changing the filter.</p>
+              <p className="text-white/40 text-sm font-semibold">{t(lang, "church_none")}</p>
+              <p className="text-white/25 text-xs">{t(lang, "church_none_sub")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -318,7 +321,7 @@ export default function ChurchDirectoryPage() {
                           ? "bg-violet-500/15 border-violet-500/30 text-violet-300"
                           : "bg-amber-500/15 border-amber-500/30 text-amber-300"
                       }`}>
-                        {presb ? "Presbyterian / Reformed" : "Reformed Baptist"}
+                        {presb ? t(lang, "church_presbyterian") : t(lang, "church_reformed_baptist")}
                       </span>
                       <span className="text-[10px] font-bold px-2.5 py-1 rounded-full border border-white/10 text-white/40">
                         {c.confession}
@@ -334,7 +337,7 @@ export default function ChurchDirectoryPage() {
                           rel="noopener noreferrer"
                           className="text-[10px] font-bold text-violet-400 hover:text-violet-300 flex-shrink-0 ml-2"
                         >
-                          Website ↗
+                          {t(lang, "church_website")}
                         </a>
                       )}
                     </div>
@@ -347,7 +350,7 @@ export default function ChurchDirectoryPage() {
 
         {/* ── Info ──────────────────────────────────────────────────────────── */}
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-1">
-          <p className="text-xs font-bold text-white/50">About this directory</p>
+          <p className="text-xs font-bold text-white/50">{t(lang, "church_about")}</p>
           <p className="text-[11px] text-white/30 leading-relaxed">
             Lists confessional Reformed churches holding to the Westminster Confession, 1689 London Baptist Confession, New Hampshire Confession, or the Doctrines of Grace. More churches are added regularly.
           </p>

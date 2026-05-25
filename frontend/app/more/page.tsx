@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, THEMES, type Theme } from "../lib/useTheme";
+import { t } from "../lib/i18n";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
 
@@ -181,11 +182,11 @@ export default function MorePage() {
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
 
-        <h1 className="text-xl font-bold text-white px-1">Extras</h1>
+        <h1 className="text-xl font-bold text-white px-1">{t(lang, "more_heading")}</h1>
 
         {/* ── App grid ──────────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Features</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_features")}</p>
           <div className="grid grid-cols-3 gap-3">
             {APP_TILES.map(({ href, Icon, label, color }) => (
               <Link
@@ -203,7 +204,7 @@ export default function MorePage() {
 
         {/* ── Theme picker ──────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Appearance</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_appearance")}</p>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
             {themeKeys.map((t) => {
               const meta = THEMES[t];
@@ -241,10 +242,10 @@ export default function MorePage() {
 
         {/* ── Language ──────────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Language</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_language_section")}</p>
           <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
             <div>
-              <p className="text-sm font-semibold text-white">Language</p>
+              <p className="text-sm font-semibold text-white">{t(lang, "more_language_section")}</p>
               <p className="text-xs text-white/40 mt-0.5">{lang === "en" ? "English" : "Español"}</p>
             </div>
             <button
@@ -260,16 +261,16 @@ export default function MorePage() {
 
         {/* ── Notifications ─────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Notifications</p>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_notifications")}</p>
           <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
             <div>
-              <p className="text-sm font-semibold text-white">Daily Bible Verse</p>
+              <p className="text-sm font-semibold text-white">{t(lang, "more_daily_verse")}</p>
               <p className="text-xs text-white/40 mt-0.5">
                 {notifStatus === "denied"
-                  ? "Blocked — enable in device settings"
+                  ? t(lang, "more_notif_blocked")
                   : notifEnabled
-                    ? "Sent every morning at 8 am"
-                    : "Get a new verse each morning at 8 am"}
+                    ? t(lang, "more_verse_on")
+                    : t(lang, "more_verse_off")}
               </p>
             </div>
             <button

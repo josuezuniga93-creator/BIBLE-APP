@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useLanguage } from "../lib/useLanguage";
+import { t } from "../lib/i18n";
+import { isAnySaved } from "../lib/collections";
+import { BookmarkModal } from "../components/BookmarkModal";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
@@ -259,6 +263,7 @@ function VideoCard({ video, onClick, progress }: { video: VideoEntry; onClick: (
 // ─── Main component ────────────────────────────────────────────────────────────
 
 export default function VideosPage() {
+  const { lang } = useLanguage();
   const [selected, setSelected]       = useState<VideoEntry | null>(null);
   const [activeCategory, setActiveCategory] = useState("All");
   const [watchlist, setWatchlist]     = useState<string[]>([]);
@@ -267,11 +272,18 @@ export default function VideosPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch]   = useState(false);
   const [watchlistTab, setWatchlistTab] = useState<"watching" | "completed">("watching");
+  const [bookmarkTarget, setBookmarkTarget] = useState<VideoEntry | null>(null);
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     setWatchlist(loadWatchlist());
     setWatched(loadWatched());
   }, []);
+
+  // Refresh saved state whenever bookmark modal closes
+  function refreshSaved() {
+    setSavedSet(new Set()); // triggers re-check via isAnySaved per card
+  }
 
   function openVideo(v: VideoEntry) {
     setSelected(v);
@@ -322,7 +334,7 @@ export default function VideosPage() {
 
           {/* Header */}
           <div className="flex items-center justify-between px-4 pt-6 pb-3">
-            <h1 className="text-xl font-bold text-white">Videos</h1>
+            <h1 className="text-xl font-bold text-white">{t(lang, "videos_heading")}</h1>
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
               className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.06] text-white/60"
@@ -338,7 +350,7 @@ export default function VideosPage() {
                 autoFocus
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search videos, topics, speakers…"
+                placeholder={t(lang, "videos_search_placeholder")}
                 className="w-full px-4 py-2.5 rounded-xl bg-white/[0.07] border border-white/10 text-sm text-white placeholder-white/30 outline-none focus:border-white/20"
               />
             </div>
@@ -354,16 +366,16 @@ export default function VideosPage() {
                     📖
                   </div>
                   <div className="flex-1">
-                    <p className="text-[9px] font-black tracking-widest text-violet-300/60 uppercase mb-0.5">Reformed Teaching</p>
-                    <h2 className="text-[15px] font-black text-white leading-tight">Watch. Learn.<br/>Grow in Truth.</h2>
-                    <p className="text-[10px] text-white/40 mt-0.5 leading-snug">Biblical teaching and inspirational truth for today.</p>
+                    <p className="text-[9px] font-black tracking-widest text-violet-300/60 uppercase mb-0.5">{t(lang, "videos_reformed_teaching")}</p>
+                    <h2 className="text-[15px] font-black text-white leading-tight whitespace-pre-line">{t(lang, "videos_hero_tagline")}</h2>
+                    <p className="text-[10px] text-white/40 mt-0.5 leading-snug">{t(lang, "videos_hero_sub")}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => openVideo(VIDEOS[0])}
                   className="mt-4 w-full py-2.5 rounded-xl bg-white/12 text-white text-sm font-bold flex items-center justify-center gap-2 border border-white/10 backdrop-blur-sm active:bg-white/20 transition-colors"
                 >
-                  <span className="text-violet-300">▶</span> Start Watching
+                  <span className="text-violet-300">▶</span> {t(lang, "videos_start_watching")}
                 </button>
               </div>
             </div>
@@ -373,8 +385,8 @@ export default function VideosPage() {
           {!searchQuery && activeCategory === "All" && (
             <section className="mb-5">
               <div className="flex items-center justify-between px-4 mb-3">
-                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">Browse by Category</p>
-                <button onClick={() => setActiveCategory("All")} className="text-[11px] text-violet-400 font-bold">View all</button>
+                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "videos_browse_category")}</p>
+                <button onClick={() => setActiveCategory("All")} className="text-[11px] text-violet-400 font-bold">{t(lang, "videos_view_all")}</button>
               </div>
               <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
                 {CATEGORY_TILES.map((cat) => (
@@ -420,7 +432,7 @@ export default function VideosPage() {
           {/* Continue Watching */}
           {!searchQuery && activeCategory === "All" && continueWatching.length > 0 && (
             <section className="mb-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">Continue Watching</p>
+              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_continue_watching")}</p>
               <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
                 {continueWatching.map(({ video, progress }) => (
                   <VideoCard key={video.id} video={video} onClick={() => openVideo(video)} progress={progress} />
@@ -433,16 +445,16 @@ export default function VideosPage() {
           {!searchQuery && activeCategory === "All" && (watchlistVideos.length > 0 || completedVideos.length > 0) && (
             <section className="mb-5">
               <div className="flex items-center justify-between px-4 mb-3">
-                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">My Watchlist</p>
+                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "videos_watchlist")}</p>
                 <div className="flex gap-1">
                   <button
                     onClick={() => setWatchlistTab("watching")}
                     className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${watchlistTab === "watching" ? "bg-violet-600 text-white" : "text-white/40"}`}
-                  >Watching</button>
+                  >{t(lang, "videos_watching")}</button>
                   <button
                     onClick={() => setWatchlistTab("completed")}
                     className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${watchlistTab === "completed" ? "bg-violet-600 text-white" : "text-white/40"}`}
-                  >Completed</button>
+                  >{t(lang, "videos_completed")}</button>
                 </div>
               </div>
               <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
@@ -451,7 +463,7 @@ export default function VideosPage() {
                 ))}
                 {(watchlistTab === "watching" ? watchlistVideos : completedVideos).length === 0 && (
                   <p className="text-xs text-white/25 py-4 px-1">
-                    {watchlistTab === "watching" ? "No videos in your watchlist yet." : "No completed videos yet."}
+                    {watchlistTab === "watching" ? t(lang, "videos_no_watchlist") : t(lang, "videos_no_completed")}
                   </p>
                 )}
               </div>
@@ -462,44 +474,61 @@ export default function VideosPage() {
           <section className="px-4">
             <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3">
               {searchQuery
-                ? `Results for "${searchQuery}"`
+                ? `${t(lang, "videos_results_for")} "${searchQuery}"`
                 : activeCategory !== "All"
                   ? activeCategory
-                  : "All Videos"}
+                  : t(lang, "videos_all_videos")}
             </p>
             {filteredVideos.length === 0 && (
-              <p className="text-center py-10 text-white/25 text-sm">No videos found.</p>
+              <p className="text-center py-10 text-white/25 text-sm">{t(lang, "videos_no_results")}</p>
             )}
             <div className="space-y-3">
-              {filteredVideos.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => openVideo(v)}
-                  className="w-full flex gap-3 rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.06] active:bg-white/[0.07] active:scale-[0.98] transition-all text-left"
-                >
-                  <div className="relative w-28 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
-                    <img
-                      src={`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}
-                      alt={v.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                      <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                        <span className="text-[11px] text-white ml-0.5">▶</span>
+              {filteredVideos.map((v) => {
+                const saved = isAnySaved(`video::${v.id}`);
+                return (
+                <div key={v.id} className="relative">
+                  <button
+                    onClick={() => openVideo(v)}
+                    className="w-full flex gap-3 rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.06] active:bg-white/[0.07] active:scale-[0.98] transition-all text-left"
+                  >
+                    <div className="relative w-28 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
+                      <img
+                        src={`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}
+                        alt={v.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                          <span className="text-[11px] text-white ml-0.5">▶</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex-1 min-w-0 py-0.5">
-                    <p className="text-[10px] text-violet-400 font-bold mb-0.5">{v.speaker}</p>
-                    <p className="text-xs font-bold text-white/90 leading-snug line-clamp-2 mb-1">{v.title}</p>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <Stars rating={v.rating} />
-                      <span className="text-[10px] text-white/30">({v.reviewCount})</span>
-                      {v.duration && <span className="text-[10px] text-white/30">{v.duration}</span>}
+                    <div className="flex-1 min-w-0 py-0.5 pr-8">
+                      <p className="text-[10px] text-violet-400 font-bold mb-0.5">{v.speaker}</p>
+                      <p className="text-xs font-bold text-white/90 leading-snug line-clamp-2 mb-1">{v.title}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Stars rating={v.rating} />
+                        <span className="text-[10px] text-white/30">({v.reviewCount})</span>
+                        {v.duration && <span className="text-[10px] text-white/30">{v.duration}</span>}
+                      </div>
                     </div>
-                  </div>
-                </button>
-              ))}
+                  </button>
+                  {/* Bookmark button — floats top-right of card */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBookmarkTarget(v); }}
+                    className="absolute top-2.5 right-2.5 w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90"
+                    style={saved
+                      ? { backgroundColor: "rgba(236,72,153,0.18)", color: "#ec4899" }
+                      : { backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }
+                    }
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                    </svg>
+                  </button>
+                </div>
+                );
+              })}
             </div>
           </section>
 
@@ -570,7 +599,7 @@ export default function VideosPage() {
               rel="noopener noreferrer"
               className="flex-1 py-3 rounded-xl bg-violet-600 text-white text-sm font-bold flex items-center justify-center gap-2 active:bg-violet-700 transition-colors shadow-lg shadow-violet-900/30"
             >
-              <span>▶</span> Watch Now
+              <span>▶</span> {t(lang, "videos_watch_now")}
             </a>
             <button
               onClick={() => toggleWatchlist(selected.id)}
@@ -581,7 +610,21 @@ export default function VideosPage() {
               }`}
             >
               <span>{isInWatchlist ? "✓" : "+"}</span>
-              <span>Watchlist</span>
+              <span>{t(lang, "videos_add_watchlist")}</span>
+            </button>
+            {/* Save to Collection */}
+            <button
+              onClick={() => setBookmarkTarget(selected)}
+              className="w-11 h-11 flex-shrink-0 rounded-xl flex items-center justify-center border transition-all active:scale-95"
+              style={
+                isAnySaved(`video::${selected.id}`)
+                  ? { backgroundColor: "rgba(236,72,153,0.18)", borderColor: "rgba(236,72,153,0.4)", color: "#ec4899" }
+                  : { backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.45)" }
+              }
+            >
+              <svg width="17" height="17" viewBox="0 0 24 24" fill={isAnySaved(`video::${selected.id}`) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+              </svg>
             </button>
           </div>
 
@@ -597,7 +640,7 @@ export default function VideosPage() {
                     : "text-white/35 hover:text-white/55"
                 }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                {t(lang, `videos_tab_${tab}` as import("../lib/i18n").TranslationKey)}
               </button>
             ))}
           </div>
@@ -628,16 +671,16 @@ export default function VideosPage() {
                     <span className="text-[10px] text-white/25 font-mono">{["0:00","8:30","22:15","29:40"][i]}</span>
                   </div>
                 ))}
-                <p className="text-[10px] text-white/20 text-center pt-3">Chapters are approximate time markers</p>
+                <p className="text-[10px] text-white/20 text-center pt-3">{t(lang, "videos_chapters_approx")}</p>
               </div>
             )}
 
             {activeTab === "notes" && (
               <div className="py-8 text-center">
                 <p className="text-3xl mb-2">📝</p>
-                <p className="text-sm font-bold text-white/40">Personal Notes</p>
-                <p className="text-xs text-white/25 mt-1 max-w-xs mx-auto">Take notes while you watch and save them here for future reference.</p>
-                <p className="text-[10px] text-white/20 mt-3">Coming soon</p>
+                <p className="text-sm font-bold text-white/40">{t(lang, "videos_personal_notes")}</p>
+                <p className="text-xs text-white/25 mt-1 max-w-xs mx-auto">{t(lang, "videos_notes_desc")}</p>
+                <p className="text-[10px] text-white/20 mt-3">{t(lang, "videos_coming_soon")}</p>
               </div>
             )}
 
@@ -647,7 +690,7 @@ export default function VideosPage() {
                   <div className="text-center">
                     <p className="text-4xl font-black text-white">{selected.rating.toFixed(1)}</p>
                     <p className="text-amber-400 text-sm">{"★".repeat(Math.round(selected.rating))}</p>
-                    <p className="text-[10px] text-white/30">{selected.reviewCount} reviews</p>
+                    <p className="text-[10px] text-white/30">{selected.reviewCount} {t(lang, "videos_reviews")}</p>
                   </div>
                 </div>
                 {reviews.map((r, i) => (
@@ -666,7 +709,7 @@ export default function VideosPage() {
           {/* More from this Series */}
           {seriesVideos.length > 0 && (
             <section className="mt-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">More from this Series</p>
+              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_more_series")}</p>
               <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
                 {seriesVideos.map((v) => (
                   <VideoCard key={v.id} video={v} onClick={() => openVideo(v)} />
@@ -678,7 +721,7 @@ export default function VideosPage() {
           {/* You may also like */}
           {relatedVideos.length > 0 && (
             <section className="mt-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">You May Also Like</p>
+              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_also_like")}</p>
               <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
                 {relatedVideos.map((v) => (
                   <VideoCard key={v.id} video={v} onClick={() => openVideo(v)} />
@@ -688,6 +731,21 @@ export default function VideosPage() {
           )}
 
         </div>
+      )}
+
+      {/* Bookmark / Save-to-Collection modal */}
+      {bookmarkTarget && (
+        <BookmarkModal
+          item={{
+            id: `video::${bookmarkTarget.id}`,
+            type: "video",
+            title: bookmarkTarget.title,
+            subtitle: bookmarkTarget.speaker,
+            preview: bookmarkTarget.description.slice(0, 120),
+          }}
+          label={`${bookmarkTarget.speaker} — ${bookmarkTarget.title}`}
+          onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
+        />
       )}
 
     </div>

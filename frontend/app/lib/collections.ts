@@ -2,7 +2,7 @@
 
 export interface SavedItem {
   id: string;           // unique reference, e.g. "learn::westminster-cf::chapter-1"
-  type: "learn" | "book" | "verse";
+  type: "learn" | "book" | "verse" | "video";
   title: string;        // primary display title
   subtitle?: string;    // document / book name
   preview?: string;     // first ~120 chars of content for card display
