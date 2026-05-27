@@ -193,14 +193,14 @@ export function BottomNav() {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t"
+      className="mobile-nav-floating md:hidden fixed bottom-0 left-0 right-0 z-50"
       style={{
-        backgroundColor: "var(--nav-bg)",
-        borderColor: "var(--nav-border)",
+        backgroundColor: "transparent",
+        borderColor: "transparent",
         paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
       }}
     >
-      <div className="flex items-stretch h-[48px]">
+      <div className="mobile-nav-surface flex items-stretch h-[58px]">
 
         {PRIMARY_TABS.map(({ href, label }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
