@@ -41,6 +41,304 @@ body {
   color: var(--fg);
 }
 
+/* Bible translation picker */
+.translation-picker-scrim {
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(10px);
+}
+
+.translation-picker-panel {
+  --tp-bg: #17151d;
+  --tp-bg-end: #0d0c11;
+  --tp-bg-soft: rgba(255,255,255,0.045);
+  --tp-bg-hover: rgba(255,255,255,0.065);
+  --tp-line: rgba(255,255,255,0.10);
+  --tp-fg: rgba(255,255,255,0.92);
+  --tp-muted: rgba(255,255,255,0.54);
+  --tp-dim: rgba(255,255,255,0.34);
+  --tp-accent: var(--accent-text);
+  --tp-accent-strong: #c4b5fd;
+  --tp-accent-bg: rgba(124,58,237,0.15);
+  --tp-shadow: 0 24px 80px rgba(0,0,0,0.46);
+  background: linear-gradient(180deg, var(--tp-bg) 0%, var(--tp-bg-end) 100%);
+  border: 1px solid var(--tp-line);
+  box-shadow: var(--tp-shadow);
+  color: var(--tp-fg);
+}
+
+.translation-picker-header {
+  border-bottom: 1px solid var(--tp-line);
+  background:
+    radial-gradient(circle at 24px 0, var(--tp-accent-bg), transparent 34%),
+    linear-gradient(180deg, rgba(255,255,255,0.035), transparent);
+}
+
+.translation-picker-kicker {
+  color: var(--tp-accent);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.translation-picker-title {
+  color: var(--tp-fg);
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.translation-picker-subtitle {
+  color: var(--tp-muted);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.translation-picker-close {
+  border: 1px solid var(--tp-line);
+  border-radius: 999px;
+  color: var(--tp-muted);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 8px 10px;
+  background: var(--tp-bg-soft);
+}
+
+.translation-picker-current {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--tp-line);
+  border-radius: 20px;
+  padding: 12px;
+  background: var(--tp-bg-soft);
+}
+
+.translation-picker-current-abbr,
+.translation-picker-option-abbr,
+.translation-picker-lang-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid var(--tp-line);
+  background: var(--tp-accent-bg);
+  color: var(--tp-accent-strong);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+}
+
+.translation-picker-current-abbr {
+  width: 54px;
+  height: 44px;
+  border-radius: 16px;
+  font-size: 12px;
+}
+
+.translation-picker-current-label {
+  color: var(--tp-dim);
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.translation-picker-current-name {
+  color: var(--tp-fg);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.translation-picker-scroll {
+  max-height: 56vh;
+}
+
+.translation-picker-section {
+  padding: 9px 0 4px;
+}
+
+.translation-picker-section + .translation-picker-section {
+  border-top: 1px solid var(--tp-line);
+  margin-top: 6px;
+}
+
+.translation-picker-section-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  padding: 10px 9px;
+  color: var(--tp-fg);
+  transition: background-color 0.16s ease, border-color 0.16s ease;
+}
+
+.translation-picker-section-head:hover {
+  background: var(--tp-bg-hover);
+  border-color: var(--tp-line);
+}
+
+.translation-picker-section.is-open .translation-picker-section-head {
+  background: var(--tp-bg-soft);
+  border-color: var(--tp-line);
+}
+
+.translation-picker-lang-chip {
+  width: 34px;
+  height: 26px;
+  border-radius: 999px;
+  font-size: 10px;
+}
+
+.translation-picker-section-label {
+  display: block;
+  color: var(--tp-fg);
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.translation-picker-section-caption {
+  display: block;
+  color: var(--tp-dim);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.translation-picker-category-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: var(--tp-muted);
+  font-size: 18px;
+  font-weight: 900;
+  transform: rotate(-90deg);
+  transition: transform 0.16s ease, color 0.16s ease, background-color 0.16s ease;
+}
+
+.translation-picker-section.is-open .translation-picker-category-arrow {
+  background: var(--tp-accent-bg);
+  color: var(--tp-accent-strong);
+  transform: rotate(0deg);
+}
+
+.translation-picker-options {
+  padding-top: 8px;
+}
+
+.translation-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 62px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  padding: 10px 11px;
+  color: var(--tp-fg);
+  text-align: left;
+  transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.16s ease;
+}
+
+.translation-picker-option:hover {
+  background: var(--tp-bg-hover);
+  border-color: var(--tp-line);
+}
+
+.translation-picker-option:active {
+  transform: scale(0.985);
+}
+
+.translation-picker-option.is-selected {
+  background: var(--tp-accent-bg);
+  border-color: color-mix(in srgb, var(--tp-accent) 34%, transparent);
+}
+
+.translation-picker-option-abbr {
+  width: 50px;
+  height: 40px;
+  border-radius: 14px;
+  font-size: 11px;
+}
+
+.translation-picker-option-name,
+.translation-picker-option-detail {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.translation-picker-option-name {
+  color: var(--tp-fg);
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.translation-picker-option-detail {
+  color: var(--tp-muted);
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.translation-picker-selected {
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--tp-bg-soft);
+  border: 1px solid var(--tp-line);
+  color: var(--tp-accent-strong);
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 5px 7px;
+  text-transform: uppercase;
+}
+
+.translation-picker-safe-area {
+  border-top: 1px solid var(--tp-line);
+}
+
+html[data-theme="light-elegant"] .translation-picker-scrim,
+html[data-theme="light-pink"] .translation-picker-scrim {
+  background: rgba(28,20,9,0.26);
+}
+
+html[data-theme="light-elegant"] .translation-picker-panel {
+  --tp-bg: #faf6ef;
+  --tp-bg-end: #ede8df;
+  --tp-bg-soft: rgba(155,114,40,0.075);
+  --tp-bg-hover: rgba(155,114,40,0.10);
+  --tp-line: rgba(28,20,9,0.10);
+  --tp-fg: rgba(28,20,9,0.94);
+  --tp-muted: rgba(28,20,9,0.58);
+  --tp-dim: rgba(28,20,9,0.38);
+  --tp-accent: #9b7228;
+  --tp-accent-strong: #7a5a1e;
+  --tp-accent-bg: rgba(155,114,40,0.12);
+  --tp-shadow: 0 24px 58px rgba(49,36,18,0.16);
+}
+
+html[data-theme="light-pink"] .translation-picker-panel {
+  --tp-bg: #fff6fb;
+  --tp-bg-end: #fce7f3;
+  --tp-bg-soft: rgba(219,39,119,0.070);
+  --tp-bg-hover: rgba(219,39,119,0.10);
+  --tp-line: rgba(91,12,48,0.11);
+  --tp-fg: #4a0628;
+  --tp-muted: rgba(74,6,40,0.58);
+  --tp-dim: rgba(74,6,40,0.38);
+  --tp-accent: #db2777;
+  --tp-accent-strong: #be185d;
+  --tp-accent-bg: rgba(219,39,119,0.11);
+  --tp-shadow: 0 24px 58px rgba(91,12,48,0.14);
+}
+
 /* Animated gradient for hero section */
 .hero-gradient {
   background: linear-gradient(
@@ -381,6 +679,42 @@ html[data-theme="neon"] body::before {
 html[data-theme="neon"] .neon-glow {
   animation: neon-pulse 2s ease-in-out infinite;
 }
+
+/* ── Neon City — override hardcoded dark hex backgrounds ────────────────── */
+html[data-theme="neon"] body,
+html[data-theme="neon"] main {
+  background-color: var(--bg) !important;
+}
+html[data-theme="neon"] [class*="bg-[#0"],
+html[data-theme="neon"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+html[data-theme="neon"] [class*="bg-white/"] {
+  background-color: var(--bg-2) !important;
+}
+html[data-theme="neon"] [class*="bg-black/"] {
+  background-color: var(--bg-3) !important;
+}
+html[data-theme="neon"] [class*="border-white/"] {
+  border-color: var(--border) !important;
+}
+html[data-theme="neon"] [class*="text-white/9"],
+html[data-theme="neon"] [class*="text-white/8"] { color: var(--fg-hi) !important; }
+html[data-theme="neon"] [class*="text-white/7"],
+html[data-theme="neon"] [class*="text-white/6"] { color: var(--fg-mid) !important; }
+html[data-theme="neon"] [class*="text-white/5"],
+html[data-theme="neon"] [class*="text-white/4"] { color: var(--fg-lo) !important; }
+html[data-theme="neon"] [class*="text-white/3"],
+html[data-theme="neon"] [class*="text-white/2"],
+html[data-theme="neon"] [class*="text-white/1"] { color: var(--fg-dim) !important; }
+html[data-theme="neon"] textarea, html[data-theme="neon"] input[type="text"],
+html[data-theme="neon"] input[type="search"], html[data-theme="neon"] select {
+  background-color: var(--input-bg) !important;
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+html[data-theme="neon"] textarea::placeholder,
+html[data-theme="neon"] input::placeholder { color: var(--fg-lo) !important; }
 
 /* ── Global overrides: translate Tailwind patterns to theme tokens ─────────── */
 
@@ -950,15 +1284,475 @@ html[data-theme="light-elegant"] ::-webkit-scrollbar-thumb:hover {
   background: rgba(155,114,40,0.55);
 }
 
+/* ── Home hero atmosphere: force GPU layer so it always repaints on navigation ── */
+@keyframes heroAtmFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.home-hero-atmosphere {
+  /* Create a compositor layer — prevents browser from skipping the gradient repaint
+     after soft (client-side) navigation back to the home page */
+  transform: translateZ(0);
+  will-change: transform;
+  /* Fade in on every mount (animation resets when the element is recreated) */
+  animation: heroAtmFadeIn 0.6s ease-out both;
+}
+
 /* No ambient glow overlay (light theme is clean) */
 html[data-theme="light-elegant"] body::before {
   display: none !important;
+}
+
+/* Home editorial hero and cards must remain legible on the parchment canvas. */
+html[data-theme="light-elegant"] .home-hero-atmosphere {
+  background: radial-gradient(70% 75% at 50% 0%, rgba(155,114,40,0.08) 0%, transparent 72%) !important;
+}
+
+html[data-theme="light-elegant"] .home-hero-headline {
+  color: #24190b !important;
+}
+
+html[data-theme="light-elegant"] .home-hero-headline-muted {
+  color: rgba(36,25,11,0.65) !important;
+}
+
+html[data-theme="light-elegant"] .home-accent {
+  color: #8a631e !important;
+}
+
+html[data-theme="light-elegant"] .home-accent-muted {
+  color: #795820 !important;
+}
+
+html[data-theme="light-elegant"] .home-accent-chip {
+  background: rgba(155,114,40,0.10) !important;
+  border-color: rgba(126,91,30,0.27) !important;
+  color: #76551c !important;
+}
+
+html[data-theme="light-elegant"] .home-feature-cta {
+  background: linear-gradient(135deg, #e7ddc9 0%, #f4eee3 100%) !important;
+  border-color: rgba(126,91,30,0.25) !important;
+  color: #76551c !important;
+}
+
+html[data-theme="light-elegant"] .home-story-action {
+  color: #24190b !important;
+}
+
+html[data-theme="light-elegant"] .home-continue-card {
+  border: 1px solid rgba(126,91,30,0.14);
+}
+
+html[data-theme="light-elegant"] .home-continue-meditation {
+  background: #ece4d4 !important;
+}
+
+html[data-theme="light-elegant"] .home-continue-article {
+  background: #e6dac4 !important;
+}
+
+html[data-theme="light-elegant"] .home-continue-scripture {
+  background: #f5f0e7 !important;
+}
+
+html[data-theme="light-elegant"] .home-streak-card {
+  background: rgba(245,241,235,0.72) !important;
+  border-color: rgba(126,91,30,0.14) !important;
+}
+
+html[data-theme="light-elegant"] .home-badge-card {
+  background: rgba(155,114,40,0.09) !important;
+  border-color: rgba(126,91,30,0.18) !important;
 }
 
 /* Focus ring: amber */
 html[data-theme="light-elegant"] textarea:focus,
 html[data-theme="light-elegant"] input:focus {
   box-shadow: 0 0 0 2px rgba(155,114,40,0.35) !important;
+}
+
+/* ── 10. Pink Blossom — soft floral rose ───────────────────────────────────── */
+html[data-theme="light-pink"] {
+  --bg:          #fff0f5;
+  --bg-2:        rgba(236,72,153,0.07);
+  --bg-3:        #fce7f3;
+  --fg:          #4a0020;
+  --fg-hi:       rgba(74,0,32,0.92);
+  --fg-mid:      rgba(74,0,32,0.62);
+  --fg-lo:       rgba(74,0,32,0.40);
+  --fg-dim:      rgba(74,0,32,0.22);
+  --border:      rgba(236,72,153,0.18);
+  --accent:      #db2777;
+  --accent-soft: rgba(219,39,119,0.12);
+  --accent-text: #be185d;
+  --nav-bg:      #fce7f3;
+  --nav-border:  rgba(236,72,153,0.14);
+  --input-bg:    rgba(236,72,153,0.07);
+  color-scheme: light;
+}
+
+html[data-theme="light-pink"] body,
+html[data-theme="light-pink"] main {
+  background-color: var(--bg) !important;
+  color: var(--fg) !important;
+}
+
+html[data-theme="light-pink"] [class*="bg-[#0"],
+html[data-theme="light-pink"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+
+html[data-theme="light-pink"] [class*="bg-white/"] {
+  background-color: var(--bg-3) !important;
+}
+
+html[data-theme="light-pink"] [class*="bg-black/"] {
+  background-color: var(--bg-2) !important;
+}
+
+html[data-theme="light-pink"] .text-white { color: var(--fg) !important; }
+html[data-theme="light-pink"] [class*="text-white/9"],
+html[data-theme="light-pink"] [class*="text-white/8"] { color: var(--fg-hi) !important; }
+html[data-theme="light-pink"] [class*="text-white/7"],
+html[data-theme="light-pink"] [class*="text-white/6"] { color: var(--fg-mid) !important; }
+html[data-theme="light-pink"] [class*="text-white/5"],
+html[data-theme="light-pink"] [class*="text-white/4"] { color: var(--fg-lo) !important; }
+html[data-theme="light-pink"] [class*="text-white/3"],
+html[data-theme="light-pink"] [class*="text-white/2"],
+html[data-theme="light-pink"] [class*="text-white/1"] { color: var(--fg-dim) !important; }
+
+html[data-theme="light-pink"] [class*="border-white/"] { border-color: var(--border) !important; }
+
+/* Violet → pink accent */
+html[data-theme="light-pink"] [class*="bg-violet-"]     { background-color: rgba(219,39,119,0.12) !important; }
+html[data-theme="light-pink"] [class*="text-violet-"]   { color: var(--accent-text) !important; }
+html[data-theme="light-pink"] [class*="border-violet-"] { border-color: rgba(219,39,119,0.30) !important; }
+html[data-theme="light-pink"] .bg-violet-600,
+html[data-theme="light-pink"] .bg-violet-500           { background-color: var(--accent) !important; }
+
+/* All accent colors → pink rose */
+html[data-theme="light-pink"] [class*="bg-sky-"],
+html[data-theme="light-pink"] [class*="bg-teal-"],
+html[data-theme="light-pink"] [class*="bg-indigo-"],
+html[data-theme="light-pink"] [class*="bg-blue-"],
+html[data-theme="light-pink"] [class*="bg-emerald-"],
+html[data-theme="light-pink"] [class*="bg-green-"],
+html[data-theme="light-pink"] [class*="bg-amber-"],
+html[data-theme="light-pink"] [class*="bg-orange-"],
+html[data-theme="light-pink"] [class*="bg-red-"],
+html[data-theme="light-pink"] [class*="bg-rose-"]      { background-color: rgba(219,39,119,0.10) !important; }
+
+html[data-theme="light-pink"] [class*="text-sky-"],
+html[data-theme="light-pink"] [class*="text-teal-"],
+html[data-theme="light-pink"] [class*="text-indigo-"],
+html[data-theme="light-pink"] [class*="text-blue-"],
+html[data-theme="light-pink"] [class*="text-emerald-"],
+html[data-theme="light-pink"] [class*="text-green-"],
+html[data-theme="light-pink"] [class*="text-amber-"],
+html[data-theme="light-pink"] [class*="text-orange-"],
+html[data-theme="light-pink"] [class*="text-red-"],
+html[data-theme="light-pink"] [class*="text-rose-"],
+html[data-theme="light-pink"] [class*="text-pink-"]    { color: var(--accent-text) !important; }
+
+html[data-theme="light-pink"] [class*="border-sky-"],
+html[data-theme="light-pink"] [class*="border-teal-"],
+html[data-theme="light-pink"] [class*="border-violet-"],
+html[data-theme="light-pink"] [class*="border-emerald-"],
+html[data-theme="light-pink"] [class*="border-amber-"],
+html[data-theme="light-pink"] [class*="border-rose-"]  { border-color: rgba(219,39,119,0.25) !important; }
+
+/* Inputs */
+html[data-theme="light-pink"] textarea,
+html[data-theme="light-pink"] input[type="text"],
+html[data-theme="light-pink"] input[type="search"],
+html[data-theme="light-pink"] select {
+  background-color: var(--input-bg) !important;
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+html[data-theme="light-pink"] textarea::placeholder,
+html[data-theme="light-pink"] input::placeholder { color: var(--fg-lo) !important; }
+
+/* Home: verse-of-the-day card → pink blossom */
+html[data-theme="light-pink"] .home-votd-card {
+  background: linear-gradient(135deg, rgba(236,72,153,0.20) 0%, #fff0f5 60%, rgba(252,231,243,0.95) 100%) !important;
+  border: 1px solid rgba(236,72,153,0.28) !important;
+  box-shadow: none !important;
+}
+html[data-theme="light-pink"] .home-votd-overlay { background: none !important; }
+html[data-theme="light-pink"] .home-votd-card .text-white { color: var(--fg) !important; }
+html[data-theme="light-pink"] .home-votd-card [class*="text-white\/8"] { color: var(--fg-mid) !important; }
+html[data-theme="light-pink"] .home-votd-card [class*="text-white\/6"] { color: var(--fg-lo) !important; }
+html[data-theme="light-pink"] .home-votd-card [class*="bg-black\/"] {
+  background-color: rgba(219,39,119,0.15) !important;
+  color: var(--accent) !important;
+  border: 1px solid rgba(219,39,119,0.28) !important;
+}
+
+/* Floral accent: subtle petal pattern overlay on body */
+html[data-theme="light-pink"] body::after {
+  content: '';
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-image:
+    radial-gradient(ellipse 6px 8px at 10% 15%, rgba(236,72,153,0.07) 0%, transparent 80%),
+    radial-gradient(ellipse 8px 6px at 25% 40%, rgba(236,72,153,0.06) 0%, transparent 80%),
+    radial-gradient(ellipse 5px 7px at 60% 10%, rgba(244,114,182,0.07) 0%, transparent 80%),
+    radial-gradient(ellipse 7px 5px at 80% 55%, rgba(236,72,153,0.05) 0%, transparent 80%),
+    radial-gradient(ellipse 6px 8px at 90% 25%, rgba(244,114,182,0.06) 0%, transparent 80%),
+    radial-gradient(ellipse 8px 6px at 40% 80%, rgba(236,72,153,0.05) 0%, transparent 80%),
+    radial-gradient(ellipse 5px 7px at 70% 90%, rgba(244,114,182,0.06) 0%, transparent 80%);
+}
+
+/* Nav active: pink rose */
+html[data-theme="light-pink"] nav a[data-active="true"] { color: var(--accent) !important; }
+html[data-theme="light-pink"] nav a[data-active="true"] svg { filter: none !important; color: var(--accent) !important; }
+html[data-theme="light-pink"] nav a[data-active="true"] span { color: var(--accent) !important; text-shadow: none !important; }
+
+/* App tiles: pink-tinted */
+html[data-theme="light-pink"] .pn-app-tile {
+  background: var(--bg-3) !important;
+  border: 1px solid rgba(219,39,119,0.12) !important;
+  box-shadow: none !important;
+  color: var(--accent-text) !important;
+}
+html[data-theme="light-pink"] .pn-app-tile span { color: var(--accent-text) !important; }
+
+/* Bible reader: pink accents */
+html[data-theme="light-pink"] .pn-chapter-num {
+  background: linear-gradient(180deg, #ec4899 0%, #be185d 55%, #9d174d 100%) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: none !important;
+}
+html[data-theme="light-pink"] .pn-book-name {
+  color: var(--accent) !important;
+  text-shadow: none !important;
+  -webkit-text-fill-color: var(--accent) !important;
+}
+html[data-theme="light-pink"] .pn-chapter-subtitle { color: var(--fg-lo) !important; }
+
+/* Gradient overrides — flower warmth */
+html[data-theme="light-pink"] .hero-gradient,
+html[data-theme="light-pink"] [class*="from-sky-"],
+html[data-theme="light-pink"] [class*="from-violet-"],
+html[data-theme="light-pink"] [class*="from-amber-"],
+html[data-theme="light-pink"] [class*="from-teal-"],
+html[data-theme="light-pink"] [class*="from-emerald-"] {
+  background: linear-gradient(135deg, rgba(236,72,153,0.09) 0%, rgba(255,240,245,0.99) 55%, rgba(252,207,232,0.08) 100%) !important;
+}
+
+/* Scrollbar: pink */
+html[data-theme="light-pink"] ::-webkit-scrollbar-thumb {
+  background: rgba(219,39,119,0.30);
+}
+html[data-theme="light-pink"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(219,39,119,0.50);
+}
+
+/* Pink Blossom is a soft matte theme; glow is reserved for Premium Neon. */
+html[data-theme="light-pink"] body::before { display: none !important; }
+
+html[data-theme="light-pink"] *,
+html[data-theme="light-pink"] *::before,
+html[data-theme="light-pink"] *::after {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="light-pink"] .home-feature-cta {
+  background: linear-gradient(135deg, #f7d4e4 0%, #fde6f1 100%) !important;
+  border-color: rgba(219,39,119,0.25) !important;
+  color: var(--accent-text) !important;
+}
+
+html[data-theme="light-pink"] .home-story-action {
+  color: var(--fg) !important;
+}
+
+html[data-theme="light-pink"] .home-hero-headline {
+  color: #4a0020 !important;
+}
+
+html[data-theme="light-pink"] .home-hero-headline-muted {
+  color: rgba(74, 0, 32, 0.58) !important;
+}
+
+html[data-theme="light-pink"] .home-hero-atmosphere {
+  background: radial-gradient(70% 80% at 50% 0%, rgba(244,114,182,0.10) 0%, transparent 72%) !important;
+}
+
+html[data-theme="light-pink"] .home-accent {
+  color: var(--accent) !important;
+}
+
+html[data-theme="light-pink"] .home-accent-muted {
+  color: var(--accent-text) !important;
+}
+
+html[data-theme="light-pink"] .home-accent-chip {
+  background: rgba(219,39,119,0.08) !important;
+  border-color: rgba(219,39,119,0.22) !important;
+  color: var(--accent-text) !important;
+}
+
+html[data-theme="light-pink"] .home-continue-card {
+  border: 1px solid rgba(219,39,119,0.14);
+}
+
+html[data-theme="light-pink"] .home-continue-meditation {
+  background: #fbe3ef !important;
+}
+
+html[data-theme="light-pink"] .home-continue-article {
+  background: #fce8f2 !important;
+}
+
+html[data-theme="light-pink"] .home-continue-scripture {
+  background: #fff8fb !important;
+}
+
+html[data-theme="light-pink"] .home-streak-card {
+  background: rgba(252,231,243,0.55) !important;
+  border-color: rgba(219,39,119,0.14) !important;
+}
+
+html[data-theme="light-pink"] .home-streak-dot-done {
+  background: var(--accent) !important;
+  color: #fff !important;
+}
+
+html[data-theme="light-pink"] .home-streak-dot-current {
+  background: rgba(219,39,119,0.10) !important;
+  border-color: rgba(190,24,93,0.55) !important;
+}
+
+html[data-theme="light-pink"] .home-streak-dot-center {
+  background: var(--accent) !important;
+}
+
+html[data-theme="light-pink"] .home-badge-card {
+  background: rgba(219,39,119,0.08) !important;
+  border-color: rgba(219,39,119,0.18) !important;
+}
+
+/* Keep keyboard focus visible without an illuminated ring. */
+html[data-theme="light-pink"] textarea:focus,
+html[data-theme="light-pink"] input:focus,
+html[data-theme="light-pink"] button:focus-visible,
+html[data-theme="light-pink"] a:focus-visible {
+  box-shadow: none !important;
+  outline: 2px solid rgba(190,24,93,0.48);
+  outline-offset: 2px;
+}
+
+/* Keep the full-story dialog readable on light page themes. */
+.home-story-backdrop {
+  background-color: rgba(8, 7, 12, 0.72) !important;
+}
+
+.home-story-backdrop-blossom {
+  background-color: rgba(88, 14, 48, 0.17) !important;
+}
+
+.home-story-modal .home-story-reference {
+  color: #faf7fb !important;
+}
+
+.home-story-modal .home-story-quote {
+  color: rgba(250, 247, 251, 0.86) !important;
+}
+
+.home-story-modal .home-story-label {
+  color: rgba(250, 247, 251, 0.6) !important;
+}
+
+.home-story-modal .home-story-body {
+  color: rgba(250, 247, 251, 0.8) !important;
+}
+
+.home-story-modal .home-story-close {
+  background-color: rgba(255, 255, 255, 0.06) !important;
+  color: rgba(250, 247, 251, 0.72) !important;
+}
+
+.home-story-modal .home-story-close:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+  color: #faf7fb !important;
+}
+
+.home-story-modal-blossom .home-story-reference {
+  color: #4a0020 !important;
+}
+
+.home-story-modal-blossom .home-story-quote {
+  color: rgba(74, 0, 32, 0.84) !important;
+}
+
+.home-story-modal-blossom .home-story-label {
+  color: #be185d !important;
+}
+
+.home-story-modal-blossom .home-story-body {
+  color: rgba(74, 0, 32, 0.78) !important;
+}
+
+.home-story-modal-blossom .home-story-close {
+  background-color: rgba(219, 39, 119, 0.08) !important;
+  color: #be185d !important;
+}
+
+.home-story-modal-blossom .home-story-close:hover {
+  background-color: rgba(219, 39, 119, 0.15) !important;
+  color: #9d174d !important;
+}
+
+/* Raised mobile dock shared by every primary phone view. */
+.mobile-nav-floating {
+  padding-left: 0.75rem;
+  padding-right: 0.75rem;
+  pointer-events: none;
+}
+
+.mobile-nav-surface {
+  pointer-events: auto;
+  overflow: hidden;
+  border: 1px solid var(--nav-border);
+  border-radius: 1.3rem;
+  background: color-mix(in srgb, var(--nav-bg) 93%, transparent);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.4),
+    0 0 30px color-mix(in srgb, var(--accent) 12%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.mobile-nav-floating .nav-tab {
+  position: relative;
+  margin: 0.35rem 0.12rem;
+  border-radius: 0.95rem;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.mobile-nav-floating .nav-tab[data-active="true"] {
+  background: var(--accent-soft);
+}
+
+.mobile-nav-floating .nav-tab[data-active="true"]::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 50%;
+  width: 1.05rem;
+  height: 2px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: var(--accent-text);
+  box-shadow: 0 0 10px var(--accent);
 }
 
 /* ── Print / PDF export styles ──────────────────────────────────────────────── */

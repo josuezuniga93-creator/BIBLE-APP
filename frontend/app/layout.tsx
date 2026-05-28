@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import type { Metadata, Viewport } from "next";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
@@ -12,6 +12,13 @@ const inter = Inter({
   display: "swap",
 });
 
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  variable: "--font-playfair",
+  style: ["normal", "italic"],
+  display: "swap",
+});
+
 export const metadata: Metadata = {
   title: "Bible",
   description:
@@ -20,11 +27,6 @@ export const metadata: Metadata = {
     title: "Bible",
     description: "Study Scripture with Strong's Concordance and Matthew Henry Commentary.",
     type: "website",
-  },
-  viewport: {
-    width: "device-width",
-    initialScale: 1,
-    viewportFit: "cover",
   },
   manifest: "/manifest.json",
   appleWebApp: {
@@ -35,6 +37,12 @@ export const metadata: Metadata = {
   icons: {
     apple: "/icons/apple-touch-icon.png",
   },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
   themeColor: "#0f0f0f",
 };
 
@@ -44,13 +52,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={inter.variable}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'premium-neon');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'premium-neon');}catch(e){}})();`,
           }}
         />
       </head>
