@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   loadStreak,
@@ -143,25 +143,6 @@ function dayOfWeekIndex() {
   return new Date().getDay();
 }
 
-// ─── Share helper ──────────────────────────────────────────────────────────────
-async function shareApp() {
-  const data = {
-    title: "TULIP Bible App",
-    text: "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Free & Reformed.",
-    url: "https://tulip-bible-app.vercel.app",
-  };
-  try {
-    if (typeof navigator !== "undefined" && navigator.share) {
-      await navigator.share(data);
-    } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(data.url);
-      alert("Link copied!");
-    }
-  } catch {
-    // cancelled or unavailable
-  }
-}
-
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function Home() {
@@ -227,6 +208,7 @@ export default function Home() {
       : "linear-gradient(135deg, #c9a961, #8b6f2e)";
   const logoGlyphColor = isPremiumNeon ? "#e0d8ff" : isLightPink ? "#fff" : "#1a0e2e";
   const pageBg         = isPremiumNeon ? "#07080d"  : isLightPink ? "#fff0f5" : "#050507";
+  const verseTextColor = isLightPink ? "#4a0020" : "#f8f4ed";
 
   // Streak dot colours
   const dotDone    = isPremiumNeon ? "#a78bfa"               : isLightPink ? "#db2777"                : "#c9a961";
@@ -257,8 +239,8 @@ export default function Home() {
   const scriptGlow = isPremiumNeon ? "0 0 22px rgba(124,58,237,0.22)"  : "none";
 
   const heroAtmosphere = isLightPink
-    ? "radial-gradient(70% 80% at 50% 0%, rgba(244,114,182,0.10) 0%, transparent 72%)"
-    : `${isPremiumNeon ? "radial-gradient(90% 60% at 50% 0%, rgba(124,58,237,0.28) 0%, transparent 65%), " : ""}radial-gradient(60% 80% at 50% 0%, ${todayHV.glow} 0%, transparent 70%), radial-gradient(120% 80% at 50% 0%, rgba(59,42,107,0.35) 0%, rgba(17,10,38,0.0) 60%)`;
+    ? "radial-gradient(70% 80% at 50% 0%, rgba(244,114,182,0.13) 0%, transparent 72%)"
+    : `${isPremiumNeon ? "radial-gradient(90% 70% at 50% 0%, rgba(124,58,237,0.42) 0%, transparent 68%), " : ""}radial-gradient(65% 80% at 50% 0%, ${todayHV.glow} 0%, transparent 72%), radial-gradient(130% 85% at 50% 0%, rgba(45,20,90,0.55) 0%, rgba(17,10,38,0.0) 65%)`;
 
   // Streak box glow
   const streakBoxGlow = isPremiumNeon
@@ -346,10 +328,18 @@ export default function Home() {
   const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const streak    = streakData?.streak ?? 0;
   const dayUpper  = today.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+  const usesHistoricalPullQuote = todayHV.event === "Diet of Worms";
+  const heroQuoteLines = (() => {
+    if (usesHistoricalPullQuote) return ["Here I stand.", "I cannot do otherwise."];
 
-  const heroHeadline = todayHV.event === "Diet of Worms"
-    ? ["Here I stand.", "I cannot do otherwise."]
-    : todayHV.text.split(/[,.]/).map((s) => s.trim()).filter(Boolean).slice(0, 2);
+    const punctuation = [...todayHV.text.matchAll(/[,;:]/g)]
+      .map((match) => match.index)
+      .filter((index): index is number => index !== undefined && index > 18 && index < todayHV.text.length - 18)
+      .sort((a, b) => Math.abs(a - todayHV.text.length / 2) - Math.abs(b - todayHV.text.length / 2))[0];
+
+    if (punctuation === undefined) return [todayHV.text];
+    return [todayHV.text.slice(0, punctuation + 1).trim(), todayHV.text.slice(punctuation + 1).trim()];
+  })();
 
   return (
     <div className="min-h-screen text-white relative overflow-hidden" style={{ background: pageBg }}>
@@ -357,8 +347,8 @@ export default function Home() {
       {/* Radial per-verse glow at top (neon adds an extra violet ring) */}
       <div
         aria-hidden
-        className="home-hero-atmosphere absolute inset-x-0 top-0 h-[520px] pointer-events-none"
-        style={{ background: heroAtmosphere }}
+        className="home-hero-atmosphere absolute inset-x-0 top-0 h-[600px] pointer-events-none"
+        style={{ '--hv-glow': todayHV.glow, background: heroAtmosphere } as React.CSSProperties}
       />
 
       {/* ── History verse modal ───────────────────────────────────────────────── */}
@@ -560,167 +550,83 @@ export default function Home() {
       {/* ── Page content ──────────────────────────────────────────────────────── */}
       <main className="relative max-w-lg mx-auto px-5 pt-10 pb-28">
 
-        {/* Top brand row */}
-        <div className="flex items-center justify-between mb-10">
-          <div className="flex items-center gap-3">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/tulip-logo.png"
-              alt="TULIP Bible App logo"
-              className="w-9 h-9 rounded-xl object-cover"
-              style={{ boxShadow: isPremiumNeon ? `0 0 14px rgba(124,58,237,0.50), 0 0 28px rgba(56,189,248,0.20)` : undefined }}
-            />
-            <div>
-              <p className="text-[13px] font-bold tracking-tight text-white leading-none">TULIP</p>
-              <p className="home-accent-muted text-[9px] tracking-wider mt-0.5 uppercase" style={{ color: acSub }}>Bible App</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={shareApp}
-              className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60 active:bg-white/[0.10] transition-colors"
-              title="Share TULIP Bible App"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <polyline points="16 6 12 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </button>
-            <Link href="/more" className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60 active:bg-white/[0.10] transition-colors">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <path d="M6 8c0-3 3-5 6-5s6 2 6 5v5l2 3H4l2-3V8Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
-                <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </Link>
-          </div>
-        </div>
-
-        {/* Hero — date label + serif headline */}
-        <p className="home-accent text-[11px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: ac }}>
+        {/* Date label */}
+        <p className="home-accent text-[11px] font-bold tracking-[0.22em] uppercase mb-6" style={{ color: ac }}>
           {dayUpper}{streak > 0 ? ` · DAY ${streak}` : ""}
         </p>
-        <h1
-          className="text-[40px] leading-[1.04] font-normal text-white tracking-tight"
-          style={{ fontFamily: "'Iowan Old Style','Georgia','Times New Roman',serif" }}
-        >
-          {heroHeadline[0] || todayHV.event}
-        </h1>
-        {heroHeadline[1] && (
-          <h2
-            className="text-[40px] leading-[1.04] italic text-white/55 tracking-tight mb-5"
-            style={{ fontFamily: "'Iowan Old Style','Georgia','Times New Roman',serif" }}
-          >
-            {heroHeadline[1]}
-          </h2>
-        )}
 
-        {/* Pill badges — event + year */}
-        <div className="flex flex-wrap items-center gap-2 mb-5">
-          <span
-            className="home-accent-chip px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase"
-            style={{ border: `1px solid ${acBorder}`, background: acBg, color: ac }}
-          >
-            {todayHV.event}
-          </span>
-          <span className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase border border-white/10 bg-white/[0.04] text-white/55">
-            {todayHV.year}
-          </span>
-        </div>
-
-        {/* ── Display blockquote ────────────────────────────────────── */}
-        {(() => {
-          const text = todayHV.text;
-          const pf   = "var(--font-playfair),'Iowan Old Style','Georgia',serif";
-
-          // Split at a conjunction after a comma for two-tone styling
-          const m = text.match(/,\s+(and\b|but\b|yet\b|so\b|for\b|who\b|that\b|as\b|since\b|if\b)/i);
-          let part1 = text, bridge: string | null = null, part2: string | null = null;
-          if (m && m.index !== undefined) {
-            part1  = text.slice(0, m.index + 1);
-            bridge = m[1];
-            part2  = text.slice(m.index + m[0].length).trim();
-          }
-          const showDash = bridge && /^(and|but|yet|so)$/i.test(bridge);
-
-          return (
-            <div className="relative mb-8 mt-1">
-              {/* Giant opening mark — ghost behind text */}
-              <span
-                aria-hidden
-                className="absolute -top-4 -left-1 leading-none select-none pointer-events-none"
-                style={{ fontFamily: pf, fontSize: "100px", color: ac, opacity: 0.45, lineHeight: 1 }}
+        {/* Editorial hero: an open pull quote with a separate story action card. */}
+        <section className="home-editorial-hero mb-8">
+          <blockquote className="mb-5" aria-label={`${todayHV.reference} featured quote`}>
+            {heroQuoteLines.map((line, index) => (
+              <p
+                key={line}
+                className={`home-hero-headline${index > 0 ? " home-hero-headline-muted italic" : ""}`}
+                style={{
+                  color: index > 0 && !isLightPink ? "rgba(248,244,237,0.38)" : verseTextColor,
+                  fontFamily: "var(--font-verse-display), 'Iowan Old Style', Georgia, serif",
+                  fontSize: "clamp(2.45rem, 11.2vw, 3rem)",
+                  fontWeight: index === 0 ? 600 : 400,
+                  lineHeight: 1.06,
+                  letterSpacing: "-0.03em",
+                  marginTop: index > 0 ? "0.25rem" : undefined,
+                }}
               >
-                &ldquo;
-              </span>
+                {line}
+              </p>
+            ))}
+          </blockquote>
 
-              {/* Verse body with subtle left accent rule */}
-              <div
-                className="relative pl-4 pt-9 pb-1"
-                style={{ borderLeft: `2px solid ${acBorderSm}` }}
-              >
-                {/* Main clause — large bold white */}
-                <p
-                  className="leading-[1.18] font-bold"
-                  style={{ fontFamily: pf, fontSize: "30px", color: "rgba(255,255,255,0.94)" }}
-                >
-                  {part1}
-                </p>
-
-                {/* Bridge word — italic accent with optional dashes */}
-                {bridge && (
-                  <p
-                    className="leading-[1.18] font-medium italic mt-1"
-                    style={{ fontFamily: pf, fontSize: "26px", color: ac }}
-                  >
-                    {showDash ? `— ${bridge} —` : bridge}
-                  </p>
-                )}
-
-                {/* Second clause — italic accent */}
-                {part2 && (
-                  <p
-                    className="leading-[1.18] font-semibold italic mt-0.5"
-                    style={{ fontFamily: pf, fontSize: "30px", color: ac }}
-                  >
-                    {part2}
-                  </p>
-                )}
-
-                {/* Closing mark — floated right */}
-                <span
-                  aria-hidden
-                  className="float-right leading-none select-none pointer-events-none -mt-4 -mr-2"
-                  style={{ fontFamily: pf, fontSize: "80px", color: ac, opacity: 0.45 }}
-                >
-                  &rdquo;
-                </span>
-                <div className="clear-both" />
-              </div>
-            </div>
-          );
-        })()}
-
-        {/* Gold / neon CTA card */}
-        <button
-          onClick={() => setHistoryOpen(true)}
-          className="home-feature-cta w-full flex items-center justify-between px-4 py-3.5 rounded-2xl active:scale-[0.99] transition-all"
-          style={{
-            background: acCTAGrad,
-            border: `1px solid ${acBorder}`,
-            boxShadow: isPremiumNeon ? `0 0 20px rgba(124,58,237,0.20), 0 0 40px rgba(56,189,248,0.08)` : undefined,
-          }}
-        >
-          <div className="text-left">
-            <p className="home-accent-muted text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: acSub }}>
-              {todayHV.reference}
-            </p>
-            <p className="text-[14px] font-bold text-white mt-0.5">Read the full story</p>
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span
+              className="home-accent-chip px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[0.14em] uppercase"
+              style={{ border: `1px solid ${acBorder}`, background: acBg, color: ac }}
+            >
+              {todayHV.event}
+            </span>
+            <span
+              className="home-accent-chip px-3 py-1.5 rounded-full text-[10px] font-bold tracking-[0.14em] uppercase"
+              style={{ border: `1px solid ${acBorderSm}`, background: acBg, color: acSub }}
+            >
+              {todayHV.year}
+            </span>
           </div>
-          <svg className="home-accent" width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: ac }}>
-            <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
+
+          {usesHistoricalPullQuote && (
+            <div
+              className="home-hero-support mb-5 italic"
+              style={{
+                color: isLightPink ? "rgba(74,0,32,0.74)" : "rgba(248,244,237,0.70)",
+                fontFamily: "var(--font-verse-display), 'Iowan Old Style', Georgia, serif",
+                fontSize: "1.15rem",
+                lineHeight: 1.5,
+              }}
+            >
+              <p>&ldquo;{todayHV.text}&rdquo;</p>
+              <p className="opacity-70">Standing alone before Emperor Charles V, Luther refused to recant.</p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setHistoryOpen(true)}
+            className="home-feature-cta w-full flex items-center justify-between px-5 py-4 rounded-[22px] active:scale-[0.99] transition-all"
+            style={{
+              background: acCTAGrad,
+              border: `1px solid ${acBorder}`,
+              color: ac,
+            }}
+          >
+            <div className="text-left">
+              <p className="home-accent text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: acSub }}>
+                {todayHV.reference}
+              </p>
+              <p className="home-story-action mt-1 text-[15px] font-bold text-white">Read the full story</p>
+            </div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </section>
 
         {/* ── Continue section ──────────────────────────────────────────────── */}
         <section className="mt-9">

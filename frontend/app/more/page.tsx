@@ -133,6 +133,27 @@ const APP_TILES = [
   { href: "/give",              Icon: GiveAppIcon,         label: "Give",               color: "#b45309" },
 ] as const;
 
+const TILE_GROUPS = [
+  {
+    title: "Daily Rhythms",
+    description: "Build steady habits",
+    columns: 3,
+    tiles: [APP_TILES[0], APP_TILES[2], APP_TILES[3]],
+  },
+  {
+    title: "Explore",
+    description: "Books and teaching",
+    columns: 3,
+    tiles: [APP_TILES[1], APP_TILES[4], APP_TILES[5]],
+  },
+  {
+    title: "Connect",
+    description: "Saved items and community",
+    columns: 2,
+    tiles: [APP_TILES[6], APP_TILES[7], APP_TILES[8], APP_TILES[9]],
+  },
+] as const;
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function MorePage() {
@@ -182,24 +203,45 @@ export default function MorePage() {
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
 
-        <h1 className="text-xl font-bold text-white px-1">{t(lang, "more_heading")}</h1>
+        <div className="px-1 pt-1">
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase text-violet-400/70 mb-2">
+            Your Toolbox
+          </p>
+          <h1 className="text-2xl font-bold text-white">{t(lang, "more_heading")}</h1>
+          <p className="text-xs text-white/38 mt-1.5 leading-relaxed">
+            Choose a daily rhythm, open a resource, or connect with your church life.
+          </p>
+        </div>
 
         {/* ── App grid ──────────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_features")}</p>
-          <div className="grid grid-cols-3 gap-3">
-            {APP_TILES.map(({ href, Icon, label, color }) => (
-              <Link
-                key={href}
-                href={href}
-                className="pn-app-tile flex flex-col items-center justify-center gap-2 aspect-square rounded-2xl p-4 active:scale-95 transition-transform"
-                style={{ backgroundColor: color }}
-              >
-                <Icon />
-                <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
-              </Link>
-            ))}
-          </div>
+        <section className="space-y-5">
+          {TILE_GROUPS.map((group) => (
+            <div key={group.title}>
+              <div className="flex items-baseline justify-between mb-3 px-1">
+                <p className="text-[10px] font-black tracking-widest text-white/35 uppercase">
+                  {group.title}
+                </p>
+                <p className="text-[10px] text-white/25">{group.description}</p>
+              </div>
+              <div className={`grid gap-3 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                {group.tiles.map(({ href, Icon, label, color }) => (
+                  <Link
+                    key={href}
+                    href={href}
+                    className={`pn-app-tile flex items-center rounded-2xl active:scale-95 transition-transform ${
+                      group.columns === 2
+                        ? "flex-row justify-start gap-3 min-h-[76px] px-4 py-3"
+                        : "flex-col justify-center gap-2 aspect-[1/0.9] p-4"
+                    }`}
+                    style={{ backgroundColor: color }}
+                  >
+                    <Icon />
+                    <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </section>
 
         {/* ── Theme picker ──────────────────────────────────────────────────── */}
@@ -287,6 +329,35 @@ export default function MorePage() {
               />
             </button>
           </div>
+        </section>
+
+        {/* ── Share ─────────────────────────────────────────────────────────── */}
+        <section>
+          <button
+            onClick={async () => {
+              const data = {
+                title: "TULIP Bible App",
+                text: "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Free & Reformed.",
+                url: "https://tulip-bible-app.vercel.app",
+              };
+              try {
+                if (navigator.share) {
+                  await navigator.share(data);
+                } else if (navigator.clipboard) {
+                  await navigator.clipboard.writeText(data.url);
+                  alert("Link copied!");
+                }
+              } catch { /* cancelled */ }
+            }}
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all"
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <polyline points="16 6 12 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <span className="text-sm font-semibold text-white/70">Share this app</span>
+          </button>
         </section>
 
       </main>
