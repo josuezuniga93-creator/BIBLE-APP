@@ -4,10 +4,12 @@ import { useEffect, useRef } from "react";
 import type { HLColor } from "../lib/highlights";
 
 const COLORS: { key: HLColor; dot: string; label: string }[] = [
-  { key: "yellow", dot: "bg-yellow-300",  label: "Yellow" },
-  { key: "green",  dot: "bg-emerald-400", label: "Green" },
-  { key: "blue",   dot: "bg-sky-400",     label: "Blue" },
-  { key: "pink",   dot: "bg-pink-400",    label: "Pink" },
+  { key: "purple", dot: "", label: "Purple" },
+  { key: "yellow", dot: "", label: "Yellow" },
+  { key: "red",    dot: "", label: "Red" },
+  { key: "blue",   dot: "", label: "Blue" },
+  { key: "lime",   dot: "", label: "Lime" },
+  { key: "pink",   dot: "", label: "Pink" },
 ];
 
 interface Props {
@@ -62,6 +64,7 @@ export function HighlightToolbar({ x, y, onHighlight, onDismiss }: Props) {
           onClick={() => onHighlight(key)}
           title={label}
           className={`w-5 h-5 rounded-full ${dot} hover:scale-125 active:scale-95 transition-transform ring-2 ring-transparent hover:ring-white/20`}
+          style={{ backgroundColor: { purple: "#7546e3", yellow: "#f2f06d", red: "#e34646", blue: "#46d3e3", lime: "#a9f558", pink: "#f558f2" }[key] }}
         />
       ))}
     </div>

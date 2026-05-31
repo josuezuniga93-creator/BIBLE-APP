@@ -51,11 +51,16 @@ export function useLanguage() {
   }, []);
 
   // Re-trigger translation after every client-side navigation (Next.js SPA)
+  // Fire multiple times to catch async-loaded content (API data, lazy sections)
   useEffect(() => {
     if (lang === "es") {
-      // Small delay to let React finish rendering the new page content
-      const id = setTimeout(() => triggerGT(), 400);
-      return () => clearTimeout(id);
+      const ids = [
+        setTimeout(() => triggerGT(), 400),   // initial render
+        setTimeout(() => triggerGT(), 1200),  // after fast API calls
+        setTimeout(() => triggerGT(), 2500),  // after slower API calls
+        setTimeout(() => triggerGT(), 5000),  // catch anything still loading
+      ];
+      return () => ids.forEach(clearTimeout);
     }
   }, [pathname, lang]);
 
@@ -67,14 +72,8 @@ export function useLanguage() {
       // Re-trigger GT without a full reload so translation feels instant
       setTimeout(() => triggerGT(), 300);
     } else {
-      // Reset GT back to English
-      const select = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-      if (select) {
-        select.value = "en";
-        select.dispatchEvent(new Event("change"));
-      } else {
-        window.location.reload();
-      }
+      // Reload is the only reliable way to clear Google Translate's DOM modifications
+      window.location.reload();
     }
   }, []);
 

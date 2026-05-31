@@ -5,6 +5,10 @@ const nextConfig = {
     // ESLint runs separately in CI; skip during Vercel builds to avoid lint-as-errors
     ignoreDuringBuilds: true,
   },
+  outputFileTracingIncludes: {
+    "/api/books/[slug]": ["./public/books/**/*.json"],
+    "/api/books/[slug]/chapter/[chapter]": ["./public/books/**/*.json"],
+  },
 };
 
 export default nextConfig;

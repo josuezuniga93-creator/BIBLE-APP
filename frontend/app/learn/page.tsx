@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import { usePagination } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
-import { LEARN_DOCUMENTS, ACCENT_CLASSES, LearnDocument, LearnSection } from "../lib/learnData";
+import Image from "next/image";
+import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
 import { useHighlights } from "../lib/useHighlights";
 import { applyHighlightsToHtml } from "../lib/highlights";
 import { HighlightToolbar } from "../components/HighlightToolbar";
@@ -10,6 +12,11 @@ import { RemoveHighlightBubble } from "../components/RemoveHighlightBubble";
 import { useTheme } from "../lib/useTheme";
 import { BookmarkModal } from "../components/BookmarkModal";
 import { isAnySaved } from "../lib/collections";
+import { GeneratedCategoryMark, GeneratedDocumentCover, GeneratedMetaIcon } from "../components/GeneratedArtwork";
+import { getDocumentCoverImage } from "../lib/documentCoverImages";
+import { useLanguage } from "../lib/useLanguage";
+import { translateToSpanish } from "../lib/googleTranslate";
+import { t } from "../lib/i18n";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -27,100 +34,43 @@ function loadProgress(docId: string): Set<string> {
 function saveProgress(docId: string, completed: Set<string>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(storageKey(docId), JSON.stringify([...completed]));
+  localStorage.setItem(`axiom_learn_lastread_${docId}`, String(Date.now()));
+}
+
+function getDocLastRead(docId: string): number {
+  try { return parseInt(localStorage.getItem(`axiom_learn_lastread_${docId}`) ?? "0", 10); } catch { return 0; }
 }
 
 function getDocPct(doc: LearnDocument): number {
+  const sections = FULL_DOCUMENT_SECTIONS[doc.id] ?? doc.sections;
   const completed = loadProgress(doc.id);
-  if (doc.sections.length === 0) return 0;
-  return Math.round((completed.size / doc.sections.length) * 100);
+  if (sections.length === 0) return 0;
+  const completedInScope = sections.filter((section) => completed.has(section.id)).length;
+  return Math.round((completedInScope / sections.length) * 100);
 }
 
 // ─── Document cover art ───────────────────────────────────────────────────────
 
-const DOC_COVERS: Record<string, { bg: string; border: string; accent: string; year: string; ornament: string }> = {
-  "1689-lbc":          { bg: "linear-gradient(160deg,#1a0e00,#3b2200,#0f0900)", border: "#c9a227", accent: "#f0c060", year: "1689", ornament: "✦" },
-  "westminster-cf":    { bg: "linear-gradient(160deg,#0a0a1a,#1a1a40,#060610)", border: "#7c6fc0", accent: "#b0a0e8", year: "1647", ornament: "⛪" },
-  "heidelberg":        { bg: "linear-gradient(160deg,#0d1a0d,#1a3a1a,#080f08)", border: "#4a9a4a", accent: "#80cc80", year: "1563", ornament: "✝" },
-  "dordrecht":         { bg: "linear-gradient(160deg,#1a0d00,#3a1e00,#0f0800)", border: "#d4822a", accent: "#f0a050", year: "1619", ornament: "🌿" },
-  "apostles-creed":    { bg: "linear-gradient(160deg,#0d0d1a,#1e1e40,#080810)", border: "#6060b0", accent: "#9090d8", year: "AD 140", ornament: "α" },
-  "nicene-creed":      { bg: "linear-gradient(160deg,#0a1a0a,#1a3a20,#060f08)", border: "#50a050", accent: "#80c880", year: "AD 381", ornament: "✦" },
-  "95-theses":         { bg: "linear-gradient(160deg,#1a0a00,#380f00,#0f0600)", border: "#c04010", accent: "#f06030", year: "1517", ornament: "⚡" },
-  "canons-of-dort":    { bg: "linear-gradient(160deg,#100a1a,#251560,#08060f)", border: "#8860c0", accent: "#b090e8", year: "1619", ornament: "⚖" },
-  "belgic-confession": { bg: "linear-gradient(160deg,#001a10,#003828,#000f08)", border: "#20a060", accent: "#40c880", year: "1561", ornament: "🛡" },
-  "council-trent":     { bg: "linear-gradient(160deg,#1a0a0a,#3a1010,#0f0606)", border: "#c03030", accent: "#e06060", year: "1547", ornament: "🏛" },
-  "diet-of-worms":     { bg: "linear-gradient(160deg,#1a1200,#3a2800,#0f0c00)", border: "#c0902a", accent: "#e0b050", year: "1521", ornament: "⚔" },
-};
-
-const DEFAULT_DOC_COVER = { bg: "linear-gradient(160deg,#0d0d1a,#1a1a3b,#080810)", border: "#7070c0", accent: "#a0a0e0", year: "", ornament: "📜" };
-
-// Custom photo covers — image overrides the gradient entirely
-const DOC_IMAGES: Record<string, string> = {
-  "jerusalem-council": "/covers/jerusalem-council.png",
-  "apostles-creed":    "/covers/apostles-creed.png",
-  "council-nicaea":    "/covers/council-nicaea.png",
-};
-
 function DocCover({ doc, size = "full" }: { doc: LearnDocument; size?: "full" | "small" | "featured" }) {
-  const style = DOC_COVERS[doc.id] ?? DEFAULT_DOC_COVER;
-  const imageSrc = DOC_IMAGES[doc.id];
-  const isSmall = size === "small";
-  const isFeatured = size === "featured";
+  const imageSrc = getDocumentCoverImage(doc.id);
+  const [imageFailed, setImageFailed] = useState(false);
 
-  // If a custom photo exists, render it as a full-bleed cover image
-  if (imageSrc) {
+  if (imageSrc && !imageFailed) {
     return (
-      <div className="w-full h-full" style={{ position: "relative", overflow: "hidden" }}>
-        <img
+      <div className="relative w-full h-full overflow-hidden pointer-events-none">
+        <Image
           src={imageSrc}
-          alt={doc.title}
-          style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+          alt={`${doc.title} cover`}
+          fill
+          sizes={size === "small" ? "56px" : "112px"}
+          className="object-cover"
+          onError={() => setImageFailed(true)}
         />
       </div>
     );
   }
 
-  return (
-    <div
-      className="w-full h-full flex flex-col justify-between"
-      style={{
-        background: style.bg,
-        border: `1px solid ${style.border}40`,
-        padding: isSmall ? "6px" : isFeatured ? "12px" : "16px",
-      }}
-    >
-      {/* Top ornament row */}
-      <div className="flex justify-between items-start">
-        <div style={{ width: "1px", alignSelf: "stretch", background: style.border, opacity: 0.4 }} />
-        <span style={{ color: style.accent, opacity: 0.5, fontSize: isSmall ? "8px" : "14px" }}>{style.ornament}</span>
-      </div>
-
-      {/* Center */}
-      <div className="text-center" style={{ padding: isSmall ? "0 2px" : "0 4px" }}>
-        {!isSmall && style.year && (
-          <p style={{ color: style.accent, opacity: 0.8, fontSize: isFeatured ? "20px" : "14px", fontWeight: "900", letterSpacing: "0.05em", marginBottom: "6px" }}>
-            {style.year}
-          </p>
-        )}
-        <p
-          className="text-white font-bold leading-tight uppercase"
-          style={{
-            fontSize: isSmall ? "7px" : isFeatured ? "11px" : "11px",
-            letterSpacing: "0.08em",
-            opacity: 0.85,
-            display: "-webkit-box",
-            WebkitLineClamp: isSmall ? 4 : 5,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
-          {doc.shortTitle}
-        </p>
-      </div>
-
-      {/* Bottom rule */}
-      <div style={{ height: "1px", width: "60%", margin: "0 auto", background: style.border, opacity: 0.4 }} />
-    </div>
-  );
+  return <GeneratedDocumentCover doc={doc} size={size} />;
 }
 
 // ─── Timeline data ────────────────────────────────────────────────────────────
@@ -160,16 +110,17 @@ const TIMELINE: { year: string; label: string; docId?: string }[] = [
 // ─── Type categories ──────────────────────────────────────────────────────────
 
 const DOC_TYPES = [
-  { key: "all",         label: "All",         icon: "📜" },
-  { key: "confession",  label: "Confessions", icon: "✝️" },
-  { key: "creed",       label: "Creeds",      icon: "🏛" },
-  { key: "debate",      label: "Debates",     icon: "⚔️" },
-  { key: "council",     label: "Councils",    icon: "👑" },
-  { key: "catechism",   label: "Catechisms",  icon: "📖" },
+  { key: "all",         label: "All" },
+  { key: "confession",  label: "Confessions" },
+  { key: "creed",       label: "Creeds" },
+  { key: "debate",      label: "Debates" },
+  { key: "council",     label: "Councils" },
+  { key: "catechism",   label: "Catechisms" },
 ];
 
 // ─── Tab keys ─────────────────────────────────────────────────────────────────
 type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism";
+type ReaderMode = "full" | "overview";
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
 function renderContent(
@@ -184,6 +135,15 @@ function renderContent(
   while (i < lines.length) {
     const line = lines[i];
     if (!line.trim()) { elements.push(<div key={i} className="h-3" />); i++; continue; }
+    if (line.startsWith("## ")) {
+      elements.push(
+        <h3 key={i} className="pt-5 pb-1 text-lg font-black" style={{ color: textColor }}>
+          {line.replace(/^##\s+/, "")}
+        </h3>
+      );
+      i++;
+      continue;
+    }
     const inlined = line
       .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
       .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
@@ -215,15 +175,18 @@ type FontSize = "sm" | "md" | "lg" | "xl";
 const FONT_SIZES: Record<FontSize, string> = { sm: "text-sm", md: "text-base", lg: "text-lg", xl: "text-xl" };
 
 function SectionReader({
-  doc, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, onJump,
+  doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, onJump, modeLabel,
 }: {
-  doc: LearnDocument; section: LearnSection; completed: Set<string>;
+  doc: LearnDocument; sections: LearnSection[]; section: LearnSection; completed: Set<string>;
   onToggle: (id: string) => void; onClose: () => void;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean;
   onJump: (id: string) => void;
+  modeLabel: string;
 }) {
   const { theme } = useTheme();
   const isLight = theme === "light-elegant";
+  const isGoldNavy = theme === "gold-navy";
+  const d = <T,>(light: T, gold: T, dark: T): T => isLight ? light : isGoldNavy ? gold : dark;
 
   const th = {
     pageBg:         isLight ? "#f5f1eb"                               : "#0e0e18",
@@ -232,42 +195,67 @@ function SectionReader({
     textMuted:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.5)",
     textFaint:      isLight ? "#b09878"                               : "rgba(255,255,255,0.4)",
     textContent:    isLight ? "#2a1e08"                               : "rgba(255,255,255,0.78)",
-    accent:         isLight ? "#9b7228"                               : "#a78bfa",
-    accentLight:    isLight ? "#c4973a"                               : "#c4b5fd",
-    primary:        isLight ? "#9b7228"                               : "#7c3aed",
+    accent:         d("#9b7228",  "#c9a961", "#a78bfa"),
+    accentLight:    d("#c4973a",  "#d4b878", "#c4b5fd"),
+    primary:        d("#9b7228",  "#c9a961", "#7c3aed"),
     topBarBg:       isLight ? "rgba(245,241,235,0.95)"                : "rgba(14,14,24,0.95)",
     topBarBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
     drawerBg:       isLight ? "#f0ebe0"                               : "#141424",
     drawerBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    drawerItemActive:isLight? "rgba(155,114,40,0.15)"                 : "rgba(124,58,237,0.2)",
-    drawerItemActiveColor: isLight ? "#9b7228"                        : "#c4b5fd",
+    drawerItemActive:    d("rgba(155,114,40,0.15)", "rgba(201,169,97,0.20)", "rgba(124,58,237,0.2)"),
+    drawerItemActiveColor: d("#9b7228", "#c9a961",  "#c4b5fd"),
     drawerItemColor:isLight ? "#9b8560"                               : "rgba(255,255,255,0.4)",
     settingsBg:     isLight ? "#f0ebe0"                               : "#141424",
     settingsBorder: isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    settingsBtnActive: isLight ? "rgba(155,114,40,0.2)"               : "rgba(124,58,237,0.3)",
-    settingsBtnActiveBorder: isLight ? "rgba(155,114,40,0.5)"         : "rgba(124,58,237,0.5)",
+    settingsBtnActive:       d("rgba(155,114,40,0.2)",  "rgba(201,169,97,0.25)", "rgba(124,58,237,0.3)"),
+    settingsBtnActiveBorder: d("rgba(155,114,40,0.5)",  "rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
     settingsBtnInactive: isLight ? "rgba(155,114,40,0.06)"            : "rgba(255,255,255,0.05)",
     settingsBtnInactiveBorder: isLight ? "rgba(155,114,40,0.14)"      : "rgba(255,255,255,0.08)",
     navBtnBg:       isLight ? "rgba(155,114,40,0.08)"                 : "rgba(255,255,255,0.07)",
     navBtnBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
     navBtnColor:    isLight ? "#6b5226"                               : "rgba(255,255,255,0.6)",
-    navNextGradient:isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
+    navNextGradient: d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
     dividerColor:   isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.06)",
     footerText:     isLight ? "rgba(155,114,40,0.5)"                  : "rgba(255,255,255,0.15)",
     bottomBarBg:    isLight ? "rgba(245,241,235,0.97)"                : "rgba(14,14,24,0.97)",
     bottomBarBorder:isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
     bottomBarDivider:isLight? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.05)",
-    sliderTrack:    isLight ? `linear-gradient(to right,#9b7228 `     : `linear-gradient(to right,#a855f7 `,
-    sliderThumb:    isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
-    sliderThumbShadow: isLight ? ""                                   : "box-shadow:0 0 8px rgba(168,85,247,0.6);",
+    sliderTrack:    d(`linear-gradient(to right,#9b7228 `, `linear-gradient(to right,#c9a961 `, `linear-gradient(to right,#a855f7 `),
+    sliderThumb:    d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    sliderThumbShadow: isLight ? "" : isGoldNavy ? "" : "box-shadow:0 0 8px rgba(168,85,247,0.6);",
     sliderTrackBg:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.1)",
     bottomIconColor:isLight ? "#9b8560"                               : "rgba(255,255,255,0.4)",
   };
 
+  const { lang } = useLanguage();
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [showToc, setShowToc] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showBookmark, setShowBookmark] = useState(false);
+
+  // ── Spanish auto-translation ──────────────────────────────────────────────
+  const [translatedSection, setTranslatedSection] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [translateProgress, setTranslateProgress] = useState(0);
+
+  useEffect(() => {
+    if (lang !== "es" || !section.content) {
+      setTranslatedSection(null);
+      return;
+    }
+    let cancelled = false;
+    setTranslating(true);
+    setTranslateProgress(0);
+    translateToSpanish(
+      section.content,
+      `learn-${doc.id}-${section.id}`,
+      (pct) => { if (!cancelled) setTranslateProgress(pct); }
+    )
+      .then((text) => { if (!cancelled) setTranslatedSection(text); })
+      .catch(() => { if (!cancelled) setTranslatedSection(null); })
+      .finally(() => { if (!cancelled) setTranslating(false); });
+    return () => { cancelled = true; };
+  }, [lang, section.content, doc.id, section.id]);
 
   const itemId = `learn::${doc.id}::${section.id}`;
   const [bookmarked, setBookmarked] = useState(() => isAnySaved(itemId));
@@ -280,8 +268,30 @@ function SectionReader({
   const [pendingRemove, setPendingRemove] = useState<{ id: string; x: number; y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
-  const sectionIndex = doc.sections.findIndex((s) => s.id === section.id);
-  const progressPct = doc.sections.length > 0 ? Math.round(((sectionIndex + 1) / doc.sections.length) * 100) : 0;
+  // ── In-section pagination ─────────────────────────────────────────────────
+  const pageStorageKey = `axiom-page-learn-${doc.id}-${section.id}`;
+  const {
+    pages: sectionPages,
+    currentPage,
+    totalPages,
+    goNextPage,
+    goPrevPage,
+    isFirstPage,
+    isLastPage,
+  } = usePagination({
+    content: section.content,
+    fontSize,
+    storageKey: pageStorageKey,
+    rawText: section.id.startsWith("md-luther-") || section.id.startsWith("md-edwards-"),
+  });
+
+  // Scroll to top when page or section changes
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [currentPage, section.id]);
+
+  const sectionIndex = sections.findIndex((s) => s.id === section.id);
+  const progressPct = sections.length > 0 ? Math.round(((sectionIndex + 1) / sections.length) * 100) : 0;
 
   const sliderCss = `.hist-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.hist-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};${th.sliderThumbShadow}border:2px solid rgba(255,255,255,0.3)}.hist-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};border:2px solid rgba(255,255,255,0.3)}`;
 
@@ -334,7 +344,7 @@ function SectionReader({
               <button onClick={() => setShowToc(false)} className="text-lg" style={{ color: th.textMuted }}>✕</button>
             </div>
             <div className="p-3 space-y-0.5">
-              {doc.sections.map((s, idx) => (
+              {sections.map((s, idx) => (
                 <button key={s.id} onClick={() => { onJump(s.id); setShowToc(false); }}
                   className="w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors min-h-[40px]"
                   style={{ backgroundColor: s.id === section.id ? th.drawerItemActive : "transparent", color: s.id === section.id ? th.drawerItemActiveColor : th.drawerItemColor, fontWeight: s.id === section.id ? "bold" : "normal" }}>
@@ -348,12 +358,11 @@ function SectionReader({
 
       {/* Settings panel */}
       {showSettings && (
-        <div className="fixed inset-0 z-40 flex flex-col justify-end" onClick={() => setShowSettings(false)}>
+        <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 px-4" onClick={() => setShowSettings(false)}>
           <div className="absolute inset-0 bg-black/50" />
-          <div className="relative rounded-t-3xl px-5 pt-3 pb-8"
+          <div className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
             style={{ backgroundColor: th.settingsBg, border: `1px solid ${th.settingsBorder}` }}
             onClick={(e) => e.stopPropagation()}>
-            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: isLight ? "rgba(155,114,40,0.25)" : "rgba(255,255,255,0.2)" }} />
             <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
             <div className="flex gap-2">
               {(["sm","md","lg","xl"] as FontSize[]).map((fs) => (
@@ -371,30 +380,86 @@ function SectionReader({
       <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
         <main className="max-w-2xl mx-auto px-5 pt-8 pb-8">
           <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-            {section.label}
+            {modeLabel} · {section.label}
+            {totalPages > 1 && (
+              <span style={{ color: th.textFaint, fontWeight: "normal", letterSpacing: "0.05em" }}>
+                {" "}· p. {currentPage}/{totalPages}
+              </span>
+            )}
           </p>
-          <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
-            {section.title}
-          </h2>
-          <div className={`space-y-1 ${FONT_SIZES[fontSize]}`}>
-            {renderContent(section.content, th.textContent, highlights, (id, x, y) => setPendingRemove({ id, x, y }))}
+          {/* Title only on first page */}
+          {isFirstPage && (
+            <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
+              {section.title}
+            </h2>
+          )}
+          <div
+            key={`${section.id}-${currentPage}`}
+            className={`space-y-1 ${FONT_SIZES[fontSize]}`}
+            style={{ animation: "axiomPageIn 0.18s ease-out" }}
+          >
+            <style>{`@keyframes axiomPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+            {/* Spanish translation status */}
+            {lang === "es" && (translating || translatedSection) && (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
+                style={{ backgroundColor: "rgba(201,169,97,0.08)", border: "1px solid rgba(201,169,97,0.18)", color: th.textMuted }}>
+                {translating ? (
+                  <>
+                    <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
+                    <span>Traduciendo al español… {translateProgress}%</span>
+                  </>
+                ) : (
+                  <><span>🌐</span><span>Traducido al español automáticamente</span></>
+                )}
+              </div>
+            )}
+            {renderContent(
+              lang === "es" && translatedSection ? translatedSection : sectionPages[currentPage - 1] ?? "",
+              th.textContent, highlights, (id, x, y) => setPendingRemove({ id, x, y })
+            )}
           </div>
 
-          {/* Nav buttons */}
+          {/* Nav buttons — pages first, then sections */}
           <div className="flex items-center justify-between gap-4 mt-14 pt-8" style={{ borderTop: `1px solid ${th.dividerColor}` }}>
-            <button disabled={!hasPrev} onClick={onPrev} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{ backgroundColor: hasPrev ? th.navBtnBg : "transparent", color: hasPrev ? th.navBtnColor : th.textMuted, border: `1px solid ${th.navBtnBorder}`, cursor: hasPrev ? "pointer" : "not-allowed" }}>
-              ← Previous
+            {/* Prev page → prev section */}
+            <button
+              disabled={isFirstPage && !hasPrev}
+              onClick={() => { if (!goPrevPage()) onPrev(); }}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+              style={{
+                backgroundColor: (!isFirstPage || hasPrev) ? th.navBtnBg : "transparent",
+                color: (!isFirstPage || hasPrev) ? th.navBtnColor : th.textMuted,
+                border: `1px solid ${th.navBtnBorder}`,
+                cursor: (!isFirstPage || hasPrev) ? "pointer" : "not-allowed",
+              }}
+            >
+              ← Prev
             </button>
-            {hasNext ? (
-              <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+
+            {/* Center page indicator */}
+            {totalPages > 1 && (
+              <span className="text-xs font-bold" style={{ color: th.textFaint }}>
+                {currentPage} / {totalPages}
+              </span>
+            )}
+
+            {/* Next page → next section → finish */}
+            {isLastPage ? (
+              hasNext ? (
+                <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+                  style={{ background: th.navNextGradient, color: "white" }}>
+                  Next →
+                </button>
+              ) : (
+                <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+                  style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}>
+                  Finish ✓
+                </button>
+              )
+            ) : (
+              <button onClick={() => goNextPage()} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
                 style={{ background: th.navNextGradient, color: "white" }}>
                 Next →
-              </button>
-            ) : (
-              <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-                style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}>
-                Finish ✓
               </button>
             )}
           </div>
@@ -409,13 +474,13 @@ function SectionReader({
         style={{ backgroundColor: th.bottomBarBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
         <div className="px-5 pt-3 pb-2">
           <style>{sliderCss}</style>
-          <input type="range" min={0} max={Math.max(1, doc.sections.length - 1)} value={sectionIndex}
-            onChange={(e) => { const idx = Number(e.target.value); if (doc.sections[idx]) onJump(doc.sections[idx].id); }}
+          <input type="range" min={0} max={Math.max(1, sections.length - 1)} value={sectionIndex}
+            onChange={(e) => { const idx = Number(e.target.value); if (sections[idx]) onJump(sections[idx].id); }}
             className="hist-slider w-full"
             style={{ background: `${th.sliderTrack}${progressPct}%,${th.sliderTrackBg} ${progressPct}%)` }}
           />
           <p className="text-center mt-2 text-[11px]" style={{ color: th.bottomIconColor }}>
-            {sectionIndex + 1} / {doc.sections.length}
+            {sectionIndex + 1} / {sections.length}
           </p>
         </div>
         <div className="flex items-center justify-around px-4 pb-1 pt-1" style={{ borderTop: `1px solid ${th.bottomBarDivider}` }}>
@@ -459,6 +524,10 @@ function SectionReader({
 function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose: () => void; allDocs: LearnDocument[] }) {
   const { theme } = useTheme();
   const isLight = theme === "light-elegant";
+  const isGoldNavy = theme === "gold-navy";
+  const d = <T,>(light: T, gold: T, dark: T): T => isLight ? light : isGoldNavy ? gold : dark;
+  const fullDocumentSections = FULL_DOCUMENT_SECTIONS[doc.id] ?? null;
+  const hasFullDocument = !!fullDocumentSections;
 
   const th = {
     pageBg:         isLight ? "#f5f1eb"                               : "#0e0e18",
@@ -466,42 +535,54 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
     textSecondary:  isLight ? "#6b5226"                               : "rgba(255,255,255,0.85)",
     textMuted:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.45)",
     textFaint:      isLight ? "#b09878"                               : "rgba(255,255,255,0.3)",
-    accent:         isLight ? "#9b7228"                               : "#a78bfa",
-    accentLight:    isLight ? "#c4973a"                               : "#c4b5fd",
-    primary:        isLight ? "#9b7228"                               : "#7c3aed",
+    accent:         d("#9b7228",  "#c9a961", "#a78bfa"),
+    accentLight:    d("#c4973a",  "#d4b878", "#c4b5fd"),
+    primary:        d("#9b7228",  "#c9a961", "#7c3aed"),
     topBarBg:       isLight ? "rgba(245,241,235,0.95)"                : "rgba(14,14,24,0.95)",
     topBarBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
-    tagBg:          isLight ? "rgba(155,114,40,0.12)"                 : "rgba(124,58,237,0.2)",
-    tagBorder:      isLight ? "rgba(155,114,40,0.35)"                 : "rgba(124,58,237,0.35)",
-    tagColor:       isLight ? "#9b7228"                               : "#c4b5fd",
+    tagBg:          d("rgba(155,114,40,0.12)",  "rgba(201,169,97,0.18)", "rgba(124,58,237,0.2)"),
+    tagBorder:      d("rgba(155,114,40,0.35)",  "rgba(201,169,97,0.40)", "rgba(124,58,237,0.35)"),
+    tagColor:       d("#9b7228",  "#c9a961", "#c4b5fd"),
     btnBorder:      isLight ? "rgba(155,114,40,0.22)"                 : "rgba(255,255,255,0.12)",
+    modeBg:         isLight ? "rgba(155,114,40,0.07)"                 : "rgba(255,255,255,0.04)",
+    modeBorder:     isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
+    modeActiveBg:   d("rgba(155,114,40,0.18)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.24)"),
+    modeActiveText: d("#6b5226",  "#d4b878", "#ddd6fe"),
+    modeInactiveText:isLight ? "#9b8560"                              : "rgba(255,255,255,0.42)",
     progressTrack:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.08)",
-    progressBar:    isLight ? "linear-gradient(90deg,#c4973a,#9b7228)": "linear-gradient(90deg,#ec4899,#a855f7)",
-    readGradient:   isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
+    progressBar:    d("linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
+    readGradient:   d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
     divider:        isLight ? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.06)",
     sectionRowBg:   isLight ? "rgba(155,114,40,0.06)"                 : "rgba(255,255,255,0.03)",
     sectionRowBorder:isLight ? "rgba(155,114,40,0.18)"                : "rgba(255,255,255,0.07)",
-    sectionDoneBg:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(124,58,237,0.3)",
-    sectionDoneBorder:isLight? "rgba(155,114,40,0.45)"                : "rgba(124,58,237,0.5)",
-    sectionDoneNum: isLight ? "#9b7228"                               : "#c4b5fd",
+    sectionDoneBg:  d("rgba(155,114,40,0.15)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.3)"),
+    sectionDoneBorder:d("rgba(155,114,40,0.45)","rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
+    sectionDoneNum: d("#9b7228",  "#c9a961", "#c4b5fd"),
     sectionPendingBg:isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.07)",
     sectionPendingBorder:isLight?"rgba(155,114,40,0.18)"              : "rgba(255,255,255,0.1)",
     sectionPendingNum:isLight ? "#9b8560"                             : "rgba(255,255,255,0.3)",
-    sectionDoneTitle:isLight ? "#9b7228"                              : "#c4b5fd",
+    sectionDoneTitle:d("#9b7228", "#c9a961", "#c4b5fd"),
     sectionTitle:   isLight ? "#2a1e08"                               : "rgba(255,255,255,0.8)",
     sectionLabel:   isLight ? "#9b8560"                               : "rgba(255,255,255,0.3)",
     sectionArrow:   isLight ? "rgba(155,114,40,0.5)"                  : "rgba(255,255,255,0.25)",
-    star:           isLight ? "#c4973a"                               : "#fbbf24",
+    star:           d("#c4973a",  "#c9a961", "#c9a961"),
     starText:       isLight ? "#6b5226"                               : "rgba(255,255,255,0.7)",
     starFaint:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.3)",
   };
 
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [reading, setReading] = useState<string | null>(null);
+  const [readerMode, setReaderMode] = useState<ReaderMode>(hasFullDocument ? "full" : "overview");
   const [descExpanded, setDescExpanded] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(() => isAnySaved(`learn::${doc.id}`));
+  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
 
   useEffect(() => { setCompleted(loadProgress(doc.id)); }, [doc.id]);
+  useEffect(() => {
+    setReading(null);
+    setReaderMode(hasFullDocument ? "full" : "overview");
+    setDescExpanded(false);
+  }, [doc.id, hasFullDocument]);
 
   const toggleSection = useCallback((sectionId: string) => {
     setCompleted((prev) => {
@@ -512,21 +593,24 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
     });
   }, [doc.id]);
 
-  const progress = doc.sections.length > 0 ? Math.round((completed.size / doc.sections.length) * 100) : 0;
-  const style = DOC_COVERS[doc.id] ?? DEFAULT_DOC_COVER;
+  const readerSections = readerMode === "full" && fullDocumentSections ? fullDocumentSections : doc.sections;
+  const completedInReader = readerSections.filter((section) => completed.has(section.id)).length;
+  const progress = readerSections.length > 0 ? Math.round((completedInReader / readerSections.length) * 100) : 0;
+  const readerModeLabel = readerMode === "full" ? "Full document" : "Overview";
 
-  const sectionIndex = reading ? doc.sections.findIndex((s) => s.id === reading) : -1;
-  const currentSection = sectionIndex >= 0 ? doc.sections[sectionIndex] : null;
+  const sectionIndex = reading ? readerSections.findIndex((s) => s.id === reading) : -1;
+  const currentSection = sectionIndex >= 0 ? readerSections[sectionIndex] : null;
 
   if (currentSection) {
     return (
       <SectionReader
-        doc={doc} section={currentSection} completed={completed} onToggle={toggleSection}
+        doc={doc} sections={readerSections} section={currentSection} completed={completed} onToggle={toggleSection}
         onClose={() => setReading(null)}
-        onPrev={() => { if (sectionIndex > 0) setReading(doc.sections[sectionIndex - 1].id); }}
-        onNext={() => { if (sectionIndex < doc.sections.length - 1) setReading(doc.sections[sectionIndex + 1].id); }}
-        hasPrev={sectionIndex > 0} hasNext={sectionIndex < doc.sections.length - 1}
+        onPrev={() => { if (sectionIndex > 0) setReading(readerSections[sectionIndex - 1].id); }}
+        onNext={() => { if (sectionIndex < readerSections.length - 1) setReading(readerSections[sectionIndex + 1].id); }}
+        hasPrev={sectionIndex > 0} hasNext={sectionIndex < readerSections.length - 1}
         onJump={(id) => setReading(id)}
+        modeLabel={readerModeLabel}
       />
     );
   }
@@ -548,7 +632,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
 
       {/* Cover + meta */}
       <div className="flex gap-4 px-4 pt-6 pb-5">
-        <div className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/60" style={{ width: "110px", height: "148px", border: `1px solid ${style.border}50` }}>
+        <div className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/60" style={{ width: "110px", height: "148px", border: `1px solid ${th.btnBorder}` }}>
           <DocCover doc={doc} />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -579,11 +663,28 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
 
       {/* Buttons */}
       <div className="px-4 flex flex-col gap-2.5 mb-5">
-        <button onClick={() => setReading(doc.sections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
+        {hasFullDocument && (
+          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl" style={{ backgroundColor: th.modeBg, border: `1px solid ${th.modeBorder}` }}>
+            {(["full", "overview"] as ReaderMode[]).map((mode) => {
+              const active = readerMode === mode;
+              return (
+                <button
+                  key={mode}
+                  onClick={() => { setReaderMode(mode); setReading(null); }}
+                  className="py-2.5 rounded-xl text-xs font-black transition-all active:scale-[0.98]"
+                  style={{ backgroundColor: active ? th.modeActiveBg : "transparent", color: active ? th.modeActiveText : th.modeInactiveText }}
+                >
+                  {mode === "full" ? "Full document" : "Overview"}
+                </button>
+              );
+            })}
+          </div>
+        )}
+        <button onClick={() => setReading(readerSections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
           style={{ background: th.readGradient }}>
-          Read Now
+          {readerMode === "full" ? "Read Full Document" : "Read Overview"}
         </button>
-        <button onClick={() => setBookmarked((v) => !v)} className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+        <button onClick={() => setShowBookmarkModal(true)} className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
           style={{ border: `1px solid ${th.btnBorder}`, color: th.textSecondary }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c4973a" : "currentColor" }}>
             <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
@@ -606,12 +707,12 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {/* Metadata */}
       <div className="flex gap-4 px-4 mb-5">
         {[
-          { icon: "📄", label: `${doc.sections.length} Sections` },
-          { icon: "🌐", label: "English" },
-          { icon: "📅", label: `Published ${doc.year}` },
+          { icon: "sections", label: `${readerSections.length} ${readerMode === "full" ? "Document Sections" : "Overview Sections"}` },
+          { icon: "language", label: "English" },
+          { icon: "year", label: `Published ${doc.year}` },
         ].map((m) => (
           <div key={m.label} className="flex items-center gap-1.5">
-            <span className="text-sm">{m.icon}</span>
+            <GeneratedMetaIcon type={m.icon as "sections" | "language" | "year"} size={15} />
             <span className="text-xs" style={{ color: th.textMuted }}>{m.label}</span>
           </div>
         ))}
@@ -621,7 +722,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {progress > 0 && (
         <div className="px-4 mb-5">
           <div className="flex justify-between text-xs mb-1.5" style={{ color: th.textFaint }}>
-            <span>{completed.size} of {doc.sections.length} sections read</span>
+            <span>{completedInReader} of {readerSections.length} {readerMode === "full" ? "document" : "overview"} sections read</span>
             <span>{progress}%</span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
@@ -634,9 +735,16 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
 
       {/* Section list */}
       <div className="px-4 mb-6">
-        <p className="text-sm font-bold mb-3" style={{ color: th.textPrimary }}>Sections</p>
+        <p className="text-sm font-bold mb-1" style={{ color: th.textPrimary }}>
+          {readerMode === "full" ? "Full document sections" : "Overview sections"}
+        </p>
+        <p className="text-[11px] leading-relaxed mb-3" style={{ color: th.textMuted }}>
+          {readerMode === "full"
+            ? "Read the primary text by chapter, article, question, canon, or sermon section."
+            : "Use the overview for historical context, theology, and study notes."}
+        </p>
         <div className="space-y-2">
-          {doc.sections.map((section, idx) => {
+          {readerSections.map((section, idx) => {
             const done = completed.has(section.id);
             return (
               <button key={section.id} onClick={() => setReading(section.id)}
@@ -665,20 +773,25 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
         <div className="px-4 pb-10">
           <p className="text-sm font-bold mb-3" style={{ color: th.textPrimary }}>You may also like</p>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-            {related.map((d) => {
-              const ds = DOC_COVERS[d.id] ?? DEFAULT_DOC_COVER;
-              return (
+            {related.map((d) => (
                 <button key={d.id} onClick={() => onClose()} className="flex-shrink-0 w-24 text-left active:scale-95 transition-transform">
-                  <div className="w-24 h-32 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${ds.border}40` }}>
+                  <div className="w-24 h-32 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.btnBorder}` }}>
                     <DocCover doc={d} />
                   </div>
                   <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{d.shortTitle}</p>
                   <p className="text-[9px] mt-0.5" style={{ color: th.textMuted }}>{d.year}</p>
                 </button>
-              );
-            })}
+            ))}
           </div>
         </div>
+      )}
+
+      {showBookmarkModal && (
+        <BookmarkModal
+          item={{ id: `learn::${doc.id}`, type: "learn", title: doc.title, subtitle: doc.origin, preview: String(doc.year) }}
+          label={doc.title}
+          onClose={() => { setShowBookmarkModal(false); setBookmarked(isAnySaved(`learn::${doc.id}`)); }}
+        />
       )}
     </div>
   );
@@ -688,53 +801,87 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
 
 function LearnPageInner() {
   const { theme } = useTheme();
+  const { lang } = useLanguage();
   const searchParams = useSearchParams();
   const isLight = theme === "light-elegant";
+  const isPink = theme === "light-pink";
+  const isGoldNavy = theme === "gold-navy";
+  const pick = (pink: string, light: string, dark: string) => isPink ? pink : isLight ? light : dark;
 
   const th = {
-    pageBg:            isLight ? "#f5f1eb"                              : "#0e0e18",
-    textPrimary:       isLight ? "#1c1409"                              : "rgba(255,255,255,0.95)",
-    textSecondary:     isLight ? "#6b5226"                              : "rgba(255,255,255,0.38)",
-    textMuted:         isLight ? "#9b8560"                              : "rgba(255,255,255,0.45)",
-    textFaint:         isLight ? "#b09878"                              : "rgba(255,255,255,0.25)",
-    textVeryFaint:     isLight ? "#c4b090"                              : "rgba(255,255,255,0.22)",
-    accent:            isLight ? "#9b7228"                              : "#a78bfa",
-    accentLight:       isLight ? "#c4973a"                              : "#c4b5fd",
-    primary:           isLight ? "#9b7228"                              : "#7c3aed",
-    heroBg:            isLight ? "linear-gradient(135deg,rgba(196,151,58,0.28) 0%,rgba(237,228,205,0.96) 55%,rgba(215,196,148,0.22) 100%)"
-                               : "linear-gradient(135deg,#1a0845 0%,#2d1b69 55%,#0f0a2a 100%)",
-    heroAccentText:    isLight ? "#9b7228"                              : "#c084fc",
-    heroSubtext:       isLight ? "rgba(107,82,38,0.85)"                 : "rgba(255,255,255,0.4)",
-    searchBg:          isLight ? "rgba(155,114,40,0.08)"                : "rgba(255,255,255,0.06)",
-    searchBorder:      isLight ? "rgba(155,114,40,0.22)"                : "rgba(255,255,255,0.08)",
-    catActiveBg:       isLight ? "rgba(155,114,40,0.15)"                : "rgba(124,58,237,0.25)",
-    catActiveBorder:   isLight ? "rgba(155,114,40,0.5)"                 : "rgba(167,139,250,0.5)",
-    catInactiveBg:     isLight ? "rgba(155,114,40,0.04)"                : "rgba(255,255,255,0.04)",
-    catInactiveBorder: isLight ? "rgba(155,114,40,0.14)"                : "rgba(255,255,255,0.08)",
-    cardBg:            isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.03)",
-    cardBorder:        isLight ? "rgba(155,114,40,0.20)"                : "rgba(255,255,255,0.07)",
-    progressTrack:     isLight ? "rgba(155,114,40,0.15)"                : "rgba(255,255,255,0.08)",
-    progressBar:       isLight ? "linear-gradient(90deg,#c4973a,#9b7228)": "linear-gradient(90deg,#ec4899,#a855f7)",
-    tabStripBorder:    isLight ? "rgba(155,114,40,0.18)"                : "rgba(255,255,255,0.07)",
-    tabActiveBorder:   isLight ? "#9b7228"                              : "#7c3aed",
-    tabInactiveColor:  isLight ? "#9b8560"                              : "rgba(255,255,255,0.3)",
-    timelineLine:      isLight ? "linear-gradient(90deg,transparent,rgba(155,114,40,0.4),transparent)"
-                               : "linear-gradient(90deg,transparent,rgba(167,139,250,0.4),transparent)",
-    timelineDotEven:   isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
-    timelineDotOdd:    isLight ? "linear-gradient(135deg,#9b7228,#6b4a10)": "linear-gradient(135deg,#a855f7,#7c3aed)",
-    timelineDotShadow: isLight ? "none"                                 : "0 0 8px rgba(168,85,247,0.5)",
-    timelineYear:      isLight ? "#9b7228"                              : "#a78bfa",
-    timelineLabel:     isLight ? "#9b8560"                              : "rgba(255,255,255,0.45)",
-    startReading:      isLight ? "#9b7228"                              : "rgba(167,139,250,0.65)",
-    star:              isLight ? "#c4973a"                              : "#fbbf24",
-    footerText:        isLight ? "rgba(155,114,40,0.5)"                 : "rgba(255,255,255,0.15)",
-    iconMuted:         isLight ? "#9b8560"                              : "rgba(255,255,255,0.3)",
+    pageBg:            pick("#fff0f5", "#f5f1eb", "#0e0e18"),
+    textPrimary:       pick("#4a0020", "#1c1409", "rgba(255,255,255,0.95)"),
+    textSecondary:     pick("rgba(74,0,32,0.62)", "#6b5226", "rgba(255,255,255,0.38)"),
+    textMuted:         pick("rgba(74,0,32,0.52)", "#9b8560", "rgba(255,255,255,0.45)"),
+    textFaint:         pick("rgba(74,0,32,0.38)", "#b09878", "rgba(255,255,255,0.25)"),
+    textVeryFaint:     pick("rgba(74,0,32,0.28)", "#c4b090", "rgba(255,255,255,0.22)"),
+    accent:            pick("#db2777", "#9b7228", "#a78bfa"),
+    accentLight:       pick("#be185d", "#c4973a", "#c4b5fd"),
+    primary:           pick("#db2777", "#9b7228", "#7c3aed"),
+    heroBg:            pick(
+      "linear-gradient(135deg,#f8dce9 0%,#fff8fb 55%,#f7cedf 100%)",
+      "linear-gradient(135deg,rgba(196,151,58,0.28) 0%,rgba(237,228,205,0.96) 55%,rgba(215,196,148,0.22) 100%)",
+      "linear-gradient(135deg,#1a0845 0%,#2d1b69 55%,#0f0a2a 100%)"
+    ),
+    heroAccentText:    pick("#be185d", "#9b7228", "#c084fc"),
+    heroSubtext:       pick("rgba(74,0,32,0.62)", "rgba(107,82,38,0.85)", "rgba(255,255,255,0.4)"),
+    searchBg:          pick("rgba(252,231,243,0.7)", "rgba(155,114,40,0.08)", "rgba(255,255,255,0.06)"),
+    searchBorder:      pick("rgba(219,39,119,0.20)", "rgba(155,114,40,0.22)", "rgba(255,255,255,0.08)"),
+    catActiveBg:       pick("#f7d1e3", "rgba(155,114,40,0.15)", "rgba(124,58,237,0.25)"),
+    catActiveBorder:   pick("rgba(219,39,119,0.38)", "rgba(155,114,40,0.5)", "rgba(167,139,250,0.5)"),
+    catInactiveBg:     pick("rgba(252,231,243,0.72)", "rgba(155,114,40,0.04)", "rgba(255,255,255,0.04)"),
+    catInactiveBorder: pick("rgba(219,39,119,0.14)", "rgba(155,114,40,0.14)", "rgba(255,255,255,0.08)"),
+    cardBg:            pick("#fff8fb", "rgba(155,114,40,0.06)", "rgba(255,255,255,0.03)"),
+    cardBorder:        pick("rgba(219,39,119,0.16)", "rgba(155,114,40,0.20)", "rgba(255,255,255,0.07)"),
+    progressTrack:     pick("rgba(219,39,119,0.14)", "rgba(155,114,40,0.15)", "rgba(255,255,255,0.08)"),
+    progressBar:       pick("linear-gradient(90deg,#ec4899,#be185d)", "linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#ec4899,#a855f7)"),
+    tabStripBorder:    pick("rgba(219,39,119,0.16)", "rgba(155,114,40,0.18)", "rgba(255,255,255,0.07)"),
+    tabActiveBorder:   pick("#db2777", "#9b7228", "#7c3aed"),
+    tabInactiveColor:  pick("rgba(74,0,32,0.45)", "#9b8560", "rgba(255,255,255,0.3)"),
+    timelineLine:      pick("linear-gradient(90deg,transparent,rgba(219,39,119,0.28),transparent)", "linear-gradient(90deg,transparent,rgba(155,114,40,0.4),transparent)", "linear-gradient(90deg,transparent,rgba(167,139,250,0.4),transparent)"),
+    timelineDotEven:   pick("linear-gradient(135deg,#ec4899,#db2777)", "linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    timelineDotOdd:    pick("linear-gradient(135deg,#db2777,#be185d)", "linear-gradient(135deg,#9b7228,#6b4a10)", "linear-gradient(135deg,#a855f7,#7c3aed)"),
+    timelineDotShadow: pick("none", "none", "0 0 8px rgba(168,85,247,0.5)"),
+    timelineYear:      pick("#be185d", "#9b7228", "#a78bfa"),
+    timelineLabel:     pick("rgba(74,0,32,0.52)", "#9b8560", "rgba(255,255,255,0.45)"),
+    startReading:      pick("#be185d", "#9b7228", "rgba(167,139,250,0.65)"),
+    star:              pick("#db2777", "#c4973a", "#c9a961"),
+    footerText:        pick("rgba(74,0,32,0.46)", "rgba(155,114,40,0.5)", "rgba(255,255,255,0.15)"),
+    iconMuted:         pick("rgba(74,0,32,0.48)", "#9b8560", "rgba(255,255,255,0.3)"),
   };
+
+  // Gold Navy overrides — replace purple/violet with antique gold
+  if (isGoldNavy) {
+    th.accent            = "#c9a961";
+    th.accentLight       = "#d4b878";
+    th.primary           = "#c9a961";
+    th.heroBg            = "linear-gradient(135deg,rgba(201,169,97,0.22) 0%,#1a1d27 55%,#0e1018 100%)";
+    th.heroAccentText    = "#c9a961";
+    th.catActiveBg       = "rgba(201,169,97,0.20)";
+    th.catActiveBorder   = "rgba(201,169,97,0.45)";
+    th.progressBar       = "linear-gradient(90deg,#c9a961,#d4b878)";
+    th.tabActiveBorder   = "#c9a961";
+    th.startReading      = "#c9a961";
+    th.timelineLine      = "linear-gradient(90deg,transparent,rgba(201,169,97,0.35),transparent)";
+    th.timelineDotEven   = "linear-gradient(135deg,#c9a961,#d4b878)";
+    th.timelineDotOdd    = "linear-gradient(135deg,#d4b878,#b8922e)";
+    th.timelineDotShadow = "none";
+    th.timelineYear      = "#c9a961";
+    th.star              = "#c9a961";
+  }
 
   const [selected, setSelected] = useState<string | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [activeTab, setActiveTab] = useState<DocTab>("all");
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
+  const [bookmarkTarget, setBookmarkTarget] = useState<LearnDocument | null>(null);
+  const [savedDocs, setSavedDocs] = useState<Set<string>>(new Set());
+
+  function refreshSaved() {
+    setSavedDocs(new Set(LEARN_DOCUMENTS.filter((d) => isAnySaved(`learn::${d.id}`)).map((d) => d.id)));
+  }
+
+  useEffect(() => { refreshSaved(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Deep-link: /learn?doc=ID opens that document directly
   useEffect(() => {
@@ -778,24 +925,26 @@ function LearnPageInner() {
       {/* Header */}
       <div className="flex items-center px-4 pt-5 pb-2">
         <h1 className="text-lg font-bold" style={{ color: th.textPrimary }}>
-          Historical <span style={{ color: th.accent }}>Documents</span>
+          {lang === "es" ? t(lang, "learn_page_title") : "Historical"} <span style={{ color: th.accent }}>{lang === "es" ? t(lang, "learn_page_accent") : "Documents"}</span>
         </h1>
       </div>
 
       {/* Hero banner */}
       <div className="mx-4 mb-6 rounded-2xl overflow-hidden relative" style={{ background: th.heroBg, minHeight: "130px" }}>
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 text-7xl opacity-20 pointer-events-none select-none">📜</div>
-        {!isLight && (
+        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none select-none">
+          <GeneratedCategoryMark id="document" size={76} />
+        </div>
+        {!isLight && !isPink && (
           <div className="absolute right-4 top-4 w-20 h-20 rounded-full opacity-15 pointer-events-none"
             style={{ background: "radial-gradient(circle,#c084fc 0%,transparent 70%)" }} />
         )}
         <div className="relative px-5 py-5">
           <h2 className="text-xl font-black leading-tight mb-1">
-            <span style={{ color: th.heroAccentText }}>Timeless Truths.</span>
-            <br /><span className="text-white">Lasting Impact.</span>
+            <span style={{ color: th.heroAccentText }}>{t(lang, "learn_hero_line1")}</span>
+            <br /><span style={{ color: th.textPrimary }}>{t(lang, "learn_hero_line2")}</span>
           </h2>
           <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
-            Explore the confessions, debates, and declarations that shaped history in Christianity.
+            {t(lang, "learn_hero_sub")}
           </p>
         </div>
       </div>
@@ -815,16 +964,16 @@ function LearnPageInner() {
               const dot = (
                 <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
                   style={{
-                    background: hasDoc ? (i % 2 === 0 ? th.timelineDotEven : th.timelineDotOdd) : (isLight ? "rgba(155,114,40,0.25)" : "rgba(255,255,255,0.12)"),
+                    background: hasDoc ? (i % 2 === 0 ? th.timelineDotEven : th.timelineDotOdd) : pick("rgba(219,39,119,0.18)", "rgba(155,114,40,0.25)", "rgba(255,255,255,0.12)"),
                     boxShadow: hasDoc ? th.timelineDotShadow : "none",
                   }}>
-                  <div className="w-2 h-2 rounded-full opacity-80" style={{ backgroundColor: hasDoc ? "white" : (isLight ? "rgba(155,114,40,0.6)" : "rgba(255,255,255,0.4)") }} />
+                  <div className="w-2 h-2 rounded-full opacity-80" style={{ backgroundColor: hasDoc ? "white" : pick("rgba(190,24,93,0.5)", "rgba(155,114,40,0.6)", "rgba(255,255,255,0.4)") }} />
                 </div>
               );
               const label = (
                 <div className="text-center">
-                  <p className="text-xs font-black" style={{ color: hasDoc ? th.timelineYear : (isLight ? "#b09878" : "rgba(255,255,255,0.3)") }}>{item.year}</p>
-                  <p className="text-[9px] leading-tight text-center" style={{ color: hasDoc ? th.timelineLabel : (isLight ? "#c4b090" : "rgba(255,255,255,0.22)"), maxWidth: "80px" }}>{item.label}</p>
+                  <p className="text-xs font-black" style={{ color: hasDoc ? th.timelineYear : pick("rgba(74,0,32,0.38)", "#b09878", "rgba(255,255,255,0.3)") }}>{item.year}</p>
+                  <p className="text-[9px] leading-tight text-center" style={{ color: hasDoc ? th.timelineLabel : pick("rgba(74,0,32,0.28)", "#c4b090", "rgba(255,255,255,0.22)"), maxWidth: "80px" }}>{item.label}</p>
                 </div>
               );
               return hasDoc ? (
@@ -851,19 +1000,49 @@ function LearnPageInner() {
           <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
         </div>
         <div className="flex gap-2.5 px-4 overflow-x-auto pb-1 scrollbar-none">
-          {DOC_TYPES.map(({ key, label, icon }) => {
+          {DOC_TYPES.map(({ key, label }) => {
             const active = activeType === key;
             return (
               <button key={key} onClick={() => { setActiveType(key); setActiveTab("all"); }}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-2xl transition-all active:scale-95"
                 style={{ border: active ? `1px solid ${th.catActiveBorder}` : `1px solid ${th.catInactiveBorder}`, backgroundColor: active ? th.catActiveBg : th.catInactiveBg, color: active ? th.accentLight : th.textMuted }}>
-                <span className="text-lg leading-none">{icon}</span>
+                <GeneratedCategoryMark id={key} active={active} size={30} />
                 <span className="text-[10px] font-bold whitespace-nowrap">{label}</span>
               </button>
             );
           })}
         </div>
       </div>
+
+      {/* Continue Reading */}
+      {LEARN_DOCUMENTS.some(d => (progressMap[d.id] ?? 0) > 0 && (progressMap[d.id] ?? 0) < 100) && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between px-4 mb-3">
+            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Continue Reading</p>
+          </div>
+          <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
+            {[...LEARN_DOCUMENTS.filter(doc => (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100)].sort((a, b) => getDocLastRead(b.id) - getDocLastRead(a.id)).map(doc => {
+              const pct = progressMap[doc.id] ?? 0;
+              return (
+                <div key={doc.id} className="flex-shrink-0 w-28 text-left">
+                  <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
+                    <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
+                    <DocCover doc={doc} />
+                  </div>
+                  <button onClick={() => setSelected(doc.id)} className="w-full text-left">
+                    <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.title}</p>
+                    <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
+                    <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
+                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: th.progressBar }} />
+                    </div>
+                    <p className="text-[9px] mt-0.5" style={{ color: th.textSecondary }}>{pct}%</p>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Featured Documents */}
       <div className="mb-6">
@@ -873,19 +1052,32 @@ function LearnPageInner() {
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
           {filteredDocs.slice(0, 8).map((doc) => {
-            const ds = DOC_COVERS[doc.id] ?? DEFAULT_DOC_COVER;
+            const saved = savedDocs.has(doc.id);
             return (
-              <button key={doc.id} onClick={() => setSelected(doc.id)} className="flex-shrink-0 w-28 text-left active:scale-95 transition-transform">
-                <div className="w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${ds.border}50` }}>
+              <div key={doc.id} className="flex-shrink-0 w-28 text-left">
+                <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
+                  <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
                   <DocCover doc={doc} />
+                  {/* Floating bookmark */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setBookmarkTarget(doc); }}
+                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+                    style={{ backgroundColor: "rgba(0,0,0,0.55)", color: saved ? "#c4973a" : "rgba(255,255,255,0.6)" }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
+                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                 </div>
-                <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.title}</p>
-                <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span style={{ color: th.star, fontSize: "10px" }}>★</span>
-                  <span style={{ color: th.textSecondary, fontSize: "10px" }}>{doc.year}</span>
-                </div>
-              </button>
+                <button onClick={() => setSelected(doc.id)} className="w-full text-left">
+                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.title}</p>
+                  <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <span style={{ color: th.star, fontSize: "10px" }}>★</span>
+                    <span style={{ color: th.textSecondary, fontSize: "10px" }}>{doc.year}</span>
+                  </div>
+                </button>
+              </div>
             );
           })}
         </div>
@@ -923,7 +1115,9 @@ function LearnPageInner() {
         {/* Empty state */}
         {listDocs.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-4xl mb-3">📜</p>
+            <div className="mb-3 flex justify-center">
+              <GeneratedMetaIcon type="document" size={44} />
+            </div>
             <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>No documents found</p>
             <p className="text-xs" style={{ color: th.textFaint }}>Try selecting a different type or tab</p>
           </div>
@@ -934,15 +1128,14 @@ function LearnPageInner() {
           {listDocs.map((doc) => {
             const pct = progressMap[doc.id] ?? 0;
             const isDone = pct === 100;
-            const ds = DOC_COVERS[doc.id] ?? DEFAULT_DOC_COVER;
+            const saved = savedDocs.has(doc.id);
             return (
-              <button key={doc.id} onClick={() => setSelected(doc.id)}
-                className="w-full flex items-center gap-3 p-3 rounded-2xl text-left transition-all active:scale-[0.99]"
+              <div key={doc.id} className="flex items-center gap-3 p-3 rounded-2xl transition-all active:scale-[0.99]"
                 style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}` }}>
-                <div className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden shadow-lg shadow-black/40" style={{ border: `1px solid ${ds.border}40` }}>
+                <button onClick={() => setSelected(doc.id)} className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
                   <DocCover doc={doc} size="small" />
-                </div>
-                <div className="flex-1 min-w-0">
+                </button>
+                <button onClick={() => setSelected(doc.id)} className="flex-1 min-w-0 text-left">
                   <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>{doc.title}</p>
                   <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>{doc.origin} · {doc.year}</p>
                   {isDone ? (
@@ -957,17 +1150,23 @@ function LearnPageInner() {
                   ) : (
                     <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>Start reading →</p>
                   )}
-                </div>
+                </button>
                 {isDone ? (
                   <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ border: "2px solid #34d399" }}>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   </div>
                 ) : (
-                  <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full" style={{ color: th.textVeryFaint }}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>
-                  </div>
+                  <button
+                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
+                    style={{ color: saved ? "#c4973a" : th.textVeryFaint }}
+                    onClick={() => setBookmarkTarget(doc)}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
+                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
@@ -976,6 +1175,21 @@ function LearnPageInner() {
           All documents are public domain · Progress saved locally in your browser
         </p>
       </div>
+
+      {/* Bookmark modal */}
+      {bookmarkTarget && (
+        <BookmarkModal
+          item={{
+            id: `learn::${bookmarkTarget.id}`,
+            type: "learn",
+            title: bookmarkTarget.title,
+            subtitle: bookmarkTarget.origin,
+            preview: String(bookmarkTarget.year),
+          }}
+          label={bookmarkTarget.title}
+          onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
+        />
+      )}
     </div>
   );
 }

@@ -1,9 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
-import { GoogleTranslate } from "./components/GoogleTranslate";
 import { ThemeProvider } from "./components/ThemeProvider";
 
 const inter = Inter({
@@ -16,6 +15,13 @@ const playfair = Playfair_Display({
   subsets: ["latin"],
   variable: "--font-playfair",
   style: ["normal", "italic"],
+  display: "swap",
+});
+
+const verseDisplay = Cormorant_Garamond({
+  subsets: ["latin"],
+  variable: "--font-verse-display",
+  weight: ["500", "600"],
   display: "swap",
 });
 
@@ -35,7 +41,11 @@ export const metadata: Metadata = {
     title: "Bible",
   },
   icons: {
-    apple: "/icons/apple-touch-icon.png",
+    icon: [
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: "/apple-touch-icon.png",
   },
 };
 
@@ -52,22 +62,21 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} ${verseDisplay.variable}`}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'premium-neon');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','gold-navy','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'gold-navy');if(localStorage.getItem('ryc-android-mode')!=='true'){document.documentElement.setAttribute('data-iphone-mode','true');}}catch(e){}})();`,
           }}
         />
       </head>
       <body className="antialiased bg-[#0f0f0f] text-white">
         <ThemeProvider />
-        <GoogleTranslate />
         <AppNav />
         {/* md:pt-14 = top nav height (hidden on mobile); pb-36 on mobile = bottom nav height */}
-        <div className="md:pt-14 pb-36 md:pb-0">{children}</div>
+        <div className="layout-children md:pt-14 pb-36 md:pb-0">{children}</div>
         <BottomNav />
         {/* Service Worker registration */}
         <script

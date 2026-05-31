@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { STATIC_BOOK_CATALOG } from "../../../../../lib/bookCatalog";
 import { getChapters } from "../../../../../lib/gutenberg";
+import { getPublicDomainBook } from "../../../../../lib/publicDomainBooks";
 
 const NO_CONTENT_MSG = `This book's full text is being prepared for in-app reading.
 
@@ -21,6 +22,26 @@ export async function GET(
   const book = STATIC_BOOK_CATALOG.find((b) => b.slug === slug);
   if (!book) {
     return NextResponse.json({ detail: "Book not found" }, { status: 404 });
+  }
+
+  const localBook = await getPublicDomainBook(slug);
+  if (localBook) {
+    const idx = chapterNum - 1;
+
+    if (idx < 0 || idx >= localBook.chapters.length) {
+      return NextResponse.json({ detail: "Chapter not found" }, { status: 404 });
+    }
+
+    const ch = localBook.chapters[idx];
+    return NextResponse.json({
+      slug,
+      chapter_number: chapterNum,
+      chapter_title: ch.title,
+      content: ch.content,
+      total_chapters: localBook.chapters.length,
+      has_prev: idx > 0,
+      has_next: idx < localBook.chapters.length - 1,
+    });
   }
 
   if (!book.pg_id) {

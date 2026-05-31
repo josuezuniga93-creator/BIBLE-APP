@@ -22,7 +22,7 @@ export function AppNav() {
   ];
 
   return (
-    <nav className="hidden md:block fixed top-0 left-0 right-0 z-40 bg-[#0f0f0f]/90 backdrop-blur-md border-b border-white/[0.06]">
+    <nav className="top-app-nav hidden md:block fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b" style={{ backgroundColor: "var(--nav-bg)", borderColor: "var(--nav-border)" }}>
       <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link

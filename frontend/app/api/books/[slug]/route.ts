@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { STATIC_BOOK_CATALOG } from "../../../lib/bookCatalog";
 import { getChapters } from "../../../lib/gutenberg";
+import { getPublicDomainBook } from "../../../lib/publicDomainBooks";
 
 export async function GET(
   _req: Request,
@@ -14,8 +15,14 @@ export async function GET(
 
   let chapterCount = 1;
   const chapterList: { number: number; title: string }[] = [];
+  const localBook = await getPublicDomainBook(slug);
 
-  if (book.pg_id) {
+  if (localBook) {
+    chapterCount = localBook.chapters.length;
+    localBook.chapters.forEach((ch, i) => {
+      chapterList.push({ number: i + 1, title: ch.title });
+    });
+  } else if (book.pg_id) {
     try {
       const chapters = await getChapters(book.pg_id);
       chapterCount = chapters.length;

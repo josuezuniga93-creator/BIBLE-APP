@@ -18,42 +18,54 @@ export interface DevotionalProgress {
 
 export const DEVOTIONAL_BADGES: Record<
   DevotionalBadgeId,
-  { label: string; emoji: string; desc: string; threshold: number }
+  { label: string; labelEs: string; emoji: string; desc: string; descEs: string; threshold: number }
 > = {
   first_devotional: {
     label: "First Devotion",
+    labelEs: "Primera Devoción",
     emoji: "🙏",
     desc: "Completed your first family devotional.",
+    descEs: "Completaste tu primera devoción familiar.",
     threshold: 1,
   },
   week_devotional: {
     label: "Faithful Week",
+    labelEs: "Semana Fiel",
     emoji: "📖",
     desc: "Completed 7 family devotionals.",
+    descEs: "Completaste 7 devociones familiares.",
     threshold: 7,
   },
   fortnight_devotional: {
     label: "Two Weeks",
+    labelEs: "Dos Semanas",
     emoji: "✝️",
     desc: "Completed 14 family devotionals.",
+    descEs: "Completaste 14 devociones familiares.",
     threshold: 14,
   },
   monthly_devotional: {
     label: "Month of Worship",
+    labelEs: "Mes de Adoración",
     emoji: "🕊️",
     desc: "Completed 30 family devotionals.",
+    descEs: "Completaste 30 devociones familiares.",
     threshold: 30,
   },
   three_months_devotional: {
     label: "90 Days",
+    labelEs: "90 Días",
     emoji: "🌿",
     desc: "Completed 90 family devotionals.",
+    descEs: "Completaste 90 devociones familiares.",
     threshold: 90,
   },
   year_devotional: {
     label: "Year of Devotion",
+    labelEs: "Año de Devoción",
     emoji: "👑",
     desc: "Completed 365 family devotionals.",
+    descEs: "Completaste 365 devociones familiares.",
     threshold: 365,
   },
 };

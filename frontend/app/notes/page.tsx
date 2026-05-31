@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useLanguage } from "../lib/useLanguage";
+import { t } from "../lib/i18n";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import {
   SermonNote,
@@ -14,9 +16,9 @@ import {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatDate(iso: string) {
+function formatDate(iso: string, lang: "en" | "es" = "en") {
   try {
-    return new Date(iso + "T00:00:00").toLocaleDateString("en-US", {
+    return new Date(iso + "T00:00:00").toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
@@ -74,27 +76,31 @@ function ConfirmModal({
   message,
   onConfirm,
   onCancel,
+  lang = "en",
 }: {
   message: string;
   onConfirm: () => void;
   onCancel: () => void;
+  lang?: "en" | "es";
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="rounded-2xl border border-white/10 bg-[#1c1c1c] p-6 max-w-sm w-full shadow-2xl">
-        <p className="text-white/75 text-sm leading-relaxed mb-6">{message}</p>
+      <div className="rounded-2xl p-6 max-w-sm w-full shadow-2xl"
+        style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+        <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--fg-mid)" }}>{message}</p>
         <div className="flex gap-3 justify-end">
           <button
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-white/10 text-white/45 text-sm font-semibold hover:bg-white/[0.05] transition-colors"
+            className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-80 transition-opacity"
+            style={{ border: "1px solid var(--border)", color: "var(--fg-lo)" }}
           >
-            Cancel
+            {t(lang, "notes_cancel")}
           </button>
           <button
             onClick={onConfirm}
             className="px-4 py-2 rounded-lg bg-red-600/80 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
           >
-            Delete
+            {t(lang, "notes_delete")}
           </button>
         </div>
       </div>
@@ -115,12 +121,13 @@ function NoteDetail({
   onDelete: () => void;
   onClose: () => void;
 }) {
+  const { lang } = useLanguage();
   const clr = getNoteColor(note.bookNum);
   const validPoints = note.mainPoints.filter(Boolean);
   const validRefs = note.scriptureRefs.filter(Boolean);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#0d0d0d] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto" style={{ background: "var(--bg)" }}>
       {/* Gradient header */}
       <div className={`relative flex-shrink-0 bg-gradient-to-b ${clr.bar} pt-safe`}>
         <div className="px-4 pt-4 pb-6">
@@ -130,14 +137,14 @@ function NoteDetail({
               onClick={onClose}
               className="flex items-center gap-1.5 text-white/50 text-sm font-semibold hover:text-white/80 transition-colors"
             >
-              <span className="text-base">←</span> Back
+              <span className="text-base">←</span> {t(lang, "notes_back")}
             </button>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => { onClose(); setTimeout(onEdit, 50); }}
                 className={`px-3.5 py-1.5 rounded-xl text-[11px] font-bold border transition-all ${clr.accent} border-white/[0.15] hover:bg-white/[0.07]`}
               >
-                Edit
+                {t(lang, "notes_edit")}
               </button>
               <button
                 onClick={() => { onClose(); setTimeout(onDelete, 50); }}
@@ -150,12 +157,12 @@ function NoteDetail({
 
           {/* Title */}
           <h2 className="text-2xl font-bold text-white leading-tight tracking-tight mb-2">
-            {note.title || "Untitled Sermon"}
+            {note.title || t(lang, "notes_untitled")}
           </h2>
 
           {/* Metadata */}
           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[12px] text-white/40">
-            <span>{formatDate(note.date)}</span>
+            <span>{formatDate(note.date, lang)}</span>
             {note.pastor && <><span className="text-white/20">·</span><span>{note.pastor}</span></>}
             {note.church && <><span className="text-white/20">·</span><span>{note.church}</span></>}
           </div>
@@ -192,7 +199,7 @@ function NoteDetail({
         {validPoints.length > 0 && (
           <section>
             <p className={`text-[10px] font-black uppercase tracking-[0.14em] mb-3 ${clr.accent} opacity-70`}>
-              Main Points
+              {t(lang, "notes_main_points")}
             </p>
             <ul className={`space-y-3 pl-4 border-l-2 ${clr.border}`}>
               {validPoints.map((pt, i) => (
@@ -221,7 +228,7 @@ function NoteDetail({
         {validRefs.length > 0 && (
           <section className="pt-2 border-t border-white/[0.06]">
             <p className={`text-[10px] font-black uppercase tracking-[0.14em] mb-3 ${clr.accent} opacity-70`}>
-              Scripture References
+              {t(lang, "notes_scripture_refs")}
             </p>
             <div className="flex flex-wrap gap-2">
               {validRefs.map((ref) => (
@@ -261,12 +268,14 @@ function NoteCard({
   onDelete: () => void;
   onView: () => void;
 }) {
+  const { lang } = useLanguage();
   const clr = getNoteColor(note.bookNum);
 
   return (
     <button
       onClick={onView}
-      className="w-full text-left rounded-2xl border border-white/[0.08] bg-[#121212] shadow-lg transition-all duration-200 overflow-hidden hover:border-white/[0.18] hover:shadow-xl hover:bg-[#161616] active:scale-[0.99]"
+      className="w-full text-left rounded-2xl shadow-lg transition-all duration-200 overflow-hidden active:scale-[0.99] hover:shadow-xl"
+      style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
     >
       {/* Colored accent bar */}
       <div className={`h-1 w-full bg-gradient-to-r ${clr.bar}`} />
@@ -275,7 +284,7 @@ function NoteCard({
         {/* Title + quick actions */}
         <div className="flex items-start justify-between gap-3">
           <h4 className="text-[15px] font-bold text-white/90 leading-snug flex-1 tracking-tight">
-            {note.title || "Untitled Sermon"}
+            {note.title || t(lang, "notes_untitled")}
           </h4>
           <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
@@ -295,7 +304,7 @@ function NoteCard({
 
         {/* Metadata */}
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-white/35">
-          <span className="font-medium">{formatDate(note.date)}</span>
+          <span className="font-medium">{formatDate(note.date, lang)}</span>
           {note.pastor && <><span className="text-white/15">·</span><span className="text-white/40">{note.pastor}</span></>}
           {note.church && <><span className="text-white/15">·</span><span className="text-white/30">{note.church}</span></>}
         </div>
@@ -331,13 +340,13 @@ function NoteCard({
         )}
 
         {/* Tap hint */}
-        <p className={`text-[10px] font-semibold ${clr.accent} opacity-40`}>Tap to read full note →</p>
+        <p className={`text-[10px] font-semibold ${clr.accent} opacity-40`}>{t(lang, "notes_tap_hint")}</p>
       </div>
     </button>
   );
 }
 
-// ─── Note Editor Modal ────────────────────────────────────────────────────────
+// ─── Note Editor (Full-Screen Immersive) ─────────────────────────────────────
 
 function NoteEditorModal({
   initial,
@@ -350,13 +359,31 @@ function NoteEditorModal({
   onSave: (note: SermonNote) => void;
   onCancel: () => void;
 }) {
+  const { lang } = useLanguage();
   const [draft, setDraft] = useState<SermonNote>({ ...initial });
   const [detectedRefs, setDetectedRefs] = useState<string[]>([]);
   const [newRef, setNewRef] = useState("");
   const [showDetails, setShowDetails] = useState(false);
   const [chapterText, setChapterText] = useState(String(initial.chapter));
+  const [scriptureInput, setScriptureInput] = useState("");
+  const [showScriptureInput, setShowScriptureInput] = useState(false);
+  const titleRef = useRef<HTMLTextAreaElement>(null);
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
 
-  const patch = (p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p }));
+  const patch = useCallback((p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p })), []);
+
+  // Auto-focus title on open
+  useEffect(() => {
+    const id = setTimeout(() => titleRef.current?.focus(), 80);
+    return () => clearTimeout(id);
+  }, []);
+
+  // Auto-resize textareas
+  const autoResize = (el: HTMLTextAreaElement | null) => {
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = el.scrollHeight + "px";
+  };
 
   // Detect refs on notes change
   useEffect(() => {
@@ -364,7 +391,7 @@ function NoteEditorModal({
     setDetectedRefs(found.filter((r) => !draft.scriptureRefs.includes(r)));
   }, [draft.notes]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-open details if editing an existing note with detail fields filled
+  // Auto-open details for existing notes with data
   useEffect(() => {
     if (!isNew) {
       const hasDetails =
@@ -375,8 +402,7 @@ function NoteEditorModal({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const selectedBook =
-    BIBLE_BOOKS.find((b) => b.num === draft.bookNum) ?? BIBLE_BOOKS[39];
+  const selectedBook = BIBLE_BOOKS.find((b) => b.num === draft.bookNum) ?? BIBLE_BOOKS[39];
 
   const handleBookChange = (num: number) => {
     const book = BIBLE_BOOKS.find((b) => b.num === num);
@@ -384,9 +410,7 @@ function NoteEditorModal({
   };
 
   const updatePoint = (i: number, val: string) => {
-    const pts = [...draft.mainPoints];
-    pts[i] = val;
-    patch({ mainPoints: pts });
+    const pts = [...draft.mainPoints]; pts[i] = val; patch({ mainPoints: pts });
   };
   const addPoint = () => patch({ mainPoints: [...draft.mainPoints, ""] });
   const removePoint = (i: number) => {
@@ -395,301 +419,586 @@ function NoteEditorModal({
   };
 
   const toggleTag = (tag: string) =>
-    patch({
-      tags: draft.tags.includes(tag)
-        ? draft.tags.filter((t) => t !== tag)
-        : [...draft.tags, tag],
-    });
+    patch({ tags: draft.tags.includes(tag) ? draft.tags.filter((t) => t !== tag) : [...draft.tags, tag] });
 
   const addRef = (ref: string) => {
-    if (ref.trim() && !draft.scriptureRefs.includes(ref.trim())) {
+    if (ref.trim() && !draft.scriptureRefs.includes(ref.trim()))
       patch({ scriptureRefs: [...draft.scriptureRefs, ref.trim()] });
-    }
   };
   const removeRef = (ref: string) =>
     patch({ scriptureRefs: draft.scriptureRefs.filter((r) => r !== ref) });
 
-  const handleSave = () =>
-    onSave({ ...draft, updatedAt: new Date().toISOString() });
+  const insertScripture = () => {
+    if (!scriptureInput.trim()) return;
+    const tag = `[${scriptureInput.trim()}]`;
+    const ta = bodyRef.current;
+    if (ta) {
+      const start = ta.selectionStart ?? draft.notes.length;
+      const newNotes = draft.notes.slice(0, start) + "\n" + tag + "\n" + draft.notes.slice(start);
+      patch({ notes: newNotes.trimStart() });
+      addRef(scriptureInput.trim());
+    } else {
+      patch({ notes: draft.notes + "\n" + tag });
+      addRef(scriptureInput.trim());
+    }
+    setScriptureInput("");
+    setShowScriptureInput(false);
+  };
+
+  const handleSave = () => onSave({ ...draft, updatedAt: new Date().toISOString() });
+
+  const dateDisplay = (() => {
+    try {
+      return new Date(draft.date + "T00:00:00").toLocaleDateString("en-US", {
+        weekday: "long", month: "long", day: "numeric", year: "numeric",
+      });
+    } catch { return draft.date; }
+  })();
+
+  // Inline scripture card detection from notes body
+  const scriptureCardRefs = draft.notes.split("\n")
+    .map((line) => { const m = line.match(/^\[(.+?)\]$/); return m ? m[1] : null; })
+    .filter(Boolean) as string[];
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm p-4">
-      <div className="rounded-3xl border border-white/[0.09] bg-[#131313] w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.07]">
-          <div>
-            <h3 className="text-sm font-bold text-white/80 tracking-tight">
-              {isNew ? "New Sermon Note" : "Edit Note"}
-            </h3>
-            <p className="text-[10px] text-white/25 mt-0.5">{isNew ? "Capture what you heard" : "Update your notes"}</p>
-          </div>
+    <>
+      {/* ── Main full-screen editor ── */}
+      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--bg)" }}>
+
+        {/* Top bar */}
+        <div
+          className="flex items-center justify-between px-4 py-3 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}
+        >
           <button
             onClick={onCancel}
-            className="w-8 h-8 rounded-xl text-white/25 hover:text-white/65 hover:bg-white/[0.07] transition-colors text-sm flex items-center justify-center"
+            className="flex items-center gap-1.5 text-sm font-semibold transition-opacity active:opacity-60"
+            style={{ color: "var(--fg-lo)" }}
           >
-            ✕
+            <span className="text-base">‹</span>
+            <span>{t(lang, "notes_back")}</span>
+          </button>
+          <span className="text-[11px] font-semibold tracking-widest uppercase" style={{ color: "var(--fg-dim)" }}>
+            {isNew ? t(lang, "notes_new_note") : t(lang, "notes_edit_note")}
+          </span>
+          <button
+            onClick={handleSave}
+            className="px-4 py-1.5 rounded-xl text-sm font-bold transition-all active:scale-[0.96]"
+            style={{
+              background: "var(--accent)",
+              color: "#fff",
+              boxShadow: "0 2px 8px color-mix(in srgb, var(--accent) 40%, transparent)",
+            }}
+          >
+            {t(lang, "notes_save")}
           </button>
         </div>
 
-        <div className="p-5 space-y-4 overflow-y-auto flex-1">
+        {/* Scrollable writing area */}
+        <div className="flex-1 overflow-y-auto pb-20 relative" style={{ background: "var(--bg)" }}>
+          <div className="max-w-2xl mx-auto px-5 pt-6 pb-4">
 
-          {/* ── Scripture reference card — always visible ── */}
-          <div className="rounded-2xl border border-white/[0.09] bg-white/[0.03] p-4 space-y-3">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white/30">
-              📖 Scripture
-            </p>
-
-            {/* Book + Chapter row */}
-            <div className="flex gap-2">
-              <select
-                value={draft.bookNum}
-                onChange={(e) => handleBookChange(Number(e.target.value))}
-                className="flex-1 bg-[#1a1a1a] border border-white/[0.09] rounded-xl px-3 py-2.5 text-sm text-white/75 font-semibold focus:outline-none focus:border-violet-500/50 [color-scheme:dark]"
-              >
-                <optgroup label="— Old Testament —">
-                  {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
-                    <option key={b.num} value={b.num}>{b.name}</option>
-                  ))}
-                </optgroup>
-                <optgroup label="— New Testament —">
-                  {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
-                    <option key={b.num} value={b.num}>{b.name}</option>
-                  ))}
-                </optgroup>
-              </select>
-              <div className="flex items-center gap-1.5 bg-[#1a1a1a] border border-white/[0.09] rounded-xl px-3 min-w-[80px]">
-                <span className="text-[10px] text-white/30 font-semibold flex-shrink-0">Ch.</span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={chapterText}
-                  onChange={(e) => setChapterText(e.target.value.replace(/\D/g, ""))}
-                  onBlur={() => {
-                    const num = Math.max(1, Math.min(selectedBook.chapters, Number(chapterText) || 1));
-                    setChapterText(String(num));
-                    patch({ chapter: num });
-                  }}
-                  className="w-full bg-transparent text-sm text-white/75 font-semibold focus:outline-none text-center"
-                />
-              </div>
+            {/* Date */}
+            <div className="flex items-center gap-2 mb-4">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-dim)", flexShrink: 0 }}>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                <line x1="16" y1="2" x2="16" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="8" y1="2" x2="8" y2="6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <line x1="3" y1="10" x2="21" y2="10" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              <span className="text-[12px]" style={{ color: "var(--fg-dim)", fontFamily: "Georgia, serif" }}>{dateDisplay}</span>
             </div>
 
-            {/* Verses */}
-            <input
-              type="text"
-              value={draft.passage}
-              onChange={(e) => patch({ passage: e.target.value })}
-              placeholder={`Verses — e.g. ${selectedBook.name} ${draft.chapter}:1–12`}
-              className="w-full bg-[#1a1a1a] border border-white/[0.09] rounded-xl px-3 py-2.5 text-sm text-white/70 placeholder:text-white/20 focus:outline-none focus:border-violet-500/50"
+            {/* Title */}
+            <textarea
+              ref={titleRef}
+              value={draft.title}
+              onChange={(e) => { patch({ title: e.target.value }); autoResize(e.target); }}
+              onInput={(e) => autoResize(e.target as HTMLTextAreaElement)}
+              placeholder="Untitled Note"
+              rows={1}
+              className="w-full resize-none bg-transparent border-none outline-none leading-tight font-bold overflow-hidden"
+              style={{
+                fontSize: "clamp(24px, 6vw, 30px)",
+                color: "var(--fg)",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                minHeight: "44px",
+                caretColor: "var(--accent)",
+              }}
             />
 
-            {/* Date — auto-filled, editable */}
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] text-white/25 font-semibold flex-shrink-0">Date</span>
-              <input
-                type="date"
-                value={draft.date}
-                onChange={(e) => patch({ date: e.target.value })}
-                className="flex-1 bg-transparent text-[12px] text-white/40 focus:outline-none focus:text-white/60 [color-scheme:dark] transition-colors"
-              />
-            </div>
-          </div>
+            {/* Subtle divider */}
+            <div className="my-5" style={{ height: "1px", background: "var(--border)", opacity: 0.6 }} />
 
-          {/* ── Sermon title ── */}
-          <input
-            type="text"
-            value={draft.title}
-            onChange={(e) => patch({ title: e.target.value })}
-            placeholder="Sermon title (optional)…"
-            autoFocus
-            className="w-full bg-white/[0.04] border border-white/[0.08] rounded-2xl px-4 py-3 text-[14px] font-semibold text-white/90 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40 focus:bg-white/[0.06] transition-colors"
-          />
+            {/* Body */}
+            <textarea
+              ref={bodyRef}
+              value={draft.notes}
+              onChange={(e) => { patch({ notes: e.target.value }); autoResize(e.target); }}
+              onInput={(e) => autoResize(e.target as HTMLTextAreaElement)}
+              placeholder="Start writing your notes…"
+              rows={12}
+              className="w-full resize-none bg-transparent border-none outline-none leading-relaxed"
+              style={{
+                fontSize: "15px",
+                color: "var(--fg-mid)",
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                minHeight: "220px",
+                caretColor: "var(--accent)",
+              }}
+            />
 
-          {/* ── Notes textarea ── */}
-          <textarea
-            value={draft.notes}
-            onChange={(e) => patch({ notes: e.target.value })}
-            placeholder="Write your notes here…"
-            rows={6}
-            className="w-full bg-white/[0.03] border border-white/[0.07] rounded-2xl px-4 py-3.5 text-[13px] text-white/65 placeholder:text-white/20 focus:outline-none focus:border-violet-500/35 focus:bg-white/[0.05] resize-none leading-relaxed transition-colors"
-          />
-
-          {/* Auto-detected refs */}
-          {detectedRefs.length > 0 && (
-            <div className="rounded-xl bg-emerald-500/[0.06] border border-emerald-500/20 px-3.5 py-3">
-              <p className="text-[11px] font-bold text-emerald-300/65 mb-2">✦ References detected — tap to add</p>
-              <div className="flex flex-wrap gap-1.5">
-                {detectedRefs.map((ref) => (
-                  <button key={ref} type="button" onClick={() => addRef(ref)}
-                    className="px-2 py-0.5 rounded text-[11px] font-semibold text-emerald-300 bg-emerald-500/20 hover:bg-emerald-500/35 transition-colors">
-                    + {ref}
-                  </button>
+            {/* Inline scripture reference cards */}
+            {scriptureCardRefs.length > 0 && (
+              <div className="space-y-2 mt-3">
+                {scriptureCardRefs.map((ref) => (
+                  <div key={ref}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
+                    style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ color: "var(--accent)", flexShrink: 0 }}>
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <span className="text-sm font-semibold" style={{ color: "var(--accent-text)", fontFamily: "Georgia, serif" }}>{ref}</span>
+                  </div>
                 ))}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* ── More details toggle ── */}
-          <button
-            type="button"
-            onClick={() => setShowDetails((v) => !v)}
-            className="w-full flex items-center justify-between px-4 py-2.5 rounded-xl border border-white/[0.07] bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
-          >
-            <span className="text-xs font-semibold text-white/35">
-              {showDetails ? "Hide extra details" : "More details"}
-              <span className="ml-1.5 text-white/20 font-normal">pastor, tags, main points…</span>
-            </span>
-            <span className={`text-white/25 text-xs transition-transform ${showDetails ? "rotate-180" : ""}`}>▾</span>
-          </button>
-
-          {/* ── Collapsible extras ── */}
-          {showDetails && (
-            <div className="space-y-4 pt-1">
-              {/* Pastor + Church */}
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">Pastor</label>
-                  <input type="text" value={draft.pastor ?? ""} onChange={(e) => patch({ pastor: e.target.value })}
-                    placeholder="Speaker name"
-                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40" />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-1.5">Church</label>
-                  <input type="text" value={draft.church ?? ""} onChange={(e) => patch({ church: e.target.value })}
-                    placeholder="Church name"
-                    className="w-full bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40" />
-                </div>
-              </div>
-
-              {/* Tags */}
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
-                  Tags
-                </label>
+            {/* Auto-detected refs */}
+            {detectedRefs.length > 0 && (
+              <div className="mt-4 rounded-xl px-3.5 py-3" style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
+                <p className="text-[11px] font-bold mb-2" style={{ color: "var(--accent-text)" }}>✦ References detected — tap to add</p>
                 <div className="flex flex-wrap gap-1.5">
-                  {PRESET_TAGS.map((tag) => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => toggleTag(tag)}
-                      className={`px-2.5 py-1 rounded-full text-[11px] font-semibold border transition-all ${
-                        draft.tags.includes(tag)
-                          ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-200"
-                          : "bg-white/[0.03] border-white/[0.08] text-white/30 hover:border-emerald-500/25 hover:text-white/50"
-                      }`}
-                    >
-                      {tag}
+                  {detectedRefs.map((ref) => (
+                    <button key={ref} type="button" onClick={() => addRef(ref)}
+                      className="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-opacity active:opacity-60"
+                      style={{ background: "var(--accent)", color: "#fff", opacity: 0.85 }}>
+                      + {ref}
                     </button>
                   ))}
                 </div>
               </div>
+            )}
 
-              {/* Main Points */}
+            {/* ── Bible Book & Passage (sermon notes only) ── */}
+            {draft.noteType !== "general" && (
+              <div className="mt-8 flex items-center gap-2 rounded-2xl px-4 py-3"
+                style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
+                {/* Book dropdown */}
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ color: "var(--accent)", flexShrink: 0 }}>
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+                <select
+                  value={draft.bookNum}
+                  onChange={(e) => handleBookChange(Number(e.target.value))}
+                  className="bg-transparent text-sm font-semibold focus:outline-none [color-scheme:inherit] flex-shrink-0"
+                  style={{ color: "var(--fg-mid)" }}
+                >
+                  <optgroup label="— Old Testament —">
+                    {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
+                      <option key={b.num} value={b.num}>{b.name}</option>
+                    ))}
+                  </optgroup>
+                  <optgroup label="— New Testament —">
+                    {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
+                      <option key={b.num} value={b.num}>{b.name}</option>
+                    ))}
+                  </optgroup>
+                </select>
+                {/* Divider */}
+                <span style={{ color: "var(--border)", fontSize: "18px", fontWeight: 100 }}>|</span>
+                {/* Passage — free text e.g. "3:16" or "1:1-18" */}
+                <input
+                  type="text"
+                  value={draft.passage}
+                  onChange={(e) => patch({ passage: e.target.value })}
+                  placeholder={`e.g. ${draft.chapter}:1–12`}
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                  style={{ color: "var(--fg-mid)", minWidth: 0 }}
+                />
+              </div>
+            )}
+
+            {/* + Add Details button */}
+            <button
+              type="button"
+              onClick={() => setShowDetails(true)}
+              className="flex items-center gap-2 mt-5 text-sm font-semibold transition-opacity active:opacity-60"
+              style={{ color: "var(--fg-lo)" }}
+            >
+              <span className="text-base font-bold" style={{ color: "var(--accent)" }}>+</span>
+              <span>Add Details</span>
+              <span className="text-xs font-normal" style={{ color: "var(--fg-dim)" }}>
+                Add more information to organize your note
+              </span>
+            </button>
+
+            {/* Summary pills if details already filled */}
+            {(draft.pastor || draft.church || draft.tags.length > 0) && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {draft.pastor && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold"
+                    style={{ background: "var(--bg-2)", color: "var(--fg-mid)", border: "1px solid var(--border)" }}>
+                    {draft.pastor}
+                  </span>
+                )}
+                {draft.tags.slice(0, 3).map((t) => (
+                  <span key={t} className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-semibold"
+                    style={{ background: "var(--bg-2)", color: "var(--fg-lo)", border: "1px solid var(--border)" }}>
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Floating Insert Scripture input (appears above toolbar) */}
+        {showScriptureInput && (
+          <div className="absolute bottom-16 left-4 right-4 z-[60] rounded-2xl shadow-2xl p-3 flex gap-2"
+            style={{ background: "var(--bg-3)", border: "1px solid var(--border)", boxShadow: "0 8px 32px rgba(0,0,0,0.25)" }}>
+            <input autoFocus type="text" value={scriptureInput}
+              onChange={(e) => setScriptureInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") insertScripture(); if (e.key === "Escape") setShowScriptureInput(false); }}
+              placeholder="e.g. John 3:16"
+              className="flex-1 bg-transparent text-sm focus:outline-none"
+              style={{ color: "var(--fg)" }} />
+            <button onClick={insertScripture}
+              className="px-3 py-1.5 rounded-xl text-xs font-bold text-white"
+              style={{ background: "var(--accent)" }}>Insert</button>
+            <button onClick={() => setShowScriptureInput(false)}
+              className="px-2 py-1.5 rounded-xl text-xs font-semibold"
+              style={{ color: "var(--fg-lo)" }}>✕</button>
+          </div>
+        )}
+
+
+        {/* Bottom toolbar */}
+        <div
+          className="flex-shrink-0 flex items-center justify-around px-1 safe-area-bottom"
+          style={{
+            background: "var(--nav-bg)",
+            borderTop: "1px solid var(--border)",
+            minHeight: "56px",
+            paddingBottom: "env(safe-area-inset-bottom)",
+          }}
+        >
+          {/* Bold */}
+          <button type="button" onClick={() => {
+            const ta = bodyRef.current; if (!ta) return;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            const sel = draft.notes.slice(s, e);
+            patch({ notes: draft.notes.slice(0, s) + (sel ? `**${sel}**` : "**bold**") + draft.notes.slice(e) });
+          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
+            <span className="text-base font-black leading-none">B</span>
+            <span className="text-[9px]">Bold</span>
+          </button>
+
+          {/* Italic */}
+          <button type="button" onClick={() => {
+            const ta = bodyRef.current; if (!ta) return;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            const sel = draft.notes.slice(s, e);
+            patch({ notes: draft.notes.slice(0, s) + (sel ? `_${sel}_` : "_italic_") + draft.notes.slice(e) });
+          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
+            <span className="text-base italic font-bold leading-none">I</span>
+            <span className="text-[9px]">Italic</span>
+          </button>
+
+          {/* Highlight */}
+          <button type="button" onClick={() => {
+            const ta = bodyRef.current; if (!ta) return;
+            const s = ta.selectionStart, e = ta.selectionEnd;
+            const sel = draft.notes.slice(s, e);
+            patch({ notes: draft.notes.slice(0, s) + (sel ? `==${sel}==` : "==highlight==") + draft.notes.slice(e) });
+          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
+            <span className="text-base leading-none">H</span>
+            <span className="text-[9px]">Highlight</span>
+          </button>
+
+          {/* Scripture */}
+          <button type="button" onClick={() => setShowScriptureInput(true)}
+            className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50"
+            style={{ color: "var(--accent)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[9px]">Scripture</span>
+          </button>
+
+          {/* Checklist */}
+          <button type="button" onClick={() => {
+            patch({ notes: draft.notes + (draft.notes.endsWith("\n") || !draft.notes ? "☐ " : "\n☐ ") });
+            setTimeout(() => bodyRef.current?.focus(), 30);
+          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
+            <span className="text-base leading-none">☐</span>
+            <span className="text-[9px]">Checklist</span>
+          </button>
+
+          {/* Audio placeholder */}
+          <button type="button"
+            className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50"
+            style={{ color: "var(--fg-dim)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M12 1a3 3 0 013 3v8a3 3 0 01-6 0V4a3 3 0 013-3z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M19 10v2a7 7 0 01-14 0v-2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <line x1="12" y1="19" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              <line x1="8" y1="23" x2="16" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
+            <span className="text-[9px]">Audio</span>
+          </button>
+
+          {/* Image placeholder */}
+          <button type="button"
+            className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50"
+            style={{ color: "var(--fg-dim)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+              <circle cx="8.5" cy="8.5" r="1.5" stroke="currentColor" strokeWidth="2"/>
+              <polyline points="21 15 16 10 5 21" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[9px]">Image</span>
+          </button>
+
+          {/* Voice placeholder */}
+          <button type="button"
+            className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50"
+            style={{ color: "var(--fg-dim)" }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M19.07 4.93a10 10 0 010 14.14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            <span className="text-[9px]">Voice</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── Add Details popup — fixed centered from top ── */}
+      {showDetails && (
+        <div
+          className="fixed inset-0 z-[70] flex flex-col"
+          style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setShowDetails(false); }}
+        >
+          {/* Panel drops from top */}
+          <div
+            className="w-full max-h-[85vh] overflow-y-auto flex-shrink-0"
+            style={{
+              background: "var(--bg)",
+              borderBottom: "1px solid var(--border)",
+              borderBottomLeftRadius: "24px",
+              borderBottomRightRadius: "24px",
+              boxShadow: "0 12px 40px rgba(0,0,0,0.35)",
+            }}
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-5 py-4"
+              style={{ borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
-                  Main Points
-                </label>
-                <div className="space-y-1.5">
-                  {draft.mainPoints.map((pt, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="text-emerald-400/30 text-xs flex-shrink-0">•</span>
-                      <input
-                        type="text"
-                        value={pt}
-                        onChange={(e) => updatePoint(i, e.target.value)}
-                        placeholder={`Point ${i + 1}…`}
-                        className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removePoint(i)}
-                        className="w-6 h-6 flex items-center justify-center rounded text-white/20 hover:text-red-400/60 transition-colors text-xs flex-shrink-0"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={addPoint}
-                    className="text-[11px] text-emerald-400/45 hover:text-emerald-300 font-semibold transition-colors"
-                  >
-                    + Add Point
-                  </button>
+                <h3 className="text-sm font-bold" style={{ color: "var(--fg)" }}>Add Details</h3>
+                <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-dim)" }}>Add more information to organize your note</p>
+              </div>
+              <button onClick={() => setShowDetails(false)}
+                className="px-4 py-1.5 rounded-xl text-sm font-bold transition-opacity active:opacity-60"
+                style={{ background: "var(--accent)", color: "#fff" }}>
+                Done
+              </button>
+            </div>
+
+            {/* 2-column grid of detail fields */}
+            <div className="grid grid-cols-2 gap-px p-px" style={{ background: "var(--border)" }}>
+
+              {/* Sermon Title */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">🎙</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Sermon Title</label>
+                  <input type="text" value={draft.title} onChange={(e) => patch({ title: e.target.value })}
+                    placeholder="Optional"
+                    className="w-full text-xs bg-transparent border-none outline-none"
+                    style={{ color: "var(--fg-mid)" }} />
+                </div>
+              </div>
+
+              {/* Speaker / Pastor */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">👤</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Speaker / Pastor</label>
+                  <input type="text" value={draft.pastor ?? ""} onChange={(e) => patch({ pastor: e.target.value })}
+                    placeholder="Optional"
+                    className="w-full text-xs bg-transparent border-none outline-none"
+                    style={{ color: "var(--fg-mid)" }} />
+                </div>
+              </div>
+
+              {/* Bible Book */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">📖</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Bible Book</label>
+                  <div className="flex gap-1.5 items-center">
+                    <select value={draft.bookNum} onChange={(e) => handleBookChange(Number(e.target.value))}
+                      className="flex-1 text-xs bg-transparent border-none outline-none [color-scheme:inherit] min-w-0"
+                      style={{ color: "var(--fg-mid)" }}>
+                      {BIBLE_BOOKS.map((b) => <option key={b.num} value={b.num}>{b.name}</option>)}
+                    </select>
+                    <input type="text" inputMode="numeric" value={chapterText}
+                      onChange={(e) => setChapterText(e.target.value.replace(/\D/g, ""))}
+                      onBlur={() => {
+                        const num = Math.max(1, Math.min(selectedBook.chapters, Number(chapterText) || 1));
+                        setChapterText(String(num)); patch({ chapter: num });
+                      }}
+                      className="w-10 text-xs bg-transparent border-none outline-none text-center flex-shrink-0"
+                      style={{ color: "var(--fg-mid)" }} />
+                  </div>
+                  <input type="text" value={draft.passage} onChange={(e) => patch({ passage: e.target.value })}
+                    placeholder={`e.g. ${selectedBook.name} 3:16`}
+                    className="w-full text-[11px] bg-transparent border-none outline-none mt-1"
+                    style={{ color: "var(--fg-lo)" }} />
                 </div>
               </div>
 
               {/* Scripture References */}
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-white/25 mb-2">
-                  Scripture References
-                </label>
-                {draft.scriptureRefs.filter(Boolean).length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mb-2">
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">🔖</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Scripture References</label>
+                  <div className="flex flex-wrap gap-1 mb-1.5">
                     {draft.scriptureRefs.filter(Boolean).map((ref) => (
-                      <span
-                        key={ref}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/12 text-emerald-300/75 border border-emerald-500/20"
-                      >
+                      <span key={ref} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold"
+                        style={{ background: "var(--accent-soft)", color: "var(--accent-text)" }}>
                         {ref}
-                        <button
-                          type="button"
-                          onClick={() => removeRef(ref)}
-                          className="text-emerald-300/40 hover:text-emerald-300 ml-0.5 transition-colors"
-                        >
-                          ✕
-                        </button>
+                        <button type="button" onClick={() => removeRef(ref)} className="ml-0.5" style={{ color: "var(--fg-lo)" }}>✕</button>
                       </span>
                     ))}
                   </div>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newRef}
-                    onChange={(e) => setNewRef(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") { addRef(newRef); setNewRef(""); }
-                    }}
-                    placeholder="e.g. Romans 8:28"
-                    className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white/60 placeholder:text-white/20 focus:outline-none focus:border-emerald-500/40"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => { addRef(newRef); setNewRef(""); }}
-                    className="px-3 py-2 rounded-lg border border-emerald-500/25 text-emerald-400/55 text-xs font-bold hover:bg-emerald-500/10 hover:text-emerald-300 transition-colors"
-                  >
-                    Add
-                  </button>
+                  <div className="flex gap-1">
+                    <input type="text" value={newRef} onChange={(e) => setNewRef(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { addRef(newRef); setNewRef(""); } }}
+                      placeholder="e.g. John 3:16, Romans 8:1"
+                      className="flex-1 text-[11px] bg-transparent border-none outline-none min-w-0"
+                      style={{ color: "var(--fg-mid)" }} />
+                    <button type="button" onClick={() => { addRef(newRef); setNewRef(""); }}
+                      className="text-[10px] font-bold flex-shrink-0 px-1.5 py-0.5 rounded transition-opacity active:opacity-60"
+                      style={{ color: "var(--accent)", background: "var(--accent-soft)" }}>+</button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">🏷</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>Tags</label>
+                  <div className="flex flex-wrap gap-1">
+                    {PRESET_TAGS.slice(0, 6).map((tag) => (
+                      <button key={tag} type="button" onClick={() => toggleTag(tag)}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-semibold transition-all"
+                        style={draft.tags.includes(tag)
+                          ? { background: "var(--accent)", color: "#fff" }
+                          : { background: "var(--bg-2)", color: "var(--fg-lo)", border: "1px solid var(--border)" }}>
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Highlight Color */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">🎨</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>Highlight Color</label>
+                  <div className="flex gap-2">
+                    {["#fde047","#86efac","#93c5fd","#f9a8d4"].map((c) => (
+                      <button key={c} type="button"
+                        className="w-6 h-6 rounded-full transition-transform active:scale-90 border-2"
+                        style={{ background: c, borderColor: "transparent" }} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Category */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">📂</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Category</label>
+                  <input type="text" placeholder="Select category" className="w-full text-xs bg-transparent border-none outline-none" style={{ color: "var(--fg-mid)" }} />
+                </div>
+              </div>
+
+              {/* Church Name */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">⛪</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Church Name</label>
+                  <input type="text" value={draft.church ?? ""} onChange={(e) => patch({ church: e.target.value })}
+                    placeholder="Optional"
+                    className="w-full text-xs bg-transparent border-none outline-none"
+                    style={{ color: "var(--fg-mid)" }} />
+                </div>
+              </div>
+
+              {/* Attach Media */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">📎</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Attach Media</label>
+                  <p className="text-[11px]" style={{ color: "var(--fg-dim)" }}>Images, files, docs</p>
+                </div>
+              </div>
+
+              {/* Audio Recording */}
+              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
+                <span className="text-xl mt-0.5 flex-shrink-0">🎙</span>
+                <div className="flex-1 min-w-0">
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Audio Recording</label>
+                  <p className="text-[11px]" style={{ color: "var(--fg-dim)" }}>Record sermon audio</p>
                 </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between px-5 py-4 border-t border-white/[0.07] gap-3">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2.5 rounded-xl border border-white/[0.08] text-white/35 text-sm font-semibold hover:bg-white/[0.04] hover:text-white/55 transition-all"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleSave}
-            className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-500 active:scale-[0.97] transition-all shadow-md shadow-emerald-900/30"
-          >
-            Save Note
-          </button>
+            {/* Main Points (full width) */}
+            <div className="px-5 py-4" style={{ borderTop: "1px solid var(--border)" }}>
+              <label className="block text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: "var(--fg-dim)" }}>Main Points</label>
+              <div className="space-y-1.5">
+                {draft.mainPoints.map((pt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-xs flex-shrink-0" style={{ color: "var(--accent)" }}>◆</span>
+                    <input type="text" value={pt} onChange={(e) => updatePoint(i, e.target.value)}
+                      placeholder={`Point ${i + 1}…`}
+                      className="flex-1 text-sm bg-transparent border-none outline-none"
+                      style={{ color: "var(--fg-mid)" }} />
+                    <button type="button" onClick={() => removePoint(i)}
+                      className="w-6 h-6 flex items-center justify-center rounded text-xs flex-shrink-0"
+                      style={{ color: "var(--fg-dim)" }}>✕</button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={addPoint}
+                className="text-[11px] font-semibold mt-2 transition-opacity active:opacity-60"
+                style={{ color: "var(--accent)" }}>+ Add Point</button>
+            </div>
+
+            {/* Bottom padding for safe area */}
+            <div className="h-4" />
+          </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function NotesPage() {
+  const { lang } = useLanguage();
   const [notes, setNotes] = useState<SermonNote[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -719,6 +1028,9 @@ export default function NotesPage() {
   // Fullscreen note viewer
   const [viewingNote, setViewingNote] = useState<SermonNote | null>(null);
 
+  // Active tab: "sermon" = Bible-book-organized, "general" = freeform flat list
+  const [activeTab, setActiveTab] = useState<"sermon" | "general">("sermon");
+
   useEffect(() => {
     setNotes(loadNotes());
     setMounted(true);
@@ -726,7 +1038,16 @@ export default function NotesPage() {
 
   // ── Filtered + sorted notes ──────────────────────────────────────────────────
 
+  const sermonNoteCount = notes.filter((n) => n.noteType !== "general").length;
+  const generalNoteCount = notes.filter((n) => n.noteType === "general").length;
+
   const filtered = notes.filter((note) => {
+    // Tab filter
+    if (activeTab === "general") {
+      if (note.noteType !== "general") return false;
+    } else {
+      if (note.noteType === "general") return false;
+    }
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       const hit =
@@ -793,6 +1114,7 @@ export default function NotesPage() {
     const book = bookNum ? BIBLE_BOOKS.find((b) => b.num === bookNum) : undefined;
     setEditingNote(
       makeNote({
+        noteType: activeTab,
         bookNum: book?.num ?? 40,
         bookName: book?.name ?? "Matthew",
         chapter: chapter ?? 1,
@@ -819,9 +1141,11 @@ export default function NotesPage() {
     });
     setEditorOpen(false);
     setEditingNote(null);
-    // Navigate to the saved note's book/chapter
-    setSelectedBookNum(note.bookNum);
-    setExpandedChapters((prev) => new Set([...prev, note.chapter]));
+    // Navigate to the saved note's book/chapter (sermon notes only)
+    if (note.noteType !== "general") {
+      setSelectedBookNum(note.bookNum);
+      setExpandedChapters((prev) => new Set([...prev, note.chapter]));
+    }
   };
 
   const handleDeleteNote = (id: string) => {
@@ -851,8 +1175,8 @@ export default function NotesPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
-        <span className="text-white/20 text-sm">Loading…</span>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
+        <span className="text-sm" style={{ color: "var(--fg-dim)" }}>Loading…</span>
       </div>
     );
   }
@@ -861,9 +1185,10 @@ export default function NotesPage() {
     <>
       {confirmDeleteId && (
         <ConfirmModal
-          message="Delete this note? This action cannot be undone."
+          message={t(lang, "notes_confirm_delete")}
           onConfirm={() => handleDeleteNote(confirmDeleteId)}
           onCancel={() => setConfirmDeleteId(null)}
+          lang={lang}
         />
       )}
 
@@ -885,53 +1210,92 @@ export default function NotesPage() {
         />
       )}
 
-      <div className="min-h-screen bg-[#0f0f0f] text-white">
+      <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--fg)" }}>
         {/* ── Action strip ─────────────────────────────────────────────────────── */}
-        <div className="border-b border-white/[0.07] bg-[#0f0f0f]">
+        <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
           <div className="max-w-screen-xl mx-auto px-4">
             <div className="flex items-center gap-2 py-2.5">
               <span className="text-sm">📓</span>
-              <button
-                onClick={() => setSelectedBookNum(null)}
-                className={`text-sm font-bold transition-colors ${
-                  selectedBook ? "text-white/40 hover:text-white/70" : "text-white/70"
-                }`}
-              >
-                Study Notes
-              </button>
-              {notes.length > 0 && !selectedBook && (
-                <span className="text-[10px] font-mono text-white/20">
-                  {notes.length} note{notes.length !== 1 ? "s" : ""}
-                </span>
-              )}
-              {selectedBook && (
+              {/* Breadcrumb */}
+              {activeTab === "sermon" ? (
                 <>
-                  <span className="text-white/20 text-xs">/</span>
-                  <span className="text-sm font-bold text-emerald-300/80">{selectedBook.name}</span>
-                  {bookNotes.length > 0 && (
+                  <button
+                    onClick={() => setSelectedBookNum(null)}
+                    className={`text-sm font-bold transition-colors ${
+                      selectedBook ? "text-white/40 hover:text-white/70" : "text-white/70"
+                    }`}
+                  >
+                    {t(lang, "notes_title")}
+                  </button>
+                  {sermonNoteCount > 0 && !selectedBook && (
                     <span className="text-[10px] font-mono text-white/20">
-                      {bookNotes.length} note{bookNotes.length !== 1 ? "s" : ""}
+                      {sermonNoteCount} note{sermonNoteCount !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                  {selectedBook && (
+                    <>
+                      <span className="text-white/20 text-xs">/</span>
+                      <span className="text-sm font-bold text-emerald-300/80">{selectedBook.name}</span>
+                      {bookNotes.length > 0 && (
+                        <span className="text-[10px] font-mono text-white/20">
+                          {bookNotes.length} note{bookNotes.length !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  <span className="text-sm font-bold text-white/70">{t(lang, "notes_tab_general")} Notes</span>
+                  {generalNoteCount > 0 && (
+                    <span className="text-[10px] font-mono text-white/20">
+                      {generalNoteCount} note{generalNoteCount !== 1 ? "s" : ""}
                     </span>
                   )}
                 </>
               )}
+
+              {/* Tab switcher */}
+              <div className="ml-auto flex items-center gap-0.5 bg-white/[0.05] rounded-xl p-0.5 mr-2">
+                <button
+                  onClick={() => setActiveTab("sermon")}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                    activeTab === "sermon"
+                      ? "bg-white/[0.12] text-white/85 shadow-sm"
+                      : "text-white/30 hover:text-white/55"
+                  }`}
+                >
+                  {t(lang, "notes_tab_sermon")}
+                </button>
+                <button
+                  onClick={() => setActiveTab("general")}
+                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
+                    activeTab === "general"
+                      ? "bg-white/[0.12] text-white/85 shadow-sm"
+                      : "text-white/30 hover:text-white/55"
+                  }`}
+                >
+                  {t(lang, "notes_tab_general")}
+                </button>
+              </div>
+
               <button
-                onClick={() => openNewNote(selectedBookNum ?? undefined)}
-                className="ml-auto flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 active:scale-[0.97] transition-all shadow-sm shadow-indigo-900/30"
+                onClick={() => openNewNote(activeTab === "sermon" ? (selectedBookNum ?? undefined) : undefined)}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 active:scale-[0.97] transition-all shadow-sm shadow-indigo-900/30"
               >
                 <span className="text-sm font-black leading-none">+</span>
-                New Note
+                {t(lang, "notes_new")}
               </button>
             </div>
           </div>
         </div>
 
         {/* ── Search + Filters — scroll away naturally ─────────────────────────── */}
-        <div className="border-b border-white/[0.05] bg-[#0f0f0f]">
+        <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
           <div className="max-w-screen-xl mx-auto px-4 pt-3 pb-3 space-y-2">
             <input
               type="text"
-              placeholder="Search notes, pastors, passages, tags…"
+              placeholder={t(lang, "notes_search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40"
@@ -940,17 +1304,17 @@ export default function NotesPage() {
               <select
                 value={filterTestament}
                 onChange={(e) => setFilterTestament(e.target.value as "all" | "OT" | "NT")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
               >
-                <option value="all">All Books</option>
-                <option value="OT">Old Testament</option>
-                <option value="NT">New Testament</option>
+                <option value="all">{t(lang, "notes_filter_all_books")}</option>
+                <option value="OT">{t(lang, "notes_filter_ot")}</option>
+                <option value="NT">{t(lang, "notes_filter_nt")}</option>
               </select>
               {allTags.length > 0 && (
                 <select
                   value={filterTag}
                   onChange={(e) => setFilterTag(e.target.value)}
-                  className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
+                  className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
                 >
                   <option value="">All Tags</option>
                   {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -959,20 +1323,20 @@ export default function NotesPage() {
               <select
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value as "all" | "this-year" | "last-year")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
               >
-                <option value="all">All Time</option>
-                <option value="this-year">This Year</option>
-                <option value="last-year">Last Year</option>
+                <option value="all">{t(lang, "notes_filter_all_time")}</option>
+                <option value="this-year">{t(lang, "notes_filter_this_year")}</option>
+                <option value="last-year">{t(lang, "notes_filter_last_year")}</option>
               </select>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "by-book")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:dark]"
+                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
               >
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="by-book">By Book</option>
+                <option value="newest">{t(lang, "notes_sort_newest")}</option>
+                <option value="oldest">{t(lang, "notes_sort_oldest")}</option>
+                <option value="by-book">{t(lang, "notes_sort_by_book")}</option>
               </select>
             </div>
           </div>
@@ -981,8 +1345,11 @@ export default function NotesPage() {
         {/* ── Layout ──────────────────────────────────────────────────────────── */}
         <div className="max-w-screen-xl mx-auto flex">
 
-          {/* ── Sidebar ──────────────────────────────────────────────────────── */}
-          <aside className="hidden md:flex flex-col w-60 lg:w-68 flex-shrink-0 border-r border-white/[0.06] min-h-[calc(100vh-56px)] bg-[#0c0c0c] sticky top-14 self-start max-h-[calc(100vh-56px)]">
+          {/* ── Sidebar (sermon tab only) ────────────────────────────────────── */}
+          <aside
+            className={`${activeTab === "general" ? "hidden" : "hidden md:flex"} flex-col w-60 lg:w-68 flex-shrink-0 min-h-[calc(100vh-56px)] sticky top-14 self-start max-h-[calc(100vh-56px)]`}
+            style={{ borderRight: "1px solid var(--border)", background: "var(--bg)" }}
+          >
             <div className="flex-1 overflow-y-auto py-2">
               {notes.length === 0 || booksWithNotes.length === 0 ? (
                 <div className="px-4 py-10 text-center">
@@ -1082,8 +1449,8 @@ export default function NotesPage() {
                 </>
               )}
             </div>
-            <div className="px-4 py-2.5 border-t border-white/[0.05]">
-              <p className="text-[9px] text-white/15 font-mono">
+            <div className="px-4 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
+              <p className="text-[9px] font-mono" style={{ color: "var(--fg-dim)" }}>
                 {notes.length} note{notes.length !== 1 ? "s" : ""} · saved locally
               </p>
             </div>
@@ -1092,8 +1459,54 @@ export default function NotesPage() {
           {/* ── Main content ─────────────────────────────────────────────────── */}
           <main className="flex-1 min-w-0 px-4 md:px-6 py-6">
 
-            {/* ── Empty state (no notes at all) ──────────────────────────────── */}
-            {notes.length === 0 && (
+            {/* ── General Notes tab ──────────────────────────────────────────── */}
+            {activeTab === "general" && (
+              <div>
+                {sorted.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center min-h-[55vh] gap-7 text-center">
+                    <div className="relative">
+                      <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-emerald-600/20 via-teal-500/15 to-sky-500/10 border border-white/[0.09] flex items-center justify-center shadow-2xl">
+                        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" className="text-white/40">
+                          <path d="M12 20h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </div>
+                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 border-2 flex items-center justify-center text-white text-xs font-black" style={{ borderColor: "var(--bg)" }}>+</div>
+                    </div>
+                    <div className="max-w-[260px]">
+                      <h2 className="text-[17px] font-bold text-white/60 mb-2.5 tracking-tight">{t(lang, "notes_general_empty_title")}</h2>
+                      <p className="text-white/30 text-[13px] leading-relaxed">{t(lang, "notes_general_empty_sub")}</p>
+                    </div>
+                    <button
+                      onClick={() => openNewNote()}
+                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm hover:from-emerald-500 hover:to-teal-500 active:scale-[0.97] transition-all shadow-lg shadow-emerald-900/40"
+                    >
+                      <span className="text-base font-black">+</span>
+                      {t(lang, "notes_add_first")}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {sorted.map((note) => (
+                      <NoteCard
+                        key={note.id}
+                        note={note}
+                        onView={() => setViewingNote(note)}
+                        onEdit={() => openEditNote(note)}
+                        onDelete={() => setConfirmDeleteId(note.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Sermon Notes tab content below ─────────────────────────────── */}
+            {activeTab === "sermon" && (
+            <>
+
+            {/* ── Empty state (no sermon notes) ──────────────────────────────── */}
+            {sermonNoteCount === 0 && (
               <div className="flex flex-col items-center justify-center min-h-[55vh] gap-7 text-center">
                 <div className="relative">
                   <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-violet-600/20 via-sky-500/15 to-emerald-500/15 border border-white/[0.09] flex items-center justify-center shadow-2xl">
@@ -1105,16 +1518,16 @@ export default function NotesPage() {
                       <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                     </svg>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-sky-500 border-2 border-[#0f0f0f] flex items-center justify-center text-white text-xs font-black">
+                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-sky-500 border-2 flex items-center justify-center text-white text-xs font-black" style={{ borderColor: "var(--bg)" }}>
                     +
                   </div>
                 </div>
                 <div className="max-w-[260px]">
                   <h2 className="text-[17px] font-bold text-white/60 mb-2.5 tracking-tight">
-                    Your sermon archive begins here
+                    {t(lang, "notes_sermon_empty_title")}
                   </h2>
                   <p className="text-white/30 text-[13px] leading-relaxed">
-                    Capture sermons, build a personal theological library organized by book and chapter.
+                    {t(lang, "notes_sermon_empty_sub")}
                   </p>
                 </div>
                 <button
@@ -1127,8 +1540,8 @@ export default function NotesPage() {
               </div>
             )}
 
-            {/* ── Library view (no book selected, has notes) ─────────────────── */}
-            {notes.length > 0 && !selectedBook && (
+            {/* ── Library view (no book selected, has sermon notes) ──────────── */}
+            {sermonNoteCount > 0 && !selectedBook && (
               <div>
                 {/* Mobile: book grid */}
                 <div className="md:hidden space-y-4 mb-4">
@@ -1209,10 +1622,10 @@ export default function NotesPage() {
                               <div className={`w-2 h-2 rounded-full flex-shrink-0 ${nclr.dot}`} />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-white/60 truncate group-hover:text-white/75 transition-colors">
-                                  {note.title || "Untitled Sermon"}
+                                  {note.title || t(lang, "notes_untitled")}
                                 </p>
                                 <p className="text-[11px] text-white/25 truncate mt-0.5">
-                                  {note.bookName} {note.chapter} · {formatDate(note.date)}
+                                  {note.bookName} {note.chapter} · {formatDate(note.date, lang)}
                                   {note.pastor && ` · ${note.pastor}`}
                                 </p>
                               </div>
@@ -1237,7 +1650,7 @@ export default function NotesPage() {
             )}
 
             {/* ── Book Detail view ──────────────────────────────────────────── */}
-            {selectedBook && (
+            {activeTab === "sermon" && selectedBook && (
               <div>
                 {/* Back button (mobile) */}
                 <button
@@ -1291,7 +1704,8 @@ export default function NotesPage() {
                         return (
                           <div
                             key={ch}
-                            className="rounded-2xl border border-white/[0.07] overflow-hidden bg-[#111111]"
+                            className="rounded-2xl overflow-hidden"
+                            style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
                           >
                             {/* Chapter header toggle */}
                             <button
@@ -1311,7 +1725,7 @@ export default function NotesPage() {
                                 </p>
                                 {!isExp && mostRecent && (
                                   <p className="text-[11px] text-white/30 truncate mt-0.5">
-                                    {mostRecent.title || "Untitled"} · {formatDate(mostRecent.date)}
+                                    {mostRecent.title || t(lang, "notes_untitled")} · {formatDate(mostRecent.date)}
                                   </p>
                                 )}
                               </div>
@@ -1350,6 +1764,8 @@ export default function NotesPage() {
                 })()}
               </div>
             )}
+            </> /* end sermon tab */
+            )} {/* end activeTab === "sermon" */}
           </main>
         </div>
       </div>

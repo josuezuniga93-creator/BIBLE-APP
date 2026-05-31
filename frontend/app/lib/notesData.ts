@@ -4,6 +4,7 @@
 
 export interface SermonNote {
   id: string;
+  noteType?: "sermon" | "general"; // "sermon" = tied to a Bible book; "general" = freeform
   bookNum: number;       // matches BIBLE_BOOKS[].num
   bookName: string;
   chapter: number;
@@ -60,6 +61,7 @@ export function makeNote(partial: Partial<SermonNote> = {}): SermonNote {
   const now = new Date().toISOString();
   return {
     id: crypto.randomUUID(),
+    noteType: "sermon",
     bookNum: 40,
     bookName: "Matthew",
     chapter: 1,

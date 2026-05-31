@@ -88,14 +88,13 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
 
       {/* Sheet */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-[401] max-w-lg mx-auto rounded-t-3xl overflow-hidden"
-        style={{ backgroundColor: "#181828", border: "1px solid rgba(255,255,255,0.08)" }}
+        className="fixed inset-0 z-[401] flex items-start justify-center pt-16 px-4 pointer-events-none"
+      >
+      <div
+        className="w-full max-w-sm rounded-2xl overflow-hidden pointer-events-auto"
+        style={{ backgroundColor: "#181828", border: "1px solid rgba(255,255,255,0.08)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-white/20" />
-        </div>
 
         {/* Header */}
         <div className="px-5 py-3 border-b border-white/[0.07]">
@@ -109,7 +108,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
         </div>
 
         {/* Collection list */}
-        <div className="overflow-y-auto" style={{ maxHeight: "42vh" }}>
+        <div className="overflow-y-auto flex-1">
           {collections.length === 0 && !showCreate && (
             <p className="text-center text-xs text-white/30 py-6">{t(lang, "bm_no_collections")}</p>
           )}
@@ -231,6 +230,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
             </button>
           </div>
         )}
+      </div>
       </div>
     </>
   );

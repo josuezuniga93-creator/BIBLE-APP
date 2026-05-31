@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTheme } from "../lib/useTheme";
+import { GeneratedCategoryMark } from "../components/GeneratedArtwork";
 
 // ─── Timeline data ────────────────────────────────────────────────────────────
 
@@ -17,7 +18,7 @@ interface TimelineSection {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  mark: string;
   color: string;
   borderColor: string;
   events: TimelineEvent[];
@@ -28,7 +29,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "early-church",
     title: "Early Church",
     subtitle: "AD 49 – 529",
-    icon: "✦",
+    mark: "creed",
     color: "#6ee7b7",
     borderColor: "#065f46",
     events: [
@@ -92,7 +93,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "pre-reformation",
     title: "Pre-Reformation",
     subtitle: "1378 – 1516",
-    icon: "🌅",
+    mark: "history",
     color: "#fcd34d",
     borderColor: "#92400e",
     events: [
@@ -120,7 +121,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "reformation",
     title: "Protestant Reformation",
     subtitle: "1517 – 1563",
-    icon: "🔥",
+    mark: "debate",
     color: "#fb923c",
     borderColor: "#7c2d12",
     events: [
@@ -190,7 +191,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "confessional",
     title: "Reformed Confessions",
     subtitle: "1611 – 1648",
-    icon: "📜",
+    mark: "confession",
     color: "#c084fc",
     borderColor: "#4c1d95",
     events: [
@@ -236,7 +237,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "baptist",
     title: "Baptist Roots & the 1689",
     subtitle: "1644 – 1689",
-    icon: "🛡",
+    mark: "document",
     color: "#f0c060",
     borderColor: "#78350f",
     events: [
@@ -269,7 +270,7 @@ const TIMELINE_SECTIONS: TimelineSection[] = [
     id: "awakening",
     title: "The Great Awakening",
     subtitle: "1700 – 1741",
-    icon: "🔥",
+    mark: "theology",
     color: "#fb923c",
     borderColor: "#7c2d12",
     events: [
@@ -334,7 +335,7 @@ function SectionHeader({ section, isLight }: { section: TimelineSection; isLight
           color: section.color,
         }}
       >
-        <span>{section.icon}</span>
+        <GeneratedCategoryMark id={section.mark} size={24} />
         <span className="uppercase tracking-wider">{section.title}</span>
         <span className="opacity-60 font-normal">{section.subtitle}</span>
       </div>
@@ -385,7 +386,7 @@ function TimelineItem({
               boxShadow: "0 0 0 4px rgba(240,192,96,0.2), 0 0 16px rgba(240,192,96,0.5)",
             }}
           >
-            <span style={{ fontSize: "10px" }}>✦</span>
+            <div className="w-2 h-2 rounded-full bg-white" />
           </div>
         ) : (
           <div
@@ -484,13 +485,16 @@ function TimelineItem({
 
 export default function TimelinePage() {
   const { theme } = useTheme();
-  const isLight = theme === "light-elegant";
+  const isLight    = theme === "light-elegant";
+  const isGoldNavy = theme === "gold-navy";
 
-  const pageBg      = isLight ? "#f5f1eb" : "#0e0e18";
+  const pageBg      = isLight ? "#f5f1eb" : isGoldNavy ? "#0e1018" : "#0e0e18";
   const textPrimary = isLight ? "#1c1409" : "rgba(255,255,255,0.95)";
   const textMuted   = isLight ? "#9b8560" : "rgba(255,255,255,0.35)";
   const heroBg      = isLight
     ? "linear-gradient(135deg,#78350f 0%,#9b7228 55%,#3b1a00 100%)"
+    : isGoldNavy
+    ? "linear-gradient(135deg,#2a1a00 0%,#1a1005 55%,#0e1018 100%)"
     : "linear-gradient(135deg,#1a0845 0%,#3b1a00 55%,#0f0a2a 100%)";
 
   return (
@@ -515,11 +519,11 @@ export default function TimelinePage() {
 
           <h1 className="text-2xl font-black text-white leading-tight mb-2">
             From Jerusalem to<br />
-            <span style={{ color: "#fb923c" }}>Sinners in God's Hands</span>
+            <span style={{ color: "#fb923c" }}>Sinners in God&apos;s Hands</span>
           </h1>
 
           <p className="text-xs leading-relaxed mb-5 opacity-70 text-amber-100">
-            From the Jerusalem Council to Jonathan Edwards's Great Awakening —
+            From the Jerusalem Council to Jonathan Edwards&apos;s Great Awakening —
             every event, every document, every martyr who shaped the Reformed faith.
           </p>
 
@@ -568,7 +572,10 @@ export default function TimelinePage() {
               color: s.color,
             }}
           >
-            {s.icon} {s.title}
+            <span className="inline-flex items-center gap-1.5">
+              <GeneratedCategoryMark id={s.mark} size={18} />
+              {s.title}
+            </span>
           </a>
         ))}
       </div>
@@ -597,13 +604,13 @@ export default function TimelinePage() {
         {/* ── End marker ──────────────────────────────────────────────────── */}
         <div className="mt-10 flex flex-col items-center gap-3 text-center">
           <div
-            className="w-12 h-12 rounded-full flex items-center justify-center text-xl"
+            className="w-12 h-12 rounded-full flex items-center justify-center"
             style={{
               background: "linear-gradient(135deg,#fb923c,#c2410c)",
               boxShadow: "0 0 0 6px rgba(251,146,60,0.15), 0 0 24px rgba(251,146,60,0.4)",
             }}
           >
-            ✦
+            <GeneratedCategoryMark id="document" size={28} />
           </div>
           <p className="font-black text-base" style={{ color: "#fb923c" }}>
             1741

@@ -1,14 +1,22 @@
 "use client";
 
-import { useEffect, useState, useCallback, use, useRef } from "react";
+import { useEffect, useState, useCallback, use, useRef, useMemo } from "react";
+import { usePagination } from "../../hooks/usePagination";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchBookDetail, fetchBookChapter } from "../../lib/api";
 import type { BookDetail, BookChapter } from "../../lib/types";
+import { getBookCoverImage } from "../../lib/bookCoverImages";
 import { useHighlights } from "../../lib/useHighlights";
+import { useLanguage } from "../../lib/useLanguage";
+import { translateToSpanish } from "../../lib/googleTranslate";
 import { applyHighlightsToHtml, type Highlight } from "../../lib/highlights";
 import { HighlightToolbar } from "../../components/HighlightToolbar";
 import { RemoveHighlightBubble } from "../../components/RemoveHighlightBubble";
 import { useTheme } from "../../lib/useTheme";
+import { BookmarkModal } from "../../components/BookmarkModal";
+import { isAnySaved } from "../../lib/collections";
+import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
 
 // ─── Inline markdown → HTML ───────────────────────────────────────────────────
 function renderInline(text: string): string {
@@ -29,11 +37,18 @@ function renderChapterContent(
   headingColor = "rgba(255,255,255,0.5)"
 ): React.ReactNode {
   if (!content) return null;
+  // Content arriving here has already been through normalizeBookContent (via
+  // usePagination rawText:true), so each \n\n boundary is a real paragraph
+  // break and there are no soft-wrapped single-\n line breaks inside paragraphs.
   const paragraphs = content.split(/\n\n+/);
   return (
     <div
-      className={`space-y-6 ${fontSize}`}
-      style={{ fontFamily: "'Georgia', 'Times New Roman', serif", color: textColor, lineHeight: presentationMode ? "2" : "1.9" }}
+      className={`${fontSize}`}
+      style={{
+        fontFamily: "'Georgia', 'Times New Roman', serif",
+        color: textColor,
+        lineHeight: presentationMode ? "2" : "1.9",
+      }}
       onClick={(e) => {
         const target = e.target as HTMLElement;
         if (target.dataset.hlId) {
@@ -43,15 +58,22 @@ function renderChapterContent(
       }}
     >
       {paragraphs.map((para, i) => {
-        const trimmed = para.trim().replace(/\n/g, " ").replace(/\s{2,}/g, " ");
+        // Trim and collapse any residual whitespace within the line
+        const trimmed = para.trim().replace(/[ \t]+/g, " ");
         if (!trimmed) return null;
-        const isHeading = trimmed.length < 60 && /^[A-Z][A-Z\s\d\.\-—]*$/.test(trimmed);
+        const isChapterHeading =
+          trimmed.length < 80 && /^[A-Z][A-Z0-9\s\.\-—,:'"!?]+$/.test(trimmed);
         const html = applyHighlightsToHtml(renderInline(trimmed), highlights);
         return (
           <p
             key={i}
-            className={isHeading ? "font-bold text-center tracking-[0.2em] mt-10 mb-2 text-sm" : ""}
-            style={isHeading ? { color: headingColor } : {}}
+            className={isChapterHeading ? "font-bold text-center tracking-[0.2em] text-sm" : ""}
+            style={{
+              ...(isChapterHeading ? { color: headingColor } : {}),
+              // Give real inter-paragraph spacing; headings get more breathing room
+              marginBottom: isChapterHeading ? "1.5em" : "1.25em",
+              marginTop: isChapterHeading ? "2em" : 0,
+            }}
             dangerouslySetInnerHTML={{ __html: html }}
           />
         );
@@ -60,55 +82,28 @@ function renderChapterContent(
   );
 }
 
-// ─── Photo cover overrides (slug → public/covers/ image) ─────────────────────
-const COVER_IMAGES: Record<string, string> = {
-  "pilgrims-progress":     "/covers/pilgrims-progress.png",
-  "grace-abounding":       "/covers/grace-abounding.png",
-  "confessions-augustine": "/covers/confessions-augustine.png",
-};
-
-// ─── Book cover for detail header ─────────────────────────────────────────────
-const COVER_STYLES: Record<string, { from: string; via: string; to: string; accent: string; ornament: string }> = {
-  "pilgrims-progress":      { from: "#1a0a2e", via: "#2d1b5e", to: "#0f0a1a", accent: "#a78bfa", ornament: "✦" },
-  "grace-abounding":        { from: "#1a0d0d", via: "#3b1414", to: "#0f0a0a", accent: "#f87171", ornament: "†" },
-  "confessions-augustine":  { from: "#0d1a0d", via: "#1a3a1a", to: "#0a0f0a", accent: "#6ee7b7", ornament: "α" },
-  "imitation-of-christ":    { from: "#1a1400", via: "#3b3000", to: "#0f0d00", accent: "#fcd34d", ornament: "☩" },
-  "institutes-of-religion": { from: "#0d1a24", via: "#1a3050", to: "#0a0f17", accent: "#7dd3fc", ornament: "✦" },
-  "holiness-ryle":          { from: "#1a0d17", via: "#3b1a30", to: "#0f0a0d", accent: "#f0abfc", ornament: "✶" },
-  "morning-evening-spurgeon":{ from: "#1a1000", via: "#3b2800", to: "#0f0900", accent: "#fb923c", ornament: "☀" },
-  "sinners-in-hands-edwards":{ from: "#1a0800", via: "#3b1400", to: "#0f0600", accent: "#fb923c", ornament: "⚡" },
-};
-const DEFAULT_COVER = { from: "#0d0d1a", via: "#1a1a3b", to: "#0a0a0f", accent: "#a78bfa", ornament: "✦" };
-
 function DetailBookCover({ slug, title, author }: { slug: string; title: string; author: string }) {
-  const imageSrc = COVER_IMAGES[slug];
-  if (imageSrc) {
+  const imageSrc = getBookCoverImage(slug);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  if (imageSrc && !imageFailed) {
     return (
-      <div className="w-full h-full" style={{ position: "relative", overflow: "hidden" }}>
-        <img src={imageSrc} alt={title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+      <div className="relative w-full h-full overflow-hidden">
+        <Image
+          src={imageSrc}
+          alt={`${title} cover`}
+          fill
+          sizes="112px"
+          className="object-cover"
+          onError={() => setImageFailed(true)}
+          priority
+        />
       </div>
     );
   }
-  const style = COVER_STYLES[slug] ?? DEFAULT_COVER;
+
   return (
-    <div
-      className="w-full h-full flex flex-col justify-between p-4"
-      style={{ background: `linear-gradient(160deg, ${style.from}, ${style.via} 50%, ${style.to})` }}
-    >
-      <div className="flex justify-between items-start">
-        <div className="w-px self-stretch opacity-30" style={{ background: style.accent }} />
-        <span className="text-xl opacity-40" style={{ color: style.accent }}>{style.ornament}</span>
-      </div>
-      <div className="text-center px-1">
-        <p className="font-black uppercase leading-tight mb-3" style={{ color: style.accent, opacity: 0.75, fontSize: "10px", letterSpacing: "0.18em" }}>
-          {author}
-        </p>
-        <p className="text-white font-bold text-sm leading-snug" style={{ display: "-webkit-box", WebkitLineClamp: 5, WebkitBoxOrient: "vertical", overflow: "hidden" }}>
-          {title}
-        </p>
-      </div>
-      <div className="h-px w-12 mx-auto opacity-25" style={{ background: style.accent }} />
-    </div>
+    <GeneratedBookCover slug={slug} title={title} author={author} size="detail" />
   );
 }
 
@@ -132,54 +127,59 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── Theme ──────────────────────────────────────────────────────────────────
   const { theme } = useTheme();
-  const isLight = theme === "light-elegant";
+  const isLight    = theme === "light-elegant";
+  const isGoldNavy = theme === "gold-navy";
 
   const th = {
-    pageBg:                  isLight ? "#f5f1eb"                                : "#0e0e18",
-    topBarBg:                isLight ? "rgba(245,241,235,0.95)"                 : "rgba(14,14,24,0.95)",
-    bottomBarBg:             isLight ? "rgba(245,241,235,0.97)"                 : "rgba(14,14,24,0.97)",
+    pageBg:                  isLight ? "#f5f1eb"                                : isGoldNavy ? "#0e1018"                          : "#0e0e18",
+    topBarBg:                isLight ? "rgba(245,241,235,0.95)"                 : isGoldNavy ? "rgba(14,16,24,0.97)"               : "rgba(14,14,24,0.95)",
+    bottomBarBg:             isLight ? "rgba(245,241,235,0.97)"                 : isGoldNavy ? "rgba(14,16,24,0.97)"               : "rgba(14,14,24,0.97)",
     textPrimary:             isLight ? "#1c1409"                                : "rgba(255,255,255,0.95)",
     textContent:             isLight ? "#2c1f0a"                                : "rgba(255,255,255,0.82)",
     textMuted:               isLight ? "#9b8560"                                : "rgba(255,255,255,0.4)",
     textVeryMuted:           isLight ? "#c4b090"                                : "rgba(255,255,255,0.2)",
     textFaint:               isLight ? "#b09878"                                : "rgba(255,255,255,0.3)",
     headingColor:            isLight ? "#9b8560"                                : "rgba(255,255,255,0.5)",
-    accent:                  isLight ? "#9b7228"                                : "#a78bfa",
-    accentLight:             isLight ? "#c4973a"                                : "#c4b5fd",
-    border:                  isLight ? "rgba(155,114,40,0.15)"                  : "rgba(255,255,255,0.07)",
+    accent:                  isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#a78bfa",
+    accentLight:             isLight ? "#c4973a"                                : isGoldNavy ? "#d4b87a"                           : "#c4b5fd",
+    border:                  isLight ? "rgba(155,114,40,0.15)"                  : isGoldNavy ? "rgba(255,255,255,0.06)"            : "rgba(255,255,255,0.07)",
     borderLight:             isLight ? "rgba(155,114,40,0.08)"                  : "rgba(255,255,255,0.05)",
     borderMed:               isLight ? "rgba(155,114,40,0.18)"                  : "rgba(255,255,255,0.08)",
-    drawerBg:                isLight ? "#f0ebe0"                                : "#141424",
-    readNowGradient:         isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
-    nextBtnGradient:         isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": "linear-gradient(135deg,#ec4899,#a855f7)",
+    drawerBg:                isLight ? "#f0ebe0"                                : isGoldNavy ? "#1a1d27"                           : "#141424",
+    readNowGradient:         isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": isGoldNavy ? "linear-gradient(135deg,#d4b87a,#c9a961)" : "linear-gradient(135deg,#ec4899,#a855f7)",
+    nextBtnGradient:         isLight ? "linear-gradient(135deg,#c4973a,#9b7228)": isGoldNavy ? "linear-gradient(135deg,#d4b87a,#c9a961)" : "linear-gradient(135deg,#ec4899,#a855f7)",
     prevBtnBg:               isLight ? "rgba(155,114,40,0.08)"                  : "rgba(255,255,255,0.07)",
     prevBtnBorder:           isLight ? "rgba(155,114,40,0.18)"                  : "rgba(255,255,255,0.08)",
-    tagBg:                   isLight ? "rgba(155,114,40,0.12)"                  : "rgba(124,58,237,0.2)",
-    tagBorder:               isLight ? "rgba(155,114,40,0.3)"                   : "rgba(124,58,237,0.35)",
-    tagColor:                isLight ? "#9b7228"                                : "#c4b5fd",
-    tocActiveBg:             isLight ? "rgba(155,114,40,0.15)"                  : "rgba(124,58,237,0.2)",
-    tocActiveText:           isLight ? "#9b7228"                                : "#c4b5fd",
+    tagBg:                   isLight ? "rgba(155,114,40,0.12)"                  : isGoldNavy ? "rgba(201,169,97,0.15)"             : "rgba(124,58,237,0.2)",
+    tagBorder:               isLight ? "rgba(155,114,40,0.3)"                   : isGoldNavy ? "rgba(201,169,97,0.32)"             : "rgba(124,58,237,0.35)",
+    tagColor:                isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#c4b5fd",
+    tocActiveBg:             isLight ? "rgba(155,114,40,0.15)"                  : isGoldNavy ? "rgba(201,169,97,0.15)"             : "rgba(124,58,237,0.2)",
+    tocActiveText:           isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#c4b5fd",
     tocInactiveText:         isLight ? "#9b8560"                                : "rgba(255,255,255,0.4)",
-    settingsBtnActiveBg:     isLight ? "rgba(155,114,40,0.2)"                   : "rgba(124,58,237,0.3)",
-    settingsBtnActiveBorder: isLight ? "rgba(155,114,40,0.5)"                   : "rgba(124,58,237,0.5)",
-    settingsBtnActiveText:   isLight ? "#9b7228"                                : "#c4b5fd",
+    settingsBtnActiveBg:     isLight ? "rgba(155,114,40,0.2)"                   : isGoldNavy ? "rgba(201,169,97,0.22)"             : "rgba(124,58,237,0.3)",
+    settingsBtnActiveBorder: isLight ? "rgba(155,114,40,0.5)"                   : isGoldNavy ? "rgba(201,169,97,0.50)"             : "rgba(124,58,237,0.5)",
+    settingsBtnActiveText:   isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#c4b5fd",
     settingsBtnInactiveBg:   isLight ? "rgba(155,114,40,0.05)"                  : "rgba(255,255,255,0.05)",
     settingsBtnInactiveBorder:isLight ? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.08)",
     settingsBtnInactiveText: isLight ? "#9b8560"                                : "rgba(255,255,255,0.4)",
-    presentBtnBg:            isLight ? "rgba(155,114,40,0.1)"                   : "rgba(124,58,237,0.15)",
-    presentBtnBorder:        isLight ? "rgba(155,114,40,0.28)"                  : "rgba(124,58,237,0.3)",
-    presentBtnText:          isLight ? "#9b7228"                                : "#c4b5fd",
-    iconActive:              isLight ? "#9b7228"                                : "#a78bfa",
+    presentBtnBg:            isLight ? "rgba(155,114,40,0.1)"                   : isGoldNavy ? "rgba(201,169,97,0.12)"             : "rgba(124,58,237,0.15)",
+    presentBtnBorder:        isLight ? "rgba(155,114,40,0.28)"                  : isGoldNavy ? "rgba(201,169,97,0.30)"             : "rgba(124,58,237,0.3)",
+    presentBtnText:          isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#c4b5fd",
+    iconActive:              isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#a78bfa",
     iconInactive:            isLight ? "#9b8560"                                : "rgba(255,255,255,0.4)",
     addLibBorder:            isLight ? "rgba(155,114,40,0.2)"                   : "rgba(255,255,255,0.12)",
     addLibText:              isLight ? "#6b5226"                                : "rgba(255,255,255,0.7)",
-    sliderProgress:          isLight ? "#9b7228"                                : "#a855f7",
+    sliderProgress:          isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#a855f7",
     sliderTrack:             isLight ? "rgba(155,114,40,0.15)"                  : "rgba(255,255,255,0.1)",
     sliderCss:               isLight
       ? `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#c4973a,#9b7228);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#c4973a,#9b7228);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}`
+      : isGoldNavy
+      ? `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#d4b87a,#c9a961);box-shadow:0 0 8px rgba(201,169,97,0.5);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#d4b87a,#c9a961);box-shadow:0 0 8px rgba(201,169,97,0.5);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}`
       : `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 0 8px rgba(168,85,247,0.6);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#ec4899,#a855f7);box-shadow:0 0 8px rgba(168,85,247,0.6);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}`,
     footerText:              isLight ? "rgba(155,114,40,0.4)"                   : "rgba(255,255,255,0.15)",
   };
+
+  const { lang } = useLanguage();
 
   const [book, setBook] = useState<BookDetail | null>(null);
   const [chapter, setChapter] = useState<BookChapter | null>(null);
@@ -190,11 +190,17 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   const [showDetail, setShowDetail] = useState(true);
   const [descExpanded, setDescExpanded] = useState(false);
 
+  // ── Spanish auto-translation ─────────────────────────────────────────────
+  const [translatedChapter, setTranslatedChapter] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+  const [translateProgress, setTranslateProgress] = useState(0);
+
   // Reader settings
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [showToc, setShowToc] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
 
   // Highlights
@@ -202,6 +208,31 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   const { highlights, selection, addHighlight, removeHighlight, dismissSelection } = useHighlights(hlContext);
   const [pendingRemove, setPendingRemove] = useState<{ id: string; x: number; y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  // ── In-chapter pagination ─────────────────────────────────────────────────
+  const chapterContent = chapter?.content ?? "";
+  const pageStorageKey = `axiom-page-${slug}-${currentChapter}`;
+  const {
+    pages,
+    currentPage,
+    totalPages,
+    goNextPage,
+    goPrevPage,
+    isFirstPage,
+    isLastPage,
+  } = usePagination({
+    content: chapterContent,
+    fontSize,
+    storageKey: pageStorageKey,
+    rawText: true,   // Gutenberg / hard-wrapped plain text — normalize soft wraps
+  });
+
+  // Scroll to top when page turns
+  useEffect(() => {
+    if (!showDetail) {
+      contentRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    }
+  }, [currentPage, showDetail]);
 
   // Load book metadata
   useEffect(() => {
@@ -217,9 +248,30 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
       .finally(() => setLoading(false));
   }, [slug]);
 
+  // Auto-translate chapter when Spanish mode is on
+  useEffect(() => {
+    if (lang !== "es" || !chapter?.content) {
+      setTranslatedChapter(null);
+      return;
+    }
+    let cancelled = false;
+    setTranslating(true);
+    setTranslateProgress(0);
+    translateToSpanish(
+      chapter.content,
+      `book-${slug}-ch${currentChapter}`,
+      (pct) => { if (!cancelled) setTranslateProgress(pct); }
+    )
+      .then((text) => { if (!cancelled) setTranslatedChapter(text); })
+      .catch(() => { if (!cancelled) setTranslatedChapter(null); })
+      .finally(() => { if (!cancelled) setTranslating(false); });
+    return () => { cancelled = true; };
+  }, [lang, chapter?.content, slug, currentChapter]);
+
   // Load chapter
   useEffect(() => {
     if (!book) return;
+    setTranslatedChapter(null);
     setChapterLoading(true);
     fetchBookChapter(slug, currentChapter)
       .then(setChapter)
@@ -232,37 +284,38 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     }
   }, [slug, book, currentChapter]);
 
-  // Sync bookmark state
+  // Sync bookmark state from collections
   useEffect(() => {
-    const saved = localStorage.getItem(BOOKMARK_KEY(slug));
-    setBookmarked(saved ? parseInt(saved, 10) === currentChapter : false);
-  }, [slug, currentChapter]);
+    setBookmarked(isAnySaved(`book::${slug}`));
+  }, [slug]);
 
   // Auto-save progress
   useEffect(() => {
     if (!book) return;
-    localStorage.setItem(PROGRESS_KEY(slug), JSON.stringify({ chapter: currentChapter, total: book.chapter_count }));
+    localStorage.setItem(PROGRESS_KEY(slug), JSON.stringify({ chapter: currentChapter, total: book.chapter_count, lastRead: Date.now() }));
   }, [slug, book, currentChapter]);
 
+  function refreshBookmarked() {
+    setBookmarked(isAnySaved(`book::${slug}`));
+  }
+
   const toggleBookmark = useCallback(() => {
-    if (bookmarked) {
-      localStorage.removeItem(BOOKMARK_KEY(slug));
-      setBookmarked(false);
-    } else {
-      localStorage.setItem(BOOKMARK_KEY(slug), String(currentChapter));
-      setBookmarked(true);
-    }
-  }, [slug, currentChapter, bookmarked]);
+    setShowBookmarkModal(true);
+  }, []);
 
   const goPrev = () => { if (chapter?.has_prev) setCurrentChapter((n) => n - 1); };
   const goNext = () => { if (chapter?.has_next) setCurrentChapter((n) => n + 1); };
 
-  // Keyboard nav
+  // Keyboard nav — pages first, then chapters
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      if (e.key === "ArrowRight" || e.key === "ArrowDown") goNext();
-      if (e.key === "ArrowLeft" || e.key === "ArrowUp") goPrev();
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        if (!goNextPage()) goNext();
+      }
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        if (!goPrevPage()) goPrev();
+      }
       if (e.key === "f" || e.key === "F") setPresentationMode((v) => !v);
     };
     window.addEventListener("keydown", onKey);
@@ -433,52 +486,98 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           <main className="px-5 pt-8 pb-8 max-w-2xl mx-auto">
             <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
               Chapter {currentChapter}
+              {totalPages > 1 && (
+                <span style={{ color: th.textVeryMuted, fontWeight: "normal", letterSpacing: "0.05em" }}>
+                  {" "}· p. {currentPage}/{totalPages}
+                </span>
+              )}
             </p>
-            <h2
-              className="text-2xl font-black mb-8 leading-tight"
-              style={{ color: th.textPrimary }}
-              dangerouslySetInnerHTML={{ __html: chapter ? renderInline(chapter.chapter_title) : "Loading…" }}
-            />
+            {/* Show title only on first page */}
+            {isFirstPage && (
+              <h2
+                className="text-2xl font-black mb-8 leading-tight"
+                style={{ color: th.textPrimary }}
+                dangerouslySetInnerHTML={{ __html: chapter ? renderInline(chapter.chapter_title) : "Loading…" }}
+              />
+            )}
+            {/* Spanish translation status bar */}
+            {lang === "es" && (translating || translatedChapter) && (
+              <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
+                style={{ backgroundColor: "rgba(201,169,97,0.08)", border: "1px solid rgba(201,169,97,0.18)", color: th.textMuted }}>
+                {translating ? (
+                  <>
+                    <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
+                    <span>Traduciendo al español… {translateProgress}%</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🌐</span>
+                    <span>Traducido al español automáticamente</span>
+                  </>
+                )}
+              </div>
+            )}
             {chapterLoading ? (
               <div className="flex justify-center py-20">
                 <div className="w-6 h-6 rounded-full border-2 animate-spin"
                   style={{ borderColor: th.borderMed, borderTopColor: th.accent }} />
               </div>
             ) : (
-              renderChapterContent(chapter?.content, FONT_SIZES[fontSize], highlights, (id, x, y) => setPendingRemove({ id, x, y }), false, th.textContent, th.headingColor)
+              <div
+                key={`${currentChapter}-${currentPage}`}
+                style={{ animation: "axiomPageIn 0.18s ease-out" }}
+              >
+                <style>{`@keyframes axiomPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+                {renderChapterContent(
+                  // In Spanish mode show full translated chapter (scrollable); else use pagination
+                  lang === "es" && translatedChapter
+                    ? translatedChapter
+                    : pages[currentPage - 1] ?? "",
+                  FONT_SIZES[fontSize], highlights, (id, x, y) => setPendingRemove({ id, x, y }), false, th.textContent, th.headingColor)}
+              </div>
             )}
             <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-              Public domain text via Project Gutenberg • Free to read, share, and distribute
+              Public domain text • Free to read, share, and distribute
             </p>
           </main>
         </div>
 
-        {/* Bottom bar — prev/next chapter nav */}
+        {/* Bottom bar — page-then-chapter nav */}
         <div
           className="flex-shrink-0 flex items-center justify-between px-5 py-3"
           style={{ backgroundColor: th.pageBg, borderTop: `1px solid ${th.border}` }}
         >
+          {/* ← Prev: prev page first, then prev chapter */}
           <button
-            disabled={!chapter?.has_prev}
-            onClick={goPrev}
+            disabled={isFirstPage && !chapter?.has_prev}
+            onClick={() => { if (!goPrevPage()) goPrev(); }}
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
             style={{
-              backgroundColor: chapter?.has_prev ? th.prevBtnBg : "transparent",
-              color: chapter?.has_prev ? th.addLibText : th.textVeryMuted,
+              backgroundColor: (!isFirstPage || chapter?.has_prev) ? th.prevBtnBg : "transparent",
+              color: (!isFirstPage || chapter?.has_prev) ? th.addLibText : th.textVeryMuted,
               border: `1px solid ${th.prevBtnBorder}`,
-              cursor: chapter?.has_prev ? "pointer" : "not-allowed",
+              cursor: (!isFirstPage || chapter?.has_prev) ? "pointer" : "not-allowed",
             }}
           >
-            ← Previous
+            ← Prev
           </button>
+
+          {/* Center page indicator */}
+          {totalPages > 1 && (
+            <span className="text-xs font-bold" style={{ color: th.textVeryMuted }}>
+              {currentPage} / {totalPages}
+            </span>
+          )}
+
+          {/* Next →: next page first, then next chapter */}
           <button
-            disabled={!chapter?.has_next}
-            onClick={goNext}
+            disabled={isLastPage && !chapter?.has_next}
+            onClick={() => { if (!goNextPage()) goNext(); }}
             className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
             style={{
-              background: chapter?.has_next ? th.nextBtnGradient : "transparent",
-              color: chapter?.has_next ? "white" : th.textVeryMuted,
-              cursor: chapter?.has_next ? "pointer" : "not-allowed",
+              background: (!isLastPage || chapter?.has_next) ? th.nextBtnGradient : "transparent",
+              color: (!isLastPage || chapter?.has_next) ? "white" : th.textVeryMuted,
+              cursor: (!isLastPage || chapter?.has_next) ? "pointer" : "not-allowed",
             }}
           >
             Next →
@@ -520,14 +619,13 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
         {/* Settings panel */}
         {showSettings && (
-          <div className="fixed inset-0 z-40 flex flex-col justify-end" onClick={() => setShowSettings(false)}>
+          <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 px-4" onClick={() => setShowSettings(false)}>
             <div className="absolute inset-0 bg-black/50" />
             <div
-              className="relative rounded-t-3xl px-5 pt-3 pb-8"
+              className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
               style={{ backgroundColor: th.drawerBg, border: `1px solid ${th.borderMed}` }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: th.borderMed }} />
               <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
               <div className="mb-5">
                 <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>Text Size</p>
@@ -617,7 +715,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           <button
             onClick={toggleBookmark}
             className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-            style={{ color: bookmarked ? "#fbbf24" : th.iconInactive }}
+            style={{ color: bookmarked ? "#c9a961" : th.iconInactive }}
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"}>
               <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
@@ -651,7 +749,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               </h1>
               <p className="text-sm font-semibold mb-2" style={{ color: th.accent }}>{book.author}</p>
               <div className="flex items-center gap-1 mb-3">
-                <span style={{ color: "#fbbf24" }}>★</span>
+                <span style={{ color: "#c9a961" }}>★</span>
                 <span className="text-xs font-bold" style={{ color: th.textMuted }}>4.8</span>
                 <span className="text-xs" style={{ color: th.textVeryMuted }}>(Reformed Classic)</span>
               </div>
@@ -687,7 +785,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
               style={{ border: `1px solid ${th.addLibBorder}`, color: th.addLibText, backgroundColor: "transparent" }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#fbbf24" : th.addLibText }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c9a961" : th.addLibText }}>
                 <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
               </svg>
               {bookmarked ? "Bookmarked" : "Add to Library"}
@@ -708,12 +806,12 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           {/* Metadata chips */}
           <div className="flex gap-4 px-4 mb-6">
             {[
-              { icon: "📄", label: `${book.chapter_count} Chapters` },
-              { icon: "🌐", label: "English" },
-              { icon: "📅", label: book.year ? String(book.year) : "" },
+              { icon: "sections", label: `${book.chapter_count} Chapters` },
+              { icon: "language", label: "English" },
+              { icon: "year", label: book.year ? String(book.year) : "" },
             ].filter(m => m.label).map((m) => (
               <div key={m.label} className="flex items-center gap-1.5">
-                <span className="text-sm">{m.icon}</span>
+                <GeneratedMetaIcon type={m.icon as "sections" | "language" | "year"} size={15} />
                 <span className="text-xs" style={{ color: th.textMuted }}>{m.label}</span>
               </div>
             ))}
@@ -768,14 +866,13 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
       {/* ── Settings panel ─────────────────────────────────────────────────── */}
       {showSettings && (
-        <div className="fixed inset-0 z-40 flex flex-col justify-end" onClick={() => setShowSettings(false)}>
+        <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 px-4" onClick={() => setShowSettings(false)}>
           <div className="absolute inset-0 bg-black/50" />
           <div
-            className="relative rounded-t-3xl px-5 pt-3 pb-8"
+            className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
             style={{ backgroundColor: th.drawerBg, border: `1px solid ${th.borderMed}` }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: th.borderMed }} />
             <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
             <div className="mb-5">
               <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>Text Size</p>
@@ -824,6 +921,14 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           y={pendingRemove.y}
           onConfirm={() => { removeHighlight(pendingRemove.id); setPendingRemove(null); }}
           onDismiss={() => setPendingRemove(null)}
+        />
+      )}
+
+      {showBookmarkModal && book && (
+        <BookmarkModal
+          item={{ id: `book::${slug}`, type: "book", title: book.title, subtitle: book.author ?? undefined, preview: book.year ? String(book.year) : undefined }}
+          label={book.title}
+          onClose={() => { setShowBookmarkModal(false); refreshBookmarked(); }}
         />
       )}
     </div>

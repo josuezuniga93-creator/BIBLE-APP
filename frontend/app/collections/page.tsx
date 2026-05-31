@@ -1,33 +1,424 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import {
   loadCollections, deleteCollection, renameCollection,
   COLLECTION_COLORS, COLLECTION_EMOJIS,
   type Collection, type SavedItem,
 } from "../lib/collections";
+import type { Highlight, HLColor } from "../lib/highlights";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
 
-// ─── Empty state ───────────────────────────────────────────────────────────────
+// ─── Highlight aggregation ────────────────────────────────────────────────────
 
-function EmptyState({ lang }: { lang: import("../lib/i18n").Lang }) {
+interface AggregatedHighlight extends Highlight {
+  context: string;       // raw key suffix, e.g. "book-pilgrim-1"
+  contextLabel: string;  // human-readable
+}
+
+type ColorNames = Record<HLColor, string>;
+const HL_NAMES_KEY = "axiom-hl-colornames";
+const DEFAULT_NAMES: ColorNames = { purple: "Purple", yellow: "Yellow", red: "Red", blue: "Blue", lime: "Lime Green", pink: "Pink" };
+
+function loadColorNames(): ColorNames {
+  try {
+    const raw = localStorage.getItem(HL_NAMES_KEY);
+    return raw ? { ...DEFAULT_NAMES, ...JSON.parse(raw) } : { ...DEFAULT_NAMES };
+  } catch { return { ...DEFAULT_NAMES }; }
+}
+
+function saveColorNames(names: ColorNames) {
+  localStorage.setItem(HL_NAMES_KEY, JSON.stringify(names));
+}
+
+function makeContextLabel(ctx: string): string {
+  // bible-{bookName-slug}-{chapter}
+  const bibleM = ctx.match(/^bible-(.+)-(\d+)$/);
+  if (bibleM) {
+    const bookName = bibleM[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return `Bible · ${bookName} ${bibleM[2]}`;
+  }
+  // book-{slug}-{chapter}
+  const bookM = ctx.match(/^book-(.+)-(\d+)$/);
+  if (bookM) {
+    const slug = bookM[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return `Free Books · ${slug} Ch.${bookM[2]}`;
+  }
+  // learn-{docId}-{sectionId}
+  const learnM = ctx.match(/^learn-(.+)$/);
+  if (learnM) {
+    const label = learnM[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return `Historical Docs · ${label}`;
+  }
+  return ctx.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/** Parse a bible highlight id like "bible-{bookNum}-{chapter}-{verseNum}" → verse number */
+function parseBibleVerseNum(id: string): number | null {
+  const m = id.match(/^bible-\d+-\d+-(\d+)$/);
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/** Build a link back to the Bible chapter for a highlight */
+function highlightHref(context: string): string {
+  const bibleM = context.match(/^bible-(.+)-(\d+)$/);
+  if (bibleM) {
+    const bookName = bibleM[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+    return `/lexicon?book=${encodeURIComponent(bookName)}&chapter=${bibleM[2]}`;
+  }
+  const bookM = context.match(/^book-(.+)-(\d+)$/);
+  if (bookM) return `/library/${bookM[1]}`;
+  const learnM = context.match(/^learn-(.+?)(-[^-]+)?$/);
+  if (learnM) return `/learn?doc=${learnM[1]}`;
+  return "/";
+}
+
+function isBibleHighlight(context: string) { return /^bible-/.test(context); }
+
+function loadAllHighlights(): AggregatedHighlight[] {
+  if (typeof window === "undefined") return [];
+  const result: AggregatedHighlight[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith("axiom-hl-")) continue;
+    if (key === HL_NAMES_KEY) continue;
+    const context = key.replace("axiom-hl-", "");
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const items: Highlight[] = JSON.parse(raw);
+      items.forEach((hl) => result.push({ ...hl, context, contextLabel: makeContextLabel(context) }));
+    } catch { /* skip */ }
+  }
+  return result.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+function deleteHighlight(context: string, id: string) {
+  if (typeof window === "undefined") return;
+  const key = `axiom-hl-${context}`;
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return;
+    const items: Highlight[] = JSON.parse(raw);
+    const next = items.filter((h) => h.id !== id);
+    if (next.length === 0) localStorage.removeItem(key);
+    else localStorage.setItem(key, JSON.stringify(next));
+  } catch { /* */ }
+}
+
+// ─── Color config ─────────────────────────────────────────────────────────────
+
+const HL_COLORS: { key: HLColor; dot: string; ring: string }[] = [
+  { key: "purple", dot: "#7546e3", ring: "rgba(117,70,227,0.30)" },
+  { key: "yellow", dot: "#f2f06d", ring: "rgba(242,240,109,0.30)" },
+  { key: "red",    dot: "#e34646", ring: "rgba(227,70,70,0.30)" },
+  { key: "blue",   dot: "#46d3e3", ring: "rgba(70,211,227,0.30)" },
+  { key: "lime",   dot: "#a9f558", ring: "rgba(169,245,88,0.30)" },
+  { key: "pink",   dot: "#f558f2", ring: "rgba(245,88,242,0.30)" },
+];
+
+// ─── Highlight color detail ───────────────────────────────────────────────────
+
+function HighlightColorDetail({
+  color,
+  colorDot,
+  displayName,
+  highlights: initialHighlights,
+  onClose,
+}: {
+  color: HLColor;
+  colorDot: string;
+  displayName: string;
+  highlights: AggregatedHighlight[];
+  onClose: () => void;
+}) {
+  const router = useRouter();
+  const [highlights, setHighlights] = useState(initialHighlights);
+
+  const handleDelete = (hl: AggregatedHighlight) => {
+    deleteHighlight(hl.context, hl.id);
+    setHighlights((prev) => prev.filter((h) => h.id !== hl.id));
+  };
+
+  const handleNavigate = (hl: AggregatedHighlight) => {
+    const href = highlightHref(hl.context);
+    router.push(href);
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center py-20 px-8 text-center">
-      <div className="w-20 h-20 rounded-3xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-4xl mb-5">
-        🔖
+    <div className="fixed inset-0 z-[300] flex flex-col max-w-lg mx-auto" style={{ background: "#0f0f0f" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 flex items-center justify-center rounded-full"
+          style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div className="flex items-center gap-2.5 flex-1">
+          <span className="w-4 h-4 rounded-full flex-shrink-0" style={{ background: colorDot }} />
+          <p className="text-base font-bold text-white">{displayName}</p>
+          <span
+            className="text-[10px] font-black px-2 py-0.5 rounded-full ml-1"
+            style={{ background: colorDot + "25", color: colorDot }}
+          >
+            {highlights.length}
+          </span>
+        </div>
       </div>
-      <p className="text-base font-bold text-white/70 mb-2">{t(lang, "col_empty_title")}</p>
-      <p className="text-sm text-white/30 max-w-xs leading-relaxed">
-        {t(lang, "col_empty_sub")}
-      </p>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {highlights.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-4xl mb-3">🖊️</div>
+            <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>No highlights yet</p>
+            <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+              Highlight text in Scripture, books, or documents to see it here.
+            </p>
+          </div>
+        ) : (
+          highlights.map((hl) => {
+            const isBible = isBibleHighlight(hl.context);
+            const verseNum = isBible ? parseBibleVerseNum(hl.id) : null;
+            // Build a display reference like "Genesis 1:3"
+            const bibleRef = (() => {
+              if (!isBible) return null;
+              const m = hl.context.match(/^bible-(.+)-(\d+)$/);
+              if (!m || verseNum === null) return null;
+              const bookName = m[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              return `${bookName} ${m[2]}:${verseNum}`;
+            })();
+
+            return (
+              <div
+                key={hl.id}
+                className="rounded-2xl px-4 py-3.5 space-y-2 active:scale-[0.98] transition-transform cursor-pointer"
+                style={{ background: colorDot + "10", border: `1px solid ${colorDot}28` }}
+                onClick={() => handleNavigate(hl)}
+              >
+                {/* Highlighted text */}
+                <p
+                  className="text-sm leading-relaxed font-medium"
+                  style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Georgia, serif", borderLeft: `3px solid ${colorDot}`, paddingLeft: "10px" }}
+                >
+                  &ldquo;{hl.text}&rdquo;
+                </p>
+                {/* Reference + date + delete */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span
+                      className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full self-start"
+                      style={{ background: colorDot + "18", color: colorDot }}
+                    >
+                      {bibleRef ?? hl.contextLabel}
+                    </span>
+                    <span className="text-[9px] pl-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+                      {new Date(hl.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(hl); }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.2)" }}
+                    title="Delete highlight"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
     </div>
   );
 }
 
-// ─── Collection detail view ────────────────────────────────────────────────────
+// ─── Highlights section ───────────────────────────────────────────────────────
+
+function HighlightsSection() {
+  const [allHighlights, setAllHighlights] = useState<AggregatedHighlight[]>([]);
+  const [colorNames, setColorNames]       = useState<ColorNames>(DEFAULT_NAMES);
+  const [editingColor, setEditingColor]   = useState<HLColor | null>(null);
+  const [editValue, setEditValue]         = useState("");
+  const [openColor, setOpenColor]         = useState<{ key: HLColor; dot: string } | null>(null);
+
+  useEffect(() => {
+    setAllHighlights(loadAllHighlights());
+    setColorNames(loadColorNames());
+  }, []);
+
+  const countFor = (color: HLColor) => allHighlights.filter((h) => h.color === color).length;
+
+  const startEdit = (color: HLColor, currentName: string) => {
+    setEditingColor(color);
+    setEditValue(currentName);
+  };
+
+  const commitEdit = useCallback(() => {
+    if (!editingColor) return;
+    const name = editValue.trim() || DEFAULT_NAMES[editingColor];
+    const next = { ...colorNames, [editingColor]: name };
+    setColorNames(next);
+    saveColorNames(next);
+    setEditingColor(null);
+  }, [editingColor, editValue, colorNames]);
+
+  const openDetail = useOpenColor(setOpenColor);
+
+  if (openColor) {
+    const cfg = HL_COLORS.find((c) => c.key === openColor.key)!;
+    return (
+      <HighlightColorDetail
+        color={openColor.key}
+        colorDot={cfg.dot}
+        displayName={colorNames[openColor.key]}
+        highlights={allHighlights.filter((h) => h.color === openColor.key)}
+        onClose={() => setOpenColor(null)}
+      />
+    );
+  }
+
+  return (
+    <section className="space-y-3">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+          My Highlights
+        </h2>
+        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {allHighlights.length} total
+        </span>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {HL_COLORS.map(({ key, dot, ring }) => {
+          const count = countFor(key);
+          const name = colorNames[key];
+          const isEditing = editingColor === key;
+
+          return (
+            <div
+              key={key}
+              className="rounded-2xl overflow-hidden"
+              style={{ background: dot + "10", border: `1px solid ${dot}28` }}
+            >
+              {/* Color bar */}
+              <div className="h-1 w-full" style={{ background: dot }} />
+
+              <div className="p-3.5 space-y-2.5">
+                {/* Swatch + count */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className="w-7 h-7 rounded-full border-2 flex-shrink-0"
+                    style={{ background: dot, borderColor: ring, boxShadow: `0 0 8px ${ring}` }}
+                  />
+                  <span
+                    className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                    style={{ background: dot + "22", color: dot }}
+                  >
+                    {count}
+                  </span>
+                </div>
+
+                {/* Color name — editable */}
+                {isEditing ? (
+                  <input
+                    autoFocus
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    onBlur={commitEdit}
+                    onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditingColor(null); }}
+                    className="w-full text-sm font-bold rounded-lg px-2 py-1 focus:outline-none"
+                    style={{ background: "rgba(255,255,255,0.07)", color: "#fff", border: `1px solid ${dot}50` }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => { if (count > 0) openDetail({ key, dot }); }}
+                    onContextMenu={(e) => { e.preventDefault(); startEdit(key, name); }}
+                    className="w-full text-left"
+                  >
+                    <p className="text-sm font-bold leading-none" style={{ color: "rgba(255,255,255,0.85)" }}>{name}</p>
+                    <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      {count === 0 ? "No highlights" : `${count} passage${count !== 1 ? "s" : ""}`}
+                    </p>
+                  </button>
+                )}
+
+                {/* View / Edit row */}
+                <div className="flex items-center justify-between pt-0.5">
+                  <button
+                    onClick={() => startEdit(key, name)}
+                    className="text-[9px] font-bold"
+                    style={{ color: "rgba(255,255,255,0.25)" }}
+                  >
+                    Rename
+                  </button>
+                  {count > 0 && (
+                    <button
+                      onClick={() => openDetail({ key, dot })}
+                      className="text-[9px] font-bold px-2.5 py-1 rounded-lg"
+                      style={{ background: dot + "18", color: dot }}
+                    >
+                      View all →
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// tiny helper so the component body isn't polluted
+function useOpenColor(setter: (v: { key: HLColor; dot: string } | null) => void) {
+  return useCallback((v: { key: HLColor; dot: string }) => setter(v), [setter]);
+}
+
+// ─── Collections helpers ──────────────────────────────────────────────────────
+
+function itemHref(item: SavedItem): string {
+  if (item.type === "book") {
+    const slug = item.id.replace(/^book::/, "");
+    return `/library/${slug}`;
+  }
+  if (item.type === "learn") {
+    const docId = item.id.replace(/^learn::/, "");
+    return `/learn?doc=${docId}`;
+  }
+  if (item.type === "video") return `/videos`;
+  if (item.type === "verse") {
+    const parts = item.id.replace(/^verse::/, "").split("::");
+    if (parts.length >= 2) return `/lexicon?book=${encodeURIComponent(parts[0])}&chapter=${parts[1]}`;
+    return `/lexicon`;
+  }
+  return "/";
+}
+
+function EmptyState({ lang }: { lang: import("../lib/i18n").Lang }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+      <div className="w-20 h-20 rounded-3xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-4xl mb-5">
+        🔖
+      </div>
+      <p className="text-base font-bold text-white/70 mb-2">{t(lang, "col_empty_title")}</p>
+      <p className="text-sm text-white/30 max-w-xs leading-relaxed">{t(lang, "col_empty_sub")}</p>
+    </div>
+  );
+}
 
 function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; onClose: () => void; onUpdated: () => void; lang: import("../lib/i18n").Lang }) {
+  const router = useRouter();
   const [editing, setEditing]   = useState(false);
   const [name, setName]         = useState(col.name);
   const [emoji, setEmoji]       = useState(col.emoji);
@@ -48,7 +439,6 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
 
   return (
     <div className="fixed inset-0 z-[300] bg-[#0f0f0f] flex flex-col max-w-lg mx-auto">
-      {/* Header */}
       <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b border-white/[0.07]">
         <button
           onClick={onClose}
@@ -70,10 +460,8 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
         </button>
       </div>
 
-      {/* Edit form */}
       {editing && (
         <div className="px-5 py-4 border-b border-white/[0.07] space-y-3">
-          {/* Emoji */}
           <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
             {COLLECTION_EMOJIS.map((e) => (
               <button key={e} onClick={() => setEmoji(e)}
@@ -83,14 +471,12 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
               </button>
             ))}
           </div>
-          {/* Name */}
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="w-full px-3 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
             style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
           />
-          {/* Colors */}
           <div className="flex gap-2">
             {COLLECTION_COLORS.map((c) => (
               <button key={c} onClick={() => setColor(c)}
@@ -98,7 +484,6 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
                 style={{ backgroundColor: c, outline: color === c ? "2px solid white" : "none", outlineOffset: "2px" }} />
             ))}
           </div>
-          {/* Actions */}
           <div className="flex gap-2">
             {!confirmDelete ? (
               <button onClick={() => setConfirmDelete(true)}
@@ -120,7 +505,6 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
         </div>
       )}
 
-      {/* Items list */}
       <div className="flex-1 overflow-y-auto">
         {col.items.length === 0 ? (
           <div className="text-center py-16">
@@ -134,9 +518,10 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
               {col.items.length} {col.items.length === 1 ? t(lang, "col_item") : t(lang, "col_items")}
             </p>
             {[...col.items].sort((a, b) => b.savedAt - a.savedAt).map((item) => (
-              <div
+              <button
                 key={item.id}
-                className="rounded-2xl p-4 border"
+                onClick={() => router.push(itemHref(item))}
+                className="w-full rounded-2xl p-4 border text-left active:scale-[0.98] transition-transform"
                 style={{ backgroundColor: "rgba(255,255,255,0.03)", borderColor: `${col.color}30` }}
               >
                 <div className="flex items-start justify-between gap-2 mb-1">
@@ -147,17 +532,16 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
                     >
                       {item.type === "learn" ? t(lang, "col_historic") : item.type === "book" ? t(lang, "col_book") : item.type === "video" ? t(lang, "col_video") : t(lang, "col_verse")}
                     </span>
-                    {item.subtitle && (
-                      <p className="text-[10px] text-white/35 mb-0.5">{item.subtitle}</p>
-                    )}
+                    {item.subtitle && <p className="text-[10px] text-white/35 mb-0.5">{item.subtitle}</p>}
                     <p className="text-sm font-bold text-white/85 leading-snug">{item.title}</p>
                   </div>
-                  <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-sm"
-                    style={{ backgroundColor: `${col.color}25` }}
-                  >
-                    {item.type === "learn" ? "📜" : item.type === "book" ? "📖" : item.type === "video" ? "▶️" : "✝️"}
-
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: `${col.color}25` }}>
+                      {item.type === "learn" ? "📜" : item.type === "book" ? "📖" : item.type === "video" ? "▶️" : "✝️"}
+                    </div>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white/20">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
                 </div>
                 {item.preview && (
@@ -168,7 +552,7 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
                 <p className="text-[9px] text-white/20 mt-2">
                   {t(lang, "col_saved")} {new Date(item.savedAt).toLocaleDateString(lang === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                 </p>
-              </div>
+              </button>
             ))}
           </div>
         )}
@@ -176,8 +560,6 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
     </div>
   );
 }
-
-// ─── Collection card ───────────────────────────────────────────────────────────
 
 function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () => void; lang: import("../lib/i18n").Lang }) {
   const topItem = col.items.sort((a, b) => b.savedAt - a.savedAt)[0];
@@ -187,15 +569,11 @@ function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () =
       className="w-full rounded-2xl overflow-hidden border active:scale-[0.98] transition-transform text-left"
       style={{ backgroundColor: `${col.color}12`, borderColor: `${col.color}30` }}
     >
-      {/* Color accent bar */}
       <div className="h-1 w-full" style={{ backgroundColor: col.color }} />
       <div className="p-4">
         <div className="flex items-start justify-between mb-3">
           <span className="text-2xl">{col.emoji}</span>
-          <span
-            className="text-[10px] font-black px-2 py-0.5 rounded-full"
-            style={{ backgroundColor: `${col.color}20`, color: col.color }}
-          >
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full" style={{ backgroundColor: `${col.color}20`, color: col.color }}>
             {col.items.length}
           </span>
         </div>
@@ -234,36 +612,49 @@ export default function CollectionsPage() {
         <p className="text-xs text-white/30 mt-0.5">{t(lang, "col_sub")}</p>
       </div>
 
-      {/* Grid */}
-      <main className="max-w-lg mx-auto px-4 pb-24">
-        {collections.length === 0 ? (
-          <EmptyState lang={lang} />
-        ) : (
-          <div className="grid grid-cols-2 gap-3 mt-4">
-            {collections.map((col) => (
-              <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} lang={lang} />
-            ))}
-          </div>
-        )}
+      <main className="max-w-lg mx-auto px-4 pb-24 space-y-8 mt-4">
 
-        {collections.length > 0 && (
-          <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
-            <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
-            <p className="text-xs text-white/25 leading-relaxed">
-              {t(lang, "col_add_more_sub")}
-            </p>
+        {/* ── Highlights section ─────────────────────────────────────────── */}
+        <HighlightsSection />
+
+        {/* ── Divider ────────────────────────────────────────────────────── */}
+        <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }} />
+
+        {/* ── Collections section ────────────────────────────────────────── */}
+        <section className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+              {t(lang, "col_heading")}
+            </h2>
+            {collections.length > 0 && (
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}>
+                {collections.length}
+              </span>
+            )}
           </div>
-        )}
+
+          {collections.length === 0 ? (
+            <EmptyState lang={lang} />
+          ) : (
+            <div className="grid grid-cols-2 gap-3">
+              {collections.map((col) => (
+                <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} lang={lang} />
+              ))}
+            </div>
+          )}
+
+          {collections.length > 0 && (
+            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
+              <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
+              <p className="text-xs text-white/25 leading-relaxed">{t(lang, "col_add_more_sub")}</p>
+            </div>
+          )}
+        </section>
       </main>
 
-      {/* Detail overlay */}
+      {/* Collection detail overlay */}
       {activeCol && (
-        <CollectionDetail
-          col={activeCol}
-          onClose={() => setSelected(null)}
-          onUpdated={refresh}
-          lang={lang}
-        />
+        <CollectionDetail col={activeCol} onClose={() => setSelected(null)} onUpdated={refresh} lang={lang} />
       )}
     </div>
   );

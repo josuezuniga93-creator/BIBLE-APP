@@ -2,7 +2,7 @@
 // Highlights are stored per reading context (book chapter / learn section).
 // Format: axiom-hl-book-{slug}-{chapter}  |  axiom-hl-learn-{docId}-{sectionId}
 
-export type HLColor = "yellow" | "green" | "blue" | "pink";
+export type HLColor = "purple" | "yellow" | "red" | "blue" | "lime" | "pink";
 
 export interface Highlight {
   id: string;

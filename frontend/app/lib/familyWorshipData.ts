@@ -10,6 +10,7 @@ export interface FamilyWorshipDay {
   discussion: string[];          // 3–4 questions for all ages
   prayer: FWPrayer;
   hymn: FWHymn;
+  hymnEs?: FWHymn;               // Spanish hymn (optional, used in ES mode)
 }
 
 export interface FWScripture {
@@ -97,6 +98,18 @@ He giveth power to the faint; and to them that have no might he increaseth stren
         `Frail children of dust, and feeble as frail,\nIn thee do we trust, nor find thee to fail;\nThy mercies how tender, how firm to the end,\nOur Maker, Defender, Redeemer, and Friend.`,
       ],
     },
+    hymnEs: {
+      title: "Santo, Santo, Santo",
+      author: "Reginald Heber / trad. español",
+      year: 1826,
+      tune: "NICAEA",
+      verses: [
+        `Santo, santo, santo, Señor omnipotente,\nSiempre el labio mío loores te dará;\nSanto, santo, santo, te adoro reverente,\nDios en tres personas, bendita Trinidad.`,
+        `Santo, santo, santo, en numerosa hueste,\nMártires y santos te adoran sin cesar;\nCualquiera que haya sido en vida su mal suerte,\nPostrado ante tu trono te vienen a alabar.`,
+        `Santo, santo, santo, la inmensa muchedumbre\nDe ángeles que cumplen tu santa voluntad,\nTe alaban y proclaman con júbilo y vislumbre\nTu gloria, tu poder y tu eternidad.`,
+        `Santo, santo, santo, Señor omnipotente,\nTus obras dan testimonio de quien tú eres, Dios;\nSanto, santo, santo, te adoro reverente,\nDios en tres personas, bendita Trinidad.`,
+      ],
+    },
   },
 
   // ── TUESDAY ──────────────────────────────────────────────────────────────────
@@ -145,6 +158,16 @@ For all have sinned, and come short of the glory of God.`,
         `Not the labor of my hands\nCan fulfill thy law's demands;\nCould my zeal no respite know,\nCould my tears forever flow,\nAll for sin could not atone;\nThou must save, and thou alone.`,
         `Nothing in my hand I bring,\nSimply to the cross I cling;\nNaked, come to thee for dress;\nHelpless, look to thee for grace;\nFoul, I to the fountain fly;\nWash me, Savior, or I die.`,
         `While I draw this fleeting breath,\nWhen mine eyes shall close in death,\nWhen I soar to worlds unknown,\nSee thee on thy judgment throne,\nRock of Ages, cleft for me,\nLet me hide myself in thee.`,
+      ],
+    },
+    hymnEs: {
+      title: "Roca de la Eternidad",
+      author: "Augustus Toplady / trad. español",
+      year: 1776,
+      verses: [
+        `Roca de la eternidad,\nFuiste abierta para mí;\nSé mi escondite y mi paz,\nSolo encuentro bien en ti.\nDe mis culpas el raudal\nSolo tú puedes limpiar,\nSolo tú eres manantial\nQue me puede purificar.`,
+        `No hay trabajo de mis manos\nQue tu ley pueda cumplir;\nY si fluyen todo el año\nMis lágrimas sin cesar,\nNo bastarán para un pecado,\nSolo tú me puedes dar\nEl perdón tan esperado;\nTú solamente puedes salvar.`,
+        `Nada traigo en mi favor,\nSolo me acojo a tu cruz;\nNecesito del Señor\nSu justicia, gracia y luz.\nFuente de agua viva, tú,\nA ti voy con sed y sed;\nLímpiame, oh Jesús,\nO en mis culpas moriré.`,
       ],
     },
   },
@@ -201,6 +224,16 @@ All we like sheep have gone astray; we have turned every one to his own way; and
         `When he comes, our glorious King,\nAll his ransomed home to bring,\nThen anew his song we'll sing:\nHallelujah! What a Savior!`,
       ],
     },
+    hymnEs: {
+      title: "¿A quién iré?",
+      author: "William W. Walford / trad. español",
+      year: 1845,
+      verses: [
+        `¿A quién iré? Solo a ti, Señor,\nPues eres fuente de todo bien;\nTú eres mi vida, mi luz, mi amor,\nY en ti descanso mi alma también.\nA ti vendré, a ti vendré,\nSalvador mío, a ti vendré.`,
+        `En ti hallé paz y me redimiste,\nDel yugo eterno de mi maldad;\nTú cargaste mi culpa y sufriste,\nY me diste tu justa bondad.\nA ti vendré, a ti vendré,\nSalvador mío, a ti vendré.`,
+        `No hay en la tierra otro Salvador,\nNi nombre alguno que pueda salvar;\nSolo tu sangre, oh Cristo Señor,\nPuede el pecado en mí perdonar.\nA ti vendré, a ti vendré,\nSalvador mío, a ti vendré.`,
+      ],
+    },
   },
 
   // ── THURSDAY ──────────────────────────────────────────────────────────────────
@@ -254,6 +287,16 @@ For by grace are ye saved through faith; and that not of yourselves: it is the g
         `No condemnation now I dread;\nJesus, and all in him, is mine;\nAlive in him, my living Head,\nAnd clothed in righteousness divine,\nBold I approach the eternal throne,\nAnd claim the crown, through Christ my own.`,
       ],
     },
+    hymnEs: {
+      title: "Gracia admirable",
+      author: "John Newton / trad. español",
+      year: 1779,
+      verses: [
+        `Gracia admirable del Señor\nQue a un pecador salvó;\nYo, que perdido en mi extravío,\nSu gracia me alcanzó.\nGracia que temo en mi temor\nY que alivió mi angustia;\nCuán precioso fue el amor\nQue rescató al que estaba perdido.`,
+        `Su gracia me enseñó a temer,\nMis dudas disipó;\nCuán dulce fue sentir que Él\nMi alma así libró.\nMuchos peligros, penas, luchas\nYa he tenido que pasar;\nFue la gracia quien me trajo\nHasta aquí en paz sin par.`,
+        `Cuando llevemos diez mil años\nBrillando como el sol,\nAún cantaremos sin cesar\nLas glorias de su amor;\nGracia admirable del Señor,\nQue a un pecador salvó,\nYo, que perdido en mi extravío,\nSu gracia me alcanzó.`,
+      ],
+    },
   },
 
   // ── FRIDAY ──────────────────────────────────────────────────────────────────
@@ -301,6 +344,17 @@ For by grace are ye saved through faith; and that not of yourselves: it is the g
         `Elect from every nation,\nYet one o'er all the earth;\nHer charter of salvation,\nOne Lord, one faith, one birth;\nOne holy Name she blesses,\nPartakes one holy food,\nAnd to one hope she presses,\nWith every grace endued.`,
         `Though with a scornful wonder\nMen see her sore oppressed,\nBy schisms rent asunder,\nBy heresies distressed;\nYet saints their watch are keeping,\nTheir cry goes up, "How long?"\nAnd soon the night of weeping\nShall be the morn of song.`,
         `'Mid toil and tribulation,\nAnd tumult of her war,\nShe waits the consummation\nOf peace forevermore;\nTill, with the vision glorious,\nHer longing eyes are blest,\nAnd the great Church victorious\nShall be the Church at rest.`,
+      ],
+    },
+    hymnEs: {
+      title: "La Iglesia de Cristo",
+      author: "Samuel J. Stone / trad. español",
+      year: 1866,
+      verses: [
+        `La iglesia de Cristo\nEn Él tiene su fe;\nEs nueva creación\nPor gracia y su poder.\nDescendió del cielo\nBuscando a su esposa;\nCon su sangre preciosa\nÉl la redimió.`,
+        `Elegida entre naciones,\nUna en todo el mundo;\nUn Señor, una fe,\nUn bautismo profundo.\nUn solo nombre bendice,\nUn pan celestial comparte;\nUna sola esperanza guía\nA cada creyente fiel.`,
+        `Aunque el mundo la mire\nCon desdén y aflicción,\nY herejes la dividan\nCon falsa enseñanza;\nLos santos siguen velando,\nClaman: "¿Hasta cuándo, Señor?"\nY la noche de llanto\nSerá mañana de amor.`,
+        `Entre pruebas y tormentas,\nEn medio de la guerra,\nEspera la consumación\nDe paz por siempre eterna;\nHasta que, con gloria plena,\nSus ojos vean al Rey,\nY la Iglesia victoriosa\nDescanse en su ley.`,
       ],
     },
   },
@@ -360,6 +414,17 @@ I will meditate in thy precepts, and have respect unto thy ways. I will delight 
         `"The soul that on Jesus hath leaned for repose,\nI will not, I will not desert to his foes;\nThat soul, though all hell should endeavor to shake,\nI'll never, no never, no never forsake!"`,
       ],
     },
+    hymnEs: {
+      title: "Cuán firme cimiento",
+      author: "John Rippon / trad. español",
+      year: 1787,
+      verses: [
+        `¡Cuán firme cimiento se ha dado a la fe\nDe todos los fieles en Cristo Jesús!\nQué más en su Palabra nos puede dar Él,\nA quienes por gracia buscamos su luz.`,
+        `"No temas, estoy contigo, no desmayes;\nYo soy tu Dios, te ayudaré;\nCon mi diestra justiciera te sostendré,\nJamás te dejaré caer."`,
+        `"Cuando cruces las aguas, yo estaré;\nLos ríos no te anegarán;\nEstaré en tus tribulaciones,\nPara santificar tu aflicción."`,
+        `"El alma que en Jesús confía y descansa\nNo la abandonaré a sus enemigos;\nAunque el infierno tiemble y la sacuda,\nNunca, jamás la desampararé."`,
+      ],
+    },
   },
 
   // ── SUNDAY ──────────────────────────────────────────────────────────────────
@@ -411,6 +476,16 @@ O death, where is thy sting? O grave, where is thy victory? The sting of death i
         `Crown him the Lord of life,\nWho triumphed o'er the grave,\nAnd rose victorious in the strife\nFor those he came to save.\nHis glories now we sing,\nWho died, and rose on high,\nWho died eternal life to bring,\nAnd lives that death may die.`,
         `Crown him the Lord of love;\nBehold his hands and side,\nRich wounds, yet visible above,\nIn beauty glorified.\nNo angel in the sky\nCan fully bear that sight,\nBut downward bends his burning eye\nAt mysteries so bright.`,
         `Crown him the Lord of years,\nThe Potentate of time,\nCreator of the rolling spheres,\nIneffably sublime.\nAll hail, Redeemer, hail!\nFor thou hast died for me;\nThy praise and glory shall not fail\nThroughout eternity.`,
+      ],
+    },
+    hymnEs: {
+      title: "Cristo, el Rey Resucitado",
+      author: "trad. español",
+      year: 1900,
+      verses: [
+        `Cristo, el Rey resucitado,\nTriunfó sobre la muerte y el sepulcro;\nVive ahora exaltado,\nSentado en gloria, el Cordero bendito.\nDespierta, alma mía, y canta\nAl que murió por ti;\nY salúdale como tu Rey\nPor toda la eternidad.`,
+        `Coronadle Rey de reyes,\nDe los cielos y la tierra Señor;\nSus victorias no tienen número,\nSu nombre es digno de honor.\nAhora sus glorias cantamos,\nMurió y resucitó;\nVida eterna nos ha dado,\nY la muerte Él venció.`,
+        `Coronadle Rey eterno,\nCreador del tiempo y del espacio;\nTodo homenaje le rindamos,\nRedentor de todo el universo.\nAlabad, oh redimidos,\nAl que murió por vos;\nSu alabanza nunca cese\nPor los siglos de los siglos. Amén.`,
       ],
     },
   },

@@ -2,15 +2,199 @@
 // Original text by J.C. Ryle (1816–1900). Fully public domain.
 // Adapted for daily family worship.
 
+import { RYLE_JOHN_COMMENTARY } from "./ryleJohnCommentary";
+import { RYLE_JOHN_CONCISE_COMMENTARY } from "./ryleJohnConciseCommentary";
+
 export interface DailyDevotional {
   date: string;
   displayDate: string;
   theme: string;
   scripture: { reference: string; text: string; translation: string; };
   devotional: string;
+  fullDevotional?: string;
   prayer: string;
   hymn: { title: string; author: string; year: number; firstLine?: string; };
+  ryleVolume?: 1 | 2 | 3;
+  ryleSection?: number;
+  audioTracks?: Array<{ title: string; duration: string; url: string; source: "LibriVox" }>;
 }
+
+type RyleJohnSection = {
+  ref: string;
+  theme: string;
+  volume: 1 | 2 | 3;
+  section: number;
+  duration: string;
+};
+
+const RYLE_JOHN_AUDIO_BASE: Record<1 | 2 | 3, string> = {
+  1: "https://www.archive.org/download/expositorythoughtsjohnvol1_1411_librivox",
+  2: "https://www.archive.org/download/expositorythoughtsjohn2_1608_librivox",
+  3: "https://www.archive.org/download/expositorythoughtsjohn3_2101_librivox",
+};
+
+function audioUrl(volume: 1 | 2 | 3, section: number): string {
+  const padded = String(section).padStart(2, "0");
+  if (volume === 1) return `${RYLE_JOHN_AUDIO_BASE[volume]}/expositorythoughtsjohn1_${padded}_ryle_128kb.mp3`;
+  if (volume === 2) return `${RYLE_JOHN_AUDIO_BASE[volume]}/expositorythoughtsjohn2_${padded}_ryle_128kb.mp3`;
+  return `${RYLE_JOHN_AUDIO_BASE[volume]}/expositorythoughtsjohn3_${padded}_ryle_128kb.mp3`;
+}
+
+const RYLE_JOHN_SECTIONS: RyleJohnSection[] = [
+  { ref: "John 1:1-5", theme: "The Eternal Word", volume: 1, section: 1, duration: "00:33:27" },
+  { ref: "John 1:6-13", theme: "The Witness and the Children of God", volume: 1, section: 2, duration: "00:29:56" },
+  { ref: "John 1:14", theme: "The Word Made Flesh", volume: 1, section: 3, duration: "00:26:25" },
+  { ref: "John 1:15-18", theme: "Grace and Truth in Christ", volume: 1, section: 4, duration: "00:22:45" },
+  { ref: "John 1:19-28", theme: "The Voice in the Wilderness", volume: 1, section: 5, duration: "00:30:51" },
+  { ref: "John 1:29-34", theme: "The Lamb of God", volume: 1, section: 6, duration: "00:34:48" },
+  { ref: "John 1:35-42", theme: "Behold the Lamb", volume: 1, section: 7, duration: "00:20:35" },
+  { ref: "John 1:43-51", theme: "Come and See", volume: 1, section: 8, duration: "00:30:30" },
+  { ref: "John 2:1-11", theme: "The First Sign", volume: 1, section: 9, duration: "00:38:09" },
+  { ref: "John 2:12-25", theme: "Zeal for the Father's House", volume: 1, section: 10, duration: "00:42:48" },
+  { ref: "John 3:1-8", theme: "You Must Be Born Again", volume: 1, section: 11, duration: "00:58:31" },
+  { ref: "John 3:9-21", theme: "The Love of God in the Son", volume: 1, section: 12, duration: "01:20:09" },
+  { ref: "John 3:22-36", theme: "He Must Increase", volume: 1, section: 14, duration: "00:57:32" },
+  { ref: "John 4:1-6", theme: "Wearied Yet Merciful", volume: 1, section: 15, duration: "00:27:20" },
+  { ref: "John 4:7-26", theme: "Living Water", volume: 1, section: 16, duration: "01:10:52" },
+  { ref: "John 4:27-30", theme: "Leaving the Waterpot", volume: 1, section: 17, duration: "00:23:40" },
+  { ref: "John 4:31-42", theme: "The Savior of the World", volume: 1, section: 18, duration: "00:36:33" },
+  { ref: "John 4:43-54", theme: "Faith in Christ's Word", volume: 1, section: 19, duration: "00:34:05" },
+  { ref: "John 5:1-15", theme: "Wilt Thou Be Made Whole?", volume: 1, section: 20, duration: "00:30:56" },
+  { ref: "John 5:16-23", theme: "The Son Equal with the Father", volume: 1, section: 21, duration: "00:34:02" },
+  { ref: "John 5:24-29", theme: "Life and Judgment", volume: 1, section: 22, duration: "00:28:45" },
+  { ref: "John 5:30-39", theme: "The Witnesses to Christ", volume: 1, section: 23, duration: "00:35:40" },
+  { ref: "John 5:40-47", theme: "You Will Not Come to Me", volume: 1, section: 24, duration: "00:25:50" },
+  { ref: "John 6:1-14", theme: "Bread in the Wilderness", volume: 1, section: 25, duration: "00:28:38" },
+  { ref: "John 6:15-21", theme: "Christ upon the Sea", volume: 1, section: 26, duration: "00:26:17" },
+  { ref: "John 6:22-27", theme: "Labor for Eternal Food", volume: 1, section: 27, duration: "00:26:41" },
+  { ref: "John 6:28-34", theme: "The Work of God", volume: 1, section: 28, duration: "00:31:37" },
+  { ref: "John 6:35-40", theme: "The Bread of Life", volume: 1, section: 29, duration: "00:31:24" },
+  { ref: "John 6:41-51", theme: "Drawn by the Father", volume: 1, section: 30, duration: "00:38:21" },
+  { ref: "John 6:52-59", theme: "Feeding on Christ", volume: 1, section: 31, duration: "00:34:59" },
+  { ref: "John 6:60-65", theme: "The Spirit Gives Life", volume: 1, section: 32, duration: "00:20:33" },
+  { ref: "John 6:66-71", theme: "To Whom Shall We Go?", volume: 1, section: 33, duration: "00:19:24" },
+
+  { ref: "John 7:1-13", theme: "Unbelief and the Hatred of Christ", volume: 2, section: 1, duration: "00:33:29" },
+  { ref: "John 7:14-24", theme: "Obedience and Spiritual Knowledge", volume: 2, section: 2, duration: "00:35:34" },
+  { ref: "John 7:25-36", theme: "The Blindness of Unbelief", volume: 2, section: 3, duration: "00:35:29" },
+  { ref: "John 7:37-39", theme: "Come and Drink", volume: 2, section: 4, duration: "00:28:56" },
+  { ref: "John 7:40-53", theme: "Division over Christ", volume: 2, section: 5, duration: "00:29:04" },
+  { ref: "John 8:1-11", theme: "Conscience and Mercy", volume: 2, section: 6, duration: "00:35:07" },
+  { ref: "John 8:12-20", theme: "The Light of the World", volume: 2, section: 7, duration: "00:34:37" },
+  { ref: "John 8:21-30", theme: "Seeking Christ Too Late", volume: 2, section: 8, duration: "00:39:09" },
+  { ref: "John 8:31-36", theme: "The Truth Shall Set You Free", volume: 2, section: 9, duration: "00:21:56" },
+  { ref: "John 8:37-47", theme: "True Spiritual Sonship", volume: 2, section: 10, duration: "00:36:50" },
+  { ref: "John 8:48-59", theme: "Before Abraham Was, I Am", volume: 2, section: 11, duration: "00:35:13" },
+  { ref: "John 9:1-12", theme: "The Works of God Displayed", volume: 2, section: 12, duration: "00:37:50" },
+  { ref: "John 9:13-25", theme: "Seeing and Testifying", volume: 2, section: 13, duration: "00:29:44" },
+  { ref: "John 9:26-41", theme: "Blindness and True Sight", volume: 2, section: 14, duration: "00:42:25" },
+  { ref: "John 10:1-9", theme: "The Door of the Sheep", volume: 2, section: 15, duration: "00:37:35" },
+  { ref: "John 10:10-18", theme: "The Good Shepherd", volume: 2, section: 16, duration: "00:38:08" },
+  { ref: "John 10:19-30", theme: "No One Shall Snatch Them", volume: 2, section: 17, duration: "00:35:57" },
+  { ref: "John 10:31-42", theme: "The Works Bear Witness", volume: 2, section: 18, duration: "00:34:57" },
+  { ref: "John 11:1-6", theme: "Loved and Afflicted", volume: 2, section: 19, duration: "00:40:48" },
+  { ref: "John 11:7-16", theme: "Walking in the Day", volume: 2, section: 20, duration: "00:32:58" },
+  { ref: "John 11:17-29", theme: "The Resurrection and the Life", volume: 2, section: 21, duration: "00:36:12" },
+  { ref: "John 11:30-37", theme: "Jesus Wept", volume: 2, section: 22, duration: "00:27:19" },
+  { ref: "John 11:38-46", theme: "Lazarus, Come Out", volume: 2, section: 23, duration: "00:37:12" },
+  { ref: "John 11:47-57", theme: "One Man for the People", volume: 2, section: 24, duration: "00:38:18" },
+  { ref: "John 12:1-11", theme: "Mary's Costly Love", volume: 2, section: 25, duration: "00:42:38" },
+  { ref: "John 12:12-19", theme: "The King Comes", volume: 2, section: 26, duration: "00:24:32" },
+  { ref: "John 12:20-26", theme: "A Grain of Wheat", volume: 2, section: 27, duration: "00:25:59" },
+  { ref: "John 12:27-33", theme: "Lifted Up", volume: 2, section: 28, duration: "00:41:52" },
+  { ref: "John 12:34-43", theme: "Believing While There Is Light", volume: 2, section: 29, duration: "00:39:38" },
+  { ref: "John 12:44-50", theme: "The Father's Commandment", volume: 2, section: 30, duration: "00:31:42" },
+
+  { ref: "John 13:1-5", theme: "He Loved Them to the End", volume: 3, section: 1, duration: "00:26:43" },
+  { ref: "John 13:6-15", theme: "Washed by Christ", volume: 3, section: 2, duration: "00:27:22" },
+  { ref: "John 13:16-20", theme: "The Servant and the Master", volume: 3, section: 3, duration: "00:15:59" },
+  { ref: "John 13:21-30", theme: "The Betrayal", volume: 3, section: 4, duration: "00:25:28" },
+  { ref: "John 13:31-38", theme: "A New Commandment", volume: 3, section: 5, duration: "00:26:09" },
+  { ref: "John 14:1-3", theme: "Let Not Your Hearts Be Troubled", volume: 3, section: 6, duration: "00:19:39" },
+  { ref: "John 14:4-11", theme: "The Way, the Truth, and the Life", volume: 3, section: 7, duration: "00:22:51" },
+  { ref: "John 14:12-17", theme: "Another Helper", volume: 3, section: 8, duration: "00:19:12" },
+  { ref: "John 14:18-20", theme: "I Will Not Leave You", volume: 3, section: 9, duration: "00:12:08" },
+  { ref: "John 14:21-26", theme: "The Spirit Will Teach You", volume: 3, section: 10, duration: "00:17:11" },
+  { ref: "John 14:27-31", theme: "Peace I Leave with You", volume: 3, section: 11, duration: "00:18:16" },
+  { ref: "John 15:1-6", theme: "The True Vine", volume: 3, section: 12, duration: "00:24:19" },
+  { ref: "John 15:7-11", theme: "Abide in My Love", volume: 3, section: 13, duration: "00:15:35" },
+  { ref: "John 15:12-16", theme: "Chosen Friends", volume: 3, section: 14, duration: "00:15:35" },
+  { ref: "John 15:17-21", theme: "Hated by the World", volume: 3, section: 15, duration: "00:15:06" },
+  { ref: "John 15:22-27", theme: "The Witness of the Spirit", volume: 3, section: 16, duration: "00:18:38" },
+  { ref: "John 16:1-7", theme: "The Helper Comes", volume: 3, section: 17, duration: "00:22:03" },
+  { ref: "John 16:8-15", theme: "The Spirit of Truth", volume: 3, section: 18, duration: "00:23:45" },
+  { ref: "John 16:16-24", theme: "Sorrow Turned to Joy", volume: 3, section: 19, duration: "00:24:01" },
+  { ref: "John 16:25-33", theme: "Take Heart", volume: 3, section: 20, duration: "00:22:50" },
+  { ref: "John 17:1-8", theme: "The Son Glorifies the Father", volume: 3, section: 21, duration: "00:37:03" },
+  { ref: "John 17:9-16", theme: "Kept in the Father's Name", volume: 3, section: 22, duration: "00:34:46" },
+  { ref: "John 17:17-26", theme: "Sanctified in Truth", volume: 3, section: 23, duration: "00:35:11" },
+  { ref: "John 18:1-11", theme: "The Voluntary Surrender", volume: 3, section: 24, duration: "00:41:16" },
+  { ref: "John 18:12-27", theme: "Peter's Fall", volume: 3, section: 25, duration: "00:46:51" },
+  { ref: "John 18:28-40", theme: "My Kingdom Is Not of This World", volume: 3, section: 26, duration: "01:00:35" },
+  { ref: "John 19:1-16", theme: "Behold the Man", volume: 3, section: 27, duration: "01:11:55" },
+  { ref: "John 19:17-27", theme: "The Crucified King", volume: 3, section: 28, duration: "01:06:41" },
+  { ref: "John 19:28-37", theme: "It Is Finished", volume: 3, section: 29, duration: "00:53:15" },
+  { ref: "John 19:38-42", theme: "The Burial of Jesus", volume: 3, section: 30, duration: "00:33:54" },
+  { ref: "John 20:1-10", theme: "The Empty Tomb", volume: 3, section: 31, duration: "00:49:12" },
+  { ref: "John 20:11-18", theme: "Mary Magdalene and the Risen Lord", volume: 3, section: 32, duration: "00:57:25" },
+  { ref: "John 20:19-23", theme: "Peace Be with You", volume: 3, section: 33, duration: "00:48:50" },
+  { ref: "John 20:24-31", theme: "My Lord and My God", volume: 3, section: 34, duration: "00:50:17" },
+  { ref: "John 21:1-14", theme: "Breakfast with the Risen Christ", volume: 3, section: 35, duration: "00:53:49" },
+  { ref: "John 21:15-17", theme: "Feed My Sheep", volume: 3, section: 36, duration: "00:33:21" },
+  { ref: "John 21:18-25", theme: "Follow Thou Me", volume: 3, section: 37, duration: "00:48:53" },
+];
+
+const RYLE_JOHN_PLAN_START = new Date(2026, 4, 29);
+
+function ryleJohnPlanIndex(date: Date): number {
+  const selected = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const start = new Date(
+    RYLE_JOHN_PLAN_START.getFullYear(),
+    RYLE_JOHN_PLAN_START.getMonth(),
+    RYLE_JOHN_PLAN_START.getDate()
+  );
+  const days = Math.floor((selected.getTime() - start.getTime()) / 86_400_000);
+  return ((days % RYLE_JOHN_SECTIONS.length) + RYLE_JOHN_SECTIONS.length) % RYLE_JOHN_SECTIONS.length;
+}
+
+function buildRyleJohnDevotional(section: RyleJohnSection, index: number): DailyDevotional {
+  const date = String(index + 1).padStart(3, "0");
+  const conciseCommentary = RYLE_JOHN_CONCISE_COMMENTARY[section.ref];
+  const fullCommentary = RYLE_JOHN_COMMENTARY[section.ref];
+  const audioTracks =
+    section.ref === "John 3:9-21"
+      ? [
+          { title: "John 3:9-21, part 1", duration: "00:42:56", url: audioUrl(1, 12), source: "LibriVox" as const },
+          { title: "John 3:9-21, part 2", duration: "00:37:13", url: audioUrl(1, 13), source: "LibriVox" as const },
+        ]
+      : [
+          { title: section.ref, duration: section.duration, url: audioUrl(section.volume, section.section), source: "LibriVox" as const },
+        ];
+
+  return {
+    date,
+    displayDate: `Reading ${index + 1} of ${RYLE_JOHN_SECTIONS.length}`,
+    theme: section.theme,
+    scripture: {
+      reference: section.ref,
+      translation: "ESV",
+      text: "Open this Ryle section and read the full Scripture passage aloud.",
+    },
+    devotional:
+      conciseCommentary ??
+      fullCommentary ??
+      `Read ${section.ref} as one complete passage, following Ryle's own division in Expository Thoughts on the Gospel of St. John, Vol. ${section.volume}.`,
+    fullDevotional: fullCommentary,
+    prayer:
+      "Lord Jesus, open this passage to our family. Give us light to understand your Word, humility to receive correction, faith to trust your promises, and grace to obey what you command. Amen.",
+    hymn: { title: "How Firm a Foundation", author: "John Rippon", year: 1787 },
+    ryleVolume: section.volume,
+    ryleSection: section.section,
+    audioTracks,
+  };
+}
+
+export const RYLE_JOHN_DEVOTIONALS: DailyDevotional[] = RYLE_JOHN_SECTIONS.map(buildRyleJohnDevotional);
 
 export const DAILY_DEVOTIONALS: Record<string, DailyDevotional> = {
   // ── JANUARY — Matthew 1–9 ────────────────────────────────────────────────
@@ -2213,10 +2397,11 @@ export function dateToKey(date: Date): string {
   return `${m}-${d}`;
 }
 export function getTodayDevotional(): DailyDevotional | undefined {
-  return DAILY_DEVOTIONALS[dateToKey(new Date())];
+  return getDevotionalForDate(new Date());
 }
 export function getDevotionalForDate(date: Date): DailyDevotional | undefined {
-  return DAILY_DEVOTIONALS[dateToKey(date)];
+  const index = ryleJohnPlanIndex(date);
+  return RYLE_JOHN_DEVOTIONALS[index] ?? DAILY_DEVOTIONALS[dateToKey(date)];
 }
 export const MONTH_NAMES = [
   "January","February","March","April","May","June",

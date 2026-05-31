@@ -223,7 +223,7 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
           <p className="text-white font-bold text-lg">{totalRead.toLocaleString()}</p>
           <p className="text-white/40 text-sm">of {TOTAL_CHAPTERS.toLocaleString()} chapters read</p>
           {pct === 100 && (
-            <p className="text-emerald-400 text-xs font-bold mt-0.5">🎉 You've read the entire Bible!</p>
+            <p className="text-emerald-400 text-xs font-bold mt-0.5">🎉 You&apos;ve read the entire Bible!</p>
           )}
         </div>
       </div>
@@ -362,7 +362,7 @@ export default function BibleTrackerPage() {
         </h1>
         <p className="text-white/40 text-sm leading-relaxed">
           Check off chapters as you read. Your progress is saved automatically on this device.
-          Never lose your place in God's Word.
+          Never lose your place in God&apos;s Word.
         </p>
       </div>
 
@@ -397,7 +397,6 @@ export default function BibleTrackerPage() {
             ))}
           </div>
         </div>
-
         {/* Book list grouped */}
         <div className="space-y-6">
           {groups.map((group) => {

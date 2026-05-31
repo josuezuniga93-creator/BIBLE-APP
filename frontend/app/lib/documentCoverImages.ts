@@ -1,0 +1,38 @@
+const DOCUMENT_COVER_IMAGES: Record<string, string> = {
+  "jerusalem-council": "/covers/documents/jerusalem-council.png",
+  "apostles-creed": "/covers/documents/apostles-creed.png",
+  "council-nicaea": "/covers/documents/council-nicaea.png",
+  "nicene-creed": "/covers/documents/nicene-creed.png",
+  "athanasian-creed": "/covers/documents/athanasian-creed.png",
+  "council-chalcedon": "/covers/documents/council-chalcedon.png",
+  "augustine-grace": "/covers/documents/augustine-grace.png",
+  "council-carthage": "/covers/documents/council-carthage.png",
+  "council-orange": "/covers/documents/council-orange.png",
+  "wycliffe": "/covers/documents/wycliffe.png",
+  "jan-hus": "/covers/documents/jan-hus.png",
+  "gutenberg": "/covers/documents/gutenberg.png",
+  "95theses": "/covers/documents/95theses.png",
+  "diet-of-worms": "/covers/documents/diet-of-worms.png",
+  "tyndale": "/covers/documents/tyndale.png",
+  "calvins-institutes": "/covers/documents/calvins-institutes.png",
+  "augsburg-confession": "/covers/documents/augsburg-confession.png",
+  "smalcald-articles": "/covers/documents/smalcald-articles.png",
+  "geneva-bible": "/covers/documents/geneva-bible.png",
+  "belgic-confession": "/covers/documents/belgic-confession.png",
+  "heidelberg": "/covers/documents/heidelberg.png",
+  "thirty-nine-articles": "/covers/documents/thirty-nine-articles.png",
+  "canons-of-dort": "/covers/documents/canons-of-dort.png",
+  "king-james-bible": "/covers/documents/king-james-bible.png",
+  "five-solas": "/covers/documents/five-solas.png",
+  "first-london-baptist": "/covers/documents/first-london-baptist.png",
+  "westminster-confession": "/covers/documents/westminster-confession.png",
+  "westminster-shorter": "/covers/documents/westminster-shorter.png",
+  "westminster-larger": "/covers/documents/westminster-larger.png",
+  "1689-lbc": "/covers/documents/1689-lbc.png",
+  "sinners-in-hands": "/covers/documents/sinners-in-hands.png",
+  "monergism-debate": "/covers/documents/monergism-debate.png",
+};
+
+export function getDocumentCoverImage(id: string): string | null {
+  return DOCUMENT_COVER_IMAGES[id] ?? null;
+}

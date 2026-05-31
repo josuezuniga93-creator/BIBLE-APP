@@ -9,6 +9,7 @@ interface Article {
   excerpt: string;
   date: string;
   slug: string;
+  imageUrl?: string;
 }
 
 function decode(s: string) {
@@ -83,6 +84,17 @@ async function tryRss(url: string): Promise<Article[]> {
 
     const slug = href.split("/").filter(Boolean).pop() ?? "";
 
+    // Extract image URL from common RSS image tags
+    const mediaContent  = block.match(/<media:content[^>]+url="([^"]+)"[^>]*>/i);
+    const mediaThumbnail = block.match(/<media:thumbnail[^>]+url="([^"]+)"[^>]*>/i);
+    const enclosure     = block.match(/<enclosure[^>]+url="([^"]+)"[^>]*type="image[^"]*"[^>]*>/i);
+    const wpFeatured    = block.match(/<wp:attachment_url>(?:<!\[CDATA\[)?(https?:\/\/[^<]+?)(?:\]\]>)?<\/wp:attachment_url>/i);
+    // Also try to grab first <img src> from content:encoded
+    const contentEnc    = block.match(/<content:encoded>(?:<!\[CDATA\[)?([\s\S]*?)(?:\]\]>)?<\/content:encoded>/i);
+    const contentImg    = contentEnc ? contentEnc[1].match(/<img[^>]+src="(https?:\/\/[^"]+)"/) : null;
+    const imageUrl: string | undefined =
+      (mediaContent?.[1] ?? mediaThumbnail?.[1] ?? enclosure?.[1] ?? wpFeatured?.[1] ?? contentImg?.[1]) || undefined;
+
     // Skip video/episode posts — YouTube embeds, show episodes, or bare video descriptions
     const rawDesc = descMatch ? descMatch[1] : "";
     const isVideoOnly =
@@ -92,7 +104,7 @@ async function tryRss(url: string): Promise<Article[]> {
       (excerpt.length < 120 && /youtube\.com|youtu\.be/i.test(rawDesc));
 
     if (title && href && href.includes("marrowministries.org") && !isVideoOnly) {
-      articles.push({ title, href, excerpt, date, slug });
+      articles.push({ title, href, excerpt, date, slug, imageUrl });
     }
   }
   return articles;

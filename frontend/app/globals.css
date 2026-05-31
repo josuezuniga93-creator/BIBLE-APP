@@ -15,18 +15,22 @@
   --fg-lo:       rgba(255,255,255,0.40);
   --fg-dim:      rgba(255,255,255,0.22);
   --border:      rgba(255,255,255,0.08);
-  --accent:      #7c3aed;
-  --accent-soft: rgba(124,58,237,0.15);
-  --accent-text: #a78bfa;
-  --nav-bg:      #111111;
-  --nav-border:  rgba(255,255,255,0.06);
-  --input-bg:    rgba(255,255,255,0.06);
+  --accent:      #c9a961;
+  --accent-soft: rgba(201,169,97,0.15);
+  --accent-text: #d4b878;
+  --nav-bg:      rgba(14,16,24,0.97);
+  --nav-border:  rgba(255,255,255,0.07);
+  --input-bg:    rgba(201,169,97,0.08);
 }
 
 /* ── Mobile safe-area support (notch, Dynamic Island, Android gesture bar) ── */
-html {
-  /* Allows the app chrome to extend into the safe areas */
-  padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
+
+/* iPhone Mode — adds top safe-area padding on mobile so Dynamic Island / notch
+   doesn't block content. Toggle stored in localStorage as 'ryc-iphone-mode'. */
+@media (max-width: 767px) {
+  [data-iphone-mode="true"] .layout-children {
+    padding-top: max(env(safe-area-inset-top), 44px) !important;
+  }
 }
 
 * {
@@ -339,6 +343,257 @@ html[data-theme="light-pink"] .translation-picker-panel {
   --tp-shadow: 0 24px 58px rgba(91,12,48,0.14);
 }
 
+/* Generated artwork: badges, category marks, book covers, document covers */
+.generated-badge-logo,
+.generated-category-mark,
+.generated-meta-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent-text);
+}
+
+.generated-badge-logo,
+.generated-category-mark {
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 46%),
+    var(--accent-soft);
+}
+
+.generated-badge-logo {
+  border-radius: 999px;
+}
+
+.generated-category-mark {
+  border-radius: 12px;
+}
+
+.generated-category-mark[data-active="true"] {
+  background:
+    radial-gradient(circle at 32% 20%, rgba(255,255,255,0.18), transparent 48%),
+    var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.generated-badge-logo svg,
+.generated-category-mark svg,
+.generated-meta-icon svg {
+  width: 68%;
+  height: 68%;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.generated-badge-logo svg,
+.generated-category-mark svg {
+  fill: none;
+}
+
+.generated-cover {
+  position: relative;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border: 1px solid var(--cover-dark-border);
+  background: linear-gradient(160deg, var(--cover-dark-from), var(--cover-dark-via) 52%, var(--cover-dark-to));
+  color: rgba(255,255,255,0.94);
+  isolation: isolate;
+}
+
+.generated-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.12), transparent 14%, transparent 86%, rgba(0,0,0,0.22)),
+    radial-gradient(circle at 50% 12%, rgba(255,255,255,0.11), transparent 34%);
+  z-index: 0;
+}
+
+.generated-cover--full,
+.generated-cover--detail {
+  padding: 14px;
+}
+
+.generated-cover--featured {
+  padding: 12px;
+}
+
+.generated-cover--small {
+  padding: 6px;
+}
+
+.generated-cover__pattern {
+  position: absolute;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
+  color: var(--cover-dark-accent);
+  fill: none;
+  opacity: 0.16;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  z-index: 0;
+}
+
+.generated-cover__top,
+.generated-cover__center,
+.generated-cover__bottom {
+  position: relative;
+  z-index: 1;
+}
+
+.generated-cover__top,
+.generated-cover__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--cover-dark-accent);
+}
+
+.generated-cover__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.generated-cover__series,
+.generated-cover__eyebrow,
+.generated-cover__bottom {
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.generated-cover__series,
+.generated-cover__eyebrow {
+  color: var(--cover-dark-accent);
+  opacity: 0.86;
+}
+
+.generated-cover__title {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  font-size: 13px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+}
+
+.generated-cover__bottom {
+  justify-content: center;
+  color: rgba(255,255,255,0.58);
+  text-align: center;
+}
+
+.generated-cover__seal {
+  width: 32px;
+  height: 32px;
+  color: var(--cover-dark-accent);
+  fill: none;
+  opacity: 0.88;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.generated-cover--small .generated-cover__series,
+.generated-cover--small .generated-cover__bottom {
+  font-size: 7px;
+  letter-spacing: 0.1em;
+}
+
+.generated-cover--small .generated-cover__title {
+  -webkit-line-clamp: 4;
+  font-size: 8px;
+  letter-spacing: 0.01em;
+}
+
+.generated-cover--small .generated-cover__seal {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.4;
+}
+
+.generated-cover--featured .generated-cover__title {
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-theme="light-pink"] .generated-cover {
+  border-color: var(--cover-pink-border);
+  background: linear-gradient(160deg, var(--cover-pink-from), var(--cover-pink-via) 52%, var(--cover-pink-to));
+  color: #4a0020;
+}
+
+html[data-theme="light-pink"] .generated-cover__pattern,
+html[data-theme="light-pink"] .generated-cover__series,
+html[data-theme="light-pink"] .generated-cover__eyebrow,
+html[data-theme="light-pink"] .generated-cover__seal {
+  color: var(--cover-pink-accent);
+}
+
+html[data-theme="light-pink"] .generated-cover__bottom {
+  color: rgba(74,0,32,0.58);
+}
+
+html[data-theme="light-pink"] .generated-cover::after {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.54), transparent 20%, transparent 86%, rgba(190,24,93,0.12)),
+    radial-gradient(circle at 50% 12%, rgba(255,255,255,0.48), transparent 36%);
+}
+
+html[data-theme="light-elegant"] .generated-cover {
+  border-color: var(--cover-elegant-border);
+  background: linear-gradient(160deg, var(--cover-elegant-from), var(--cover-elegant-via) 52%, var(--cover-elegant-to));
+  color: #1c1409;
+}
+
+html[data-theme="light-elegant"] .generated-cover__pattern,
+html[data-theme="light-elegant"] .generated-cover__series,
+html[data-theme="light-elegant"] .generated-cover__eyebrow,
+html[data-theme="light-elegant"] .generated-cover__seal {
+  color: var(--cover-elegant-accent);
+}
+
+html[data-theme="light-elegant"] .generated-cover__bottom {
+  color: rgba(28,20,9,0.58);
+}
+
+html[data-theme="light-elegant"] .generated-cover::after {
+  background:
+    linear-gradient(90deg, rgba(255,255,255,0.42), transparent 18%, transparent 86%, rgba(122,85,27,0.14)),
+    radial-gradient(circle at 50% 12%, rgba(255,255,255,0.35), transparent 36%);
+}
+
+html[data-theme="premium-neon"] .generated-badge-logo,
+html[data-theme="premium-neon"] .generated-category-mark,
+html[data-theme="premium-neon"] .generated-cover {
+  box-shadow: 0 0 18px rgba(124,58,237,0.20), inset 0 0 18px rgba(56,189,248,0.04);
+}
+
+html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
+  box-shadow: 0 0 22px rgba(124,58,237,0.32);
+}
+
 /* Animated gradient for hero section */
 .hero-gradient {
   background: linear-gradient(
@@ -382,7 +637,7 @@ html[data-theme="light-pink"] .translation-picker-panel {
     90deg,
     #ffffff 0%,
     #c4b5fd 30%,
-    #fcd34d 60%,
+    #d4c07a 60%,
     #ffffff 100%
   );
   background-size: 200% auto;
@@ -473,16 +728,12 @@ html[data-theme="light-pink"] .translation-picker-panel {
 }
 .axiom-hl:hover { filter: brightness(1.25); }
 
-.axiom-hl-yellow { background-color: rgba(253, 224, 71, 0.38); }
-.axiom-hl-green  { background-color: rgba(52, 211, 153, 0.30); }
-.axiom-hl-blue   { background-color: rgba(56, 189, 248, 0.28); }
-.axiom-hl-pink   { background-color: rgba(244, 114, 182, 0.30); }
-
-/* Premium Neon — brighter highlights on dark background */
-html[data-theme="premium-neon"] .axiom-hl-yellow { background-color: rgba(253, 224, 71, 0.72); color: #000; }
-html[data-theme="premium-neon"] .axiom-hl-green  { background-color: rgba(52, 211, 153, 0.65); color: #000; }
-html[data-theme="premium-neon"] .axiom-hl-blue   { background-color: rgba(56, 189, 248, 0.65); color: #000; }
-html[data-theme="premium-neon"] .axiom-hl-pink   { background-color: rgba(244, 114, 182, 0.70); color: #000; }
+.axiom-hl-purple { background-color: #7546e3; color: #fff; }
+.axiom-hl-yellow { background-color: #f2f06d; color: #000; }
+.axiom-hl-red    { background-color: #e34646; color: #fff; }
+.axiom-hl-blue   { background-color: #46d3e3; color: #000; }
+.axiom-hl-lime   { background-color: #a9f558; color: #000; }
+.axiom-hl-pink   { background-color: #f558f2; color: #000; }
 
 /* ── Google Translate — hide all default UI chrome ──────────────────────────── */
 #google_translate_element          { display: none !important; }
@@ -982,23 +1233,16 @@ html[data-theme="premium-neon"] body::before {
     radial-gradient(ellipse 65% 50% at 80% -5%,  rgba(56,189,248,0.08) 0%, transparent 70%);
 }
 
-/* ── Active nav icon: neon purple bloom glow ─────────────────────────────── */
+/* ── Active nav icon: consistent across all themes — no bloom ────────────── */
 html[data-theme="premium-neon"] nav a[data-active="true"] {
   color: #a78bfa !important;
 }
-/* Icon SVG gets the layered bloom */
 html[data-theme="premium-neon"] nav a[data-active="true"] svg {
-  filter:
-    drop-shadow(0 0 4px rgba(167,139,250,1.0))
-    drop-shadow(0 0 10px rgba(124,58,237,0.85))
-    drop-shadow(0 0 22px rgba(124,58,237,0.55))
-    drop-shadow(0 0 40px rgba(124,58,237,0.25));
-  transition: filter 0.2s ease;
+  filter: none !important;
 }
-/* Label text glows too */
 html[data-theme="premium-neon"] nav a[data-active="true"] span {
   color: #a78bfa !important;
-  text-shadow: 0 0 10px rgba(167,139,250,0.70);
+  text-shadow: none !important;
 }
 
 /* ── Card hover glow ─────────────────────────────────────────────────────── */
@@ -1036,7 +1280,284 @@ html[data-theme="premium-neon"] .neon-glow {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   9. LIGHT ELEGANT — warm parchment + amber gold
+   9. GOLD NAVY — dark navy + amber gold (premium study Bible)
+══════════════════════════════════════════════════════════════ */
+html[data-theme="gold-navy"] {
+  --bg:          #0e1018;
+  --bg-2:        rgba(201,169,97,0.08);
+  --bg-3:        rgba(201,169,97,0.14);
+  --fg:          #ffffff;
+  --fg-hi:       rgba(255,255,255,0.94);
+  --fg-mid:      rgba(255,255,255,0.60);
+  --fg-lo:       rgba(255,255,255,0.38);
+  --fg-dim:      rgba(255,255,255,0.20);
+  --border:      rgba(255,255,255,0.06);
+  --accent:      #c9a961;
+  --accent-soft: rgba(201,169,97,0.15);
+  --accent-text: #d4b878;
+  --nav-bg:      rgba(14,16,24,0.97);
+  --nav-border:  rgba(255,255,255,0.07);
+  --input-bg:    rgba(201,169,97,0.08);
+}
+
+/* Base bg */
+html[data-theme="gold-navy"] body,
+html[data-theme="gold-navy"] main {
+  background-color: var(--bg) !important;
+}
+
+/* Override hardcoded dark hex backgrounds → navy */
+html[data-theme="gold-navy"] [class*="bg-[#0"],
+html[data-theme="gold-navy"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+html[data-theme="gold-navy"] [class*="bg-white/"] {
+  background-color: var(--bg-2) !important;
+}
+html[data-theme="gold-navy"] [class*="bg-black/"] {
+  background-color: var(--bg-3) !important;
+}
+
+/* Borders get gold tint */
+html[data-theme="gold-navy"] [class*="border-white/"] {
+  border-color: var(--border) !important;
+}
+
+/* Violet accent → gold */
+html[data-theme="gold-navy"] [class*="bg-violet-"] {
+  background-color: rgba(201,169,97,0.15) !important;
+}
+html[data-theme="gold-navy"] [class*="text-violet-"] {
+  color: #d4b878 !important;
+}
+html[data-theme="gold-navy"] [class*="border-violet-"] {
+  border-color: rgba(251,191,36,0.35) !important;
+}
+
+/* Emerald → gold */
+html[data-theme="gold-navy"] [class*="bg-emerald-"] {
+  background-color: rgba(201,169,97,0.12) !important;
+}
+html[data-theme="gold-navy"] [class*="text-emerald-"] {
+  color: #d4b878 !important;
+}
+html[data-theme="gold-navy"] [class*="border-emerald-"] {
+  border-color: rgba(201,169,97,0.28) !important;
+}
+
+/* Amber classes → use gold directly */
+html[data-theme="gold-navy"] [class*="bg-amber-"] {
+  background-color: rgba(201,169,97,0.15) !important;
+}
+html[data-theme="gold-navy"] [class*="text-amber-"] {
+  color: #d4b878 !important;
+}
+html[data-theme="gold-navy"] [class*="border-amber-"] {
+  border-color: rgba(201,169,97,0.30) !important;
+}
+
+/* ── Bible Reader: gold chapter number (no glow) ──────────────────────── */
+html[data-theme="gold-navy"] .pn-chapter-num {
+  background: linear-gradient(180deg, #d4c07a 0%, #c9a961 55%, #b8922e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Book name: gold */
+html[data-theme="gold-navy"] .pn-book-name {
+  color: #c9a961 !important;
+  -webkit-text-fill-color: #c9a961;
+}
+
+/* Subtitle: muted gold */
+html[data-theme="gold-navy"] .pn-chapter-subtitle {
+  color: rgba(201,169,97,0.50) !important;
+}
+
+/* Verse numbers: gold */
+html[data-theme="gold-navy"] .text-violet-400\/50,
+html[data-theme="gold-navy"] [class*="text-violet-4"] {
+  color: rgba(201,169,97,0.70) !important;
+}
+
+/* ── App tile gold navy cards ──────────────────────────────────────────── */
+html[data-theme="gold-navy"] .pn-app-tile {
+  background: #1a1d27 !important;
+  border: 1px solid rgba(201,169,97,0.22) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+  color: white;
+}
+html[data-theme="gold-navy"] .pn-app-tile:nth-child(3n+2),
+html[data-theme="gold-navy"] .pn-app-tile:nth-child(3n+3) {
+  border-color: rgba(201,169,97,0.18) !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25) !important;
+}
+html[data-theme="gold-navy"] .pn-app-tile:active {
+  box-shadow: 0 0 0 1px rgba(201,169,97,0.35) !important;
+}
+
+/* ── Scrollbar: gold ────────────────────────────────────────────────────── */
+html[data-theme="gold-navy"] ::-webkit-scrollbar-thumb {
+  background: rgba(201,169,97,0.35);
+}
+html[data-theme="gold-navy"] ::-webkit-scrollbar-thumb:hover {
+  background: rgba(201,169,97,0.55);
+}
+
+/* ── No ambient glow overlay ─────────────────────────────────────────── */
+html[data-theme="gold-navy"] body::before {
+  display: none !important;
+}
+
+/* ── No button/input glows ───────────────────────────────────────────── */
+html[data-theme="gold-navy"] .btn-primary:not(:disabled):hover {
+  box-shadow: none !important;
+}
+html[data-theme="gold-navy"] textarea:focus,
+html[data-theme="gold-navy"] input:focus {
+  box-shadow: 0 0 0 2px rgba(201,169,97,0.35) !important;
+}
+
+/* ── Active nav: antique gold, no bloom ──────────────────────────────── */
+html[data-theme="gold-navy"] .mobile-nav-floating .nav-tab[data-active="true"] {
+  background: rgba(201,169,97,0.18) !important;
+}
+html[data-theme="gold-navy"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
+  background: #c9a961 !important;
+  box-shadow: none !important;
+}
+html[data-theme="gold-navy"] nav a[data-active="true"] {
+  color: #c9a961 !important;
+}
+html[data-theme="gold-navy"] nav a[data-active="true"] svg {
+  filter: none !important;
+  color: #c9a961 !important;
+}
+html[data-theme="gold-navy"] nav a[data-active="true"] span {
+  color: #c9a961 !important;
+  text-shadow: none !important;
+}
+
+/* ── Focus rings: gold ────────────────────────────────────────────────── */
+html[data-theme="gold-navy"] textarea:focus,
+html[data-theme="gold-navy"] input:focus {
+  box-shadow: 0 0 0 2px rgba(201,169,97,0.35) !important;
+}
+
+/* ── Verse of the day card: navy/gold gradient ──────────────────────── */
+html[data-theme="gold-navy"] .hero-gradient,
+html[data-theme="gold-navy"] [class*="from-sky-"],
+html[data-theme="gold-navy"] [class*="from-amber-"],
+html[data-theme="gold-navy"] [class*="from-violet-"],
+html[data-theme="gold-navy"] [class*="from-orange-"],
+html[data-theme="gold-navy"] [class*="from-red-"],
+html[data-theme="gold-navy"] [class*="from-emerald-"],
+html[data-theme="gold-navy"] [class*="from-indigo-"],
+html[data-theme="gold-navy"] [class*="from-teal-"] {
+  background: linear-gradient(135deg, rgba(201,169,97,0.45) 0%, rgba(14,16,24,0.95) 55%, rgba(26,29,39,0.80) 100%) !important;
+}
+
+/* ── Home hero atmosphere: subtle, no bloom ──────────────────────────── */
+html[data-theme="gold-navy"] .home-hero-atmosphere {
+  background:
+    radial-gradient(80% 60% at 50% 0%, rgba(201,169,97,0.10) 0%, transparent 70%) !important;
+}
+
+/* Home headline/accent colors */
+html[data-theme="gold-navy"] .home-hero-headline      { color: #ffffff !important; }
+html[data-theme="gold-navy"] .home-hero-headline-muted { color: rgba(255,255,255,0.58) !important; }
+html[data-theme="gold-navy"] .home-accent             { color: #c9a961 !important; }
+html[data-theme="gold-navy"] .home-accent-muted       { color: #b8922e !important; }
+html[data-theme="gold-navy"] .home-accent-chip {
+  background: rgba(201,169,97,0.12) !important;
+  border-color: rgba(201,169,97,0.28) !important;
+  color: #d4b878 !important;
+}
+html[data-theme="gold-navy"] .home-feature-cta {
+  background: linear-gradient(135deg, #1a1d27 0%, #23273a 100%) !important;
+  border-color: rgba(201,169,97,0.25) !important;
+  color: #d4b878 !important;
+}
+html[data-theme="gold-navy"] .home-story-action { color: #ffffff !important; }
+
+/* Homepage main content area — transparent so lamp background shows through */
+html[data-theme="gold-navy"] main.home-main {
+  background: transparent !important;
+}
+
+/* Top desktop nav — use navy nav-bg so it stays translucent + correct color */
+html[data-theme="gold-navy"] nav.top-app-nav {
+  background-color: var(--nav-bg) !important;
+  border-color: var(--nav-border) !important;
+}
+
+/* Continue reading cards */
+html[data-theme="gold-navy"] .home-continue-card  { border: 1px solid rgba(201,169,97,0.12); }
+html[data-theme="gold-navy"] .home-continue-meditation { background: #151821 !important; }
+html[data-theme="gold-navy"] .home-continue-article    { background: #131620 !important; }
+html[data-theme="gold-navy"] .home-continue-scripture  { background: #1a1d2b !important; }
+
+/* Streak card */
+html[data-theme="gold-navy"] .home-streak-card {
+  background: rgba(26,29,39,0.72) !important;
+  border-color: rgba(201,169,97,0.14) !important;
+}
+html[data-theme="gold-navy"] .home-badge-card {
+  background: rgba(201,169,97,0.08) !important;
+  border-color: rgba(201,169,97,0.18) !important;
+}
+
+/* VotD card */
+html[data-theme="gold-navy"] .home-votd-card {
+  background: linear-gradient(135deg, rgba(201,169,97,0.22) 0%, #0e1018 60%, #1a1d27 100%) !important;
+  border: 1px solid rgba(201,169,97,0.28) !important;
+  box-shadow: 0 2px 20px rgba(201,169,97,0.10) !important;
+}
+html[data-theme="gold-navy"] .home-votd-overlay { background: none !important; }
+html[data-theme="gold-navy"] .home-votd-card [class*="bg-black\/"] {
+  background-color: rgba(201,169,97,0.15) !important;
+  color: #c9a961 !important;
+  border: 1px solid rgba(201,169,97,0.28) !important;
+}
+
+/* bible/testament label → gold */
+html[data-theme="gold-navy"] .le-testament-label {
+  color: #c9a961 !important;
+  opacity: 0.75;
+}
+html[data-theme="gold-navy"] .le-nav-arrow {
+  color: #c9a961 !important;
+}
+html[data-theme="gold-navy"] .le-nav-arrow:hover {
+  color: #b8922e !important;
+  background-color: rgba(201,169,97,0.12) !important;
+}
+
+/* No glow on badges/covers in gold-navy */
+html[data-theme="gold-navy"] .neon-glow {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* Translation picker: gold-navy overrides */
+html[data-theme="gold-navy"] .translation-picker-panel {
+  --tp-bg: #13161f;
+  --tp-bg-end: #0e1018;
+  --tp-bg-soft: rgba(201,169,97,0.07);
+  --tp-bg-hover: rgba(201,169,97,0.10);
+  --tp-line: rgba(255,255,255,0.07);
+  --tp-fg: rgba(255,255,255,0.92);
+  --tp-muted: rgba(255,255,255,0.50);
+  --tp-dim: rgba(255,255,255,0.30);
+  --tp-accent: #c9a961;
+  --tp-accent-strong: #d4b878;
+  --tp-accent-bg: rgba(201,169,97,0.12);
+  --tp-shadow: 0 24px 80px rgba(0,0,0,0.55);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   10. LIGHT ELEGANT — warm parchment + amber gold
 ══════════════════════════════════════════════════════════════ */
 html[data-theme="light-elegant"] {
   --bg:          #ede8df;
@@ -1055,6 +1576,9 @@ html[data-theme="light-elegant"] {
   --nav-border:  rgba(28,20,9,0.07);
   --input-bg:    rgba(28,20,9,0.05);
   color-scheme: light;
+  /* Set bg on html itself so there's no dark flash before body renders */
+  background-color: #ede8df !important;
+  color: #1c1409 !important;
 }
 
 /* Page + main backgrounds */
@@ -1242,6 +1766,18 @@ html[data-theme="light-elegant"] .home-votd-card [class*="bg-black\/"] {
   border: 1px solid rgba(155,114,40,0.30) !important;
 }
 
+/* ── Nav surface: parchment pill, no dark shadow bloom ─────────────── */
+html[data-theme="light-elegant"] .mobile-nav-surface {
+  background: rgba(237,232,223,0.97) !important;
+  border-color: rgba(28,20,9,0.10) !important;
+  box-shadow:
+    0 8px 24px rgba(28,20,9,0.12),
+    0 1px 4px rgba(28,20,9,0.08) !important;
+}
+html[data-theme="light-elegant"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
+  box-shadow: none !important;
+}
+
 /* ── Active nav: amber gold, no bloom ──────────────────────────────── */
 html[data-theme="light-elegant"] nav a[data-active="true"] {
   color: var(--accent) !important;
@@ -1400,12 +1936,38 @@ html[data-theme="light-pink"] {
   --nav-border:  rgba(236,72,153,0.14);
   --input-bg:    rgba(236,72,153,0.07);
   color-scheme: light;
+  /* Set bg on html itself so there's no dark flash before body renders */
+  background-color: #fff0f5 !important;
+  color: #4a0020 !important;
 }
 
 html[data-theme="light-pink"] body,
 html[data-theme="light-pink"] main {
   background-color: var(--bg) !important;
   color: var(--fg) !important;
+}
+
+/* ── Nav surface: pink pill ──────────────────────────────────────────── */
+html[data-theme="light-pink"] .mobile-nav-surface {
+  background: rgba(252,231,243,0.97) !important;
+  border-color: rgba(236,72,153,0.18) !important;
+  box-shadow:
+    0 8px 24px rgba(74,0,32,0.10),
+    0 1px 4px rgba(74,0,32,0.07) !important;
+}
+html[data-theme="light-pink"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
+  box-shadow: none !important;
+}
+html[data-theme="light-pink"] nav a[data-active="true"] {
+  color: var(--accent) !important;
+}
+html[data-theme="light-pink"] nav a[data-active="true"] svg {
+  filter: none !important;
+  color: var(--accent) !important;
+}
+html[data-theme="light-pink"] nav a[data-active="true"] span {
+  color: var(--accent) !important;
+  text-shadow: none !important;
 }
 
 html[data-theme="light-pink"] [class*="bg-[#0"],
@@ -1815,7 +2377,7 @@ html[data-theme="light-pink"] a:focus-visible {
 
   /* Keep verdict badge colors legible */
   .text-emerald-300, .text-emerald-400 { color: #059669 !important; }
-  .text-amber-300,   .text-amber-400   { color: #d97706 !important; }
+  .text-amber-300,   .text-amber-400   { color: #b8922e !important; }
   .text-orange-300,  .text-orange-400  { color: #ea580c !important; }
   .text-red-300,     .text-red-400     { color: #dc2626 !important; }
   .text-violet-300,  .text-violet-400  { color: #7c3aed !important; }

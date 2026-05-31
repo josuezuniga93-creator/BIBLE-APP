@@ -87,6 +87,18 @@ function FellowshipAppIcon() {
   );
 }
 
+function HistoricalAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.7"/>
+      <path d="M4 5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" stroke="currentColor" strokeWidth="1.5"/>
+      <line x1="10" y1="9"  x2="17" y2="9"  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="10" y1="13" x2="17" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="10" y1="17" x2="14" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 function ChurchAppIcon() {
   return (
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
@@ -120,39 +132,24 @@ function CollectionsAppIcon() {
 
 // ─── App grid config ──────────────────────────────────────────────────────────
 
-const APP_TILES = [
-  { href: "/bible-plans",       Icon: PlansAppIcon,        label: "Plans",              color: "#5b21b6" },
-  { href: "/library",           Icon: LibraryAppIcon,      label: "Free Books",         color: "#0369a1" },
-  { href: "/bible-tracker",     Icon: TrackerAppIcon,      label: "Bible Tracker",      color: "#065f46" },
-  { href: "/family-worship",    Icon: FamilyAppIcon,       label: "Family Worship",     color: "#9d174d" },
-  { href: "/kids-books",        Icon: KidsAppIcon,         label: "Kids Books",         color: "#c2410c" },
-  { href: "/videos",            Icon: VideosAppIcon,       label: "Videos",             color: "#1e3a8a" },
-  { href: "/collections",       Icon: CollectionsAppIcon,  label: "Collections",        color: "#92400e" },
-  { href: "/fellowship",        Icon: FellowshipAppIcon,   label: "Fellowship",         color: "#7c3aed" },
-  { href: "/church-directory",  Icon: ChurchAppIcon,       label: "Find a Church",      color: "#1a6b3a" },
-  { href: "/give",              Icon: GiveAppIcon,         label: "Give",               color: "#b45309" },
-] as const;
+const APP_TILE_DEFS = [
+  { href: "/bible-plans",       Icon: PlansAppIcon,        labelKey: "more_tile_plans"       as const, color: "#5b21b6" },
+  { href: "/library",           Icon: LibraryAppIcon,      labelKey: "more_tile_books"       as const, color: "#0369a1" },
+  { href: "/learn",             Icon: HistoricalAppIcon,   labelKey: "more_tile_history"     as const, color: "#78350f" },
+  { href: "/bible-tracker",     Icon: TrackerAppIcon,      labelKey: "more_tile_tracker"     as const, color: "#065f46" },
+  { href: "/kids-books",        Icon: KidsAppIcon,         labelKey: "more_tile_kids"        as const, color: "#c2410c" },
+  { href: "/videos",            Icon: VideosAppIcon,       labelKey: "more_tile_videos"      as const, color: "#1e3a8a" },
+  { href: "/collections",       Icon: CollectionsAppIcon,  labelKey: "more_tile_collections" as const, color: "#92400e" },
+  { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed" },
+  { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a" },
+  { href: "/give",              Icon: GiveAppIcon,         labelKey: "more_tile_give"        as const, color: "#b45309" },
+];
 
-const TILE_GROUPS = [
-  {
-    title: "Daily Rhythms",
-    description: "Build steady habits",
-    columns: 3,
-    tiles: [APP_TILES[0], APP_TILES[2], APP_TILES[3]],
-  },
-  {
-    title: "Explore",
-    description: "Books and teaching",
-    columns: 3,
-    tiles: [APP_TILES[1], APP_TILES[4], APP_TILES[5]],
-  },
-  {
-    title: "Connect",
-    description: "Saved items and community",
-    columns: 2,
-    tiles: [APP_TILES[6], APP_TILES[7], APP_TILES[8], APP_TILES[9]],
-  },
-] as const;
+const TILE_GROUP_DEFS = [
+  { titleKey: "more_group_rhythms" as const, dekKey: "more_group_rhythms_dek" as const, columns: 2, indices: [0, 3] },
+  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 4] },
+  { titleKey: "more_group_connect" as const, dekKey: "more_group_connect_dek" as const, columns: 2, indices: [6, 7, 8, 9] },
+];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -160,6 +157,29 @@ export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
   const themeKeys = Object.keys(THEMES) as Theme[];
+
+  // ── Android Mode state (iPhone safe-area padding is ON by default) ──────────
+  const [androidMode, setAndroidMode] = useState(false);
+
+  useEffect(() => {
+    try {
+      setAndroidMode(localStorage.getItem("ryc-android-mode") === "true");
+    } catch { /**/ }
+  }, []);
+
+  function handleIphoneMode(enabled: boolean) {
+    setAndroidMode(enabled);
+    try {
+      localStorage.setItem("ryc-android-mode", enabled ? "true" : "false");
+      if (enabled) {
+        // Android mode ON → remove iPhone notch padding
+        document.documentElement.removeAttribute("data-iphone-mode");
+      } else {
+        // Android mode OFF → restore iPhone notch padding
+        document.documentElement.setAttribute("data-iphone-mode", "true");
+      }
+    } catch { /**/ }
+  }
 
   // ── Notification state ──────────────────────────────────────────────────────
   const [notifEnabled, setNotifEnabled] = useState(false);
@@ -203,42 +223,82 @@ export default function MorePage() {
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
 
+        {/* ── Videos card (compact & premium) ─────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-2 px-1" style={{ color: "rgba(201,169,97,0.70)" }}>
+            {lang === "es" ? "Destacado" : "Featured"}
+          </p>
+          <Link href="/videos" className="block group">
+            <div
+              className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
+              style={{ background: "linear-gradient(120deg, rgba(201,169,97,0.11) 0%, rgba(14,17,28,0.97) 70%)", border: "1px solid rgba(201,169,97,0.24)" }}
+            >
+              <div className="flex items-center gap-4 px-4 py-4">
+                {/* Icon */}
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", boxShadow: "0 6px 18px rgba(201,169,97,0.28)" }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0e1018" style={{ marginLeft: 2 }}>
+                    <path d="M8 5v14l11-7z" />
+                  </svg>
+                </div>
+                {/* Text */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-0.5" style={{ color: "#c9a961" }}>
+                    {lang === "es" ? "Fundamentos de la Fe" : "Fundamentals of the Faith"}
+                  </p>
+                  <p className="text-[15px] font-bold text-white leading-tight">
+                    {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
+                    {lang === "es" ? "Dios · Cristo · Evangelio · Escritura" : "God · Christ · Gospel · Scripture"}
+                  </p>
+                </div>
+                {/* Arrow */}
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,97,0.55)" strokeWidth="2.2" strokeLinecap="round" className="flex-shrink-0">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </div>
+          </Link>
+        </section>
+
         <div className="px-1 pt-1">
           <p className="text-[10px] font-black tracking-[0.22em] uppercase text-violet-400/70 mb-2">
-            Your Toolbox
+            {t(lang, "more_toolbox_label")}
           </p>
           <h1 className="text-2xl font-bold text-white">{t(lang, "more_heading")}</h1>
           <p className="text-xs text-white/38 mt-1.5 leading-relaxed">
-            Choose a daily rhythm, open a resource, or connect with your church life.
+            {t(lang, "more_toolbox_sub")}
           </p>
         </div>
 
         {/* ── App grid ──────────────────────────────────────────────────────── */}
         <section className="space-y-5">
-          {TILE_GROUPS.map((group) => (
-            <div key={group.title}>
+          {TILE_GROUP_DEFS.map((group) => (
+            <div key={group.titleKey}>
               <div className="flex items-baseline justify-between mb-3 px-1">
                 <p className="text-[10px] font-black tracking-widest text-white/35 uppercase">
-                  {group.title}
+                  {t(lang, group.titleKey)}
                 </p>
-                <p className="text-[10px] text-white/25">{group.description}</p>
+                <p className="text-[10px] text-white/25">{t(lang, group.dekKey)}</p>
               </div>
               <div className={`grid gap-3 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                {group.tiles.map(({ href, Icon, label, color }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className={`pn-app-tile flex items-center rounded-2xl active:scale-95 transition-transform ${
-                      group.columns === 2
-                        ? "flex-row justify-start gap-3 min-h-[76px] px-4 py-3"
-                        : "flex-col justify-center gap-2 aspect-[1/0.9] p-4"
-                    }`}
-                    style={{ backgroundColor: color }}
-                  >
-                    <Icon />
-                    <span className="text-[11px] font-bold text-white text-center leading-tight">{label}</span>
-                  </Link>
-                ))}
+                {group.indices.map((idx) => {
+                  const { href, Icon, labelKey, color } = APP_TILE_DEFS[idx];
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="pn-app-tile flex items-center flex-row justify-start gap-3 min-h-[76px] px-4 py-3 rounded-2xl active:scale-95 transition-transform"
+                      style={{ backgroundColor: color }}
+                    >
+                      <Icon />
+                      <span className="text-[11px] font-bold text-white text-center leading-tight">{t(lang, labelKey)}</span>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -331,6 +391,29 @@ export default function MorePage() {
           </div>
         </section>
 
+        {/* ── Display (iPhone Mode) ─────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_display")}</p>
+          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
+            <div>
+              <p className="text-sm font-semibold text-white">{t(lang, "more_iphone_mode")}</p>
+              <p className="text-xs text-white/40 mt-0.5 max-w-[220px] leading-relaxed">{t(lang, "more_iphone_mode_desc")}</p>
+            </div>
+            <button
+              onClick={() => handleIphoneMode(!androidMode)}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ml-3 ${
+                androidMode ? "bg-white/25" : "bg-white/[0.08]"
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
+                  androidMode ? "translate-x-6" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </section>
+
         {/* ── Share ─────────────────────────────────────────────────────────── */}
         <section>
           <button
@@ -356,7 +439,7 @@ export default function MorePage() {
               <polyline points="16 6 12 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            <span className="text-sm font-semibold text-white/70">Share this app</span>
+            <span className="text-sm font-semibold text-white/70">{t(lang, "more_share")}</span>
           </button>
         </section>
 

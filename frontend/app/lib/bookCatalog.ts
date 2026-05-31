@@ -1,8 +1,8 @@
 import type { BookCatalogEntry } from "./types";
 
-// Static book catalog — no backend required.
-// All titles are public domain. Chapters are fetched from Project Gutenberg
-// via the backend when it is running; otherwise the reader falls back gracefully.
+// Static book catalog -- no backend required.
+// Gutenberg titles are fetched on demand; local public-domain titles are bundled
+// under public/books so the in-app reader can open them section by section.
 export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
   {
     slug: "pilgrims-progress",
@@ -97,6 +97,150 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
       "Edwards's famous sermon that sparked the Great Awakening, together with other sermons on the excellency of Christ, the reality of heaven, and the importance of seeking God now.",
     cover_emoji: "⚡",
     tags: ["Sermons", "Great Awakening", "Edwards"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "mortification-of-sin",
+    title: "The Mortification of Sin",
+    author: "John Owen",
+    year: 1656,
+    description:
+      "Owen's classic treatment of putting sin to death by the Spirit. Searching, pastoral, and deeply practical for believers fighting remaining sin.",
+    cover_emoji: "🔥",
+    tags: ["Puritan", "Sanctification", "Theology", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "bondage-of-the-will",
+    title: "The Bondage of the Will",
+    author: "Martin Luther",
+    year: 1525,
+    description:
+      "Luther's forceful reply to Erasmus on human inability, divine grace, and the freedom of God in salvation.",
+    cover_emoji: "⛓️",
+    tags: ["Reformation", "Theology", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "religious-affections",
+    title: "Religious Affections",
+    author: "Jonathan Edwards",
+    year: 1746,
+    description:
+      "Edwards's careful guide to discerning true spiritual life from mere emotion, written in the wake of the Great Awakening.",
+    cover_emoji: "♥️",
+    tags: ["Great Awakening", "Theology", "Spiritual Life", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "death-of-death",
+    title: "The Death of Death in the Death of Christ",
+    author: "John Owen",
+    year: 1647,
+    description:
+      "Owen's major work on definite atonement and the triumph of Christ's saving death for his people.",
+    cover_emoji: "✝️",
+    tags: ["Puritan", "Atonement", "Reformed", "Theology"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "body-of-divinity",
+    title: "Body of Divinity",
+    author: "Thomas Watson",
+    year: 1692,
+    description:
+      "Watson's warm, memorable exposition of the Westminster Shorter Catechism, rich in doctrine and practical application.",
+    cover_emoji: "📚",
+    tags: ["Puritan", "Catechism", "Theology", "Reformed"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "freedom-of-the-will",
+    title: "The Freedom of the Will",
+    author: "Jonathan Edwards",
+    year: 1754,
+    description:
+      "Edwards's philosophical and theological argument on moral agency, necessity, and the will's bondage to the heart.",
+    cover_emoji: "⚖️",
+    tags: ["Theology", "Philosophy", "Great Awakening", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "commentary-on-romans-hodge",
+    title: "Commentary on Romans",
+    author: "Charles Hodge",
+    year: 1835,
+    description:
+      "Hodge's substantial Reformed exposition of Romans, organized by chapter and verse ranges for easier study.",
+    cover_emoji: "🕮",
+    tags: ["Commentary", "Romans", "Reformed", "Theology"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "fourfold-state",
+    title: "Human Nature in Its Fourfold State",
+    author: "Thomas Boston",
+    year: 1720,
+    description:
+      "Boston traces humanity in innocence, corruption, grace, and glory with the searching clarity of classic Reformed pastoral theology.",
+    cover_emoji: "🌿",
+    tags: ["Reformed", "Theology", "Classic", "Puritan"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "practical-religion",
+    title: "Practical Religion",
+    author: "J.C. Ryle",
+    year: 1878,
+    description:
+      "Ryle's direct and pastoral essays on the lived reality of Christian discipleship, faith, repentance, prayer, and holiness.",
+    cover_emoji: "🕯️",
+    tags: ["Victorian", "Devotional", "Practical", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "knots-untied",
+    title: "Knots Untied",
+    author: "J.C. Ryle",
+    year: 1877,
+    description:
+      "Ryle's clear Protestant answers to disputed questions about salvation, Scripture, worship, sacraments, and the church.",
+    cover_emoji: "🪢",
+    tags: ["Victorian", "Doctrine", "Practical", "Classic"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "thoughts-for-young-men",
+    title: "Thoughts for Young Men",
+    author: "J.C. Ryle",
+    year: 1865,
+    description:
+      "A short, urgent, and affectionate exhortation to young men on temptation, character, wisdom, and devotion to Christ.",
+    cover_emoji: "🧭",
+    tags: ["Victorian", "Devotional", "Youth", "Practical"],
+    pg_id: null,
+    coming_soon: false,
+  },
+  {
+    slug: "duties-of-parents",
+    title: "The Duties of Parents",
+    author: "J.C. Ryle",
+    year: 1888,
+    description:
+      "Ryle's concise counsel on raising children with tenderness, discipline, Scripture, prayer, and eternal seriousness.",
+    cover_emoji: "🏠",
+    tags: ["Victorian", "Family", "Practical", "Devotional"],
     pg_id: null,
     coming_soon: false,
   },

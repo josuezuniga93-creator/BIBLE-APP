@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "../lib/useLanguage";
 
 // ─── SVG Icons — use currentColor so theme CSS variables drive the color ─────
 
@@ -70,12 +71,19 @@ function YouIcon({ active }: { active: boolean }) {
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
-const PRIMARY_TABS = [
-  { href: "/",        label: "Home"       },
-  { href: "/lexicon", label: "Bible"      },
-  { href: "/notes",   label: "Notes"      },
-  { href: "/learn",   label: "Historical" },
-] as const;
+const PRIMARY_TABS_EN = [
+  { href: "/",               label: "Home"     },
+  { href: "/lexicon",        label: "Bible"    },
+  { href: "/notes",          label: "Notes"    },
+  { href: "/family-worship", label: "Worship"  },
+];
+
+const PRIMARY_TABS_ES = [
+  { href: "/",               label: "Inicio"    },
+  { href: "/lexicon",        label: "Biblia"    },
+  { href: "/notes",          label: "Notas"     },
+  { href: "/family-worship", label: "Adoración" },
+];
 
 // ─── Sheet link SVG icons ─────────────────────────────────────────────────────
 
@@ -164,22 +172,39 @@ function TimelineIcon({ active }: { active: boolean }) {
 }
 
 const MORE_LINKS = [
-  { href: "/timeline",       Icon: TimelineIcon, label: "Timeline"        },
-  { href: "/library",        Icon: LibraryIcon,  label: "Free Books"      },
-  { href: "/bible-tracker",  Icon: TrackerIcon,  label: "Bible Tracker"   },
-  { href: "/family-worship", Icon: FamilyIcon,   label: "Family Worship"  },
-  { href: "/bible-plans",    Icon: PlansIcon,    label: "Plans"           },
-  { href: "/kids-books",     Icon: KidsIcon,     label: "Kids Books"      },
-  { href: "/videos",         Icon: VideosIcon,   label: "Videos"          },
-  { href: "/give",           Icon: GiveIcon,     label: "Give"            },
-  { href: "/fellowship",     Icon: GiveIcon,     label: "Fellowship"      },
+  { href: "/timeline",      Icon: TimelineIcon, label: "Timeline"      },
+  { href: "/library",       Icon: LibraryIcon,  label: "Free Books"    },
+  { href: "/bible-tracker", Icon: TrackerIcon,  label: "Bible Tracker" },
+  { href: "/bible-plans",   Icon: PlansIcon,    label: "Plans"         },
+  { href: "/kids-books",    Icon: KidsIcon,     label: "Kids Books"    },
+  { href: "/videos",        Icon: VideosIcon,   label: "Videos"        },
+  { href: "/give",          Icon: GiveIcon,     label: "Give"          },
+  { href: "/fellowship",    Icon: GiveIcon,     label: "Fellowship"    },
 ] as const;
 
+// Family Worship nav tab icon — cross/hearth style
+function FamilyWorshipIcon({ active }: { active: boolean }) {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path
+        d="M12 21C12 21 4 15.5 4 9.5a4 4 0 018 0 4 4 0 018 0C20 15.5 12 21 12 21z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        fill={active ? "currentColor" : "none"}
+        fillOpacity={active ? 0.18 : 0}
+      />
+      <line x1="12" y1="5" x2="12" y2="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      <line x1="10" y1="3" x2="14" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 function TabIcon({ href, active }: { href: string; active: boolean }) {
-  if (href === "/")        return <HomeIcon active={active} />;
-  if (href === "/lexicon") return <BibleIcon active={active} />;
-  if (href === "/notes")   return <NotesIcon active={active} />;
-  if (href === "/learn")   return <DiscoverIcon active={active} />;
+  if (href === "/")               return <HomeIcon active={active} />;
+  if (href === "/lexicon")        return <BibleIcon active={active} />;
+  if (href === "/notes")          return <NotesIcon active={active} />;
+  if (href === "/family-worship") return <FamilyWorshipIcon active={active} />;
   return null;
 }
 
@@ -187,6 +212,8 @@ function TabIcon({ href, active }: { href: string; active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const { lang } = useLanguage();
+  const PRIMARY_TABS = lang === "es" ? PRIMARY_TABS_ES : PRIMARY_TABS_EN;
 
   const youActive = MORE_LINKS.some((l) => pathname.startsWith(l.href)) ||
     pathname === "/more";
@@ -229,7 +256,7 @@ export function BottomNav() {
         >
           <YouIcon active={youActive} />
           <span className="text-[10px] font-bold tracking-wide leading-none">
-            Extras
+            {lang === "es" ? "Más" : "Extras"}
           </span>
         </Link>
 

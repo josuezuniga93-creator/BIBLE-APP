@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import { RemoveHighlightBubble } from "../components/RemoveHighlightBubble";
 import { useTheme } from "../lib/useTheme";
+import { useLanguage } from "../lib/useLanguage";
 import type {
   BookMeta,
   WordToken,
@@ -21,7 +21,7 @@ import {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-type BibleTranslation = "kjv" | "geneva" | "rv60";
+type BibleTranslation = "kjv" | "geneva" | "nkjv" | "esv" | "nasb" | "niv" | "lsb" | "rv1960" | "ntv" | "nvi" | "lbla";
 type FontSize = "sm" | "base" | "lg" | "xl" | "2xl";
 const FONT_SIZES: FontSize[] = ["sm", "base", "lg", "xl", "2xl"];
 const FONT_SIZE_CLASSES: Record<FontSize, string> = {
@@ -32,10 +32,111 @@ const FONT_SIZE_CLASSES: Record<FontSize, string> = {
   "2xl":"text-2xl",
 };
 
-const HIGHLIGHT_KEY    = (book: number, ch: number) => `ryc-highlight-${book}-${ch}`;
+type ScriptureFont = "georgia" | "palatino" | "modern" | "typewriter" | "baskerville";
+const SCRIPTURE_FONTS: { key: ScriptureFont; label: string; family: string; desc: string }[] = [
+  { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif",                          desc: "Classic & warm" },
+  { key: "baskerville", label: "Baskerville", family: "Baskerville, 'Baskerville Old Face', 'Book Antiqua', serif",  desc: "Sharp & elegant" },
+  { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",         desc: "Calligraphic" },
+  { key: "modern",      label: "Modern",      family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",    desc: "Clean sans-serif" },
+  { key: "typewriter",  label: "Typewriter",  family: "'Courier New', Courier, 'Lucida Console', monospace",          desc: "Vintage & faithful" },
+];
+const SCRIPTURE_FONT_KEY = "ryc-scripture-font";
+
 const VERSE_COLOR_KEY  = (book: number, ch: number) => `ryc-vcolor-${book}-${ch}`;
 const CHAPTER_NOTE_KEY = (book: number, ch: number) => `ryc-chapter-note-${book}-${ch}`;
 const LAST_POSITION_KEY = "ryc-last-position";
+
+// ─── Bible highlight sync (Collections) ──────────────────────────────────────
+// Mirrors verse highlights into the shared axiom-hl-* format so Collections
+// can display them with full verse text, reference, and a link back to Scripture.
+const BIBLE_HL_KEY = (bookName: string, chapter: number) =>
+  `axiom-hl-bible-${bookName.toLowerCase().replace(/\s+/g, "-")}-${chapter}`;
+
+function saveBibleHighlight(
+  bookName: string, bookNum: number, chapter: number,
+  verseNum: number, verseText: string, color: HighlightColor,
+) {
+  const key = BIBLE_HL_KEY(bookName, chapter);
+  let arr: { id: string; text: string; color: string; createdAt: number }[] = [];
+  try { arr = JSON.parse(localStorage.getItem(key) ?? "[]"); } catch { /* */ }
+  const id = `bible-${bookNum}-${chapter}-${verseNum}`;
+  const filtered = arr.filter((h) => h.id !== id);
+  filtered.push({ id, text: verseText, color, createdAt: Date.now() });
+  localStorage.setItem(key, JSON.stringify(filtered));
+}
+
+function removeBibleHighlight(bookName: string, bookNum: number, chapter: number, verseNum: number) {
+  const key = BIBLE_HL_KEY(bookName, chapter);
+  let arr: { id: string }[] = [];
+  try { arr = JSON.parse(localStorage.getItem(key) ?? "[]"); } catch { /* */ }
+  const id = `bible-${bookNum}-${chapter}-${verseNum}`;
+  const filtered = arr.filter((h) => h.id !== id);
+  if (filtered.length === 0) localStorage.removeItem(key);
+  else localStorage.setItem(key, JSON.stringify(filtered));
+}
+
+// Spanish book names (book.num 1–66 → localized name)
+const ES_BOOK_NAMES: Record<number, string> = {
+  1:"Génesis",2:"Éxodo",3:"Levítico",4:"Números",5:"Deuteronomio",
+  6:"Josué",7:"Jueces",8:"Rut",9:"1 Samuel",10:"2 Samuel",
+  11:"1 Reyes",12:"2 Reyes",13:"1 Crónicas",14:"2 Crónicas",15:"Esdras",
+  16:"Nehemías",17:"Ester",18:"Job",19:"Salmos",20:"Proverbios",
+  21:"Eclesiastés",22:"Cantares",23:"Isaías",24:"Jeremías",25:"Lamentaciones",
+  26:"Ezequiel",27:"Daniel",28:"Oseas",29:"Joel",30:"Amós",
+  31:"Abdías",32:"Jonás",33:"Miqueas",34:"Nahúm",35:"Habacuc",
+  36:"Sofonías",37:"Hageo",38:"Zacarías",39:"Malaquías",40:"Mateo",
+  41:"Marcos",42:"Lucas",43:"Juan",44:"Hechos",45:"Romanos",
+  46:"1 Corintios",47:"2 Corintios",48:"Gálatas",49:"Efesios",50:"Filipenses",
+  51:"Colosenses",52:"1 Tesalonicenses",53:"2 Tesalonicenses",54:"1 Timoteo",55:"2 Timoteo",
+  56:"Tito",57:"Filemón",58:"Hebreos",59:"Santiago",60:"1 Pedro",
+  61:"2 Pedro",62:"1 Juan",63:"2 Juan",64:"3 Juan",65:"Judas",
+  66:"Apocalipsis",
+};
+const SPANISH_TRANSLATIONS: BibleTranslation[] = ["rv1960","nvi","ntv","lbla"];
+const TRANSLATION_OPTIONS = [
+  { key: "esv",    group: "en", name: "English Standard Version",       abbr: "ESV",  note: "Recommended", detail: "Clear modern English" },
+  { key: "kjv",    group: "en", name: "King James Version",             abbr: "KJV",  note: "1611",        detail: "Classic traditional text" },
+  { key: "nkjv",   group: "en", name: "New King James Version",         abbr: "NKJV", note: "",            detail: "Traditional style, modernized" },
+  { key: "nasb",   group: "en", name: "New American Standard Bible",    abbr: "NASB", note: "",            detail: "Formal English translation" },
+  { key: "niv",    group: "en", name: "New International Version",      abbr: "NIV",  note: "",            detail: "Readable contemporary English" },
+  { key: "lsb",    group: "en", name: "Legacy Standard Bible",          abbr: "LSB",  note: "",            detail: "Formal and precise" },
+  { key: "geneva", group: "en", name: "Geneva Bible 1599",              abbr: "GNV",  note: "Historic",    detail: "Reformation-era English" },
+  { key: "lbla",   group: "es", name: "La Biblia de las Américas",      abbr: "LBLA", note: "Recommended", detail: "Formal Spanish translation" },
+  { key: "rv1960", group: "es", name: "Reina-Valera 1960",              abbr: "RV60", note: "Clásica",     detail: "Traditional Spanish text" },
+  { key: "nvi",    group: "es", name: "Nueva Versión Internacional",    abbr: "NVI",  note: "",            detail: "Readable contemporary Spanish" },
+  { key: "ntv",    group: "es", name: "Nueva Traducción Viviente",      abbr: "NTV",  note: "",            detail: "Natural modern Spanish" },
+] as const satisfies ReadonlyArray<{
+  key: BibleTranslation;
+  group: "en" | "es";
+  name: string;
+  abbr: string;
+  note: string;
+  detail: string;
+}>;
+const TRANSLATION_GROUPS = [
+  {
+    id: "en",
+    label: "English",
+    eyebrow: "EN",
+    caption: "English editions",
+    options: TRANSLATION_OPTIONS.filter((option) => option.group === "en"),
+  },
+  {
+    id: "es",
+    label: "Spanish",
+    eyebrow: "ES",
+    caption: "Spanish editions",
+    options: TRANSLATION_OPTIONS.filter((option) => option.group === "es"),
+  },
+] as const;
+function getTranslationMeta(t: BibleTranslation) {
+  return TRANSLATION_OPTIONS.find((option) => option.key === t) ?? TRANSLATION_OPTIONS[0];
+}
+function getBookDisplayName(book: BookMeta | null, t: BibleTranslation): string {
+  if (!book) return "";
+  if (SPANISH_TRANSLATIONS.includes(t)) return ES_BOOK_NAMES[book.num] ?? book.name;
+  return book.name;
+}
 
 function saveLastPosition(bookName: string, chapter: number) {
   try { localStorage.setItem(LAST_POSITION_KEY, JSON.stringify({ bookName, chapter })); } catch {}
@@ -48,11 +149,12 @@ function loadLastPosition(): { bookName: string; chapter: number } | null {
 }
 
 const HIGHLIGHT_COLORS = {
-  yellow: { bg: "bg-yellow-400/30",  text: "text-yellow-100", dot: "#ca8a04",  label: "Yellow"  },
-  green:  { bg: "bg-green-500/25",   text: "text-green-100",  dot: "#16a34a",  label: "Green"   },
-  blue:   { bg: "bg-blue-500/25",    text: "text-blue-100",   dot: "#2563eb",  label: "Blue"    },
-  pink:   { bg: "bg-pink-500/25",    text: "text-pink-100",   dot: "#db2777",  label: "Pink"    },
-  purple: { bg: "bg-purple-500/25",  text: "text-purple-100", dot: "#7c3aed",  label: "Purple"  },
+  purple: { dot: "#7546e3", label: "Purple",     bgRgb: "117,70,227",  textColor: "#fff" },
+  yellow: { dot: "#f2f06d", label: "Yellow",     bgRgb: "242,240,109", textColor: "#000" },
+  red:    { dot: "#e34646", label: "Red",        bgRgb: "227,70,70",   textColor: "#fff" },
+  blue:   { dot: "#46d3e3", label: "Blue",       bgRgb: "70,211,227",  textColor: "#000" },
+  lime:   { dot: "#a9f558", label: "Lime Green", bgRgb: "169,245,88",  textColor: "#000" },
+  pink:   { dot: "#f558f2", label: "Pink",       bgRgb: "245,88,242",  textColor: "#000" },
 } as const;
 type HighlightColor = keyof typeof HIGHLIGHT_COLORS;
 
@@ -60,56 +162,6 @@ type HighlightColor = keyof typeof HIGHLIGHT_COLORS;
 
 function isPunctuation(w: string) {
   return /^[.,;:!?()\[\]"'—–\-]+$/.test(w);
-}
-
-// ─── Inline word (for prose reading) ─────────────────────────────────────────
-
-function InlineWord({
-  token,
-  onSelect,
-  active,
-  highlighted,
-  onHighlight,
-  testament,
-}: {
-  token: WordToken;
-  onSelect: (t: WordToken) => void;
-  active: boolean;
-  highlighted: boolean;
-  onHighlight: (w: string) => void;
-  testament: string;
-}) {
-  if (isPunctuation(token.w)) {
-    return <span className="text-white/50">{token.w}</span>;
-  }
-
-  const isHebrew = testament === "OT";
-
-  return (
-    <span className="group/word relative inline">
-      <button
-        onClick={() => onSelect(token)}
-        onContextMenu={(e) => { e.preventDefault(); onHighlight(token.w); }}
-        className={`inline rounded-sm px-[1px] transition-colors duration-75 ${
-          highlighted
-            ? "bg-amber-400/30 text-amber-100"
-            : active
-            ? isHebrew
-              ? "bg-amber-500/25 text-amber-100 underline decoration-amber-500/60 underline-offset-2"
-              : "bg-sky-500/25 text-sky-100 underline decoration-sky-500/60 underline-offset-2"
-            : "text-white/85 hover:text-white hover:bg-white/[0.07]"
-        }`}
-      >
-        {token.w}
-      </button>
-      {/* Strong's number tooltip on hover */}
-      {token.s && (
-        <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] font-mono text-white/0 group-hover/word:text-white/50 pointer-events-none transition-colors whitespace-nowrap z-10">
-          {token.s}
-        </span>
-      )}
-    </span>
-  );
 }
 
 // ─── Strong's panel content (shared between popup and sidebar) ───────────────
@@ -312,48 +364,109 @@ function CommentaryPanel({ entries, bookName, chapter }: { entries: CommentaryEn
   );
 }
 
-// ─── Color Picker Popover ─────────────────────────────────────────────────────
+// ─── Verse Highlight Popover ──────────────────────────────────────────────────
+// Appears near the tap point. Three modes:
+//   "pick"           — verse not highlighted yet → show color swatches
+//   "edit"           — verse already highlighted → show swatches + Remove button
+//   "confirm-remove" — user pressed Remove → show confirmation prompt
 
-function ColorPicker({
-  verseNum,
+type VHMode = "pick" | "edit" | "confirm-remove";
+
+interface VersePopoverState {
+  verseNum: number;
+  x: number; // viewport x of tap
+  y: number; // viewport y of tap
+  mode: VHMode;
+}
+
+function VerseHighlightPopover({
+  state,
   current,
   onSelect,
-  onClear,
+  onRequestConfirm,
+  onRemove,
   onClose,
 }: {
-  verseNum: number;
+  state: VersePopoverState;
   current: HighlightColor | undefined;
   onSelect: (color: HighlightColor) => void;
-  onClear: () => void;
+  onRequestConfirm: () => void;
+  onRemove: () => void;
   onClose: () => void;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handle = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handle, true);
+    return () => document.removeEventListener("mousedown", handle, true);
+  }, [onClose]);
+
+  const W = 232;
+  const estimatedH = state.mode === "confirm-remove" ? 104 : 88;
+  const vx = Math.max(W / 2 + 8, Math.min(state.x, window.innerWidth - W / 2 - 8));
+  const rawTop = state.y - estimatedH - 14;
+  const top = rawTop < 8 ? state.y + 14 : rawTop;
+
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); onClose(); }} />
-      <div className="fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-[#1a1a1a] border border-white/[0.12] rounded-2xl shadow-2xl p-4 flex flex-col gap-3 min-w-[220px]" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-widest text-white/30">Highlight v.{verseNum}</p>
-          <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors text-sm">✕</button>
-        </div>
-        <div className="flex gap-2 justify-center">
-          {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
-            <button
-              key={key}
-              onClick={() => { onSelect(key); onClose(); }}
-              title={val.label}
-              className={`w-9 h-9 rounded-full transition-transform hover:scale-110 border-2 ${current === key ? "border-white/60 scale-110" : "border-transparent"}`}
-              style={{ backgroundColor: val.dot }}
-            />
-          ))}
-        </div>
-        {current && (
-          <button
-            onClick={() => { onClear(); onClose(); }}
-            className="text-[10px] text-white/25 hover:text-white/50 font-bold text-center transition-colors"
-          >
-            Remove highlight
-          </button>
+      <div
+        ref={ref}
+        className="fixed z-50 bg-[#1a1a1a] border border-white/[0.12] rounded-2xl shadow-2xl p-4 flex flex-col gap-3"
+        style={{ width: W, left: vx - W / 2, top }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {state.mode !== "confirm-remove" ? (
+          <>
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
+                {state.mode === "pick" ? `Highlight v.​${state.verseNum}` : `v.​${state.verseNum} · change color`}
+              </p>
+              <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors text-sm leading-none">✕</button>
+            </div>
+            <div className="flex gap-2 justify-center">
+              {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
+                <button
+                  key={key}
+                  onClick={() => { onSelect(key); onClose(); }}
+                  title={val.label}
+                  className={`w-9 h-9 rounded-full transition-transform hover:scale-110 active:scale-95 border-2 ${current === key ? "border-white/60 scale-110" : "border-transparent"}`}
+                  style={{ backgroundColor: val.dot }}
+                />
+              ))}
+            </div>
+            {state.mode === "edit" && (
+              <button
+                onClick={onRequestConfirm}
+                className="text-[11px] text-white/25 hover:text-red-400/70 font-bold text-center transition-colors pt-0.5"
+              >
+                Remove highlight
+              </button>
+            )}
+          </>
+        ) : (
+          <>
+            <p className="text-sm text-white/60 text-center leading-snug px-1">
+              Remove highlight from verse {state.verseNum}?
+            </p>
+            <div className="flex gap-2">
+              <button
+                onClick={onClose}
+                className="flex-1 py-2 rounded-xl border border-white/10 text-white/40 text-xs font-bold hover:bg-white/[0.05] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => { onRemove(); onClose(); }}
+                className="flex-1 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
+              >
+                Remove
+              </button>
+            </div>
+          </>
         )}
       </div>
     </>
@@ -400,6 +513,7 @@ export default function LexiconPage() {
 function LexiconInner() {
   const { theme } = useTheme();
   const isLight = theme === "light-elegant";
+  const { lang } = useLanguage();
   const searchParams = useSearchParams();
   const [books, setBooks]       = useState<BookMeta[]>([]);
   const [hasStrongs, setHasStrongs] = useState(false);
@@ -410,6 +524,7 @@ function LexiconInner() {
   const [selectedBook, setSelectedBook]       = useState<BookMeta | null>(null);
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [chapterData, setChapterData]         = useState<ChapterData | null>(null);
+  const [chapterError, setChapterError]       = useState<string | null>(null);
   const [commentary, setCommentary]           = useState<CommentaryEntry[]>([]);
   const [loadingChapter, setLoadingChapter]   = useState(false);
 
@@ -426,41 +541,58 @@ function LexiconInner() {
   const [showCommentary, setShowCommentary]   = useState(true);
   const [testamentFilter, setTestamentFilter] = useState<"ALL" | "OT" | "NT">("ALL");
 
-  const [translation, setTranslation]         = useState<BibleTranslation>("kjv");
+  const [translation, setTranslation]         = useState<BibleTranslation>(() => {
+    try {
+      const saved = localStorage.getItem("ryc-translation");
+      const valid: BibleTranslation[] = TRANSLATION_OPTIONS.map((option) => option.key);
+      if (saved && valid.includes(saved as BibleTranslation)) return saved as BibleTranslation;
+      // No explicit translation chosen — pick the appropriate default for the current language.
+      // English → ESV, Spanish → LBLA
+      const storedLang = localStorage.getItem("ryc-lang");
+      return storedLang === "es" ? "lbla" : "esv";
+    } catch {}
+    return "esv";
+  });
+  // Auto-switch translation when the UI language changes (without a full page reload).
+  // Crossing the language boundary: en → Spanish defaults to LBLA; es → English defaults to ESV.
+  // Within-group selections are preserved (e.g. user picked RV60 stays on RV60 while in Spanish).
+  useEffect(() => {
+    const isSpanishTrans = SPANISH_TRANSLATIONS.includes(translation);
+    if (lang === "es" && !isSpanishTrans) {
+      setTranslation("lbla");
+    } else if (lang === "en" && isSpanishTrans) {
+      setTranslation("esv");
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const [fontSize, setFontSize]               = useState<FontSize>("lg");
+  const [scriptureFont, setScriptureFont]     = useState<ScriptureFont>(() => {
+    try { const s = localStorage.getItem(SCRIPTURE_FONT_KEY) as ScriptureFont; return SCRIPTURE_FONTS.some(f => f.key === s) ? s : "georgia"; } catch { return "georgia"; }
+  });
+  const [showFontPicker, setShowFontPicker]   = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
+
+  function selectFont(f: ScriptureFont) {
+    setScriptureFont(f);
+    try { localStorage.setItem(SCRIPTURE_FONT_KEY, f); } catch {}
+    setShowFontPicker(false);
+  }
+  const activeFontFamily = SCRIPTURE_FONTS.find(f => f.key === scriptureFont)?.family ?? "'Georgia', serif";
 
   // Translation picker sheet
   const [showTranslationPicker, setShowTranslationPicker] = useState(false);
+  const [pickerCategory, setPickerCategory] = useState<"en" | "es">("en");
 
   // Navigation search (type "Romans 3")
   const [showNavSearch, setShowNavSearch]   = useState(false);
   const [navQuery,      setNavQuery]        = useState("");
 
-  // Word-level highlights (existing)
-  const [highlights, setHighlights] = useState<Set<string>>(new Set());
-  const [highlightMode, setHighlightMode] = useState(false);
+  // Verse highlight popover (tap-to-highlight whole verse)
+  const [versePopover, setVersePopover] = useState<VersePopoverState | null>(null);
 
-  // Pending word-highlight removal — requires user confirmation
-  const [pendingRemoveWord, setPendingRemoveWord] = useState<{ word: string; x: number; y: number } | null>(null);
-
-  // Track last mouse position so the confirmation bubble can be placed correctly
-  const lastPointerPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
-  useEffect(() => {
-    const track = (e: MouseEvent) => { lastPointerPos.current = { x: e.clientX, y: e.clientY }; };
-    document.addEventListener("mousemove", track);
-    document.addEventListener("click", track);
-    document.addEventListener("contextmenu", track);
-    return () => {
-      document.removeEventListener("mousemove", track);
-      document.removeEventListener("click", track);
-      document.removeEventListener("contextmenu", track);
-    };
-  }, []);
-
-  // Verse color highlights (new — multi-color)
+  // Verse color highlights (tap-to-highlight whole verse)
   const [verseColors, setVerseColors] = useState<Record<number, HighlightColor>>({});
-  const [colorPickerVerse, setColorPickerVerse] = useState<number | null>(null);
 
   // Chapter notes
   const [chapterNote, setChapterNote] = useState("");
@@ -471,34 +603,6 @@ function LexiconInner() {
   const noteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const verseRefs = useRef<Record<number, HTMLDivElement | null>>({});
-
-  // ── Word highlights load/save ─────────────────────────────────────────────
-  useEffect(() => {
-    if (!selectedBook) return;
-    const saved = localStorage.getItem(HIGHLIGHT_KEY(selectedBook.num, selectedChapter));
-    try { setHighlights(saved ? new Set(JSON.parse(saved)) : new Set()); }
-    catch { setHighlights(new Set()); }
-  }, [selectedBook, selectedChapter]);
-
-  useEffect(() => {
-    if (!selectedBook) return;
-    if (highlights.size === 0) localStorage.removeItem(HIGHLIGHT_KEY(selectedBook.num, selectedChapter));
-    else localStorage.setItem(HIGHLIGHT_KEY(selectedBook.num, selectedChapter), JSON.stringify([...highlights]));
-  }, [highlights, selectedBook, selectedChapter]);
-
-  const toggleHighlight = useCallback((word: string) => {
-    if (highlights.has(word)) {
-      // Word is already highlighted — ask for confirmation before removing
-      const { x, y } = lastPointerPos.current;
-      setPendingRemoveWord({ word, x, y });
-    } else {
-      setHighlights((prev) => {
-        const next = new Set(prev);
-        next.add(word);
-        return next;
-      });
-    }
-  }, [highlights]);
 
   // ── Verse color highlights load/save ─────────────────────────────────────
   useEffect(() => {
@@ -516,7 +620,13 @@ function LexiconInner() {
 
   const setVerseColor = useCallback((verseNum: number, color: HighlightColor) => {
     setVerseColors((prev) => ({ ...prev, [verseNum]: color }));
-  }, []);
+    // Mirror to axiom-hl-* format for Collections sync
+    const book = selectedBook;
+    const verse = chapterData?.verses.find((v) => v.verse === verseNum);
+    if (book && verse) {
+      saveBibleHighlight(book.name, book.num, selectedChapter, verseNum, verse.text, color);
+    }
+  }, [selectedBook, selectedChapter, chapterData]);
 
   const clearVerseColor = useCallback((verseNum: number) => {
     setVerseColors((prev) => {
@@ -524,11 +634,27 @@ function LexiconInner() {
       delete next[verseNum];
       return next;
     });
-  }, []);
+    // Remove from axiom-hl-* format for Collections sync
+    const book = selectedBook;
+    if (book) removeBibleHighlight(book.name, book.num, selectedChapter, verseNum);
+  }, [selectedBook, selectedChapter]);
+
+  // ── Tap-to-highlight handler ──────────────────────────────────────────────
+  const handleVerseClick = useCallback((verseNum: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const isHighlighted = verseNum in verseColors;
+    setVersePopover({
+      verseNum,
+      x: e.clientX,
+      y: e.clientY,
+      mode: isHighlighted ? "edit" : "pick",
+    });
+  }, [verseColors]);
 
   // ── Chapter notes load/save ───────────────────────────────────────────────
   const selectedBookRef    = useRef(selectedBook);
   const selectedChapterRef = useRef(selectedChapter);
+  const fetchIdRef         = useRef(0);
   useEffect(() => { selectedBookRef.current = selectedBook; }, [selectedBook]);
   useEffect(() => { selectedChapterRef.current = selectedChapter; }, [selectedChapter]);
 
@@ -564,17 +690,58 @@ function LexiconInner() {
   const handleNavSearch = useCallback((q: string) => {
     const trimmed = q.trim();
     if (!trimmed || !books.length) return;
-    // Match: BookName Chapter[:Verse] — e.g. "Romans 3", "1 Cor 13", "John 3:16"
+    // Match: BookName Chapter[:Verse] — e.g. "Romans 3", "Hechos 1", "Juan 3:16"
     const match = trimmed.match(/^(.+?)\s+(\d+)(?::\d+)?$/);
     if (!match) return;
     const [, rawBook, chStr] = match;
     const bookQuery = rawBook.toLowerCase().trim();
     const ch = parseInt(chStr, 10);
+
+    // Spanish → English name aliases
+    const ES_TO_EN: Record<string, string> = {
+      genesis: "genesis", exodo: "exodus", éxodo: "exodus", levitico: "leviticus",
+      levítico: "leviticus", numeros: "numbers", números: "numbers",
+      deuteronomio: "deuteronomy", josue: "joshua", josué: "joshua",
+      jueces: "judges", rut: "ruth", samuel: "samuel", reyes: "kings",
+      cronicas: "chronicles", crónicas: "chronicles", esdras: "ezra",
+      nehemias: "nehemiah", nehemías: "nehemiah", ester: "esther", job: "job",
+      salmos: "psalms", salmo: "psalms", proverbios: "proverbs",
+      eclesiastes: "ecclesiastes", eclesiastés: "ecclesiastes",
+      cantares: "song of solomon", cantar: "song of solomon",
+      isaias: "isaiah", isaías: "isaiah", jeremias: "jeremiah", jeremías: "jeremiah",
+      lamentaciones: "lamentations", ezequiel: "ezekiel", daniel: "daniel",
+      oseas: "hosea", joel: "joel", amos: "amos", amós: "amos",
+      abdias: "obadiah", abdías: "obadiah", jonas: "jonah", jonás: "jonah",
+      miqueas: "micah", nahum: "nahum", habacuc: "habakkuk", sofonias: "zephaniah",
+      sofonías: "zephaniah", hageo: "haggai", zacarias: "zechariah",
+      zacarías: "zechariah", malaquias: "malachi", malaquías: "malachi",
+      mateo: "matthew", marcos: "mark", lucas: "luke", juan: "john",
+      hechos: "acts", romanos: "romans", corintios: "corinthians",
+      galatas: "galatians", gálatas: "galatians", efesios: "ephesians",
+      filipenses: "philippians", colosenses: "colossians", tesalonicenses: "thessalonians",
+      timoteo: "timothy", tito: "titus", filemon: "philemon", filemón: "philemon",
+      hebreos: "hebrews", santiago: "james", pedro: "peter",
+      judas: "jude", apocalipsis: "revelation",
+    };
+
+    // Normalize: strip leading number (e.g. "1 corintios" → prefix "1 " + "corintios")
+    const numPrefixMatch = bookQuery.match(/^(\d)\s*(.+)$/);
+    let resolvedQuery = bookQuery;
+    if (numPrefixMatch) {
+      const [, num, rest] = numPrefixMatch;
+      const enBase = ES_TO_EN[rest] ?? rest;
+      resolvedQuery = `${num} ${enBase}`;
+    } else {
+      resolvedQuery = ES_TO_EN[bookQuery] ?? bookQuery;
+    }
+
     const found = books.find(
-      (b) =>
-        b.name.toLowerCase() === bookQuery ||
-        b.name.toLowerCase().startsWith(bookQuery) ||
-        b.name.toLowerCase().replace(/\s+/g, "").startsWith(bookQuery.replace(/\s+/g, ""))
+      (b) => {
+        const bLow = b.name.toLowerCase();
+        const bNoSpace = bLow.replace(/\s+/g, "");
+        const qNoSpace = resolvedQuery.replace(/\s+/g, "");
+        return bLow === resolvedQuery || bLow.startsWith(resolvedQuery) || bNoSpace.startsWith(qNoSpace);
+      }
     );
     if (found) {
       setSelectedBook(found);
@@ -629,12 +796,14 @@ function LexiconInner() {
 
   useEffect(() => {
     if (!selectedBook) return;
+    const fetchId = ++fetchIdRef.current;
     setLoadingChapter(true);
     setChapterData(null);
+    setChapterError(null);
     setCommentary([]);
     setActiveToken(null);
     setStrongsEntry(null);
-    setColorPickerVerse(null);
+    setVersePopover(null);
 
     const chFetch  = fetchChapter(selectedBook.num, selectedChapter, translation);
     const mhcFetch = hasMhc
@@ -642,7 +811,14 @@ function LexiconInner() {
       : Promise.resolve([] as CommentaryEntry[]);
 
     Promise.allSettled([chFetch, mhcFetch]).then(([chRes, mhcRes]) => {
-      if (chRes.status  === "fulfilled") setChapterData(chRes.value);
+      if (fetchId !== fetchIdRef.current) return; // stale fetch — discard
+      if (chRes.status === "fulfilled") {
+        setChapterData(chRes.value);
+        setChapterError(null);
+      } else {
+        const msg = chRes.reason instanceof Error ? chRes.reason.message : String(chRes.reason);
+        setChapterError(`Could not load chapter. ${msg}`);
+      }
       if (mhcRes.status === "fulfilled") setCommentary(mhcRes.value as CommentaryEntry[]);
       setLoadingChapter(false);
     });
@@ -678,14 +854,13 @@ function LexiconInner() {
     const onKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "f" || e.key === "F") setPresentationMode((v) => !v);
-      if (e.key === "h" || e.key === "H") setHighlightMode((v) => !v);
       if (e.key === "ArrowRight") {
         if (selectedBook && selectedChapter < selectedBook.chapters) setSelectedChapter((c) => c + 1);
       }
       if (e.key === "ArrowLeft") {
         if (selectedChapter > 1) setSelectedChapter((c) => c - 1);
       }
-      if (e.key === "Escape") setColorPickerVerse(null);
+      if (e.key === "Escape") setVersePopover(null);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -717,10 +892,20 @@ function LexiconInner() {
   };
 
   const highlightedVerseCount = Object.keys(verseColors).length;
+  const currentTranslation = getTranslationMeta(translation);
+  const openTranslationPicker = () => {
+    setPickerCategory(currentTranslation.group);
+    setShowTranslationPicker(true);
+  };
+  const selectTranslation = (next: BibleTranslation) => {
+    setTranslation(next);
+    try { localStorage.setItem("ryc-translation", next); } catch {}
+    setShowTranslationPicker(false);
+  };
 
   // ── Presentation mode ─────────────────────────────────────────────────────
   if (presentationMode) {
-    const translLabel = translation === "geneva" ? "Geneva 1599" : translation === "rv60" ? "Reina Valera 1960" : "King James Version";
+    const translLabel = currentTranslation.name;
     return (
       <div className="fixed inset-0 z-50 bg-[#0a0a0a] flex flex-col" onClick={() => setPresentationMode(false)}>
         <div className="absolute top-4 right-4 text-white/20 text-xs pointer-events-none">
@@ -753,7 +938,7 @@ function LexiconInner() {
                   <span className="text-lg font-black text-violet-400/40 w-10 text-right flex-shrink-0 pt-1">
                     {verse.verse}
                   </span>
-                  <p className="text-2xl md:text-3xl leading-relaxed text-white/85 font-serif" style={{ fontFamily: "'Georgia', serif" }}>
+                  <p className="text-2xl md:text-3xl leading-relaxed text-white/85" style={{ fontFamily: activeFontFamily }}>
                     {verse.text}
                   </p>
                 </div>
@@ -769,7 +954,7 @@ function LexiconInner() {
   return (
     <div
       className="min-h-screen bg-[#0f0f0f] text-white"
-      onClick={() => setColorPickerVerse(null)}
+      onClick={() => setVersePopover(null)}
     >
       {/* ── Books error banner ── */}
       {booksError && (
@@ -777,7 +962,7 @@ function LexiconInner() {
           <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.07] px-5 py-4 flex items-start gap-3">
             <span className="text-xl flex-shrink-0 mt-0.5">⚠️</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-red-300/90 mb-1">Couldn't connect to the Bible server</p>
+              <p className="text-sm font-bold text-red-300/90 mb-1">Couldn&apos;t connect to the Bible server</p>
               <p className="text-xs text-red-400/60 leading-relaxed mb-3">The backend may be sleeping or unreachable. This sometimes happens after a period of inactivity — try again in a moment.</p>
               <button
                 onClick={() => {
@@ -810,64 +995,94 @@ function LexiconInner() {
       )}
       {/* ── Translation picker bottom sheet ── */}
       {showTranslationPicker && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end" onClick={() => setShowTranslationPicker(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16 print:hidden" onClick={() => setShowTranslationPicker(false)}>
+          <div className="translation-picker-scrim absolute inset-0" />
           <div
-            className="relative bg-[#1a1a1a] rounded-t-3xl border-t border-white/[0.08] pb-8"
+            className="translation-picker-panel relative w-full max-w-sm overflow-hidden rounded-[28px]"
+            style={{ maxHeight: "min(82vh, 680px)" }}
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/30 px-6 mb-4">
-              Bible Translation
-            </p>
-
-            {/* English */}
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 px-6 mb-1">English</p>
-            {([
-              { key: "kjv",    name: "King James Version",   abbr: "KJV"  },
-              { key: "geneva", name: "Geneva Bible 1599",    abbr: "GNV"  },
-            ] as const).map(({ key, name, abbr }) => (
-              <button
-                key={key}
-                onClick={() => { setTranslation(key); setShowTranslationPicker(false); }}
-                className={`w-full flex items-center justify-between px-6 py-3.5 transition-colors ${
-                  translation === key ? "bg-violet-500/10" : "hover:bg-white/[0.04]"
-                }`}
-              >
-                <div className="text-left">
-                  <p className={`text-sm font-semibold ${translation === key ? "text-violet-300" : "text-white/75"}`}>{name}</p>
-                  <p className="text-[10px] text-white/30 mt-0.5">{abbr}</p>
+            <div className="translation-picker-header px-5 pb-4 pt-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="translation-picker-kicker">Bible Translation</p>
+                  <h2 className="translation-picker-title mt-1">Choose an edition</h2>
+                  <p className="translation-picker-subtitle mt-1">Text-only selector, grouped by language.</p>
                 </div>
-                {translation === key && (
-                  <span className="text-violet-400 text-sm">✓</span>
-                )}
-              </button>
-            ))}
-
-            {/* Divider */}
-            <div className="border-t border-white/[0.06] my-2" />
-
-            {/* Spanish */}
-            <p className="text-[9px] font-bold uppercase tracking-widest text-white/20 px-6 mb-1">Español</p>
-            <button
-              onClick={() => { setTranslation("rv60"); setShowTranslationPicker(false); }}
-              className={`w-full flex items-center justify-between px-6 py-3.5 transition-colors ${
-                translation === "rv60" ? "bg-violet-500/10" : "hover:bg-white/[0.04]"
-              }`}
-            >
-              <div className="text-left">
-                <p className={`text-sm font-semibold ${translation === "rv60" ? "text-violet-300" : "text-white/75"}`}>Reina Valera 1960</p>
-                <p className="text-[10px] text-white/30 mt-0.5">RV60</p>
+                <button
+                  onClick={() => setShowTranslationPicker(false)}
+                  className="translation-picker-close"
+                  aria-label="Close translation picker"
+                >
+                  Close
+                </button>
               </div>
-              {translation === "rv60" && (
-                <span className="text-violet-400 text-sm">✓</span>
-              )}
-            </button>
 
-            <div style={{ height: "max(env(safe-area-inset-bottom), 8px)" }} />
+              <div className="translation-picker-current mt-4">
+                <span className="translation-picker-current-abbr">{currentTranslation.abbr}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="translation-picker-current-label">Current selection</p>
+                  <p className="translation-picker-current-name truncate">{currentTranslation.name}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="translation-picker-scroll overflow-y-auto px-3 pb-3">
+              {/* ── Language selector — pill toggle ── */}
+              <div
+                className="flex p-1 mb-4 rounded-2xl"
+                style={{ background: "var(--tp-bg-soft)", border: "1px solid var(--tp-line)" }}
+              >
+                {TRANSLATION_GROUPS.map((group) => {
+                  const active = pickerCategory === group.id;
+                  return (
+                    <button
+                      key={group.id}
+                      type="button"
+                      onClick={() => setPickerCategory(group.id)}
+                      className="flex-1 flex flex-col items-center gap-0.5 py-3 rounded-xl transition-all"
+                      style={{
+                        background: active ? "var(--tp-accent-bg)" : "transparent",
+                        border: active ? "1px solid color-mix(in srgb, var(--tp-accent) 35%, transparent)" : "1px solid transparent",
+                        color: active ? "var(--tp-accent-strong)" : "var(--tp-muted)",
+                      }}
+                    >
+                      <span style={{ fontWeight: 900, fontSize: "15px", letterSpacing: "-0.01em" }}>
+                        {group.label}
+                      </span>
+                      <span style={{ fontSize: "10px", fontWeight: 700, opacity: active ? 0.7 : 0.45 }}>
+                        {group.options.length} {group.id === "en" ? "versions" : "translations"}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* ── Translations for selected language ── */}
+              <div className="space-y-1.5">
+                {TRANSLATION_GROUPS.find((g) => g.id === pickerCategory)?.options.map((option) => {
+                  const active = translation === option.key;
+                  return (
+                    <button
+                      key={option.key}
+                      onClick={() => selectTranslation(option.key)}
+                      className={`translation-picker-option ${active ? "is-selected" : ""}`}
+                    >
+                      <span className="translation-picker-option-abbr">{option.abbr}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="translation-picker-option-name">{option.name}</span>
+                        <span className="translation-picker-option-detail">
+                          {option.note ? `${option.note} · ${option.detail}` : option.detail}
+                        </span>
+                      </span>
+                      {active && <span className="translation-picker-selected">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div style={{ height: "max(env(safe-area-inset-bottom), 8px)" }} className="translation-picker-safe-area" />
           </div>
         </div>
       )}
@@ -890,39 +1105,54 @@ function LexiconInner() {
 
           <div className="flex-1" />
 
-          {/* Highlight toggle */}
+          {/* Font family picker */}
           <button
-            onClick={() => setHighlightMode((v) => !v)}
-            className={`w-9 h-9 rounded-xl flex items-center justify-center transition-colors ${
-              highlightMode ? "bg-amber-500/20 text-amber-400" : "text-white/25 hover:text-white/55 hover:bg-white/[0.07]"
-            }`}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <path d="M12 20h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
+            onClick={() => setShowFontPicker((v) => !v)}
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors text-white/30 hover:text-white/60 hover:bg-white/[0.07] font-bold text-[13px]"
+            title="Change scripture font">
+            Ff
           </button>
-
-          {/* Notes — go to notes page */}
-          <a
-            href="/notes"
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors text-white/25 hover:text-white/55 hover:bg-white/[0.07]">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-              <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
-              <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-          </a>
 
           {/* Translation pill — opens picker */}
           <button
-            onClick={() => setShowTranslationPicker(true)}
+            onClick={openTranslationPicker}
             className="ml-1 px-2.5 py-1 rounded-full border border-white/[0.12] bg-white/[0.04] text-[11px] font-bold text-white/50 hover:border-white/25 hover:text-white/70 transition-colors">
-            {translation === "kjv" ? "KJV" : translation === "geneva" ? "GNV" : "RV60"}
+            {currentTranslation.abbr}
           </button>
         </div>
 
       </header>
+
+      {/* ── Font picker sheet ── */}
+      {showFontPicker && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 print:hidden" onClick={() => setShowFontPicker(false)}>
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="relative bg-[#1a1a1a] rounded-2xl border border-white/[0.08] px-5 pb-6 pt-5 w-full max-w-sm overflow-y-auto" style={{ maxHeight: "80vh" }} onClick={(e) => e.stopPropagation()}>
+            <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">Scripture Font</p>
+            <div className="space-y-2">
+              {SCRIPTURE_FONTS.map((f) => (
+                <button
+                  key={f.key}
+                  onClick={() => selectFont(f.key)}
+                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
+                    scriptureFont === f.key
+                      ? "border-violet-500/40 bg-violet-500/10"
+                      : "border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.05]"
+                  }`}
+                >
+                  <div className="text-left">
+                    <p className="text-sm font-semibold" style={{ color: scriptureFont === f.key ? "#c4b5fd" : "rgba(255,255,255,0.7)", fontFamily: f.family }}>
+                      {f.label} — In the beginning was the Word
+                    </p>
+                    <p className="text-[10px] text-white/30 mt-0.5">{f.desc}</p>
+                  </div>
+                  {scriptureFont === f.key && <span className="text-violet-400 text-xs flex-shrink-0 ml-2">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
 
       {/* ── Strong's Search tab ── */}
@@ -983,10 +1213,10 @@ function LexiconInner() {
           {/* Chapter hero */}
           {selectedBook && (
             <div className="text-center mb-10">
-              <p className="pn-book-name text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{selectedBook.name}</p>
+              <p className="pn-book-name text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{getBookDisplayName(selectedBook, translation)}</p>
               <p className="pn-chapter-num text-8xl font-black text-white leading-none mb-3">{selectedChapter}</p>
               <p className="pn-chapter-subtitle text-[11px] text-white/20 tracking-wide">
-                {translation === "rv60" ? "Reina Valera 1960" : `${selectedBook.testament === "OT" ? "Hebrew · Aramaic" : "Greek NT"} · ${translation === "geneva" ? "Geneva 1599" : "King James"}`}
+                {translation === "rv1960" ? "Reina-Valera 1960" : translation === "nvi" ? "Nueva Versión Internacional" : translation === "ntv" ? "Nueva Traducción Viviente" : translation === "lbla" ? "La Biblia de las Américas" : translation === "nkjv" ? "New King James Version" : translation === "esv" ? "English Standard Version" : translation === "nasb" ? "New American Standard" : translation === "niv" ? "New International Version" : translation === "lsb" ? "Legacy Standard Bible" : `${selectedBook.testament === "OT" ? "Hebrew · Aramaic" : "Greek NT"} · ${translation === "geneva" ? "Geneva 1599" : "King James"}`}
               </p>
               {highlightedVerseCount > 0 && (
                 <div className="flex items-center justify-center gap-1.5 mt-3">
@@ -1013,10 +1243,23 @@ function LexiconInner() {
                 </div>
               )}
 
+              {chapterError && !loadingChapter && (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
+                  <span className="text-3xl">⚠️</span>
+                  <p className="text-white/50 text-sm">{chapterError}</p>
+                  <button
+                    onClick={() => { setChapterError(null); setLoadingChapter(true); fetchChapter(selectedBook!.num, selectedChapter, translation).then((d) => { setChapterData(d); setChapterError(null); }).catch((e) => setChapterError(e.message ?? "Failed to load")).finally(() => setLoadingChapter(false)); }}
+                    className="text-xs font-bold px-4 py-2 rounded-full border border-white/10 text-white/50 hover:text-white/70 hover:border-white/20 transition-colors"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
+
               {chapterData && (
                 <div
-                  className={`leading-loose font-serif ${FONT_SIZE_CLASSES[fontSize]}`}
-                  style={{ fontFamily: "'Georgia', 'Times New Roman', serif" }}
+                  className={`leading-loose ${FONT_SIZE_CLASSES[fontSize]}`}
+                  style={{ fontFamily: activeFontFamily }}
                   translate="no"
                 >
                   {chapterData.verses.map((verse) => {
@@ -1026,46 +1269,30 @@ function LexiconInner() {
                       <span
                         key={verse.verse}
                         ref={(el) => { if (el) verseRefs.current[verse.verse] = el as unknown as HTMLDivElement; }}
-                        className={`relative inline rounded-sm transition-colors ${colorCfg ? colorCfg.bg : ""}`}
+                        className="relative inline cursor-pointer"
+                        style={colorCfg ? {
+                          backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,
+                          color: colorCfg.textColor,
+                          borderRadius: "4px",
+                          padding: "2px 4px",
+                          boxDecorationBreak: "clone",
+                          WebkitBoxDecorationBreak: "clone",
+                        } : undefined}
+                        onClick={(e) => handleVerseClick(verse.verse, e)}
+                        title={color ? "Tap to change or remove highlight" : "Tap to highlight this verse"}
                       >
-                        <span className="relative inline-block">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setColorPickerVerse((v) => v === verse.verse ? null : verse.verse);
-                            }}
-                            className={`text-[11px] font-black align-super mr-[3px] ml-[3px] transition-colors select-none ${
-                              colorCfg ? "text-white/60 hover:text-violet-300" : "text-violet-400/50 hover:text-violet-300"
-                            }`}
-                            title={verseColors[verse.verse] ? "Change or remove highlight" : "Highlight verse"}>
-                            {verse.verse}
-                          </button>
-                          {colorPickerVerse === verse.verse && (
-                            <ColorPicker
-                              verseNum={verse.verse}
-                              current={color}
-                              onSelect={(c) => setVerseColor(verse.verse, c)}
-                              onClear={() => clearVerseColor(verse.verse)}
-                              onClose={() => setColorPickerVerse(null)}
-                            />
-                          )}
-                        </span>
                         <span
-                          className={`cursor-pointer select-text transition-all ${
-                            colorPickerVerse === verse.verse
-                              ? isLight
-                                ? "underline decoration-yellow-600/70 underline-offset-4 decoration-2"
-                                : "underline decoration-violet-400/60 underline-offset-4 decoration-2"
-                              : ""
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setColorPickerVerse((v) => v === verse.verse ? null : verse.verse);
-                          }}
-                          title="Tap to highlight this verse"
+                          className="text-[11px] font-black align-super mr-[3px] ml-[3px] select-none"
+                          style={colorCfg ? {
+                            backgroundColor: `rgba(0,0,0,0.25)`,
+                            borderRadius: "3px",
+                            padding: "0 3px",
+                            color: "rgba(255,255,255,0.9)",
+                          } : { color: "rgba(167,139,250,0.5)" }}
                         >
-                          {verse.text}
+                          {verse.verse}
                         </span>
+                        {verse.text}
                         {" "}
                       </span>
                     );
@@ -1089,12 +1316,9 @@ function LexiconInner() {
 
       {/* ── Notes bottom sheet ── */}
       {showNotes && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end print:hidden" onClick={() => setShowNotes(false)}>
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 print:hidden" onClick={() => setShowNotes(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-[#181818] rounded-t-3xl border-t border-emerald-500/25 flex flex-col overflow-hidden" style={{ maxHeight: "65vh" }} onClick={(e) => e.stopPropagation()}>
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
+          <div className="relative bg-[#181818] rounded-2xl border border-emerald-500/25 flex flex-col overflow-hidden w-full max-w-sm" style={{ maxHeight: "80vh" }} onClick={(e) => e.stopPropagation()}>
             <div className="px-5 py-3 border-b border-emerald-500/15 flex items-center justify-between flex-shrink-0">
               <div>
                 <p className="text-xs font-black uppercase tracking-widest text-emerald-400/70">My Notes</p>
@@ -1129,7 +1353,8 @@ function LexiconInner() {
 
       {/* ── Floating search button (above reader bar, left) ── */}
       {activeTab === "reader" && (
-        <div className="fixed bottom-[136px] left-4 z-40 print:hidden">
+        <div className="fixed left-4 z-40 print:hidden"
+          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 80px)" }}>
           {showNavSearch ? (
             <form onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
               className="flex items-center gap-1.5 bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl border border-white/[0.08] shadow-2xl px-3 py-2">
@@ -1139,7 +1364,7 @@ function LexiconInner() {
               </svg>
               <input autoFocus type="text" value={navQuery} onChange={(e) => setNavQuery(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
-                placeholder="John 3, Rom 8…"
+                placeholder="John 3 · Hechos 1 · Rom 8…"
                 className="bg-transparent text-xs text-white/80 placeholder:text-white/30 focus:outline-none w-32" />
               <button type="submit" className="text-[10px] px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">Go</button>
               <button type="button" onClick={() => { setShowNavSearch(false); setNavQuery(""); }} className="text-white/30 hover:text-white/60 text-sm">✕</button>
@@ -1159,7 +1384,8 @@ function LexiconInner() {
 
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
-        <div className="fixed bottom-[64px] left-0 right-0 z-40 px-4 print:hidden">
+        <div className="fixed left-0 right-0 z-40 px-4 print:hidden"
+          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)" }}>
           <div className="le-chapter-nav bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/[0.08] flex items-center h-14 px-2 gap-1">
 
             {/* Prev chapter */}
@@ -1176,10 +1402,12 @@ function LexiconInner() {
               onClick={() => { setPickerView("books"); setPickerBook(selectedBook); setShowBookPicker(true); }}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 h-full rounded-xl hover:bg-white/[0.05] transition-colors">
               <span className="le-testament-label text-[10px] font-semibold text-white/25 tracking-widest uppercase leading-none">
-                {selectedBook?.testament === "OT" ? "Old Testament" : "New Testament"}
+                {(translation === "rv1960" || translation === "lbla" || translation === "nvi" || translation === "ntv")
+                  ? (selectedBook?.testament === "OT" ? "Antiguo Testamento" : "Nuevo Testamento")
+                  : (selectedBook?.testament === "OT" ? "Old Testament" : "New Testament")}
               </span>
               <span className="text-white font-bold text-sm leading-none mt-1">
-                {selectedBook?.name} · {selectedChapter}
+                {getBookDisplayName(selectedBook, translation)} · {selectedChapter}
               </span>
             </button>
 
@@ -1212,14 +1440,9 @@ function LexiconInner() {
 
       {/* ── Book / Chapter picker sheet ── */}
       {showBookPicker && (
-        <div className="fixed inset-0 z-50 flex flex-col justify-end print:hidden">
+        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 print:hidden">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowBookPicker(false)} />
-          <div className="relative bg-[#1a1a1a] rounded-t-3xl border-t border-white/[0.08] max-h-[78vh] flex flex-col">
-
-            {/* Handle */}
-            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-              <div className="w-10 h-1 rounded-full bg-white/20" />
-            </div>
+          <div className="relative bg-[#1a1a1a] rounded-2xl border border-white/[0.08] w-full max-w-sm flex flex-col" style={{ maxHeight: "82vh" }}>
 
             {/* Books view */}
             {pickerView === "books" && (
@@ -1295,20 +1518,17 @@ function LexiconInner() {
         </div>
       )}
 
-      {/* Remove highlight confirmation */}
-      {pendingRemoveWord && (
-        <RemoveHighlightBubble
-          x={pendingRemoveWord.x}
-          y={pendingRemoveWord.y}
-          onConfirm={() => {
-            setHighlights((prev) => {
-              const next = new Set(prev);
-              next.delete(pendingRemoveWord.word);
-              return next;
-            });
-            setPendingRemoveWord(null);
-          }}
-          onDismiss={() => setPendingRemoveWord(null)}
+      {/* Verse highlight popover */}
+      {versePopover && (
+        <VerseHighlightPopover
+          state={versePopover}
+          current={verseColors[versePopover.verseNum]}
+          onSelect={(c) => setVerseColor(versePopover.verseNum, c)}
+          onRequestConfirm={() =>
+            setVersePopover((p) => p ? { ...p, mode: "confirm-remove" } : null)
+          }
+          onRemove={() => clearVerseColor(versePopover.verseNum)}
+          onClose={() => setVersePopover(null)}
         />
       )}
     </div>

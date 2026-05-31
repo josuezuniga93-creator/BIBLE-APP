@@ -148,8 +148,17 @@ function tokenize(text: string): WordToken[] {
 // Map our internal translation keys to helloao.org translation IDs
 const HELLOAO_TRANSLATION_ID: Record<string, string> = {
   kjv:    "KJV",
-  rv60:   "RVR1960",
-  geneva: "GNVA",   // Geneva Bible 1599
+  geneva: "GNVA",
+  // The following go through the bolls.life proxy (values unused but key must be present)
+  nkjv:  "NKJV",
+  esv:   "ESV",
+  nasb:  "NASB",
+  niv:   "NIV2011",
+  lsb:   "LSB",
+  rv1960: "RV1960",
+  ntv:   "NTV",
+  nvi:   "NVI",
+  lbla:  "LBLA",
 };
 
 // Map bibleBooks.ts abbr codes → USFM codes expected by helloao.org
@@ -160,6 +169,10 @@ const ABBR_USFM_EXCEPTIONS: Record<string, string> = {
   Nah: "NAM",
   Mar: "MRK",
   Joh: "JHN",
+  // 1/2/3 John: standard abbr gives 1JO/2JO/3JO but USFM is 1JN/2JN/3JN
+  "1Jo": "1JN",
+  "2Jo": "2JN",
+  "3Jo": "3JN",
 };
 
 function toUSFM(abbr: string): string {
@@ -181,12 +194,32 @@ function extractText(content: AnyContent[]): string {
     .trim();
 }
 
+interface HelloAOItem {
+  type: string;
+  number?: number;
+  content?: AnyContent[];
+}
+
 interface HelloAOChapter {
   book: { shortName?: string; name?: string };
   chapter: {
     number: number;
-    content: Array<{ type: string; number?: number; content?: AnyContent[] }>;
+    content: HelloAOItem[];
   };
+}
+
+// Recursively collect all verse items regardless of nesting depth.
+// Some translations (e.g. RVR1960) wrap verses inside paragraph/section containers.
+function collectVerses(items: HelloAOItem[]): HelloAOItem[] {
+  const result: HelloAOItem[] = [];
+  for (const item of items) {
+    if (item.type === "verse" && typeof item.number === "number") {
+      result.push(item);
+    } else if (item.content) {
+      result.push(...collectVerses(item.content as HelloAOItem[]));
+    }
+  }
+  return result;
 }
 
 async function fetchChapterHelloAO(
@@ -218,24 +251,93 @@ async function fetchChapterHelloAO(
 
   const data = (await res.json()) as HelloAOChapter;
 
-  // Extract only verse items from the content array
-  const verses: Verse[] = data.chapter.content
-    .filter((item) => item.type === "verse" && typeof item.number === "number")
-    .map((item) => {
-      const text = extractText((item.content ?? []) as AnyContent[]);
-      return {
-        verse: item.number as number,
-        text,
-        words: tokenize(text),
-        hasStrongs: false,
-      };
-    });
+  // Recursively collect verse items (some translations nest them in paragraphs/sections)
+  const verseItems = collectVerses(data.chapter.content);
+  const verses: Verse[] = verseItems.map((item) => {
+    const text = extractText((item.content ?? []) as AnyContent[]);
+    return {
+      verse: item.number as number,
+      text,
+      words: tokenize(text),
+      hasStrongs: false,
+    };
+  });
 
   const bookName = data.book?.name ?? data.book?.shortName ?? meta.name;
 
   return {
     book: bookNum,
     bookName,
+    chapter,
+    testament: meta.testament,
+    translation: appTranslation,
+    verses,
+    hasStrongs: false,
+  };
+}
+
+// ─── getbible.net — Spanish fallback ─────────────────────────────────────────
+//     Free, supports rv1960 / rv1909. Used when helloao.org is unreachable.
+//     URL: https://getbible.net/v2/{translation}/{bookNum}/{chapter}.json
+
+const GETBIBLE_TRANSLATION_ID: Record<string, string> = {
+  rv1960: "rv1960",
+  rv1909: "rv1909",
+};
+
+interface GetBibleVerse {
+  book: number;
+  chapter: number;
+  verse: number;
+  name: string;
+  text: string;
+}
+
+interface GetBibleChapter {
+  book: number;
+  chapter: number;
+  name: string;
+  translation: string;
+  verses: Record<string, GetBibleVerse>;
+}
+
+async function fetchChapterGetBible(
+  bookNum: number,
+  chapter: number,
+  appTranslation: string
+): Promise<ChapterData> {
+  const meta = STATIC_BOOKS.find((b) => b.num === bookNum);
+  if (!meta) throw new Error(`Unknown book ${bookNum}`);
+
+  const translId = GETBIBLE_TRANSLATION_ID[appTranslation];
+  if (!translId) throw new Error(`No getbible mapping for translation "${appTranslation}"`);
+
+  const url = `https://getbible.net/v2/${translId}/${bookNum}/${chapter}.json`;
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15_000);
+  let res: Response;
+  try {
+    res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timeout);
+  } catch (err) {
+    clearTimeout(timeout);
+    throw err;
+  }
+
+  if (!res.ok) throw new Error(`getbible.net error ${res.status}`);
+
+  const data = (await res.json()) as GetBibleChapter;
+  const verses: Verse[] = Object.values(data.verses)
+    .sort((a, b) => a.verse - b.verse)
+    .map(({ verse, text }) => {
+      const clean = text.replace(/\n/g, " ").replace(/\s+/g, " ").trim();
+      return { verse, text: clean, words: tokenize(clean), hasStrongs: false };
+    });
+
+  return {
+    book: bookNum,
+    bookName: data.name ?? meta.name,
     chapter,
     testament: meta.testament,
     translation: appTranslation,
@@ -305,8 +407,9 @@ async function fetchChapterFallback(
 
 // ─── Chapter cache (localStorage) ────────────────────────────────────────────
 
+// v2 — busts any stale KJV-fallback data cached under Spanish translation keys
 const CHAPTER_CACHE_KEY = (book: number, ch: number, t: string) =>
-  `ryc-ch-${book}-${ch}-${t}`;
+  `ryc-ch-v2-${book}-${ch}-${t}`;
 
 function readChapterCache(book: number, ch: number, t: string): ChapterData | null {
   if (typeof window === "undefined") return null;
@@ -322,12 +425,47 @@ function writeChapterCache(data: ChapterData): void {
   try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ }
 }
 
+// ─── Local proxy for non-English translations ─────────────────────────────────
+//     Calls the Next.js API route /api/bible/chapter which fetches from
+//     helloao.org server-side, bypassing browser CORS restrictions.
+async function fetchChapterProxy(
+  bookNum: number,
+  chapter: number,
+  trans: string
+): Promise<ChapterData> {
+  const params = new URLSearchParams({
+    book:        String(bookNum),
+    chapter:     String(chapter),
+    translation: trans,
+  });
+  const res = await fetch(`/api/bible/chapter?${params.toString()}`, { cache: "no-store" });
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (!res.ok || !contentType.includes("application/json")) {
+    const body = await res.text().catch(() => "");
+    if (!res.ok) {
+      const jsonErr = (() => { try { return (JSON.parse(body) as { error?: string }).error; } catch { return null; } })();
+      throw new Error(jsonErr ?? `Proxy ${res.status}: ${body.slice(0, 120)}`);
+    }
+    // 200 but HTML — serverless function likely crashed before responding
+    throw new Error(`Proxy returned non-JSON (${contentType}): ${body.slice(0, 80)}`);
+  }
+
+  return res.json() as Promise<ChapterData>;
+}
+
 /**
  * Chapter loading strategy:
- *  1. Return cached version instantly if available (localStorage).
- *  2. For KJV / Geneva / RVR1960: race Railway vs bible.helloao.org (AWS, 1000+ translations).
- *  3. If both fail, fall back to bible-api.com (legacy, KJV + Geneva only).
- *  4. Write result to cache so next visit is instant.
+ *
+ *  English default: ESV (also KJV / Geneva / NKJV / NASB / NIV / LSB)
+ *    KJV / Geneva: Race Railway vs helloao.org (direct) → fallback bible-api.com
+ *    ESV / NKJV / NASB / NIV / LSB: Server-side proxy → bolls.life
+ *
+ *  Spanish default: LBLA (also RV1960 / NVI / NTV)
+ *    All Spanish translations: Server-side proxy → bolls.life (no CORS issues).
+ *    Never falls back to an English translation.
+ *
+ *  All results cached in localStorage for instant subsequent loads.
  */
 export async function fetchChapter(
   bookNum: number,
@@ -336,32 +474,38 @@ export async function fetchChapter(
 ): Promise<ChapterData> {
   const trans = translation ?? "kjv";
 
-  // ── 1. Instant cache hit ────────────────────────────────────────────────────
+  // ── 1. Instant cache hit ───────────────────────────────────────────────────
   const cached = readChapterCache(bookNum, chapter, trans);
   if (cached) return cached;
 
-  // ── 2. Fetch ────────────────────────────────────────────────────────────────
+  // ── 2. Fetch ───────────────────────────────────────────────────────────────
   let result: ChapterData;
+  const isEnglish = trans === "kjv" || trans === "geneva";
 
-  const t = translation ? `&translation=${encodeURIComponent(translation)}` : "";
-  const railwayPromise = railwayFetch<ChapterData>(
-    `/api/lexicon/chapter?book=${bookNum}&chapter=${chapter}${t}`
-  );
-
-  if (trans in HELLOAO_TRANSLATION_ID) {
-    // KJV, RVR1960, Geneva — race Railway vs helloao.org, fall back to bible-api.com
+  if (isEnglish) {
+    // English: race Railway vs helloao.org, fallback bible-api.com
+    const t = `&translation=${encodeURIComponent(trans)}`;
+    const railwayPromise = railwayFetch<ChapterData>(
+      `/api/lexicon/chapter?book=${bookNum}&chapter=${chapter}${t}`
+    );
     const helloAOPromise = fetchChapterHelloAO(bookNum, chapter, trans);
     try {
       result = await Promise.any([railwayPromise, helloAOPromise]);
     } catch {
       result = await fetchChapterFallback(bookNum, chapter, trans);
     }
+  } else if (trans in HELLOAO_TRANSLATION_ID) {
+    // Spanish / non-English — go straight to the server-side proxy.
+    // Direct browser calls to these APIs don't work reliably:
+    //   - getbible.net returns 200 HTML (anti-bot) → JSON parse error
+    //   - helloao.org blocks CORS requests from this domain
+    // The proxy calls helloao.org server-side where CORS/IP checks don't apply.
+    result = await fetchChapterProxy(bookNum, chapter, trans);
   } else {
-    try { result = await railwayPromise; }
-    catch { result = await fetchChapterFallback(bookNum, chapter, "kjv"); }
+    throw new Error(`Unsupported translation: ${trans}`);
   }
 
-  // ── 4. Cache for next visit ─────────────────────────────────────────────────
+  // ── 3. Cache for next visit ────────────────────────────────────────────────
   writeChapterCache(result);
   return result;
 }

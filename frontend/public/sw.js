@@ -1,6 +1,6 @@
-// TULIP Bible App — Service Worker v5 (daily verse notifications)
+// TULIP Bible App — Service Worker v6 (daily verse notifications)
 
-const CACHE_NAME = 'tulip-v5';
+const CACHE_NAME = 'tulip-v6';
 
 // ─── Daily verse pool ─────────────────────────────────────────────────────────
 const DAILY_VERSES = [

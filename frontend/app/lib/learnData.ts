@@ -1,3 +1,17 @@
+import {
+  athanasianCreedFullText,
+  augsburgConfessionFullText,
+  belgicConfessionFullText,
+  canonsOfDortFullText,
+  firstLondonBaptistFullText,
+  heidelbergCatechismFullText,
+  secondLondonBaptistFullText,
+  thirtyNineArticlesFullText,
+  westminsterLargerFullText,
+} from "./fullConfessionTexts";
+import bondageOfTheWillBook from "../../public/books/bondage-of-the-will.json";
+import freedomOfTheWillBook from "../../public/books/freedom-of-the-will.json";
+
 export type DocumentCategory = "theses" | "confession" | "catechism" | "creed" | "solas" | "council" | "debate" | "history";
 export type DocumentSection = "A" | "B" | "C" | "D" | "E" | "F";
 
@@ -20,6 +34,29 @@ export interface LearnDocument {
   icon: string;
   color: string;
   sections: LearnSection[];
+}
+
+export type FullDocumentSectionMap = Record<string, LearnSection[]>;
+
+type SourceBook = {
+  title: string;
+  source?: {
+    label: string;
+    url: string;
+  };
+  chapters: Array<{
+    title: string;
+    content: string;
+  }>;
+};
+
+function sourceBookSections(book: SourceBook, prefix: string, labelPrefix: string, author: string): LearnSection[] {
+  return book.chapters.map((chapter, index) => ({
+    id: `${prefix}-${index + 1}`,
+    label: `${labelPrefix} ${index + 1}`,
+    title: `${book.title}: ${chapter.title}`,
+    content: `**Primary source:** ${book.title} by ${author}\n\n**Source:** ${book.source?.label ?? "Public-domain source"}${book.source?.url ? ` - ${book.source.url}` : ""}\n\n${chapter.content}`,
+  }));
 }
 
 export const SECTION_GROUPS: Array<{ id: DocumentSection; label: string; description: string; icon: string }> = [
@@ -562,7 +599,291 @@ const sinnersInHands: LearnSection[] = [
   },
 ];
 
+// ─── Full Document Readers for Historical Entries ────────────────────────────
+
+const jerusalemCouncilFull: LearnSection[] = [
+  {
+    id: "jc-full-1", label: "Acts 15:1-5", title: "The Question Before the Council",
+    content: `**Primary text: Acts 15:1-5 (KJV, public domain)**\n\n**1.** And certain men which came down from Judaea taught the brethren, and said, Except ye be circumcised after the manner of Moses, ye cannot be saved.\n\n**2.** When therefore Paul and Barnabas had no small dissension and disputation with them, they determined that Paul and Barnabas, and certain other of them, should go up to Jerusalem unto the apostles and elders about this question.\n\n**3.** And being brought on their way by the church, they passed through Phenice and Samaria, declaring the conversion of the Gentiles: and they caused great joy unto all the brethren.\n\n**4.** And when they were come to Jerusalem, they were received of the church, and of the apostles and elders, and they declared all things that God had done with them.\n\n**5.** But there rose up certain of the sect of the Pharisees which believed, saying, That it was needful to circumcise them, and to command them to keep the law of Moses.\n\n**Historic section**\nThis is the full question that forced the first council: must Gentiles become Jews ceremonially in order to be saved? The council is not a mere administrative meeting. It is a gospel crisis.`,
+  },
+  {
+    id: "jc-full-2", label: "Acts 15:6-21", title: "Peter, Barnabas, Paul, and James Speak",
+    content: `**Primary text: Acts 15:6-21 (KJV, public domain)**\n\n**6.** And the apostles and elders came together for to consider of this matter.\n\n**7.** And when there had been much disputing, Peter rose up, and said unto them, Men and brethren, ye know how that a good while ago God made choice among us, that the Gentiles by my mouth should hear the word of the gospel, and believe.\n\n**8.** And God, which knoweth the hearts, bare them witness, giving them the Holy Ghost, even as he did unto us;\n\n**9.** And put no difference between us and them, purifying their hearts by faith.\n\n**10.** Now therefore why tempt ye God, to put a yoke upon the neck of the disciples, which neither our fathers nor we were able to bear?\n\n**11.** But we believe that through the grace of the Lord Jesus Christ we shall be saved, even as they.\n\n**12.** Then all the multitude kept silence, and gave audience to Barnabas and Paul, declaring what miracles and wonders God had wrought among the Gentiles by them.\n\n**13.** And after they had held their peace, James answered, saying, Men and brethren, hearken unto me:\n\n**14.** Simeon hath declared how God at the first did visit the Gentiles, to take out of them a people for his name.\n\n**15.** And to this agree the words of the prophets; as it is written,\n\n**16.** After this I will return, and will build again the tabernacle of David, which is fallen down; and I will build again the ruins thereof, and I will set it up:\n\n**17.** That the residue of men might seek after the Lord, and all the Gentiles, upon whom my name is called, saith the Lord, who doeth all these things.\n\n**18.** Known unto God are all his works from the beginning of the world.\n\n**19.** Wherefore my sentence is, that we trouble not them, which from among the Gentiles are turned to God:\n\n**20.** But that we write unto them, that they abstain from pollutions of idols, and from fornication, and from things strangled, and from blood.\n\n**21.** For Moses of old time hath in every city them that preach him, being read in the synagogues every sabbath day.`,
+  },
+  {
+    id: "jc-full-3", label: "Acts 15:22-35", title: "The Apostolic Letter to the Gentiles",
+    content: `**Primary text: Acts 15:22-35 (KJV, public domain)**\n\n**22.** Then pleased it the apostles and elders with the whole church, to send chosen men of their own company to Antioch with Paul and Barnabas; namely, Judas surnamed Barsabas, and Silas, chief men among the brethren.\n\n**23.** And they wrote letters by them after this manner; The apostles and elders and brethren send greeting unto the brethren which are of the Gentiles in Antioch and Syria and Cilicia:\n\n**24.** Forasmuch as we have heard, that certain which went out from us have troubled you with words, subverting your souls, saying, Ye must be circumcised, and keep the law: to whom we gave no such commandment:\n\n**25.** It seemed good unto us, being assembled with one accord, to send chosen men unto you with our beloved Barnabas and Paul,\n\n**26.** Men that have hazarded their lives for the name of our Lord Jesus Christ.\n\n**27.** We have sent therefore Judas and Silas, who shall also tell you the same things by mouth.\n\n**28.** For it seemed good to the Holy Ghost, and to us, to lay upon you no greater burden than these necessary things;\n\n**29.** That ye abstain from meats offered to idols, and from blood, and from things strangled, and from fornication: from which if ye keep yourselves, ye shall do well. Fare ye well.\n\n**30.** So when they were dismissed, they came to Antioch: and when they had gathered the multitude together, they delivered the epistle:\n\n**31.** Which when they had read, they rejoiced for the consolation.\n\n**32.** And Judas and Silas, being prophets also themselves, exhorted the brethren with many words, and confirmed them.\n\n**33.** And after they had tarried there a space, they were let go in peace from the brethren unto the apostles.\n\n**34.** Notwithstanding it pleased Silas to abide there still.\n\n**35.** Paul also and Barnabas continued in Antioch, teaching and preaching the word of the Lord, with many others also.\n\n**Historic section**\nThe council's answer protects the freedom of the gospel while preserving fellowship between Jewish and Gentile believers. The letter does not add works to justification. It removes the false burden that had been placed on Gentile converts.`,
+  },
+];
+
+const augustineGraceFull: LearnSection[] = [
+  {
+    id: "ag-full-1", label: "Confessions", title: "Augustine's Prayer of Restless Grace",
+    content: `**Primary source reader: Augustine, Confessions**\n\nAugustine's doctrine of grace was not abstract first. It was personal. In the Confessions he prays as a man who knows that even his turning to God was God's gift.\n\n**The restless heart**\n"You have made us for yourself, and our heart is restless until it rests in you." Augustine's whole theology of grace is hidden in that sentence. The human heart cannot become its own rest. It must be drawn, healed, and settled by God.\n\n**Grace before the will**\nAugustine repeatedly confesses that God sought him while he fled, taught him while he was blind, and made him willing when he was unwilling. The soul does not climb to God by natural strength. God bends down in mercy.\n\n**Historic section**\nThis is the seed of Augustine's anti-Pelagian theology: conversion is not the triumph of autonomous willpower. It is the mercy of God awakening the will, ordering the loves, and bringing the sinner home.`,
+  },
+  {
+    id: "ag-full-2", label: "Nature and Grace", title: "Against Pelagius: Grace Is Necessary",
+    content: `**Primary source reader: Augustine, On Nature and Grace**\n\nPelagius treated grace as instruction, example, and forgiveness. Augustine insisted that grace is deeper: it heals the will itself.\n\n**Human nature after the fall**\nHuman nature is created good, but in Adam it has become wounded, guilty, and unable to heal itself. Augustine does not deny responsibility. He denies that fallen humanity can produce saving righteousness from itself.\n\n**The law commands; grace gives**\nThe law shows what righteousness requires, but it does not create the love that fulfills righteousness. Grace does what commandment alone cannot do: it gives a new heart.\n\n**Prayer proves grace**\nAugustine's famous argument is pastoral: why does the church pray for unbelievers to be converted if the first movement of faith lies in their independent will? Prayer assumes that God can do inwardly what preaching calls for outwardly.\n\n**Historic section**\nThis is the basic Augustinian answer to Pelagianism: commandment reveals duty, but grace grants power. Salvation is not less than moral transformation; it is more than moral instruction.`,
+  },
+  {
+    id: "ag-full-3", label: "Predestination", title: "Predestination and the Gift of Faith",
+    content: `**Primary source reader: Augustine, On the Predestination of the Saints**\n\nIn his later writings Augustine pressed the point further: faith itself is a gift of God, not the reason God chooses.\n\n**Election is not based on foreseen faith**\nIf God elects because he foresees who will believe by their own decisive act, then grace is no longer the root of salvation. Augustine argued from Paul that election comes before faith and produces faith.\n\n**Faith is given, not merely observed**\n"What do you have that you did not receive?" For Augustine, this question from 1 Corinthians 4:7 destroys boasting. The believer's faith is truly exercised by the believer, but it is first granted by God.\n\n**Perseverance is also grace**\nAugustine also taught the gift of perseverance. God not only begins the work; he carries his people to the end. Assurance rests not in the strength of the believer's grip, but in the mercy and faithfulness of God.\n\n**Historic section**\nThe Reformation did not invent these doctrines. Luther, Calvin, Dort, Westminster, and the 1689 Confession all stand downstream from Augustine's mature doctrine of grace.`,
+  },
+];
+
+const wycliffeFull: LearnSection[] = [
+  {
+    id: "wy-full-1", label: "Scripture", title: "Wycliffe's Principle: Scripture Above Human Authority",
+    content: `**Primary source reader: Wycliffe and the Wycliffite tradition**\n\nJohn Wycliffe argued that Scripture is the supreme authority for the church. Popes, councils, priests, and traditions may err; the Word of God does not.\n\n**The English Bible**\nThe Wycliffite Bible movement put Scripture into the language of the people. Its governing conviction was simple: Christian people should hear and read God's Word plainly, not depend entirely on clerical control.\n\n**Authority and lordship**\nWycliffe taught that all earthly authority is accountable to God. Church office does not make sin righteous, and human rank cannot overturn divine truth.\n\n**Historic section**\nThis is why Wycliffe is called the Morning Star of the Reformation. Long before Luther, he joined reform of the church to the authority and accessibility of Scripture.`,
+  },
+  {
+    id: "wy-full-2", label: "Twelve Conclusions", title: "The Twelve Conclusions of the Lollards",
+    content: `**Historic document: The Twelve Conclusions of the Lollards (sectioned reader)**\n\nThe Lollards, influenced by Wycliffe, presented a reforming protest against late medieval corruption. The conclusions vary in wording across manuscripts, but their burden is clear.\n\n**1. The church had become too entangled with temporal power.** Spiritual office was being corrupted by wealth and political lordship.\n\n**2. The priesthood had fallen from apostolic simplicity.** The ministry should be marked by preaching, holiness, and service, not status.\n\n**3. Clerical celibacy had produced hypocrisy and hidden sin.** The Lollards challenged compulsory celibacy as a human rule elevated beyond Scripture.\n\n**4. The doctrine of transubstantiation was rejected.** They objected to explanations of the Supper that, in their view, obscured Christ's true institution.\n\n**5. Exorcisms and blessings attached to objects were criticized.** The Lollards opposed superstitious uses of religious ritual.\n\n**6. The union of civil office and priestly office was condemned.** One person should not wield both the sword and the keys as a spiritual empire.\n\n**7. Prayers for the dead and related practices were challenged.** They feared these practices displaced confidence in Christ.\n\n**8. Pilgrimages, images, and relics were criticized when treated superstitiously.** The issue was not memory but misplaced devotion.\n\n**9. Confession was to be governed by repentance and Scripture.** They objected to priestly control of consciences.\n\n**10. Warfare among Christians was denounced.** They pressed the claims of peace and charity.\n\n**11. Vows of chastity and religious orders were questioned.** Human vows must not be treated as superior righteousness.\n\n**12. Arts and crafts that served vanity or violence were criticized.** Christian life should be ordered toward godliness.\n\n**Historic section**\nThe Twelve Conclusions show how Wycliffe's doctrine of Scripture became a reform movement touching worship, ministry, wealth, sacraments, and conscience.`,
+  },
+  {
+    id: "wy-full-3", label: "Legacy", title: "Condemnation, Translation, and the Road to Reform",
+    content: `**Full historical section**\n\nWycliffe died in 1384, but his influence did not die with him. His writings spread through the Lollard movement in England and through students and reformers on the Continent.\n\n**Condemnation after death**\nThe Council of Constance later condemned Wycliffe. His remains were exhumed and burned, a symbolic act meant to erase his influence. It failed.\n\n**The Bible in the common tongue**\nThe Wycliffite Bible tradition kept pressing the claim that the laity should have Scripture in a language they understand. This became one of the great Reformation commitments.\n\n**Historic section**\nFrom Wycliffe to Hus to Luther, the line is visible: Scripture over tradition, Christ over clerical domination, and the Word of God for the people of God.`,
+  },
+];
+
+const janHusFull: LearnSection[] = [
+  {
+    id: "jh-full-1", label: "On the Church", title: "Christ Alone Is Head of the Church",
+    content: `**Primary source reader: Jan Hus, On the Church**\n\nHus argued that the true church is the company of the predestined, known perfectly to God. Visible institutions matter, but they are not identical with the church in its deepest sense.\n\n**Christ is the head**\nNo pope, bishop, or council can take the place of Christ as head of the church. Church officers have real responsibility, but their authority is ministerial and accountable to Scripture.\n\n**Unworthy officeholders**\nHus denied that office alone makes a corrupt minister spiritually safe or unquestionable. A wicked priest remains morally accountable to God.\n\n**Historic section**\nHus was not merely attacking personalities. He was challenging an entire system in which institutional office could silence Scripture and conscience.`,
+  },
+  {
+    id: "jh-full-2", label: "Appeal", title: "Hus's Appeal to Christ",
+    content: `**Primary source reader: The appeal of Jan Hus**\n\nWhen ecclesiastical courts pressed him, Hus appealed ultimately to Jesus Christ, the righteous Judge. His appeal was not individualism. It was an appeal from fallible human judgment to the Lord of the church.\n\n**The substance of the appeal**\nHus confessed willingness to be corrected by Scripture. He refused to recant what he believed Scripture taught merely because authorities demanded it.\n\n**Conscience under the Word**\nHus's conscience was not autonomous. It was bound to Christ and his Word. That is why later Reformers saw him as a forerunner.\n\n**Historic section**\nThe appeal anticipates Luther at Worms: councils and popes may err, but the Word of God must not be surrendered.`,
+  },
+  {
+    id: "jh-full-3", label: "Constance", title: "Letters, Trial, and Martyrdom",
+    content: `**Full historical section**\n\nHus went to the Council of Constance under promise of safe conduct. He was imprisoned, tried, condemned, and burned in 1415.\n\n**His letters from prison**\nHus wrote with pastoral concern, urging believers to cling to Christ, love truth, and not be terrified by suffering. He did not present himself as a hero but as a servant who must answer to God.\n\n**Final declaration**\nHus refused to recant errors he did not believe he had taught. He asked to be shown from Scripture where he was wrong.\n\n**Historic section**\nHis death did not end his witness. It strengthened reform in Bohemia and gave later Protestants a living example of conscience captive to the Word of God.`,
+  },
+];
+
+const gutenbergFull: LearnSection[] = [
+  {
+    id: "gb-full-1", label: "The Bible", title: "The Gutenberg Bible as a Historical Document",
+    content: `**Full historical reader: Gutenberg Bible and movable type**\n\nThe Gutenberg Bible is not a new translation but a printed edition of the Latin Vulgate. Its significance lies in production: Scripture could now be copied with speed, consistency, and reach unknown to manuscript culture.\n\n**The document itself**\nThe Gutenberg Bible contains the biblical text in Latin, arranged in two columns, with hand-finished rubrication and illumination. It stands at the meeting point of medieval manuscript beauty and modern reproducible print.\n\n**Why it matters**\nThe Reformation depended on print. Pamphlets, Bibles, sermons, confessions, catechisms, and debates could travel faster than bishops and emperors could suppress them.\n\n**Historic section**\nThe Gutenberg Bible is therefore both a Bible and an event: a physical document that changed the conditions under which doctrine, Scripture, and reform could spread.`,
+  },
+  {
+    id: "gb-full-2", label: "Opening Text", title: "Genesis 1 as the Bible's Printed Beginning",
+    content: `**Representative biblical text: Genesis 1:1-5 (KJV, public domain)**\n\n**1.** In the beginning God created the heaven and the earth.\n\n**2.** And the earth was without form, and void; and darkness was upon the face of the deep. And the Spirit of God moved upon the face of the waters.\n\n**3.** And God said, Let there be light: and there was light.\n\n**4.** And God saw the light, that it was good: and God divided the light from the darkness.\n\n**5.** And God called the light Day, and the darkness he called Night. And the evening and the morning were the first day.\n\n**Historic section**\nThe Gutenberg Bible printed this opening in Latin Vulgate form. The app uses an English public-domain rendering here so readers can engage the kind of biblical text the press helped distribute.`,
+  },
+  {
+    id: "gb-full-3", label: "Print Revolution", title: "What the Press Made Possible",
+    content: `**Full historical section**\n\nBefore movable type, books were copied by hand. That made books expensive, slow to reproduce, and easy to control. Movable type changed the economics of reading.\n\n**Doctrinal effect**\nWhen Luther wrote, printers carried his works across Europe. When confessions were drafted, they could be reproduced. When vernacular Bibles appeared, ordinary readers could compare church teaching with Scripture.\n\n**Historic section**\nThe Gutenberg Bible belongs in the historical documents library because it is one of the material foundations of the Reformation: the Word could travel.`,
+  },
+];
+
+const dietOfWormsFull: LearnSection[] = [
+  {
+    id: "dw-full-1", label: "Summons", title: "The Question Put to Luther",
+    content: `**Full historical reader: Diet of Worms, 1521**\n\nMartin Luther stood before Emperor Charles V and representatives of church and empire. His books were displayed. He was asked two questions: whether the books were his, and whether he would recant them.\n\n**Luther's first answer**\nHe acknowledged the books as his. On the question of recanting, he asked for time, because the matter concerned Scripture, conscience, and salvation.\n\n**Historic section**\nThis was not a debate among equals in a classroom. It was a public demand that Luther submit his teaching to imperial and ecclesiastical authority.`,
+  },
+  {
+    id: "dw-full-2", label: "Answer", title: "Unless I Am Convinced by Scripture",
+    content: `**Primary source reader: Luther's answer at Worms**\n\nLuther divided his writings into kinds: works of basic Christian teaching, works against corruption, and works against individuals who defended tyranny. He admitted he could have written with more gentleness, but he would not deny the substance.\n\n**The heart of the answer**\nUnless he was convinced by the testimony of Scripture or by clear reason, he could not recant. Popes and councils had erred and contradicted themselves. His conscience was captive to the Word of God.\n\n**The famous conclusion**\nThe traditional wording "Here I stand; I can do no other" captures the meaning of the moment, whether or not every word belongs to the earliest transcript. The point is clear: conscience bound to Scripture must not be forced.\n\n**Historic section**\nWorms became a defining Reformation moment because it placed Scripture above coercive religious authority.`,
+  },
+  {
+    id: "dw-full-3", label: "Edict", title: "The Edict of Worms and Its Consequences",
+    content: `**Primary source reader: The Edict of Worms**\n\nAfter Luther refused to recant, the Edict of Worms declared him an outlaw and heretic. His writings were banned, and those sheltering him were placed at risk.\n\n**What the edict tried to do**\nThe edict attempted to silence Luther, stop publication, and preserve religious unity under Rome and the emperor.\n\n**What happened instead**\nLuther was hidden at the Wartburg, where he translated the New Testament into German. The attempt to silence him became the occasion for spreading Scripture in the language of the people.\n\n**Historic section**\nThe Diet of Worms shows the Reformation conflict in one scene: Word, conscience, empire, church authority, and the cost of refusing to recant.`,
+  },
+];
+
+const tyndaleFull: LearnSection[] = [
+  {
+    id: "tn-full-1", label: "New Testament", title: "Tyndale's New Testament: Purpose and Method",
+    content: `**Full historical reader: William Tyndale's New Testament**\n\nTyndale translated the New Testament from Greek into English so ordinary people could hear the voice of Scripture plainly.\n\n**The governing conviction**\nTyndale believed the ploughboy should know Scripture better than clergy who kept it hidden. His translation work was therefore pastoral, theological, and dangerous.\n\n**Translation legacy**\nMuch of later English Bible language flows through Tyndale. Phrases such as "let there be light," "the powers that be," "my brother's keeper," and "fight the good fight" entered English religious speech through this translation stream.\n\n**Historic section**\nTyndale's New Testament is a document of reform because it put justification, grace, and Christ's mediation into English ears.`,
+  },
+  {
+    id: "tn-full-2", label: "Sample Text", title: "John 1:1-14 in the English Bible Tradition",
+    content: `**Representative biblical text: John 1:1-14 (KJV, public domain)**\n\n**1.** In the beginning was the Word, and the Word was with God, and the Word was God.\n\n**2.** The same was in the beginning with God.\n\n**3.** All things were made by him; and without him was not any thing made that was made.\n\n**4.** In him was life; and the life was the light of men.\n\n**5.** And the light shineth in darkness; and the darkness comprehended it not.\n\n**14.** And the Word was made flesh, and dwelt among us, and we beheld his glory, the glory as of the only begotten of the Father, full of grace and truth.\n\n**Historic section**\nThe King James rendering stands in the line Tyndale helped establish. The theological force is unmistakable: Christ is eternal God, creator, life, light, and incarnate Savior.`,
+  },
+  {
+    id: "tn-full-3", label: "Martyrdom", title: "Betrayal, Execution, and Last Prayer",
+    content: `**Full historical section**\n\nTyndale was betrayed, imprisoned near Brussels, condemned for heresy, strangled, and burned in 1536.\n\n**His final prayer**\nThe traditional account records his final cry: "Lord, open the King of England's eyes." Within a few years, English Bibles were legally circulating with royal approval.\n\n**Historic section**\nTyndale's document is not only ink on paper. It is translation at the price of blood: Scripture in English for the sake of Christ's people.`,
+  },
+];
+
+const calvinsInstitutesFull: LearnSection[] = [
+  {
+    id: "ci-full-1", label: "Book I", title: "The Knowledge of God the Creator",
+    content: `**Full work reader: Calvin's Institutes, Book I**\n\nBook I treats the knowledge of God as Creator. Calvin begins with the connection between knowing God and knowing ourselves.\n\n**Scripture and revelation**\nCreation displays God's glory, but fallen sinners suppress the truth. Scripture is therefore like spectacles: it clarifies what sin has made blurry and reveals God savingly.\n\n**God's providence**\nCalvin insists that providence is not bare foreknowledge. God governs all things actively, wisely, and fatherly for his glory and the good of his people.\n\n**Historic section**\nBook I establishes the Reformed instinct that doctrine begins with God: his revelation, his majesty, his providence, and his right to be worshiped as he commands.`,
+  },
+  {
+    id: "ci-full-2", label: "Book II", title: "The Knowledge of God the Redeemer in Christ",
+    content: `**Full work reader: Calvin's Institutes, Book II**\n\nBook II moves from creation to fall and redemption. Humanity in Adam is ruined, and Christ is the only Redeemer.\n\n**Sin and bondage**\nCalvin teaches that the will remains voluntary but is enslaved to sin until grace liberates it. Fallen people choose according to their nature, and that nature must be renewed.\n\n**Christ the mediator**\nThe Redeemer must be true God and true man. Calvin expounds Christ's prophetic, priestly, and kingly offices as the shape of his saving work.\n\n**Historic section**\nBook II gives the doctrinal backbone for Reformed soteriology: total ruin in Adam, full redemption in Christ, and no salvation outside the mediator.`,
+  },
+  {
+    id: "ci-full-3", label: "Book III", title: "Receiving the Grace of Christ",
+    content: `**Full work reader: Calvin's Institutes, Book III**\n\nBook III explains how Christ's benefits become ours: by the secret work of the Holy Spirit, through faith.\n\n**Union with Christ**\nAs long as Christ remains outside us, his benefits do not profit us. The Spirit unites believers to Christ so that justification, sanctification, adoption, repentance, and perseverance flow from him.\n\n**Justification by faith**\nCalvin treats justification as a legal acceptance before God, grounded in Christ's righteousness and received by faith alone.\n\n**Election and assurance**\nCalvin handles predestination pastorally. Election humbles pride, comforts believers, and locates salvation in God's mercy rather than human merit.\n\n**Historic section**\nBook III is the heart of the Institutes for many readers: Christ for us, Christ in us, and grace from beginning to end.`,
+  },
+  {
+    id: "ci-full-4", label: "Book IV", title: "The External Means of Grace",
+    content: `**Full work reader: Calvin's Institutes, Book IV**\n\nBook IV concerns the church, ministry, sacraments, discipline, and civil order.\n\n**The church**\nCalvin values the visible church because God uses preaching, sacraments, and discipline to gather and mature his people. The church is not saved by its own authority; it serves Christ's authority.\n\n**The sacraments**\nBaptism and the Lord's Supper are signs and seals of God's promises. They do not work apart from faith and the Spirit, yet they are not empty symbols.\n\n**Historic section**\nBook IV shows that Reformed theology is not only private doctrine. It builds churches, orders worship, administers sacraments, and trains believers in public discipleship.`,
+  },
+];
+
+const genevaBibleFull: LearnSection[] = [
+  {
+    id: "gv-full-1", label: "Preface", title: "The Geneva Bible: A Bible for Exiles",
+    content: `**Full historical reader: The Geneva Bible**\n\nThe Geneva Bible was produced by English Protestant exiles in Geneva during the reign of Mary I. It was portable, readable, and filled with study notes.\n\n**Why Geneva mattered**\nGeneva was a center of Reformed learning. English exiles there absorbed the theology of Calvin, Beza, Knox, and the wider Reformed tradition.\n\n**Features of the document**\nThe Geneva Bible included verse numbers, maps, chapter summaries, and marginal notes. It was designed not only to be read but studied.\n\n**Historic section**\nThe Geneva Bible shaped Puritan and early Baptist biblical imagination. It was Scripture in the hands of households, pastors, and reform-minded readers.`,
+  },
+  {
+    id: "gv-full-2", label: "Sample Text", title: "Romans 8:28-39 in the English Bible Tradition",
+    content: `**Representative biblical text: Romans 8:28-39 (KJV, public domain)**\n\n**28.** And we know that all things work together for good to them that love God, to them who are the called according to his purpose.\n\n**29.** For whom he did foreknow, he also did predestinate to be conformed to the image of his Son.\n\n**30.** Moreover whom he did predestinate, them he also called: and whom he called, them he also justified: and whom he justified, them he also glorified.\n\n**31.** What shall we then say to these things? If God be for us, who can be against us?\n\n**32.** He that spared not his own Son, but delivered him up for us all, how shall he not with him also freely give us all things?\n\n**38-39.** For I am persuaded, that neither death, nor life, nor angels, nor principalities, nor powers, nor things present, nor things to come... shall be able to separate us from the love of God, which is in Christ Jesus our Lord.\n\n**Historic section**\nTexts like Romans 8 made the Geneva Bible beloved among Reformed readers. Its notes reinforced doctrines of providence, calling, justification, and perseverance.`,
+  },
+  {
+    id: "gv-full-3", label: "Notes", title: "The Marginal Notes and Reformed Reading",
+    content: `**Full historical section**\n\nThe Geneva Bible's notes were controversial because they taught readers how to interpret Scripture with doctrinal clarity.\n\n**What the notes did**\nThey explained difficult passages, connected texts across Scripture, identified doctrinal themes, and sometimes challenged tyranny or false worship.\n\n**Why rulers disliked it**\nA Bible with notes could form readers who judged kings, bishops, and traditions by Scripture. King James disliked precisely that feature.\n\n**Historic section**\nThe Geneva Bible is a document of the Reformation not only because of translation, but because it trained readers to read Scripture theologically.`,
+  },
+];
+
+const kingJamesBibleFull: LearnSection[] = [
+  {
+    id: "kjv-full-1", label: "Commission", title: "The King James Bible as an Authorized Translation",
+    content: `**Full historical reader: King James Bible, 1611**\n\nThe King James Bible was commissioned after the Hampton Court Conference and completed by companies of scholars working at Westminster, Cambridge, and Oxford.\n\n**Translation principles**\nThe translators worked from Hebrew and Greek, consulted earlier English translations, and sought a public Bible suitable for church reading.\n\n**Not a private project**\nThe KJV was ecclesiastical and national in scope. It aimed to give the English church a common Bible without the controversial marginal notes of the Geneva Bible.\n\n**Historic section**\nThe document matters not merely as literature but as the Bible-world of English-speaking Protestantism for centuries.`,
+  },
+  {
+    id: "kjv-full-2", label: "Sample Text", title: "Romans 3:21-28: Justification in English",
+    content: `**Primary biblical text: Romans 3:21-28 (KJV, public domain)**\n\n**21.** But now the righteousness of God without the law is manifested, being witnessed by the law and the prophets;\n\n**22.** Even the righteousness of God which is by faith of Jesus Christ unto all and upon all them that believe: for there is no difference:\n\n**23.** For all have sinned, and come short of the glory of God;\n\n**24.** Being justified freely by his grace through the redemption that is in Christ Jesus:\n\n**25.** Whom God hath set forth to be a propitiation through faith in his blood...\n\n**27.** Where is boasting then? It is excluded. By what law? of works? Nay: but by the law of faith.\n\n**28.** Therefore we conclude that a man is justified by faith without the deeds of the law.\n\n**Historic section**\nThis is the English Bible language that shaped Puritan preaching, Westminster theology, and later Baptist confessional language.`,
+  },
+  {
+    id: "kjv-full-3", label: "Translators", title: "The Translators to the Reader",
+    content: `**Primary source reader: The Translators to the Reader**\n\nThe 1611 KJV included a long preface defending Bible translation and explaining the translators' work.\n\n**Translation is necessary**\nThe translators argued that Scripture must be made understandable to the people. A Bible locked away in unknown tongues does not serve the church as it should.\n\n**Translation can be improved**\nThey did not pretend earlier English Bibles were worthless. They honored prior translations while revising them for greater accuracy and public use.\n\n**Historic section**\nThe preface reminds readers that the KJV itself came from a tradition of translation, correction, and service to the church.`,
+  },
+];
+
+const fiveSolasFull: LearnSection[] = [
+  {
+    id: "sola-full-1", label: "Sola Scriptura", title: "Scripture Alone as the Formal Principle",
+    content: `**Full doctrinal document reader: The Five Solas**\n\nThe Five Solas are not a single sixteenth-century document. They are a later summary of Reformation convictions. The app treats them as a sectioned doctrinal document because they function as a compact confession of the Reformation.\n\n**Sola Scriptura**\nScripture alone is the final norm for faith and life. Creeds, councils, teachers, and traditions are valuable only under Scripture.\n\n**Historic section**\nThis is the formal principle of the Reformation: how the church knows what is true and binding.`,
+  },
+  {
+    id: "sola-full-2", label: "Grace and Faith", title: "Sola Gratia and Sola Fide",
+    content: `**Sola Gratia**\nSalvation is by grace alone. It begins in God's mercy, not in human worthiness, foreseen merit, or autonomous decision.\n\n**Sola Fide**\nJustification is received by faith alone. Faith is the empty hand receiving Christ, not the ground of righteousness before God.\n\n**Historic section**\nTogether these answer the question: how is a sinner accepted by God? Not by works, but by grace through faith in Christ.`,
+  },
+  {
+    id: "sola-full-3", label: "Christ and Glory", title: "Solus Christus and Soli Deo Gloria",
+    content: `**Solus Christus**\nChrist alone is mediator, sacrifice, righteousness, priest, king, and Savior. No saint, priest, work, or institution shares his mediatorial office.\n\n**Soli Deo Gloria**\nAll glory belongs to God alone because all salvation comes from God alone.\n\n**Historic section**\nThe Five Solas end in worship. Reformation doctrine is doxological: from God, through God, and to God are all things.`,
+  },
+];
+
+const remonstrance1610Full: LearnSection[] = [
+  {
+    id: "md-remonstrance-1",
+    label: "Remonstrance 1",
+    title: "The Five Arminian Articles: Conditional Predestination",
+    content: `**Primary source:** The Five Arminian Articles, A.D. 1610\n\n**Source:** Philip Schaff, *The Creeds of Christendom*, Volume III - Christian Classics Ethereal Library\n\nThat God, by an eternal, unchangeable purpose in Jesus Christ his Son, before the foundation of the world, hath determined, out of the fallen, sinful race of men, to save in Christ, for Christ's sake, and through Christ, those who, through the grace of the Holy Ghost, shall believe on this his Son Jesus, and shall persevere in this faith and obedience of faith, through this grace, even to the end; and, on the other hand, to leave the incorrigible and unbelieving in sin and under wrath, and to condemn them as alienate from Christ, according to the word of the gospel in John iii. 36: "He that believeth on the Son hath everlasting life: and he that believeth not the Son shall not see life; but the wrath of God abideth on him," and according to other passages of Scripture also.`,
+  },
+  {
+    id: "md-remonstrance-2",
+    label: "Remonstrance 2",
+    title: "The Five Arminian Articles: Universal Atonement",
+    content: `**Primary source:** The Five Arminian Articles, A.D. 1610\n\n**Source:** Philip Schaff, *The Creeds of Christendom*, Volume III - Christian Classics Ethereal Library\n\nThat, agreeably thereto, Jesus Christ, the Saviour of the world, died for all men and for every man, so that he has obtained for them all, by his death on the cross, redemption and the forgiveness of sins; yet that no one actually enjoys this forgiveness of sins except the believer, according to the word of the Gospel of John iii. 16: "God so loved the world that he gave his only-begotten Son, that whosoever believeth in him should not perish, but have everlasting life." And in the First Epistle of John ii. 2: "And he is the propitiation for our sins; and not for ours only, but also for the sins of the whole world."`,
+  },
+  {
+    id: "md-remonstrance-3",
+    label: "Remonstrance 3",
+    title: "The Five Arminian Articles: Human Inability and New Birth",
+    content: `**Primary source:** The Five Arminian Articles, A.D. 1610\n\n**Source:** Philip Schaff, *The Creeds of Christendom*, Volume III - Christian Classics Ethereal Library\n\nThat man has not saving grace of himself, nor of the energy of his free will, inasmuch as he, in the state of apostasy and sin, can of and by himself neither think, will, nor do any thing that is truly good (such as saving Faith eminently is); but that it is needful that he be born again of God in Christ, through his Holy Spirit, and renewed in understanding, inclination, or will, and all his powers, in order that he may rightly understand, think, will, and effect what is truly good, according to the Word of Christ, John xv. 5: "Without me ye can do nothing."`,
+  },
+  {
+    id: "md-remonstrance-4",
+    label: "Remonstrance 4",
+    title: "The Five Arminian Articles: Resistible Grace",
+    content: `**Primary source:** The Five Arminian Articles, A.D. 1610\n\n**Source:** Philip Schaff, *The Creeds of Christendom*, Volume III - Christian Classics Ethereal Library\n\nThat this grace of God is the beginning, continuance, and accomplishment of all good, even to this extent, that the regenerate man himself, without prevenient or assisting, awakening, following and cooperative grace, can neither think, will, nor do good, nor withstand any temptations to evil; so that all good deeds or movements, that can be conceived, must be ascribed to the grace of God in Christ.\n\nBut as respects the mode of the operation of this grace, it is not irresistible, inasmuch as it is written concerning many, that they have resisted the Holy Ghost. Acts vii., and elsewhere in many places.`,
+  },
+  {
+    id: "md-remonstrance-5",
+    label: "Remonstrance 5",
+    title: "The Five Arminian Articles: Perseverance Question",
+    content: `**Primary source:** The Five Arminian Articles, A.D. 1610\n\n**Source:** Philip Schaff, *The Creeds of Christendom*, Volume III - Christian Classics Ethereal Library\n\nThat those who are incorporated into Christ by a true faith, and have thereby become partakers of his life-giving Spirit, have thereby full power to strive against Satan, sin, the world, and their own flesh, and to win the victory; it being well understood that it is ever through the assisting grace of the Holy Ghost; and that Jesus Christ assists them through his Spirit in all temptations, extends to them his hand, and if only they are ready for the conflict, and desire his help, and are not inactive, keeps them from falling, so that they, by no craft or power of Satan, can be misled nor plucked out of Christ's hands, according to the Word of Christ, John x. 28: "Neither shall any man pluck them out of my hand."\n\nBut whether they are capable, through negligence, of forsaking again the first beginnings of their life in Christ, of again returning to this present evil world, of turning away from the holy doctrine which was delivered them, of losing a good conscience, of becoming devoid of grace, that must be more particularly determined out of the Holy Scripture, before we ourselves can teach it with the full persuasion of our minds.\n\nThese Articles, thus set forth and taught, the Remonstrants deem agreeable to the Word of God, tending to edification, and, as regards this argument, sufficient for salvation, so that it is not necessary or edifying to rise higher or to descend deeper.`,
+  },
+];
+
+const canonsOfDortDebateSections: LearnSection[] = canonsOfDortFullText.map((section, index) => ({
+  ...section,
+  id: `md-dort-${section.id}`,
+  label: `Dort ${index + 1}`,
+  title: `Canons of Dort: ${section.title}`,
+  content: `**Primary source:** The Canons of Dort, A.D. 1618-1619\n\n**Role in this debate:** The Synod of Dort answered the Remonstrant articles point by point, explaining Reformed teaching and rejecting the opposing errors.\n\n${section.content}`,
+}));
+
+const monergismDebateFull: LearnSection[] = [
+  {
+    id: "md-full-1",
+    label: "Guide",
+    title: "How to Read the Full Monergism vs. Synergism Debate",
+    content: `**Full debate reader: Monergism vs. Synergism**\n\nThis debate is not one single primary document. It is a historic controversy that appears in several major source moments: Erasmus vs. Luther, the Remonstrants vs. Dort, and later Reformed responses to Arminian ideas of free will.\n\nThis reader now includes:\n\n**1. The Remonstrant side**\nThe Five Arminian Articles of 1610, the direct theological statement that led to the Synod of Dort.\n\n**2. The Reformed confessional answer**\nThe Canons of Dort, with its positive articles and rejection of errors.\n\n**3. Luther's full reply to Erasmus**\nMartin Luther's *The Bondage of the Will*, divided into its public-domain chapter sections.\n\n**4. Edwards's later philosophical-theological answer**\nJonathan Edwards's *The Freedom of the Will*, divided into its public-domain chapter sections.\n\n**Important note**\nA complete English public-domain text of Erasmus's *Diatribe Concerning Free Will* is not bundled here because the available English editions are not all clearly reusable as app text. Luther's book, however, directly answers Erasmus throughout and includes many statements of Erasmus's position as the controversy unfolds.`,
+  },
+  {
+    id: "md-full-2",
+    label: "Erasmus/Luther",
+    title: "The Reformation Debate: Erasmus and Luther",
+    content: `**The issue**\nErasmus argued that Christians should speak cautiously about predestination and that the human will has a real role in responding to grace. Luther answered that this made the decisive difference in salvation rest finally in man rather than in God.\n\n**Why this matters**\nThe debate was not merely philosophical. It concerned the gospel itself: whether fallen sinners can move themselves toward God, or whether God must first liberate the will by sovereign grace.\n\n**How the source sections work**\nThe Luther sections below give the full public-domain text of *The Bondage of the Will*. This is the major Reformation-era monergist source against Erasmus's position.`,
+  },
+  ...remonstrance1610Full,
+  {
+    id: "md-dort-guide",
+    label: "Dort Guide",
+    title: "The Dutch Debate: Remonstrance and Dort",
+    content: `**The Remonstrance of 1610**\nAfter Jacob Arminius died, his followers summarized their position in five articles: conditional election, universal atonement, human inability requiring grace, resistible grace, and uncertainty about final perseverance.\n\n**The Canons of Dort**\nThe Synod of Dort met in 1618-1619 to answer those articles. Its canons are not a general systematic theology; they are a direct judicial response to this controversy.\n\nRead the Remonstrant articles first, then Dort's answer.`,
+  },
+  ...canonsOfDortDebateSections,
+  {
+    id: "md-luther-guide",
+    label: "Luther Guide",
+    title: "Full Source: Luther's The Bondage of the Will",
+    content: `**Primary source now included in this reader**\nMartin Luther wrote *The Bondage of the Will* in 1525 as his answer to Erasmus's *Diatribe Concerning Free Will*.\n\nThe sections that follow are the full public-domain in-app text already used by the Free Books library, now made available here inside the historical debate reader for easier study.`,
+  },
+  ...sourceBookSections(bondageOfTheWillBook as SourceBook, "md-luther", "Luther", "Martin Luther"),
+  {
+    id: "md-edwards-guide",
+    label: "Edwards Guide",
+    title: "Full Source: Edwards's The Freedom of the Will",
+    content: `**Primary source now included in this reader**\nJonathan Edwards wrote *The Freedom of the Will* in 1754 to address moral agency, necessity, inability, Arminian liberty, and responsibility.\n\nThis is not the same debate moment as Luther and Erasmus, but it became one of the most important later Reformed answers to Arminian arguments about free will.\n\nThe sections that follow are the full public-domain in-app text already used by the Free Books library.`,
+  },
+  ...sourceBookSections(freedomOfTheWillBook as SourceBook, "md-edwards", "Edwards", "Jonathan Edwards"),
+];
+
 // ─── Document Registry ────────────────────────────────────────────────────────
+
+export const FULL_DOCUMENT_SECTIONS: FullDocumentSectionMap = {
+  "jerusalem-council": jerusalemCouncilFull,
+  "apostles-creed": apostlesCreed,
+  "nicene-creed": niceneCreed,
+  "athanasian-creed": athanasianCreedFullText,
+  "council-nicaea": nicaea325,
+  "council-chalcedon": chalcedon451,
+  "augustine-grace": augustineGraceFull,
+  "council-carthage": carthage418,
+  "council-orange": orange529,
+  "wycliffe": wycliffeFull,
+  "jan-hus": janHusFull,
+  "gutenberg": gutenbergFull,
+  "95theses": theses95,
+  "diet-of-worms": dietOfWormsFull,
+  "tyndale": tyndaleFull,
+  "calvins-institutes": calvinsInstitutesFull,
+  "augsburg-confession": augsburgConfessionFullText,
+  "smalcald-articles": smalcaldArticles,
+  "geneva-bible": genevaBibleFull,
+  "belgic-confession": belgicConfessionFullText,
+  "heidelberg": heidelbergCatechismFullText,
+  "thirty-nine-articles": thirtyNineArticlesFullText,
+  "canons-of-dort": canonsOfDortFullText,
+  "king-james-bible": kingJamesBibleFull,
+  "five-solas": fiveSolasFull,
+  "first-london-baptist": firstLondonBaptistFullText,
+  "westminster-confession": wcf,
+  "westminster-shorter": wsc,
+  "westminster-larger": westminsterLargerFullText,
+  "1689-lbc": secondLondonBaptistFullText,
+  "sinners-in-hands": sinnersInHands,
+  "monergism-debate": monergismDebateFull,
+};
 
 export const LEARN_DOCUMENTS: LearnDocument[] = [
   // ── Early Church ──────────────────────────────────────────────────────────

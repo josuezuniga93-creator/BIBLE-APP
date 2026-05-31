@@ -1,753 +1,1604 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useLanguage } from "../lib/useLanguage";
-import { t } from "../lib/i18n";
-import { isAnySaved } from "../lib/collections";
-import { BookmarkModal } from "../components/BookmarkModal";
+/**
+ * Tulip Bible App — Videos Section
+ *
+ * Phase 1: Frontend structure with categories
+ * Phase 2: Fundamentals of the Faith educational library
+ * Architecture is designed for Supabase integration (Phase 7).
+ * All video content is delivered via the official Tulip Bible App YouTube channel.
+ */
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useLanguage } from "../lib/useLanguage";
+import type { FundamentalsTopic, FundamentalsCategory, Video } from "../lib/videoTypes";
+
+// ─── Design constants (matches app-wide system) ────────────────────────────────
+const AC        = "#c9a961";
+const AC_BG     = "rgba(201,169,97,0.12)";
+const AC_BORDER = "rgba(201,169,97,0.35)";
+const SERIF     = "'Iowan Old Style','Georgia','Times New Roman',serif";
+const BG_ROOT   = "#08090f";
+const BG_CARD   = "rgba(255,255,255,0.033)";
+const BD_CARD   = "rgba(255,255,255,0.08)";
+
+// ─── Static video data (future: replaced by Supabase fetch) ────────────────────
 
 interface VideoEntry {
-  id: string;
+  id: string;               // YouTube video ID
   title: string;
   speaker: string;
+  church?: string;
   series?: string;
-  category: string;
-  tags: string[];
+  category: "featured" | "archive" | "fundamentals" | "short" | "community" | "testimonies";
+  fundamentalsTopicId?: string;
   description: string;
-  duration?: string;
-  rating: number;
-  reviewCount: number;
+  duration?: string;        // e.g. "31 min"
+  durationSeconds?: number;
+  datePublished?: string;
+  scriptureRefs?: string[];
+  isShort?: boolean;        // ≤ 6 min
+  isFeatured?: boolean;
 }
 
-interface WatchedItem {
-  id: string;
-  progress: number; // 0–100
-  completed: boolean;
-  watchedAt: number;
-}
+// Videos loaded from Supabase (Phase 7). Empty until first content is approved.
+const CURRENT_FEATURED: VideoEntry | null = null;
+const ARCHIVE_VIDEOS:   VideoEntry[]      = [];
+const SHORT_VIDEOS:     VideoEntry[]      = [];
+const COMMUNITY_VIDEOS: VideoEntry[]      = [];
 
-// ─── Constants ─────────────────────────────────────────────────────────────────
-
-const WATCHLIST_KEY = "ryc-video-watchlist";
-const WATCHED_KEY   = "ryc-video-watched";
-
-const CATEGORY_TILES = [
-  { id: "Bible Studies", label: "Bible Studies", icon: "📖", color: "#1d4ed8" },
-  { id: "Discipleship",  label: "Discipleship",  icon: "✝️",  color: "#065f46" },
-  { id: "Gospel",        label: "Gospel",        icon: "📢",  color: "#7c3aed" },
-  { id: "Devotionals",   label: "Devotionals",   icon: "🙏",  color: "#9d174d" },
+// ─── Testimonies ───────────────────────────────────────────────────────────────
+const TESTIMONIES_VIDEOS: VideoEntry[] = [
+  {
+    id: "fU3Hek_exX0",
+    title: "ForCry Ministry Testimony",
+    speaker: "ForCry Ministry",
+    category: "testimonies",
+    description: "A testimony of God's grace shared through ForCry Ministry.",
+    isShort: true,
+  },
 ];
 
-const SAMPLE_REVIEWS: Record<string, { name: string; text: string; stars: number }[]> = {
-  default: [
-    { name: "Reformed Reader",  text: "One of the clearest explanations I've heard. Highly recommended for every believer.", stars: 5 },
-    { name: "Sola Scriptura",   text: "Grounded in Scripture, faithful to the confessions. Excellent teaching.", stars: 5 },
-    { name: "Truth Seeker",     text: "Changed how I read my Bible. Pray more people hear this.", stars: 4 },
-  ],
+// All vertical short-form videos, pooled from every section.
+const ALL_SHORTS: VideoEntry[] = [
+  ...SHORT_VIDEOS,
+  ...TESTIMONIES_VIDEOS.filter((v) => v.isShort),
+];
+
+// ─── Phase 2: Fundamentals of the Faith data ───────────────────────────────────
+
+interface FundamentalsSection {
+  category: FundamentalsCategory;
+  topics: {
+    id: string;
+    title: string;
+    videoCount: number;
+    featuredVideoId?: string;
+  }[];
+}
+
+const FUNDAMENTALS: FundamentalsSection[] = [
+  {
+    category: "God",
+    topics: [
+      { id: "who-is-god",         title: "Who Is God?",                videoCount: 0 },
+      { id: "the-trinity",        title: "The Trinity",                videoCount: 0 },
+      { id: "attributes-of-god",  title: "Attributes of God",          videoCount: 0 },
+      { id: "holiness-of-god",    title: "Holiness of God",            videoCount: 0 },
+      { id: "sovereignty-of-god", title: "Sovereignty of God",         videoCount: 0 },
+    ],
+  },
+  {
+    category: "Jesus Christ",
+    topics: [
+      { id: "who-is-jesus",       title: "Who Is Jesus?",              videoCount: 0 },
+      { id: "deity-of-christ",    title: "Deity of Christ",            videoCount: 0 },
+      { id: "humanity-of-christ", title: "Humanity of Christ",         videoCount: 0 },
+      { id: "sinless-life",       title: "Sinless Life of Christ",     videoCount: 0 },
+      { id: "death-of-christ",    title: "Death of Christ",            videoCount: 0 },
+      { id: "resurrection",       title: "Resurrection of Christ",     videoCount: 0 },
+      { id: "ascension",          title: "Ascension of Christ",        videoCount: 0 },
+      { id: "return-of-christ",   title: "Return of Christ",           videoCount: 0 },
+    ],
+  },
+  {
+    category: "The Gospel",
+    topics: [
+      { id: "what-is-gospel",     title: "What Is the Gospel?",        videoCount: 0 },
+      { id: "what-is-sin",        title: "What Is Sin?",               videoCount: 0 },
+      { id: "why-jesus-die",      title: "Why Did Jesus Die?",         videoCount: 0 },
+      { id: "repentance",         title: "Repentance",                 videoCount: 0 },
+      { id: "faith",              title: "Faith",                      videoCount: 0 },
+      { id: "grace",              title: "Grace",                      videoCount: 0 },
+      { id: "justification",      title: "Justification",              videoCount: 0 },
+      { id: "adoption",           title: "Adoption",                   videoCount: 0 },
+      { id: "sanctification",     title: "Sanctification",             videoCount: 0 },
+    ],
+  },
+  {
+    category: "Scripture",
+    topics: [
+      { id: "what-is-bible",      title: "What Is the Bible?",         videoCount: 0 },
+      { id: "trust-bible",        title: "Why Can We Trust the Bible?", videoCount: 0 },
+      { id: "inspiration",        title: "Inspiration of Scripture",   videoCount: 0 },
+      { id: "authority",          title: "Authority of Scripture",     videoCount: 0 },
+      { id: "sufficiency",        title: "Sufficiency of Scripture",   videoCount: 0 },
+    ],
+  },
+  {
+    category: "Salvation",
+    topics: [
+      { id: "what-is-salvation",  title: "What Is Salvation?",         videoCount: 0 },
+      { id: "regeneration",       title: "Regeneration",               videoCount: 0 },
+      { id: "conversion",         title: "Conversion",                 videoCount: 0 },
+      { id: "union-with-christ",  title: "Union with Christ",          videoCount: 0 },
+      { id: "assurance",          title: "Assurance of Salvation",     videoCount: 0 },
+      { id: "perseverance",       title: "Perseverance of the Saints", videoCount: 0 },
+    ],
+  },
+  {
+    category: "The Holy Spirit",
+    topics: [
+      { id: "who-is-hs",          title: "Who Is the Holy Spirit?",    videoCount: 0 },
+      { id: "work-of-hs",         title: "Work of the Holy Spirit",    videoCount: 0 },
+      { id: "fruit-of-spirit",    title: "Fruit of the Spirit",        videoCount: 0 },
+    ],
+  },
+  {
+    category: "The Church",
+    topics: [
+      { id: "what-is-church",     title: "What Is the Church?",        videoCount: 0 },
+      { id: "baptism",            title: "Baptism",                    videoCount: 0 },
+      { id: "lords-supper",       title: "The Lord's Supper",          videoCount: 0 },
+      { id: "membership",         title: "Church Membership",          videoCount: 0 },
+      { id: "leadership",         title: "Biblical Leadership",        videoCount: 0 },
+      { id: "worship",            title: "Corporate Worship",          videoCount: 0 },
+    ],
+  },
+];
+
+const CATEGORY_COLORS: Record<FundamentalsCategory, string> = {
+  "God":              "#f59e0b",
+  "Jesus Christ":     "#3b82f6",
+  "The Gospel":       "#ef4444",
+  "Scripture":        "#c9a961",
+  "Salvation":        "#8b5cf6",
+  "The Holy Spirit":  "#06b6d4",
+  "The Church":       "#10b981",
 };
-
-const VIDEOS: VideoEntry[] = [
-  {
-    id: "Yba_bm4nYmA",
-    title: "What Is Reformed Theology?",
-    speaker: "R.C. Sproul",
-    series: "Reformed Theology Explained",
-    category: "Bible Studies",
-    tags: ["Doctrine", "Church History"],
-    rating: 4.8,
-    reviewCount: 51,
-    duration: "31 min",
-    description: "In this foundational message, R.C. Sproul explains the core convictions of Reformed Theology and how they shape our understanding of God, salvation, and the church. A must-watch for anyone wanting to understand the historic faith.",
-  },
-  {
-    id: "V_r3sFJWVQE",
-    title: "What Is the Gospel?",
-    speaker: "John Piper",
-    series: "Core Christianity",
-    category: "Gospel",
-    tags: ["Gospel", "Doctrine"],
-    rating: 4.9,
-    reviewCount: 87,
-    duration: "45 min",
-    description: "A clear, concise biblical explanation of the gospel of Jesus Christ and why it is the power of God unto salvation for everyone who believes.",
-  },
-  {
-    id: "Kn-bsE2jBjA",
-    title: "The Holiness of God",
-    speaker: "R.C. Sproul",
-    series: "The Attributes of God",
-    category: "Bible Studies",
-    tags: ["Holiness", "Doctrine"],
-    rating: 4.9,
-    reviewCount: 134,
-    duration: "55 min",
-    description: "Sproul's definitive lecture on the holiness of God — the attribute that underlies every other attribute of the divine nature. Compelling, reverent, and transformative.",
-  },
-  {
-    id: "e50Rgh7rGw8",
-    title: "Shocking Youth Message",
-    speaker: "Paul Washer",
-    series: "HeartCry Messages",
-    category: "Gospel",
-    tags: ["Gospel", "Holiness", "Evangelism"],
-    rating: 4.8,
-    reviewCount: 203,
-    duration: "58 min",
-    description: "The sermon that shook a generation — a biblical confrontation with easy-believism and a call to genuine repentance and faith in Christ alone.",
-  },
-  {
-    id: "k1kEt4lFAuM",
-    title: "Don't Waste Your Life",
-    speaker: "John Piper",
-    series: "Core Christianity",
-    category: "Discipleship",
-    tags: ["Holiness", "Evangelism"],
-    rating: 4.7,
-    reviewCount: 76,
-    duration: "42 min",
-    description: "The urgent call to live for the glory of God rather than comfort, safety, and the accumulation of worldly things. Life is too short to live for anything less than God.",
-  },
-  {
-    id: "vvmKQn27WKM",
-    title: "The One True God",
-    speaker: "Paul Washer",
-    series: "HeartCry Messages",
-    category: "Bible Studies",
-    tags: ["Doctrine", "Sovereignty"],
-    rating: 4.8,
-    reviewCount: 61,
-    duration: "48 min",
-    description: "A powerful message on the true nature of God as revealed in Scripture — His sovereignty, majesty, and absolute authority over all creation and history.",
-  },
-  {
-    id: "bA7ga7iP0bo",
-    title: "Why I Choose to Believe the Bible",
-    speaker: "Voddie Baucham",
-    series: "Expository Apologetics",
-    category: "Bible Studies",
-    tags: ["Doctrine"],
-    rating: 4.9,
-    reviewCount: 92,
-    duration: "52 min",
-    description: "A compelling defense of the sufficiency and authority of Scripture — why the Bible is the foundation of the Christian life and witness against all challengers.",
-  },
-  {
-    id: "Y5YzxWpSrY4",
-    title: "Contending for the Faith",
-    speaker: "Voddie Baucham",
-    series: "Expository Apologetics",
-    category: "Gospel",
-    tags: ["Evangelism", "Doctrine"],
-    rating: 4.7,
-    reviewCount: 44,
-    duration: "38 min",
-    description: "The church's call to contend earnestly for the faith once for all delivered to the saints — standing firm in the face of cultural pressure and apostasy.",
-  },
-  {
-    id: "S-VlBzCQyiY",
-    title: "The Christian Life",
-    speaker: "Sinclair Ferguson",
-    series: "Union with Christ",
-    category: "Discipleship",
-    tags: ["Holiness", "Doctrine"],
-    rating: 4.8,
-    reviewCount: 39,
-    duration: "49 min",
-    description: "Ferguson walks through the shape and texture of the Christian life — union with Christ, sanctification, and the means of grace that sustain the believer.",
-  },
-  {
-    id: "Hm-hP7q5dJ8",
-    title: "The Sovereignty of God in Salvation",
-    speaker: "Alistair Begg",
-    series: "Truth For Life",
-    category: "Bible Studies",
-    tags: ["Sovereignty", "Gospel"],
-    rating: 4.7,
-    reviewCount: 55,
-    duration: "44 min",
-    description: "A clear, pastoral exposition of God's sovereign grace in election, calling, and salvation — from Scripture alone, for the glory of God alone.",
-  },
-  {
-    id: "QLo9r1V0PzI",
-    title: "Why Revival Tarries",
-    speaker: "Leonard Ravenhill",
-    series: "Revival Messages",
-    category: "Devotionals",
-    tags: ["Prayer", "Holiness", "Evangelism"],
-    rating: 4.9,
-    reviewCount: 118,
-    duration: "60 min",
-    description: "Ravenhill's legendary message on the church's prayerlessness — the primary reason for spiritual deadness and the absence of revival in our generation.",
-  },
-  {
-    id: "KwHHBRtqc5Y",
-    title: "Stop Faking It",
-    speaker: "Francis Chan",
-    series: "Crazy Love Series",
-    category: "Discipleship",
-    tags: ["Holiness", "Gospel"],
-    rating: 4.6,
-    reviewCount: 67,
-    duration: "35 min",
-    description: "An honest confrontation with nominal Christianity and a passionate call to authentic, costly discipleship that bears the marks of a true follower of Christ.",
-  },
-];
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function loadWatchlist(): string[] {
-  try { return JSON.parse(localStorage.getItem(WATCHLIST_KEY) || "[]"); } catch { return []; }
-}
-function saveWatchlist(ids: string[]) {
-  try { localStorage.setItem(WATCHLIST_KEY, JSON.stringify(ids)); } catch {}
-}
-function loadWatched(): WatchedItem[] {
-  try { return JSON.parse(localStorage.getItem(WATCHED_KEY) || "[]"); } catch { return []; }
+function ytThumb(id: string, quality: "hq" | "mq" = "hq") {
+  return `https://img.youtube.com/vi/${id}/${quality}default.jpg`;
 }
 
-function Stars({ rating }: { rating: number }) {
-  return <span className="text-amber-400 text-xs font-bold">★ {rating.toFixed(1)}</span>;
+function formatDuration(secs?: number): string {
+  if (!secs) return "";
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return s > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${m} min`;
 }
 
-function BackIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M19 12H5M12 19l-7-7 7-7"/>
-    </svg>
-  );
+// ─── Continue Watching — localStorage-backed history ───────────────────────────
+
+interface WatchItem {
+  videoId: string;
+  title: string;
+  speaker?: string;
+  isShort?: boolean;
+  ts: number;
 }
 
-function SearchIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-    </svg>
-  );
+const WATCH_KEY = "tba_watch_history";
+
+function loadWatchHistory(): WatchItem[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(WATCH_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as WatchItem[]) : [];
+  } catch {
+    return [];
+  }
 }
 
-// ─── Thumbnail card ────────────────────────────────────────────────────────────
+function recordWatch(item: WatchItem) {
+  if (typeof window === "undefined") return;
+  try {
+    const prev = loadWatchHistory().filter((w) => w.videoId !== item.videoId);
+    const next = [item, ...prev].slice(0, 12);
+    window.localStorage.setItem(WATCH_KEY, JSON.stringify(next));
+  } catch {
+    /* ignore quota / private-mode errors */
+  }
+}
 
-function VideoCard({ video, onClick, progress }: { video: VideoEntry; onClick: () => void; progress?: number }) {
+// ─── Back arrow icon ───────────────────────────────────────────────────────────
+
+function BackArrow({ onClick }: { onClick: () => void }) {
   return (
     <button
       onClick={onClick}
-      className="flex-shrink-0 w-40 rounded-xl overflow-hidden bg-white/[0.04] border border-white/[0.07] active:scale-95 transition-transform text-left"
+      className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors py-1"
     >
-      <div className="relative aspect-video">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
+        <path d="M19 12H5M12 5l-7 7 7 7"/>
+      </svg>
+      <span className="text-[13px] font-semibold">Back</span>
+    </button>
+  );
+}
+
+// ─── YouTube embed player (full-screen modal) ──────────────────────────────────
+
+function VideoPlayerModal({ videoId, title, onClose, vertical = false }: { videoId: string; title: string; onClose: () => void; vertical?: boolean }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", handler); };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[500] bg-black flex flex-col"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      {/* Minimal back button — no title, no badge */}
+      <div className="flex items-center px-3 py-2 flex-shrink-0">
+        <button
+          onClick={onClose}
+          className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
+          style={{ background: "rgba(255,255,255,0.08)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.3" strokeLinecap="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </button>
+        {vertical && (
+          <span className="ml-3 text-[10px] font-black tracking-widest uppercase px-2 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.90)", color: "#08090f" }}>
+            Short
+          </span>
+        )}
+      </div>
+      {/* Player — vertical shorts are centered in a 9:16 frame */}
+      {vertical ? (
+        <div className="flex-1 flex items-center justify-center px-3 pb-3">
+          <div
+            className="relative w-full overflow-hidden rounded-2xl"
+            style={{ maxWidth: "min(440px, calc((100vh - 110px) * 0.5625))", aspectRatio: "9/16", border: "1px solid rgba(255,255,255,0.10)" }}
+          >
+            <iframe
+              src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&color=white&playsinline=1`}
+              title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full"
+              style={{ border: "none" }}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 relative">
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&color=white`}
+            title={title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+            style={{ border: "none" }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Video card — horizontal scroll list ──────────────────────────────────────
+
+function VideoCard({
+  video,
+  size = "md",
+  onClick,
+  showChurch = false,
+}: {
+  video: VideoEntry;
+  size?: "sm" | "md" | "lg";
+  onClick: () => void;
+  showChurch?: boolean;
+}) {
+  const widthClass = size === "sm" ? "w-[130px]" : size === "lg" ? "w-[220px]" : "w-[165px]";
+  const thumbQuality = size === "lg" ? "hq" : "mq";
+
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 ${widthClass} rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all`}
+      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+    >
+      {/* Thumbnail */}
+      <div className="relative" style={{ aspectRatio: "16/9" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={`https://img.youtube.com/vi/${video.id}/hqdefault.jpg`}
+          src={ytThumb(video.id, thumbQuality)}
           alt={video.title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-          <div className="w-8 h-8 rounded-full bg-white/25 flex items-center justify-center">
-            <span className="text-xs text-white ml-0.5">▶</span>
+        <div className="absolute inset-0 bg-black/20" />
+        {/* Play button */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.22)", backdropFilter: "blur(4px)" }}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
           </div>
         </div>
-        {progress !== undefined && progress > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20">
-            <div className="h-full bg-violet-500" style={{ width: `${progress}%` }} />
-          </div>
+        {/* Duration badge */}
+        {video.duration && (
+          <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.78)", color: "rgba(255,255,255,0.85)" }}>
+            {video.duration}
+          </span>
+        )}
+        {/* Short badge */}
+        {video.isShort && (
+          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.90)", color: "#08090f" }}>
+            SHORT
+          </span>
         )}
       </div>
-      <div className="p-2">
-        <p className="text-[10px] text-violet-400 font-bold truncate">{video.speaker}</p>
-        <p className="text-[11px] font-bold text-white/80 leading-tight line-clamp-2">{video.title}</p>
+      {/* Info */}
+      <div className="p-2.5">
+        <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>
+          {video.speaker}
+        </p>
+        {showChurch && video.church && (
+          <p className="text-[9px] mb-0.5 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{video.church}</p>
+        )}
+        <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{video.title}</p>
       </div>
     </button>
   );
 }
 
-// ─── Main component ────────────────────────────────────────────────────────────
+// ─── Short card — vertical 9:16 (phone "shorts" format) ────────────────────────
 
-export default function VideosPage() {
-  const { lang } = useLanguage();
-  const [selected, setSelected]       = useState<VideoEntry | null>(null);
-  const [activeCategory, setActiveCategory] = useState("All");
-  const [watchlist, setWatchlist]     = useState<string[]>([]);
-  const [watched, setWatched]         = useState<WatchedItem[]>([]);
-  const [activeTab, setActiveTab]     = useState<"info" | "chapters" | "notes" | "reviews">("info");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch]   = useState(false);
-  const [watchlistTab, setWatchlistTab] = useState<"watching" | "completed">("watching");
-  const [bookmarkTarget, setBookmarkTarget] = useState<VideoEntry | null>(null);
-  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
+function ShortCard({
+  video,
+  size = "md",
+  onClick,
+}: {
+  video: VideoEntry;
+  size?: "sm" | "md";
+  onClick: () => void;
+}) {
+  const widthClass = size === "sm" ? "w-[124px]" : "w-[142px]";
+  return (
+    <button
+      onClick={onClick}
+      className={`flex-shrink-0 ${widthClass} rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all relative`}
+      style={{ background: "#0d0d18", border: `1px solid ${BD_CARD}` }}
+    >
+      {/* Vertical thumbnail (YouTube thumb cropped to 9:16) */}
+      <div className="relative" style={{ aspectRatio: "9/16" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ytThumb(video.id, "hq")}
+          alt={video.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.10) 45%, rgba(8,9,15,0.05) 100%)" }} />
+        {/* Short badge */}
+        <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.92)", color: "#08090f" }}>
+          SHORT
+        </span>
+        {/* Play ring */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.25)" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
+          </div>
+        </div>
+        {/* Info pinned to bottom */}
+        <div className="absolute bottom-0 left-0 right-0 p-2.5">
+          <p className="text-[9px] font-bold mb-0.5 truncate" style={{ color: AC }}>{video.speaker}</p>
+          <p className="text-[11px] font-semibold text-white leading-tight line-clamp-2">{video.title}</p>
+        </div>
+      </div>
+    </button>
+  );
+}
+
+// ─── Continue Watching card ────────────────────────────────────────────────────
+
+function ContinueCard({ item, onClick }: { item: WatchItem; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex-shrink-0 w-[200px] rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all"
+      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+    >
+      <div className="relative" style={{ aspectRatio: item.isShort ? "9/16" : "16/9", maxHeight: item.isShort ? 150 : undefined }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={ytThumb(item.videoId, "hq")} alt={item.title} className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(201,169,97,0.92)" }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#08090f"><polygon points="6,3 20,12 6,21"/></svg>
+          </div>
+        </div>
+        {/* Faux resume progress bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: "rgba(255,255,255,0.18)" }}>
+          <div className="h-full" style={{ width: "38%", background: AC }} />
+        </div>
+      </div>
+      <div className="p-2.5">
+        {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{item.speaker}</p>}
+        <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{item.title}</p>
+      </div>
+    </button>
+  );
+}
+
+// ─── Featured Video Banner (Phase 1) ──────────────────────────────────────────
+
+function FeaturedVideoBanner({ video, onWatch }: { video: VideoEntry; onWatch: () => void }) {
+  return (
+    <div className="mx-4 mb-6 rounded-2xl overflow-hidden relative" style={{ background: "#0d0d18", border: `1px solid ${BD_CARD}` }}>
+      {/* Thumbnail */}
+      <div className="relative" style={{ aspectRatio: "16/9" }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={ytThumb(video.id, "hq")}
+          alt={video.title}
+          className="w-full h-full object-cover"
+        />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(to top, rgba(8,9,15,0.98) 0%, rgba(8,9,15,0.45) 55%, rgba(8,9,15,0.10) 100%)" }}
+        />
+        {/* Play button overlay */}
+        <button
+          onClick={onWatch}
+          className="absolute inset-0 flex items-center justify-center group"
+        >
+          <div className="w-14 h-14 rounded-full flex items-center justify-center transition-all group-hover:scale-110 group-active:scale-95"
+            style={{ background: "rgba(201,169,97,0.90)", backdropFilter: "blur(8px)" }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="#08090f"><polygon points="6,3 20,12 6,21"/></svg>
+          </div>
+        </button>
+        {/* Live badge */}
+        <div className="absolute top-3 left-3">
+          <span className="text-[9px] font-black tracking-widest px-2 py-1 rounded" style={{ background: AC, color: "#08090f" }}>
+            FEATURED
+          </span>
+        </div>
+      </div>
+      {/* Info */}
+      <div className="px-4 pt-3 pb-4">
+        <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: AC }}>
+          {video.speaker}{video.church ? ` · ${video.church}` : ""}
+        </p>
+        <h2 className="text-[17px] font-bold text-white leading-snug mb-1">{video.title}</h2>
+        {video.description && (
+          <p className="text-[12px] text-white/50 leading-relaxed mb-3 line-clamp-2">{video.description}</p>
+        )}
+        <div className="flex gap-2">
+          <button
+            onClick={onWatch}
+            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            style={{ background: AC, color: "#08090f" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+            Watch Now
+          </button>
+          <a
+            href={`https://www.youtube.com/watch?v=${video.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-4 py-2.5 rounded-xl text-[13px] font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98]"
+            style={{ background: "rgba(255,0,0,0.12)", color: "#ff4444", border: "1px solid rgba(255,0,0,0.22)" }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+            YouTube
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Ask a Question — localStorage queue ───────────────────────────────────────
+
+interface QuestionItem {
+  question: string;
+  email?: string;
+  ts: number;
+}
+
+const QUESTIONS_KEY = "tba_questions";
+
+function saveQuestion(item: QuestionItem) {
+  if (typeof window === "undefined") return;
+  try {
+    const raw = window.localStorage.getItem(QUESTIONS_KEY);
+    const prev: QuestionItem[] = raw ? JSON.parse(raw) : [];
+    window.localStorage.setItem(QUESTIONS_KEY, JSON.stringify([item, ...prev].slice(0, 50)));
+  } catch {
+    /* ignore quota / private-mode errors */
+  }
+}
+
+// ─── Coming Soon feature banners (hero + 2 stacked, 231-style) ─────────────────
+
+function ComingSoonBanners({ onAsk }: { onAsk: () => void }) {
+  return (
+    <section className="px-4 pt-4 mb-8">
+      <p className="text-[9px] font-black tracking-[0.22em] uppercase mb-3" style={{ color: "rgba(255,255,255,0.45)" }}>
+        Coming Soon
+      </p>
+
+      {/* Hero banner — Testimonies */}
+      <div
+        className="relative rounded-2xl overflow-hidden mb-3 flex flex-col justify-center"
+        style={{ minHeight: 132, background: "#11203a", border: `1px solid ${AC_BORDER}`, padding: "18px" }}
+      >
+        <p className="text-[10px] font-black tracking-widest uppercase mb-1.5" style={{ color: AC }}>Stories of Grace</p>
+        <h2 className="text-[26px] font-bold text-white leading-[1.06]" style={{ fontFamily: SERIF }}>Testimonies</h2>
+        <span className="absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ color: AC, border: `1px solid ${AC_BORDER}` }}>SOON</span>
+      </div>
+
+      {/* Two stacked cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {/* Fundamentals */}
+        <div
+          className="relative rounded-2xl overflow-hidden flex flex-col justify-end"
+          style={{ minHeight: 104, background: "#1d1305", border: "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
+        >
+          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Series</p>
+          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Fundamentals</h3>
+          <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: AC, border: `1px solid ${AC_BORDER}` }}>SOON</span>
+        </div>
+
+        {/* Ask a Question — opens request form */}
+        <button
+          onClick={onAsk}
+          className="relative rounded-2xl overflow-hidden flex flex-col justify-end text-left active:scale-[0.97] transition-all"
+          style={{ minHeight: 104, background: "#0e1f1a", border: "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
+        >
+          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Ask &amp; Receive</p>
+          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Ask a Question</h3>
+          <span className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          </span>
+        </button>
+      </div>
+    </section>
+  );
+}
+
+// ─── Ask a Question — request form (bottom sheet) ──────────────────────────────
+
+function QuestionFormModal({ onClose }: { onClose: () => void }) {
+  const [question, setQuestion] = useState("");
+  const [email, setEmail] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    setWatchlist(loadWatchlist());
-    setWatched(loadWatched());
-  }, []);
+    document.body.style.overflow = "hidden";
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", handler); };
+  }, [onClose]);
 
-  // Refresh saved state whenever bookmark modal closes
-  function refreshSaved() {
-    setSavedSet(new Set()); // triggers re-check via isAnySaved per card
-  }
-
-  function openVideo(v: VideoEntry) {
-    setSelected(v);
-    setActiveTab("info");
-    window.scrollTo(0, 0);
-  }
-
-  function closeVideo() {
-    setSelected(null);
-  }
-
-  function toggleWatchlist(id: string) {
-    setWatchlist((prev) => {
-      const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
-      saveWatchlist(next);
-      return next;
-    });
-  }
-
-  const filteredVideos = VIDEOS.filter((v) => {
-    const matchesCat    = activeCategory === "All" || v.category === activeCategory || v.tags.includes(activeCategory);
-    const matchesSearch = !searchQuery || v.title.toLowerCase().includes(searchQuery.toLowerCase()) || v.speaker.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
-
-  const continueWatching = watched
-    .filter((w) => !w.completed && w.progress > 0)
-    .sort((a, b) => b.watchedAt - a.watchedAt)
-    .map((w) => ({ video: VIDEOS.find((v) => v.id === w.id), progress: w.progress }))
-    .filter((x) => x.video) as { video: VideoEntry; progress: number }[];
-
-  const watchlistVideos  = watchlist.map((id) => VIDEOS.find((v) => v.id === id)).filter(Boolean) as VideoEntry[];
-  const completedVideos  = watched.filter((w) => w.completed).map((w) => VIDEOS.find((v) => v.id === w.id)).filter(Boolean) as VideoEntry[];
-
-  const isInWatchlist = selected ? watchlist.includes(selected.id) : false;
-  const seriesVideos  = selected ? VIDEOS.filter((v) => v.series === selected.series && v.id !== selected.id) : [];
-  const relatedVideos = selected ? VIDEOS.filter((v) => v.id !== selected.id && v.tags.some((t) => selected.tags.includes(t))).slice(0, 6) : [];
-  const reviews       = SAMPLE_REVIEWS[selected?.id ?? ""] ?? SAMPLE_REVIEWS.default;
-
-  // ─────────────────────────────────────────────────────────────────────────────
+  const submit = () => {
+    if (!question.trim()) return;
+    saveQuestion({ question: question.trim(), email: email.trim() || undefined, ts: Date.now() });
+    setSubmitted(true);
+  };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="fixed inset-0 z-[450] flex flex-col justify-end">
+      <button
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
+      />
 
-      {/* ── HOME SCREEN ──────────────────────────────────────────────────────── */}
-      {!selected && (
-        <main className="max-w-lg mx-auto pb-24">
+      <div
+        className="relative rounded-t-3xl overflow-hidden"
+        style={{ background: "#11131c", borderTop: `1px solid ${AC_BORDER}`, maxHeight: "90vh", animation: "sheetUp 0.28s cubic-bezier(0.22,1,0.36,1)" }}
+      >
+        <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
 
-          {/* Header */}
-          <div className="flex items-center justify-between px-4 pt-6 pb-3">
-            <h1 className="text-xl font-bold text-white">{t(lang, "videos_heading")}</h1>
-            <button
-              onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.06] text-white/60"
-            >
-              <SearchIcon />
-            </button>
-          </div>
+        <div className="flex justify-center pt-3 pb-1">
+          <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+        </div>
 
-          {/* Search bar */}
-          {showSearch && (
-            <div className="px-4 pb-4">
-              <input
-                autoFocus
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t(lang, "videos_search_placeholder")}
-                className="w-full px-4 py-2.5 rounded-xl bg-white/[0.07] border border-white/10 text-sm text-white placeholder-white/30 outline-none focus:border-white/20"
-              />
+        {submitted ? (
+          <div className="px-6 pt-4 pb-10 text-center">
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
             </div>
-          )}
-
-          {/* Hero banner */}
-          {!searchQuery && activeCategory === "All" && (
-            <div className="mx-4 mb-6 rounded-3xl overflow-hidden">
-              <div className="bg-gradient-to-br from-violet-900 via-violet-800 to-indigo-900 p-5 relative overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none" style={{ background: "radial-gradient(ellipse at 75% 40%, rgba(167,139,250,0.18) 0%, transparent 65%)" }} />
-                <div className="flex items-center gap-4 relative">
-                  <div className="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center text-2xl flex-shrink-0 border border-white/10">
-                    📖
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[9px] font-black tracking-widest text-violet-300/60 uppercase mb-0.5">{t(lang, "videos_reformed_teaching")}</p>
-                    <h2 className="text-[15px] font-black text-white leading-tight whitespace-pre-line">{t(lang, "videos_hero_tagline")}</h2>
-                    <p className="text-[10px] text-white/40 mt-0.5 leading-snug">{t(lang, "videos_hero_sub")}</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => openVideo(VIDEOS[0])}
-                  className="mt-4 w-full py-2.5 rounded-xl bg-white/12 text-white text-sm font-bold flex items-center justify-center gap-2 border border-white/10 backdrop-blur-sm active:bg-white/20 transition-colors"
-                >
-                  <span className="text-violet-300">▶</span> {t(lang, "videos_start_watching")}
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Browse by Category */}
-          {!searchQuery && activeCategory === "All" && (
-            <section className="mb-5">
-              <div className="flex items-center justify-between px-4 mb-3">
-                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "videos_browse_category")}</p>
-                <button onClick={() => setActiveCategory("All")} className="text-[11px] text-violet-400 font-bold">{t(lang, "videos_view_all")}</button>
-              </div>
-              <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
-                {CATEGORY_TILES.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
-                    className="flex-shrink-0 flex flex-col items-center justify-center gap-2 w-20 py-3.5 rounded-2xl active:scale-95 transition-transform"
-                    style={{ backgroundColor: cat.color + "2a", border: `1px solid ${cat.color}40` }}
-                  >
-                    <span className="text-2xl">{cat.icon}</span>
-                    <span className="text-[10px] font-bold text-white/75 text-center leading-tight">{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* Category filter pills (when a category is active) */}
-          {activeCategory !== "All" && !searchQuery && (
-            <div className="flex gap-2 px-4 mb-5 overflow-x-auto scrollbar-none pb-1">
-              <button
-                onClick={() => setActiveCategory("All")}
-                className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-white/[0.06] text-white/50 border border-white/10"
-              >
-                ← All
-              </button>
-              {CATEGORY_TILES.map((cat) => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                    activeCategory === cat.id
-                      ? "bg-violet-600 text-white"
-                      : "bg-white/[0.05] text-white/40 border border-white/10"
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Continue Watching */}
-          {!searchQuery && activeCategory === "All" && continueWatching.length > 0 && (
-            <section className="mb-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_continue_watching")}</p>
-              <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
-                {continueWatching.map(({ video, progress }) => (
-                  <VideoCard key={video.id} video={video} onClick={() => openVideo(video)} progress={progress} />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {/* My Watchlist */}
-          {!searchQuery && activeCategory === "All" && (watchlistVideos.length > 0 || completedVideos.length > 0) && (
-            <section className="mb-5">
-              <div className="flex items-center justify-between px-4 mb-3">
-                <p className="text-[10px] font-black tracking-widest text-white/30 uppercase">{t(lang, "videos_watchlist")}</p>
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setWatchlistTab("watching")}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${watchlistTab === "watching" ? "bg-violet-600 text-white" : "text-white/40"}`}
-                  >{t(lang, "videos_watching")}</button>
-                  <button
-                    onClick={() => setWatchlistTab("completed")}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition-all ${watchlistTab === "completed" ? "bg-violet-600 text-white" : "text-white/40"}`}
-                  >{t(lang, "videos_completed")}</button>
-                </div>
-              </div>
-              <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
-                {(watchlistTab === "watching" ? watchlistVideos : completedVideos).map((v) => (
-                  <VideoCard key={v.id} video={v} onClick={() => openVideo(v)} />
-                ))}
-                {(watchlistTab === "watching" ? watchlistVideos : completedVideos).length === 0 && (
-                  <p className="text-xs text-white/25 py-4 px-1">
-                    {watchlistTab === "watching" ? t(lang, "videos_no_watchlist") : t(lang, "videos_no_completed")}
-                  </p>
-                )}
-              </div>
-            </section>
-          )}
-
-          {/* Video list */}
-          <section className="px-4">
-            <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3">
-              {searchQuery
-                ? `${t(lang, "videos_results_for")} "${searchQuery}"`
-                : activeCategory !== "All"
-                  ? activeCategory
-                  : t(lang, "videos_all_videos")}
+            <h2 className="text-[19px] font-bold text-white mb-2">Question received</h2>
+            <p className="text-[13px] leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.50)" }}>
+              Thanks for asking. We&rsquo;ll answer it in a short video &mdash; keep an eye on the Short Videos shelf.
             </p>
-            {filteredVideos.length === 0 && (
-              <p className="text-center py-10 text-white/25 text-sm">{t(lang, "videos_no_results")}</p>
-            )}
-            <div className="space-y-3">
-              {filteredVideos.map((v) => {
-                const saved = isAnySaved(`video::${v.id}`);
-                return (
-                <div key={v.id} className="relative">
-                  <button
-                    onClick={() => openVideo(v)}
-                    className="w-full flex gap-3 rounded-xl p-2.5 bg-white/[0.03] border border-white/[0.06] active:bg-white/[0.07] active:scale-[0.98] transition-all text-left"
-                  >
-                    <div className="relative w-28 flex-shrink-0 aspect-video rounded-lg overflow-hidden">
-                      <img
-                        src={`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}
-                        alt={v.title}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-                          <span className="text-[11px] text-white ml-0.5">▶</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex-1 min-w-0 py-0.5 pr-8">
-                      <p className="text-[10px] text-violet-400 font-bold mb-0.5">{v.speaker}</p>
-                      <p className="text-xs font-bold text-white/90 leading-snug line-clamp-2 mb-1">{v.title}</p>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <Stars rating={v.rating} />
-                        <span className="text-[10px] text-white/30">({v.reviewCount})</span>
-                        {v.duration && <span className="text-[10px] text-white/30">{v.duration}</span>}
-                      </div>
-                    </div>
-                  </button>
-                  {/* Bookmark button — floats top-right of card */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setBookmarkTarget(v); }}
-                    className="absolute top-2.5 right-2.5 w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90"
-                    style={saved
-                      ? { backgroundColor: "rgba(236,72,153,0.18)", color: "#ec4899" }
-                      : { backgroundColor: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.3)" }
-                    }
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-                    </svg>
-                  </button>
-                </div>
-                );
-              })}
-            </div>
-          </section>
-
-        </main>
-      )}
-
-      {/* ── DETAIL SCREEN ─────────────────────────────────────────────────────── */}
-      {selected && (
-        <div className="min-h-screen bg-[#0f0f0f] max-w-lg mx-auto flex flex-col pb-16">
-
-          {/* Back */}
-          <div className="flex items-center gap-3 px-4 pt-5 pb-3">
-            <button
-              onClick={closeVideo}
-              className="w-9 h-9 flex items-center justify-center rounded-full bg-white/[0.07] text-white/70 active:bg-white/10 transition-colors flex-shrink-0"
-            >
-              <BackIcon />
+            <button onClick={onClose} className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]" style={{ background: AC, color: "#08090f" }}>
+              Done
             </button>
-            <p className="text-sm font-semibold text-white/50 truncate flex-1">{selected.series ?? "Videos"}</p>
           </div>
+        ) : (
+          <>
+            <div className="px-5 pt-2 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+              <p className="text-[9px] font-black tracking-widest uppercase" style={{ color: AC }}>Ask &amp; Receive</p>
+              <h2 className="text-[19px] font-bold text-white leading-tight">Ask a Question</h2>
+              <p className="text-[11px] mt-2" style={{ color: "rgba(255,255,255,0.42)" }}>
+                Submit your question and we&rsquo;ll answer it in a short video.
+              </p>
+            </div>
 
-          {/* Thumbnail / player */}
-          <div className="mx-4 rounded-2xl overflow-hidden bg-black mb-5" style={{ aspectRatio: "16/9" }}>
-            <a
-              href={`https://www.youtube.com/watch?v=${selected.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="relative block w-full h-full"
-            >
-              <img
-                src={`https://img.youtube.com/vi/${selected.id}/hqdefault.jpg`}
-                alt={selected.title}
-                className="w-full h-full object-cover"
+            <div className="px-5 py-4">
+              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>Your question</label>
+              <textarea
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                rows={4}
+                placeholder="What would you like us to address?"
+                className="w-full rounded-xl px-3 py-2.5 text-[14px] text-white placeholder-white/30 outline-none resize-none mb-4"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
               />
-              <div className="absolute inset-0 bg-black/35 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-violet-600/85 flex items-center justify-center border-2 border-white/20 shadow-2xl shadow-violet-900/60">
-                  <span className="text-white text-2xl ml-1">▶</span>
+              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>Email (optional)</label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                type="email"
+                placeholder="So we can let you know when it's answered"
+                className="w-full rounded-xl px-3 py-2.5 text-[14px] text-white placeholder-white/30 outline-none mb-5"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+              />
+              <button
+                onClick={submit}
+                disabled={!question.trim()}
+                className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+                style={{ background: AC, color: "#08090f", opacity: question.trim() ? 1 : 0.45 }}
+              >
+                Submit Question
+              </button>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Section header ────────────────────────────────────────────────────────────
+
+function SectionHeader({
+  label,
+  title,
+  onViewAll,
+  color = AC,
+}: {
+  label: string;
+  title: string;
+  onViewAll?: () => void;
+  color?: string;
+}) {
+  return (
+    <div className="flex items-center justify-between px-4 mb-3">
+      <div>
+        <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color }}>{label}</p>
+        <h3 className="text-[16px] font-bold text-white">{title}</h3>
+      </div>
+      {onViewAll && (
+        <button onClick={onViewAll} className="text-[11px] font-bold" style={{ color: "rgba(201,169,97,0.55)" }}>
+          View all →
+        </button>
+      )}
+    </div>
+  );
+}
+
+// ─── Browse-by-Topic grid card (clean, emoji-free) ─────────────────────────────
+
+function TopicCategoryCard({
+  section,
+  onSelect,
+}: {
+  section: FundamentalsSection;
+  onSelect: (section: FundamentalsSection) => void;
+}) {
+  const color = CATEGORY_COLORS[section.category];
+  const available = section.topics.filter((t) => t.videoCount > 0).length;
+
+  return (
+    <button
+      onClick={() => onSelect(section)}
+      className="rounded-2xl p-4 text-left transition-all active:scale-[0.97]"
+      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+    >
+      {/* Gold accent dot */}
+      <span className="block w-2.5 h-2.5 rounded-full mb-3" style={{ background: color, boxShadow: `0 0 10px ${color}66` }} />
+      <p className="text-[14px] font-bold text-white leading-tight mb-1">{section.category}</p>
+      <p className="text-[10px] tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>
+        {section.topics.length} topics
+      </p>
+      <p className="text-[10px] mt-2 font-semibold tracking-wide uppercase" style={{ color: available > 0 ? color : "rgba(255,255,255,0.25)" }}>
+        {available > 0 ? `${available} available` : "Coming soon"}
+      </p>
+    </button>
+  );
+}
+
+// ─── Category bottom sheet (tap a category to see what's available) ────────────
+
+function CategorySheet({
+  section,
+  onClose,
+  onSeeAll,
+  onSelectTopic,
+}: {
+  section: FundamentalsSection;
+  onClose: () => void;
+  onSeeAll: () => void;
+  onSelectTopic: (topicId: string) => void;
+}) {
+  const color = CATEGORY_COLORS[section.category];
+
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", handler); };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[400] flex flex-col justify-end">
+      {/* Backdrop */}
+      <button
+        aria-label="Close"
+        onClick={onClose}
+        className="absolute inset-0"
+        style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
+      />
+
+      {/* Panel */}
+      <div
+        className="relative rounded-t-3xl overflow-hidden"
+        style={{
+          background: "#11131c",
+          borderTop: `1px solid ${color}33`,
+          maxHeight: "82vh",
+          animation: "sheetUp 0.28s cubic-bezier(0.22,1,0.36,1)",
+        }}
+      >
+        <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+
+        {/* Grabber */}
+        <div className="flex justify-center pt-3 pb-1">
+          <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+        </div>
+
+        {/* Header */}
+        <div className="px-5 pt-2 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+          <div className="flex items-center gap-3">
+            <span className="block w-3 h-3 rounded-full flex-shrink-0" style={{ background: color, boxShadow: `0 0 12px ${color}77` }} />
+            <div className="flex-1">
+              <p className="text-[9px] font-black tracking-widest uppercase" style={{ color }}>
+                Fundamentals of the Faith
+              </p>
+              <h2 className="text-[19px] font-bold text-white leading-tight">{section.category}</h2>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-white/60 transition-all active:scale-90"
+              style={{ background: "rgba(255,255,255,0.06)" }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <p className="text-[11px] mt-2.5" style={{ color: "rgba(255,255,255,0.42)" }}>
+            Tap any topic to jump into that part of the study
+          </p>
+        </div>
+
+        {/* Topic list — every topic navigates into the section */}
+        <div className="px-4 py-3 overflow-y-auto" style={{ maxHeight: "52vh" }}>
+          <div className="flex flex-col gap-2">
+            {section.topics.map((topic) => {
+              const hasVideos = topic.videoCount > 0;
+              return (
+                <button
+                  key={topic.id}
+                  onClick={() => onSelectTopic(topic.id)}
+                  className="w-full text-left rounded-xl px-4 py-3.5 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.98] transition-all"
+                  style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[14px] font-semibold text-white leading-snug">{topic.title}</p>
+                    <p className="text-[10px] mt-0.5 font-semibold tracking-wide uppercase" style={{ color: hasVideos ? color : "rgba(255,255,255,0.30)" }}>
+                      {hasVideos ? `${topic.videoCount} video${topic.videoCount !== 1 ? "s" : ""} · Start watching` : "Coming soon · Browse section"}
+                    </p>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" className="flex-shrink-0" style={{ opacity: 0.8 }}>
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 pt-2 pb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+          <button
+            onClick={onSeeAll}
+            className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
+          >
+            See the full library
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Fundamentals Detail View ─────────────────────────────────────────────────
+
+function FundamentalsDetailView({
+  section,
+  onBack,
+  onPlayVideo,
+  focusTopicId,
+}: {
+  section: FundamentalsSection;
+  onBack: () => void;
+  onPlayVideo: (id: string, title: string) => void;
+  focusTopicId?: string;
+}) {
+  const color = CATEGORY_COLORS[section.category];
+  const filtered = section.topics;
+
+  useEffect(() => {
+    if (!focusTopicId) return;
+    const el = document.getElementById(`topic-${focusTopicId}`);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [focusTopicId]);
+
+  return (
+    <div className="min-h-screen" style={{ background: BG_ROOT }}>
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <BackArrow onClick={onBack} />
+        <div className="flex items-center gap-3 mt-3">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}20` }}>
+            <span className="block w-3 h-3 rounded-full" style={{ background: color, boxShadow: `0 0 10px ${color}66` }} />
+          </div>
+          <div>
+            <p className="text-[9px] font-black tracking-widest uppercase" style={{ color }}>
+              Fundamentals of the Faith
+            </p>
+            <h1 className="text-[18px] font-bold text-white">{section.category}</h1>
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 pt-4 pb-24">
+        {/* Topics */}
+        <div className="flex flex-col gap-2">
+          {filtered.map((topic) => {
+            const focused = topic.id === focusTopicId;
+            const hasVideos = topic.videoCount > 0;
+            return (
+              <div
+                key={topic.id}
+                id={`topic-${topic.id}`}
+                onClick={() => hasVideos && topic.featuredVideoId && onPlayVideo(topic.featuredVideoId, topic.title)}
+                className={`rounded-xl px-4 py-3.5 transition-all ${hasVideos ? "cursor-pointer active:scale-[0.98]" : ""}`}
+                style={{
+                  background: focused ? `${color}14` : BG_CARD,
+                  border: focused ? `1px solid ${color}66` : `1px solid ${BD_CARD}`,
+                  boxShadow: focused ? `0 0 0 1px ${color}33` : undefined,
+                }}
+              >
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-[14px] font-semibold text-white leading-snug">{topic.title}</p>
+                  {hasVideos ? (
+                    <span
+                      className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: `${color}18`, color }}
+                    >
+                      {topic.videoCount} video{topic.videoCount !== 1 ? "s" : ""}
+                    </span>
+                  ) : (
+                    <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.32)" }}>
+                      Coming soon
+                    </span>
+                  )}
                 </div>
               </div>
-            </a>
-          </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
 
-          {/* Title & meta */}
-          <div className="px-4 mb-4">
-            <h1 className="text-lg font-black text-white leading-tight mb-2">{selected.title}</h1>
-            <div className="flex items-center gap-2 flex-wrap mb-1">
-              <Stars rating={selected.rating} />
-              <span className="text-xs text-white/30">({selected.reviewCount})</span>
-              <span className="text-white/15">•</span>
-              <span className="text-xs text-white/50">{selected.speaker}</span>
-              {selected.duration && (
-                <>
-                  <span className="text-white/15">•</span>
-                  <span className="text-xs text-white/40">{selected.duration}</span>
-                </>
-              )}
-            </div>
-            {selected.series && (
-              <p className="text-[11px] text-violet-400 font-bold">{selected.series}</p>
-            )}
-          </div>
+// ─── Archive & Community List Views ───────────────────────────────────────────
 
-          {/* Action buttons */}
-          <div className="flex gap-2.5 px-4 mb-5">
-            <a
-              href={`https://www.youtube.com/watch?v=${selected.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-3 rounded-xl bg-violet-600 text-white text-sm font-bold flex items-center justify-center gap-2 active:bg-violet-700 transition-colors shadow-lg shadow-violet-900/30"
-            >
-              <span>▶</span> {t(lang, "videos_watch_now")}
-            </a>
-            <button
-              onClick={() => toggleWatchlist(selected.id)}
-              className={`px-4 py-3 rounded-xl text-sm font-bold flex items-center gap-1.5 border transition-all ${
-                isInWatchlist
-                  ? "bg-white/10 border-white/20 text-white"
-                  : "bg-white/[0.05] border-white/10 text-white/55 active:bg-white/10"
-              }`}
-            >
-              <span>{isInWatchlist ? "✓" : "+"}</span>
-              <span>{t(lang, "videos_add_watchlist")}</span>
-            </button>
-            {/* Save to Collection */}
-            <button
-              onClick={() => setBookmarkTarget(selected)}
-              className="w-11 h-11 flex-shrink-0 rounded-xl flex items-center justify-center border transition-all active:scale-95"
-              style={
-                isAnySaved(`video::${selected.id}`)
-                  ? { backgroundColor: "rgba(236,72,153,0.18)", borderColor: "rgba(236,72,153,0.4)", color: "#ec4899" }
-                  : { backgroundColor: "rgba(255,255,255,0.05)", borderColor: "rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.45)" }
-              }
-            >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill={isAnySaved(`video::${selected.id}`) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
-              </svg>
-            </button>
-          </div>
+function VideoListView({
+  title,
+  videos,
+  onBack,
+  onPlay,
+  showSearch = true,
+  showChurch = false,
+}: {
+  title: string;
+  videos: VideoEntry[];
+  onBack: () => void;
+  onPlay: (id: string, title: string) => void;
+  showSearch?: boolean;
+  showChurch?: boolean;
+}) {
+  const [q, setQ] = useState("");
+  const filtered = videos.filter(
+    (v) =>
+      !q ||
+      v.title.toLowerCase().includes(q.toLowerCase()) ||
+      v.speaker.toLowerCase().includes(q.toLowerCase()) ||
+      (v.church ?? "").toLowerCase().includes(q.toLowerCase())
+  );
 
-          {/* Tabs */}
-          <div className="flex border-b border-white/[0.07] px-4 mb-0 gap-0">
-            {(["info","chapters","notes","reviews"] as const).map((tab) => (
+  return (
+    <div className="min-h-screen" style={{ background: BG_ROOT }}>
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <BackArrow onClick={onBack} />
+        <h1 className="text-[18px] font-bold text-white mt-3">{title}</h1>
+        {showSearch && (
+          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round">
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              className="flex-1 bg-transparent text-[13px] text-white placeholder-white/30 outline-none"
+              placeholder="Search videos…"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Grid */}
+      <div className="px-4 pt-4 pb-24">
+        <div className="grid grid-cols-2 gap-3">
+          {filtered.map((v) => (
+            <div key={v.id} className="rounded-xl overflow-hidden" style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-3 py-2.5 text-xs font-bold capitalize transition-colors ${
-                  activeTab === tab
-                    ? "text-white border-b-2 border-violet-500 -mb-px"
-                    : "text-white/35 hover:text-white/55"
-                }`}
+                onClick={() => onPlay(v.id, v.title)}
+                className="w-full text-left active:scale-[0.97] transition-all"
               >
-                {t(lang, `videos_tab_${tab}` as import("../lib/i18n").TranslationKey)}
+                <div className="relative" style={{ aspectRatio: "16/9" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ytThumb(v.id, "mq")} alt={v.title} className="w-full h-full object-cover"/>
+                  <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.22)" }}>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="white"><polygon points="5,3 19,12 5,21"/></svg>
+                    </div>
+                  </div>
+                  {v.duration && (
+                    <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(0,0,0,0.75)", color: "rgba(255,255,255,0.85)" }}>
+                      {v.duration}
+                    </span>
+                  )}
+                </div>
+                <div className="p-2.5">
+                  <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{v.speaker}</p>
+                  {showChurch && v.church && (
+                    <p className="text-[9px] mb-0.5 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{v.church}</p>
+                  )}
+                  <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{v.title}</p>
+                  {v.datePublished && (
+                    <p className="text-[9px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+                      {new Date(v.datePublished).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                    </p>
+                  )}
+                </div>
+              </button>
+            </div>
+          ))}
+        </div>
+        {filtered.length === 0 && (
+          <p className="text-center text-white/30 text-[14px] mt-12">No videos found.</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Shorts grid view (vertical 9:16) ──────────────────────────────────────────
+
+function ShortsGridView({
+  videos,
+  onBack,
+  onPlay,
+}: {
+  videos: VideoEntry[];
+  onBack: () => void;
+  onPlay: (id: string, title: string, isShort: boolean) => void;
+}) {
+  return (
+    <div className="min-h-screen" style={{ background: BG_ROOT }}>
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <BackArrow onClick={onBack} />
+        <h1 className="text-[18px] font-bold text-white mt-3">Short Videos</h1>
+        <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+          Quick vertical teachings, made for your phone
+        </p>
+      </div>
+
+      <div className="px-4 pt-4 pb-24">
+        {videos.length > 0 ? (
+          <div className="grid grid-cols-2 gap-3">
+            {videos.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => onPlay(v.id, v.title, true)}
+                className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all relative"
+                style={{ background: "#0d0d18", border: `1px solid ${BD_CARD}` }}
+              >
+                <div className="relative" style={{ aspectRatio: "9/16" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={ytThumb(v.id, "hq")} alt={v.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.10) 45%, rgba(8,9,15,0.05) 100%)" }} />
+                  <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.92)", color: "#08090f" }}>SHORT</span>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.25)" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 p-3">
+                    <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{v.speaker}</p>
+                    <p className="text-[12px] font-semibold text-white leading-tight line-clamp-2">{v.title}</p>
+                  </div>
+                </div>
               </button>
             ))}
           </div>
+        ) : (
+          <p className="text-center text-white/30 text-[14px] mt-12">No shorts yet — content in progress.</p>
+        )}
+      </div>
+    </div>
+  );
+}
 
-          {/* Tab content */}
-          <div className="px-4 pt-4 pb-2">
-            {activeTab === "info" && (
-              <div>
-                <p className="text-sm text-white/65 leading-relaxed mb-4">{selected.description}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {selected.tags.map((tag) => (
-                    <span key={tag} className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/[0.05] border border-white/[0.08] text-white/45">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+// ─── Main Page ─────────────────────────────────────────────────────────────────
 
-            {activeTab === "chapters" && (
-              <div>
-                {["Introduction", "Main Exposition", "Application", "Conclusion"].map((ch, i) => (
-                  <div key={i} className="flex items-center gap-3 py-3 border-b border-white/[0.05]">
-                    <span className="w-7 h-7 rounded-full bg-white/[0.06] flex items-center justify-center text-[11px] text-white/40 font-bold flex-shrink-0">{i + 1}</span>
-                    <div className="flex-1">
-                      <p className="text-xs font-bold text-white/80">{ch}</p>
-                    </div>
-                    <span className="text-[10px] text-white/25 font-mono">{["0:00","8:30","22:15","29:40"][i]}</span>
-                  </div>
-                ))}
-                <p className="text-[10px] text-white/20 text-center pt-3">{t(lang, "videos_chapters_approx")}</p>
-              </div>
-            )}
+type Screen =
+  | { id: "home" }
+  | { id: "archive" }
+  | { id: "short" }
+  | { id: "community" }
+  | { id: "testimonies" }
+  | { id: "fundamentals-home" }
+  | { id: "fundamentals-detail"; section: FundamentalsSection; focusTopicId?: string };
 
-            {activeTab === "notes" && (
-              <div className="py-8 text-center">
-                <p className="text-3xl mb-2">📝</p>
-                <p className="text-sm font-bold text-white/40">{t(lang, "videos_personal_notes")}</p>
-                <p className="text-xs text-white/25 mt-1 max-w-xs mx-auto">{t(lang, "videos_notes_desc")}</p>
-                <p className="text-[10px] text-white/20 mt-3">{t(lang, "videos_coming_soon")}</p>
-              </div>
-            )}
+export default function VideosPage() {
+  const { lang } = useLanguage();
+  const [screen, setScreen] = useState<Screen>({ id: "home" });
+  const [player, setPlayer] = useState<{ videoId: string; title: string; isShort?: boolean } | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
+  const [sheetSection, setSheetSection] = useState<FundamentalsSection | null>(null);
+  const [history, setHistory] = useState<WatchItem[]>([]);
+  const [askOpen, setAskOpen] = useState(false);
 
-            {activeTab === "reviews" && (
-              <div>
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-white/[0.07]">
-                  <div className="text-center">
-                    <p className="text-4xl font-black text-white">{selected.rating.toFixed(1)}</p>
-                    <p className="text-amber-400 text-sm">{"★".repeat(Math.round(selected.rating))}</p>
-                    <p className="text-[10px] text-white/30">{selected.reviewCount} {t(lang, "videos_reviews")}</p>
-                  </div>
-                </div>
-                {reviews.map((r, i) => (
-                  <div key={i} className="py-3 border-b border-white/[0.05]">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-xs font-bold text-white/70">{r.name}</p>
-                      <span className="text-amber-400 text-xs">{"★".repeat(r.stars)}</span>
-                    </div>
-                    <p className="text-xs text-white/45 leading-relaxed">{r.text}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
+  useEffect(() => { setHistory(loadWatchHistory()); }, []);
 
-          {/* More from this Series */}
-          {seriesVideos.length > 0 && (
-            <section className="mt-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_more_series")}</p>
-              <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
-                {seriesVideos.map((v) => (
-                  <VideoCard key={v.id} video={v} onClick={() => openVideo(v)} />
-                ))}
-              </div>
-            </section>
-          )}
+  const go = (s: Screen) => { setScreen(s); window.scrollTo(0, 0); };
+  const playVideo = useCallback((videoId: string, title: string, isShort = false, speaker?: string) => {
+    setPlayer({ videoId, title, isShort });
+    recordWatch({ videoId, title, isShort, speaker, ts: Date.now() });
+    setHistory(loadWatchHistory());
+  }, []);
 
-          {/* You may also like */}
-          {relatedVideos.length > 0 && (
-            <section className="mt-5">
-              <p className="text-[10px] font-black tracking-widest text-white/30 uppercase px-4 mb-3">{t(lang, "videos_also_like")}</p>
-              <div className="flex gap-3 px-4 overflow-x-auto scrollbar-none pb-1">
-                {relatedVideos.map((v) => (
-                  <VideoCard key={v.id} video={v} onClick={() => openVideo(v)} />
-                ))}
-              </div>
-            </section>
-          )}
+  // Filtered home results
+  const allVideos = [...(CURRENT_FEATURED ? [CURRENT_FEATURED] : []), ...ARCHIVE_VIDEOS, ...SHORT_VIDEOS, ...COMMUNITY_VIDEOS, ...TESTIMONIES_VIDEOS];
+  const searchResults = searchQuery
+    ? allVideos.filter(
+        (v) =>
+          v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          v.speaker.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : [];
 
-        </div>
-      )}
+  // ── Sub-screen renders ────────────────────────────────────────────────────────
 
-      {/* Bookmark / Save-to-Collection modal */}
-      {bookmarkTarget && (
-        <BookmarkModal
-          item={{
-            id: `video::${bookmarkTarget.id}`,
-            type: "video",
-            title: bookmarkTarget.title,
-            subtitle: bookmarkTarget.speaker,
-            preview: bookmarkTarget.description.slice(0, 120),
+  if (screen.id === "archive") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <VideoListView
+          title="Featured Video Archive"
+          videos={ARCHIVE_VIDEOS}
+          onBack={() => go({ id: "home" })}
+          onPlay={playVideo}
+          showChurch
+        />
+      </>
+    );
+  }
+
+  if (screen.id === "short") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <ShortsGridView
+          videos={ALL_SHORTS}
+          onBack={() => go({ id: "home" })}
+          onPlay={playVideo}
+        />
+      </>
+    );
+  }
+
+  if (screen.id === "community") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <VideoListView
+          title="Community Videos"
+          videos={COMMUNITY_VIDEOS}
+          onBack={() => go({ id: "home" })}
+          onPlay={playVideo}
+          showChurch
+        />
+      </>
+    );
+  }
+
+  if (screen.id === "testimonies") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <VideoListView
+          title="Testimonies"
+          videos={TESTIMONIES_VIDEOS}
+          onBack={() => go({ id: "home" })}
+          onPlay={playVideo}
+          showChurch
+        />
+      </>
+    );
+  }
+
+  if (screen.id === "fundamentals-home") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <FundamentalsHomeView
+          onBack={() => go({ id: "home" })}
+          onSelectCategory={(s) => go({ id: "fundamentals-detail", section: s })}
+          onPlay={playVideo}
+        />
+      </>
+    );
+  }
+
+  if (screen.id === "fundamentals-detail") {
+    return (
+      <>
+        {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
+        <FundamentalsDetailView
+          section={screen.section}
+          focusTopicId={screen.focusTopicId}
+          onBack={() => go({ id: "fundamentals-home" })}
+          onPlayVideo={playVideo}
+        />
+      </>
+    );
+  }
+
+  // ── HOME SCREEN ───────────────────────────────────────────────────────────────
+
+  return (
+    <>
+      {player && <VideoPlayerModal videoId={player.videoId} title={player.title} onClose={() => setPlayer(null)} />}
+      {askOpen && <QuestionFormModal onClose={() => setAskOpen(false)} />}
+      {sheetSection && (
+        <CategorySheet
+          section={sheetSection}
+          onClose={() => setSheetSection(null)}
+          onSeeAll={() => { setSheetSection(null); go({ id: "fundamentals-home" }); }}
+          onSelectTopic={(topicId) => {
+            const s = sheetSection;
+            setSheetSection(null);
+            go({ id: "fundamentals-detail", section: s, focusTopicId: topicId });
           }}
-          label={`${bookmarkTarget.speaker} — ${bookmarkTarget.title}`}
-          onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
         />
       )}
 
+      <div className="min-h-screen pb-24 text-white" style={{ background: BG_ROOT }}>
+
+        {/* ── Header ──────────────────────────────────────────────────────────── */}
+        <div
+          className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3"
+          style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <div>
+            <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: AC }}>
+              Tulip Bible App
+            </p>
+            <h1 className="text-[22px] font-bold text-white leading-none">Video Library</h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/videos/submit"
+              className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-[0.97]"
+              style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Submit
+            </Link>
+            <button
+              onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
+              className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
+              style={{ background: showSearch ? AC_BG : "rgba(255,255,255,0.06)", border: showSearch ? `1px solid ${AC_BORDER}` : "1px solid transparent" }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={showSearch ? AC : "rgba(255,255,255,0.55)"} strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* ── Search bar ──────────────────────────────────────────────────────── */}
+        {showSearch && (
+          <div className="px-4 py-3">
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                autoFocus
+                className="flex-1 bg-transparent text-[14px] text-white placeholder-white/30 outline-none"
+                placeholder="Search videos, speakers…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-white/30 hover:text-white/60">✕</button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ── Search results ───────────────────────────────────────────────────── */}
+        {searchQuery && (
+          <div className="px-4 pb-6">
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.30)" }}>
+              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              {searchResults.map((v) => (
+                <VideoCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+              ))}
+            </div>
+            {searchResults.length === 0 && (
+              <p className="text-center text-white/30 text-[14px] mt-8">No results for &ldquo;{searchQuery}&rdquo;</p>
+            )}
+          </div>
+        )}
+
+        {!searchQuery && (
+          <>
+            {/* ── Cinematic hero ────────────────────────────────────────────── */}
+            {CURRENT_FEATURED ? (
+              <div className="pt-4">
+                <SectionHeader label="This Week" title="Featured Video" color={AC} />
+                <FeaturedVideoBanner
+                  video={CURRENT_FEATURED}
+                  onWatch={() => playVideo(CURRENT_FEATURED.id, CURRENT_FEATURED.title)}
+                />
+              </div>
+            ) : (
+              <ComingSoonBanners onAsk={() => setAskOpen(true)} />
+            )}
+
+            {/* ── Continue Watching (only when there's history) ─────────────── */}
+            {history.length > 0 && (
+              <section className="mb-8">
+                <SectionHeader label="Pick up where you left off" title="Continue Watching" color={AC} />
+                <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+                  {history.map((item) => (
+                    <ContinueCard
+                      key={item.videoId}
+                      item={item}
+                      onClick={() => playVideo(item.videoId, item.title, item.isShort, item.speaker)}
+                    />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Short Videos (vertical 9:16, always present) ───────────────── */}
+            <section className="mb-7">
+              <SectionHeader
+                label="Quick Teachings · Made for your phone"
+                title="Short Videos"
+                onViewAll={() => go({ id: "short" })}
+                color="#c9a961"
+              />
+              {ALL_SHORTS.length > 0 ? (
+                <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+                  {ALL_SHORTS.map((v) => (
+                    <ShortCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, true, v.speaker)} />
+                  ))}
+                </div>
+              ) : (
+                <div className="px-4">
+                  <div className="rounded-2xl px-4 py-6 text-center" style={{ background: BG_CARD, border: `1px dashed ${BD_CARD}` }}>
+                    <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                      Short vertical teachings are coming soon.
+                    </p>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            {/* ── Featured Videos (landscape grid, 231-style) ────────────────── */}
+            <section className="mb-8 px-4">
+              <h3 className="text-[16px] font-bold text-white mb-3">Featured Videos</h3>
+              {ARCHIVE_VIDEOS.length > 0 ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {ARCHIVE_VIDEOS.map((v) => (
+                    <button
+                      key={v.id}
+                      onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)}
+                      className="text-left active:scale-[0.97] transition-all"
+                    >
+                      <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={ytThumb(v.id, "mq")} alt={v.title} className="w-full h-full object-cover" />
+                        {v.isFeatured && (
+                          <span className="absolute top-1.5 left-1.5 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: AC, color: "#08090f" }}>NEW</span>
+                        )}
+                      </div>
+                      <p className="text-[12px] font-semibold text-white/85 leading-tight line-clamp-2 mt-2">{v.title}</p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="rounded-2xl px-4 py-8 text-center" style={{ background: BG_CARD, border: `1px dashed ${BD_CARD}` }}>
+                  <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                    Featured teaching videos are coming soon.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            {/* ── Browse by Topic ───────────────────────────────────────────── */}
+            <section className="mb-8">
+              <div className="px-4 mb-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(201,169,97,0.35))" }} />
+                  <p className="text-[9px] font-black tracking-[0.22em] uppercase" style={{ color: AC }}>
+                    Fundamentals of the Faith
+                  </p>
+                  <span className="h-px flex-1" style={{ background: "linear-gradient(to left, transparent, rgba(201,169,97,0.35))" }} />
+                </div>
+                <h3 className="text-[18px] font-bold text-white text-center">Browse by Topic</h3>
+              </div>
+              <div className="px-4 grid grid-cols-2 gap-3">
+                {FUNDAMENTALS.map((section) => (
+                  <TopicCategoryCard
+                    key={section.category}
+                    section={section}
+                    onSelect={(s) => setSheetSection(s)}
+                  />
+                ))}
+              </div>
+              <div className="px-4 mt-3">
+                <button
+                  onClick={() => go({ id: "fundamentals-home" })}
+                  className="w-full py-3 rounded-xl text-[12px] font-bold tracking-wide transition-all active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.08)" }}
+                >
+                  See the full library
+                </button>
+              </div>
+            </section>
+
+            {/* ── Community Videos (only when content exists) ────────────────── */}
+            {COMMUNITY_VIDEOS.length > 0 && (
+              <section className="mb-7">
+                <SectionHeader
+                  label="Approved Submissions"
+                  title="Community Videos"
+                  onViewAll={() => go({ id: "community" })}
+                  color="#10b981"
+                />
+                <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+                  {COMMUNITY_VIDEOS.map((v) => (
+                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Testimonies (only when content exists) ────────────────────── */}
+            {TESTIMONIES_VIDEOS.length > 0 && (
+              <section className="mb-7">
+                <SectionHeader
+                  label="Stories of Grace"
+                  title="Testimonies"
+                  onViewAll={() => go({ id: "testimonies" })}
+                  color="#c9a961"
+                />
+                <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
+                  {TESTIMONIES_VIDEOS.map((v) => (
+                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {/* ── Submit CTA (always visible) ───────────────────────────────── */}
+            <section className="mb-7 px-4">
+              <Link
+                href="/videos/submit"
+                className="flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-[0.98]"
+                style={{ background: "rgba(201,169,97,0.07)", border: `1px solid ${AC_BORDER}` }}
+              >
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: AC_BG }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2" strokeLinecap="round">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                </div>
+                <div>
+                  <p className="text-[13px] font-bold" style={{ color: AC }}>Submit a Video</p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
+                    Are you a pastor or teacher? Share biblical teaching with believers worldwide.
+                  </p>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" className="ml-auto flex-shrink-0">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </Link>
+            </section>
+
+            {/* ── About banner ────────────────────────────────────────────────── */}
+            <div className="mx-4 rounded-2xl p-5 mb-4" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
+              <p className="text-[9px] font-black tracking-widest uppercase mb-2" style={{ color: AC }}>
+                Our Video Philosophy
+              </p>
+              <p className="text-[13px] text-white/70 leading-relaxed" style={{ fontFamily: SERIF }}>
+                All approved videos are published through the official Tulip Bible App YouTube channel and embedded here, keeping the experience native to the app while maintaining doctrinal accountability.
+              </p>
+              <a
+                href="https://www.youtube.com/@TulipBibleApp"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 flex items-center gap-2 text-[12px] font-bold transition-colors"
+                style={{ color: AC }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                Visit our YouTube channel
+              </a>
+            </div>
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
+// ─── Fundamentals Home View ────────────────────────────────────────────────────
+
+function FundamentalsHomeView({
+  onBack,
+  onSelectCategory,
+  onPlay,
+}: {
+  onBack: () => void;
+  onSelectCategory: (s: FundamentalsSection) => void;
+  onPlay: (id: string, title: string) => void;
+}) {
+  const totalTopics = FUNDAMENTALS.reduce((a, s) => a + s.topics.length, 0);
+
+  return (
+    <div className="min-h-screen pb-24" style={{ background: BG_ROOT }}>
+      {/* Header */}
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <BackArrow onClick={onBack} />
+        <div className="mt-3">
+          <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: AC }}>Educational Library</p>
+          <h1 className="text-[20px] font-bold text-white">Fundamentals of the Faith</h1>
+        </div>
+      </div>
+
+      <div className="px-4 pt-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3 mb-6">
+          {[
+            { label: "Categories", value: FUNDAMENTALS.length.toString() },
+            { label: "Topics", value: totalTopics.toString() },
+          ].map((s) => (
+            <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
+              <p className="text-[20px] font-bold text-white">{s.value}</p>
+              <p className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Category sections */}
+        {FUNDAMENTALS.map((section) => {
+          const color = CATEGORY_COLORS[section.category];
+
+          return (
+            <div key={section.category} className="mb-4">
+              <button
+                onClick={() => onSelectCategory(section)}
+                className="w-full rounded-2xl p-4 text-left transition-all active:scale-[0.98]"
+                style={{ background: `linear-gradient(135deg, ${color}12, ${color}04)`, border: `1px solid ${color}22` }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}20` }}>
+                      <span className="block w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}66` }} />
+                    </div>
+                    <div>
+                      <p className="text-[15px] font-bold text-white">{section.category}</p>
+                      <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                        {section.topics.length} topics
+                      </p>
+                    </div>
+                  </div>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="2" strokeLinecap="round">
+                    <path d="M9 18l6-6-6-6"/>
+                  </svg>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {section.topics.slice(0, 4).map((t) => (
+                    <span key={t.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)" }}>
+                      {t.title}
+                    </span>
+                  ))}
+                  {section.topics.length > 4 && (
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: "rgba(255,255,255,0.25)" }}>
+                      +{section.topics.length - 4} more
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
+          );
+        })}
+
+        {/* Submit CTA */}
+        <div
+          className="rounded-2xl p-5 mt-2"
+          style={{ background: "rgba(201,169,97,0.06)", border: `1px solid ${AC_BORDER}` }}
+        >
+          <p className="text-[13px] font-bold text-white mb-1">Help Build the Library</p>
+          <p className="text-[12px] mb-3" style={{ color: "rgba(255,255,255,0.45)" }}>
+            Are you a pastor, teacher, or ministry? Submit a video for any of these topics for review.
+          </p>
+          <Link
+            href="/videos/submit"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
+            style={{ background: AC, color: "#08090f" }}
+          >
+            Submit a Video →
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }
