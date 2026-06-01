@@ -10,6 +10,7 @@ export interface GraceGemsArticle {
   url: string;
   summary: string;
   tags: string[];
+  image?: string;    // cover image path under /public (e.g. /covers/portraits/sibbes.jpg)
   content?: string;  // full article text stored locally — no network needed
 }
 
@@ -22,6 +23,7 @@ export const GRACE_GEMS_ARTICLES: GraceGemsArticle[] = [
     url: "https://www.gracegems.org/Sibbes/means_to_make_grace_victorious.htm",
     summary: "Practical rules for ensuring Christ's grace triumphs — right judgment, tender conscience, walking in step with the Spirit — and warnings against sinful ignorance.",
     tags: ["Sanctification", "Grace", "Practical Godliness"],
+    image: "/covers/portraits/sibbes.jpg",
     content: `As to directions on how we are to conduct ourselves so that the judgment of Christ in us may indeed be victorious, we must know that, though Christ has undertaken this victory, yet he accomplishes it by training us up to fight his battles. He overcomes in us by making us 'wise unto salvation' (1 Timothy 3:15); and, in the measure that we believe Christ will conquer, in that measure we will endeavour by his grace that we may conquer, for faith is an obedient and a wise grace. Christ makes us wise to ponder and weigh things, and to rank and order them accordingly, so that we may make the fitter choice of what is best. Some rules to help us in judging are these:
 
 RULES FOR RIGHT JUDGMENT

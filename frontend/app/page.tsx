@@ -340,8 +340,8 @@ function dayOfYearIndex(): number {
 // ─── Grace Gems Article Reader ────────────────────────────────────────────────
 
 function GgArticleReader({
-  title, author, content: localContent, onClose,
-}: { title: string; author: string; url?: string; content?: string; onClose: () => void }) {
+  title, author, content: localContent, image, onClose,
+}: { title: string; author: string; url?: string; content?: string; image?: string; onClose: () => void }) {
   const content = localContent ?? "";
   const status: "ready" | "fallback" = content.length > 0 ? "ready" : "fallback";
   const artTitle = title;
@@ -381,6 +381,12 @@ function GgArticleReader({
       <div className="flex-1 overflow-y-auto overscroll-contain" style={{ minHeight: 0 }}>
         {status === "ready" && (
           <div className="px-5 pt-6 pb-16">
+            {image && (
+              <div className="rounded-2xl overflow-hidden mb-5" style={{ border: "1px solid rgba(201,169,97,0.22)" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={image} alt={`Portrait — ${author}`} className="w-full object-cover" style={{ maxHeight: 280 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
+              </div>
+            )}
             <h1 className="text-[22px] font-bold leading-snug mb-1" style={{ color: "#c9a961", fontFamily: "'Iowan Old Style','Georgia',serif" }}>
               {artTitle || title}
             </h1>
@@ -963,7 +969,7 @@ export default function Home() {
   const [contentLoading, setContentLoading] = useState(false);
 
   // In-app Grace Gems reader
-  const [ggReader, setGgReader] = useState<{ title: string; author: string; url: string; content?: string } | null>(null);
+  const [ggReader, setGgReader] = useState<{ title: string; author: string; url: string; content?: string; image?: string } | null>(null);
 
   // Theme detection — drives background glow color
   const [theme, setTheme] = useState<string>(() => {
@@ -1326,6 +1332,7 @@ export default function Home() {
           title={ggReader.title}
           author={ggReader.author}
           content={ggReader.content}
+          image={ggReader.image}
           onClose={() => setGgReader(null)}
         />
       )}
@@ -1479,10 +1486,26 @@ export default function Home() {
               const art = getRotatingArticle();
               return (
                 <button
-                  onClick={() => setGgReader({ title: art.title, author: art.author, url: art.url, content: art.content })}
+                  onClick={() => setGgReader({ title: art.title, author: art.author, url: art.url, content: art.content, image: art.image })}
                   className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
                   style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.18) 0%, rgba(10,12,20,0.97) 60%)", border: "1px solid rgba(201,169,97,0.28)" }}
                 >
+                  {/* Cover image (when provided) — hides itself if the file is missing */}
+                  {art.image && (
+                    <>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={art.image}
+                        alt=""
+                        className="absolute inset-0 w-full h-full object-cover object-top"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                      <div
+                        className="absolute inset-0"
+                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.08) 100%)" }}
+                      />
+                    </>
+                  )}
                   {/* Book icon */}
                   <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
