@@ -995,27 +995,52 @@ function VerseMemorizationWidget({
 
           {/* CTA row */}
           {!isCommitted ? (
-            <button
-              onClick={(e) => { e.stopPropagation(); commitVerse(activeVerse.ref); }}
-              className="w-full py-2.5 rounded-xl text-[12.5px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-              style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", color: "#0e1018" }}
-            >
-              {lang === "es" ? "Memorizar este versículo" : "Memorize this verse"}
-            </button>
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); commitVerse(activeVerse.ref); }}
+                className="w-full py-2.5 rounded-xl text-[12.5px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", color: "#0e1018" }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
+                {lang === "es" ? "Comprometerme a memorizarlo" : "Commit to memorize this verse"}
+              </button>
+              <p className="text-[10px] text-white/35 text-center mt-2 leading-relaxed">
+                {lang === "es"
+                  ? "Se mantiene fijo el tiempo que necesites. Mañana habrá otro versículo si no te comprometes."
+                  : "It stays pinned as long as you need. A new verse appears daily until you commit to one."}
+              </p>
+            </>
           ) : (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-1 rounded-full bg-white/10 overflow-hidden">
+            <div className="flex flex-col gap-2.5">
+              <div className="flex items-center justify-between">
+                <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: accentColor }}>
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-4 1-2 2 1 4-3-1-4 4-1-4-4-1 4-4-1-3 4 1 2-2 1-4z"/></svg>
+                  {lang === "es" ? "Fijado hasta que avances" : "Pinned until you move on"}
+                </span>
+                <span className="text-[10px] font-bold text-white/35">{memState.mastered.length}/{MEM_VERSES.length}</span>
+              </div>
+              <div className="h-1 rounded-full bg-white/10 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${(memState.mastered.length / MEM_VERSES.length) * 100}%`, background: accentColor }}
                 />
               </div>
-              <span className="text-[10px] font-bold text-white/35 flex-shrink-0">
-                {memState.mastered.length}/{MEM_VERSES.length}
-              </span>
-              <span className="text-[11px] font-bold flex-shrink-0" style={{ color: accentColor }}>
-                {lang === "es" ? "Continuar →" : "Continue →"}
-              </span>
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => { e.stopPropagation(); setFullScreen(true); }}
+                  className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
+                  style={{ background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}3a` }}
+                >
+                  {lang === "es" ? "Practicar →" : "Practice →"}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); releaseVerse(); }}
+                  className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}
+                >
+                  {lang === "es" ? "Pasar al siguiente" : "Move to next verse"}
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -1260,7 +1285,7 @@ export default function Home() {
               </p>
             </div>
             <div className="px-5 py-4 max-h-[45vh] overflow-y-auto">
-              <p className="text-[9px] font-black uppercase tracking-[0.20em] text-white/30 mb-2">Church History</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.20em] text-white/30 mb-2">{lang === "es" ? "Historia de la Iglesia" : "Church History"}</p>
               <p className="text-[13px] text-white/65 leading-relaxed">{todayHV.history}</p>
             </div>
             <div className="px-5 pb-5">
@@ -1428,7 +1453,7 @@ export default function Home() {
         >
           <GeneratedBadgeLogo id={newBadgeIds[0]} family="streak" size={24} />
           <span className="text-[12px] font-bold" style={{ color: AC }}>
-            {newBadgeIds.map((id) => BADGES[id].label).join(", ")} unlocked!
+            {newBadgeIds.map((id) => BADGES[id].label).join(", ")} {lang === "es" ? "¡desbloqueado!" : "unlocked!"}
           </span>
         </div>
       )}
@@ -1516,7 +1541,7 @@ export default function Home() {
             <p className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(201,169,97,0.85)" }}>
               {todayHV.reference}
             </p>
-            <p className="text-[14px] font-bold text-white mt-0.5" style={heroCtaText ? { color: heroCtaText } : {}}>Read the full story</p>
+            <p className="text-[14px] font-bold text-white mt-0.5" style={heroCtaText ? { color: heroCtaText } : {}}>{lang === "es" ? "Leer la historia completa" : "Read the full story"}</p>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: AC }}>
             <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1526,7 +1551,7 @@ export default function Home() {
         {/* ── Continue section ─────────────────────────────────────────────── */}
         <section className="mt-9">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>Featured</h3>
+            <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Destacado" : "Featured"}</h3>
           </div>
 
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5" style={{ scrollbarWidth: "none" }}>
@@ -1558,9 +1583,9 @@ export default function Home() {
               </div>
               {/* Labels */}
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>Meditation</p>
+                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>{lang === "es" ? "Meditación" : "Meditation"}</p>
                 <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{featuredVideo.title}</p>
-                <p className="text-[10px] mt-1.5 text-white/55">Tap to watch</p>
+                <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Toca para ver" : "Tap to watch"}</p>
               </div>
             </button>
 
@@ -1597,7 +1622,7 @@ export default function Home() {
                     </svg>
                   </div>
                   <div className="relative z-10">
-                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>Article</p>
+                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>{lang === "es" ? "Artículo" : "Article"}</p>
                     <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{art.title}</p>
                     <p className="text-[9px] mt-1.5" style={{ color: "rgba(201,169,97,0.70)" }}>{art.author}</p>
                   </div>
@@ -1631,9 +1656,9 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(96,165,250,0.90)" }}>Library</p>
-                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">Free Books</p>
-                <p className="text-[10px] mt-1.5 text-white/55">Puritan classics</p>
+                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(96,165,250,0.90)" }}>{lang === "es" ? "Biblioteca" : "Library"}</p>
+                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Libros Gratis" : "Free Books"}</p>
+                <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Clásicos puritanos" : "Puritan classics"}</p>
               </div>
             </Link>
 
@@ -1665,9 +1690,9 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(196,181,253,0.90)" }}>History</p>
-                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">Historical Documents</p>
-                <p className="text-[10px] mt-1.5 text-white/55">Church history</p>
+                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(196,181,253,0.90)" }}>{lang === "es" ? "Historia" : "History"}</p>
+                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Documentos Históricos" : "Historical Documents"}</p>
+                <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Historia de la iglesia" : "Church history"}</p>
               </div>
             </Link>
 
@@ -1742,8 +1767,8 @@ export default function Home() {
         {/* ── Your streak ─────────────────────────────────────────────────── */}
         <section className="mt-9">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>Your streak</h3>
-            <p className="text-[12px] font-bold" style={{ color: AC }}>{streak} {streak === 1 ? "day" : "days"}</p>
+            <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Tu racha" : "Your streak"}</h3>
+            <p className="text-[12px] font-bold" style={{ color: AC }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
           </div>
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3 py-4 flex justify-between" style={isLight ? { borderColor: "rgba(28,20,9,0.10)", background: "rgba(28,20,9,0.04)" } : {}}>
             {dayLabels.map((d, i) => {
@@ -1781,7 +1806,7 @@ export default function Home() {
         {/* ── Badges showcase ───────────────────────────────────────────────── */}
         {(earnedBadgeIds.length > 0 || devotionalBadges.length > 0) && (
           <section className="mt-9">
-            <h3 className="text-[15px] font-bold text-white mb-3" style={sectionHdColor ? { color: sectionHdColor } : {}}>Badges</h3>
+            <h3 className="text-[15px] font-bold text-white mb-3" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Insignias" : "Badges"}</h3>
             <div className="grid grid-cols-5 gap-1.5">
               {earnedBadgeIds.map((id) => {
                 const badge = BADGES[id];

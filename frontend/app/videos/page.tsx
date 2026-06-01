@@ -557,25 +557,25 @@ function ComingSoonBanners({ onAsk }: { onAsk: () => void }) {
         Coming Soon
       </p>
 
-      {/* Hero banner — Testimonies */}
+      {/* Hero banner — Fundamentals (blue box) */}
       <div
         className="relative rounded-2xl overflow-hidden mb-3 flex flex-col justify-center"
-        style={{ minHeight: 132, background: "#11203a", border: `1px solid ${AC_BORDER}`, padding: "18px" }}
+        style={{ minHeight: 132, background: "#0d1b33", border: "1px solid rgba(59,130,246,0.40)", padding: "18px" }}
       >
-        <p className="text-[10px] font-black tracking-widest uppercase mb-1.5" style={{ color: AC }}>Stories of Grace</p>
-        <h2 className="text-[26px] font-bold text-white leading-[1.06]" style={{ fontFamily: SERIF }}>Testimonies</h2>
-        <span className="absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ color: AC, border: `1px solid ${AC_BORDER}` }}>SOON</span>
+        <p className="text-[10px] font-black tracking-widest uppercase mb-1.5" style={{ color: "#6ea8fe" }}>Series · Fundamentals of the Faith</p>
+        <h2 className="text-[26px] font-bold text-white leading-[1.06]" style={{ fontFamily: SERIF }}>Fundamentals</h2>
+        <span className="absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ color: "#6ea8fe", border: "1px solid rgba(59,130,246,0.45)" }}>SOON</span>
       </div>
 
       {/* Two stacked cards */}
       <div className="grid grid-cols-2 gap-3">
-        {/* Fundamentals */}
+        {/* Testimonies */}
         <div
           className="relative rounded-2xl overflow-hidden flex flex-col justify-end"
           style={{ minHeight: 104, background: "#1d1305", border: "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
         >
-          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Series</p>
-          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Fundamentals</h3>
+          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Stories of Grace</p>
+          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Testimonies</h3>
           <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: AC, border: `1px solid ${AC_BORDER}` }}>SOON</span>
         </div>
 
@@ -617,23 +617,28 @@ function QuestionFormModal({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[450] flex flex-col justify-end">
+    <div className="fixed inset-0 z-[450] flex flex-col items-center px-4 pt-14 overflow-y-auto">
       <button
         aria-label="Close"
         onClick={onClose}
-        className="absolute inset-0"
+        className="fixed inset-0"
         style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
       />
 
       <div
-        className="relative rounded-t-3xl overflow-hidden"
-        style={{ background: "#11131c", borderTop: `1px solid ${AC_BORDER}`, maxHeight: "90vh", animation: "sheetUp 0.28s cubic-bezier(0.22,1,0.36,1)" }}
+        className="relative w-full max-w-md rounded-2xl overflow-hidden"
+        style={{ background: "#11131c", border: `1px solid ${AC_BORDER}`, maxHeight: "88vh", animation: "sheetDrop 0.26s cubic-bezier(0.22,1,0.36,1)" }}
       >
-        <style>{`@keyframes sheetUp{from{transform:translateY(100%)}to{transform:translateY(0)}}`}</style>
+        <style>{`@keyframes sheetDrop{from{transform:translateY(-14px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
-        <div className="flex justify-center pt-3 pb-1">
-          <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
-        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close"
+          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full text-white/55 active:scale-90"
+          style={{ background: "rgba(255,255,255,0.06)" }}
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
 
         {submitted ? (
           <div className="px-6 pt-4 pb-10 text-center">
