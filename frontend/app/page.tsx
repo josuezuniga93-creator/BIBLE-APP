@@ -18,6 +18,8 @@ import {
 import { useLanguage } from "./lib/useLanguage";
 import { GeneratedBadgeLogo } from "./components/GeneratedArtwork";
 
+import { getRotatingArticle, daysUntilNextRotation } from "./lib/graceGemsArticles";
+
 // ─── Church History Verses ────────────────────────────────────────────────────
 
 interface HistoryVerse {
@@ -248,123 +250,61 @@ interface MemVerse {
   text: string;
   textEs: string;
   refEs: string;
-  theme: string;             // the attribute of God
+  theme: string;             // sanctification topic
   color: string;             // subtle indicator accent
+  context: string;           // brief background / why it matters
 }
 
 const MEM_VERSES: MemVerse[] = [
-  {
-    ref: "Isaiah 6:3",
-    refEs: "Isaías 6:3",
-    theme: "Holiness",
-    color: "#c9a961",
-    text: "Holy, holy, holy is the Lord of hosts; the whole earth is full of his glory!",
-    textEs: "Santo, santo, santo, Jehová de los ejércitos; toda la tierra está llena de su gloria.",
-  },
-  {
-    ref: "Psalm 115:3",
-    refEs: "Salmo 115:3",
-    theme: "Sovereignty",
-    color: "#d4a857",
-    text: "Our God is in the heavens; he does all that he pleases.",
-    textEs: "Nuestro Dios está en los cielos; todo lo que quiso ha hecho.",
-  },
-  {
-    ref: "1 John 4:8",
-    refEs: "1 Juan 4:8",
-    theme: "Love",
-    color: "#dca15a",
-    text: "Anyone who does not love does not know God, because God is love.",
-    textEs: "El que no ama, no ha conocido a Dios; porque Dios es amor.",
-  },
-  {
-    ref: "Lamentations 3:22–23",
-    refEs: "Lamentaciones 3:22–23",
-    theme: "Faithfulness",
-    color: "#caa45e",
-    text: "The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness.",
-    textEs: "Por la misericordia de Jehová no hemos sido consumidos, porque nunca decayeron sus misericordias. Nuevas son cada mañana; grande es tu fidelidad.",
-  },
-  {
-    ref: "Psalm 147:5",
-    refEs: "Salmo 147:5",
-    theme: "Omniscience",
-    color: "#c9a961",
-    text: "Great is our Lord, and abundant in power; his understanding is beyond measure.",
-    textEs: "Grande es el Señor nuestro, y de mucho poder; y su entendimiento es infinito.",
-  },
-  {
-    ref: "Jeremiah 32:17",
-    refEs: "Jeremías 32:17",
-    theme: "Omnipotence",
-    color: "#d6a652",
-    text: "Ah, Lord God! It is you who have made the heavens and the earth by your great power and by your outstretched arm! Nothing is too hard for you.",
-    textEs: "¡Oh Señor Jehová! He aquí que tú hiciste el cielo y la tierra con tu gran poder, y con tu brazo extendido; ni hay nada que sea difícil para ti.",
-  },
-  {
-    ref: "Psalm 139:7–8",
-    refEs: "Salmo 139:7–8",
-    theme: "Omnipresence",
-    color: "#cf9f56",
-    text: "Where shall I go from your Spirit? Or where shall I flee from your presence? If I ascend to heaven, you are there! If I make my bed in Sheol, you are there!",
-    textEs: "¿A dónde me iré de tu Espíritu? ¿Y a dónde huiré de tu presencia? Si subiere a los cielos, allí estás tú; y si en el Seol hiciere mi estrado, he aquí, allí tú estás.",
-  },
-  {
-    ref: "Malachi 3:6",
-    refEs: "Malaquías 3:6",
-    theme: "Immutability",
-    color: "#c9a961",
-    text: "For I the Lord do not change; therefore you, O children of Jacob, are not consumed.",
-    textEs: "Porque yo Jehová no cambio; por esto, hijos de Jacob, no habéis sido consumidos.",
-  },
-  {
-    ref: "Psalm 90:2",
-    refEs: "Salmo 90:2",
-    theme: "Eternality",
-    color: "#dca15a",
-    text: "Before the mountains were brought forth, or ever you had formed the earth and the world, from everlasting to everlasting you are God.",
-    textEs: "Antes que naciesen los montes y formases la tierra y el mundo, desde el siglo y hasta el siglo, tú eres Dios.",
-  },
-  {
-    ref: "Psalm 34:8",
-    refEs: "Salmo 34:8",
-    theme: "Goodness",
-    color: "#d4a857",
-    text: "Oh, taste and see that the Lord is good! Blessed is the man who takes refuge in him!",
-    textEs: "Gustad, y ved que es bueno Jehová; dichoso el hombre que confía en él.",
-  },
-  {
-    ref: "Exodus 34:6",
-    refEs: "Éxodo 34:6",
-    theme: "Mercy & Grace",
-    color: "#caa45e",
-    text: "The Lord, the Lord, a God merciful and gracious, slow to anger, and abounding in steadfast love and faithfulness.",
-    textEs: "¡Jehová! ¡Jehová! fuerte, misericordioso y piadoso; tardo para la ira, y grande en misericordia y verdad.",
-  },
-  {
-    ref: "Deuteronomy 32:4",
-    refEs: "Deuteronomio 32:4",
-    theme: "Justice",
-    color: "#cf9f56",
-    text: "The Rock, his work is perfect, for all his ways are justice. A God of faithfulness and without iniquity, just and upright is he.",
-    textEs: "Él es la Roca, cuya obra es perfecta, porque todos sus caminos son rectitud; Dios de verdad, y sin ninguna iniquidad en él; es justo y recto.",
-  },
-  {
-    ref: "Romans 11:33",
-    refEs: "Romanos 11:33",
-    theme: "Wisdom",
-    color: "#c9a961",
-    text: "Oh, the depth of the riches and wisdom and knowledge of God! How unsearchable are his judgments and how inscrutable his ways!",
-    textEs: "¡Oh profundidad de las riquezas de la sabiduría y de la ciencia de Dios! ¡Cuán insondables son sus juicios, e inescrutables sus caminos!",
-  },
-  {
-    ref: "Exodus 3:14",
-    refEs: "Éxodo 3:14",
-    theme: "Self-Existence",
-    color: "#d6a652",
-    text: "God said to Moses, “I am who I am.” And he said, “Say this to the people of Israel: ‘I am has sent me to you.’”",
-    textEs: "Y respondió Dios a Moisés: YO SOY EL QUE SOY. Y dijo: Así dirás a los hijos de Israel: YO SOY me envió a vosotros.",
-  },
+  { ref: "Psalm 119:11",        refEs: "Salmo 119:11",          theme: "Scripture & Sin",     color: "#c9a961", text: "I have stored up your word in my heart, that I might not sin against you.", textEs: "En mi corazón he guardado tus dichos, para no pecar contra ti.", context: "The psalmist's strategy against sin is not willpower but Scripture. Hiding God's Word in the heart means meditating on it until it shapes desires — so temptation meets truth before it meets the will." },
+  { ref: "John 17:17",          refEs: "Juan 17:17",            theme: "Sanctification",      color: "#d4a857", text: "Sanctify them in the truth; your word is truth.", textEs: "Santifícalos en tu verdad; tu palabra es verdad.", context: "Jesus prays this on the night of His arrest. Sanctification is not self-improvement but being set apart and shaped by divine truth. The Word is the instrument the Spirit uses to conform us to Christ." },
+  { ref: "John 17:19",          refEs: "Juan 17:19",            theme: "Christ Our Holiness", color: "#dca15a", text: "And for their sake I consecrate myself, that they also may be sanctified in truth.", textEs: "Y por ellos yo me santifico a mí mismo, para que también ellos sean santificados en la verdad.", context: "Jesus consecrates Himself to death so that His people would be holy. Our sanctification is rooted in His sacrifice — He is the source, not just the model, of our holiness." },
+  { ref: "Acts 26:18",          refEs: "Hechos 26:18",          theme: "Gospel & Holiness",   color: "#caa45e", text: "…that they may receive forgiveness of sins and a place among those who are sanctified by faith in me.", textEs: "…para que reciban, por la fe que es en mí, perdón de pecados y herencia entre los santificados.", context: "Paul's gospel commission links forgiveness and sanctification. Salvation is not merely pardon; it transfers us into a holy people set apart for God — sanctification begins at conversion." },
+  { ref: "Romans 6:6",          refEs: "Romanos 6:6",           theme: "Death to Sin",        color: "#c9a961", text: "We know that our old self was crucified with him in order that the body of sin might be brought to nothing, so that we would no longer be enslaved to sin.", textEs: "Sabiendo esto, que nuestro viejo hombre fue crucificado juntamente con él, para que el cuerpo del pecado sea destruido, a fin de que no sirvamos más al pecado.", context: "Union with Christ in His death means our sinful nature received a lethal blow at the cross. This is the doctrinal foundation for mortification — sin has no legal claim on those who died with Christ." },
+  { ref: "Romans 6:11",         refEs: "Romanos 6:11",          theme: "Reckoning Faith",     color: "#d6a652", text: "So you also must consider yourselves dead to sin and alive to God in Christ Jesus.", textEs: "Así también vosotros consideraos muertos al pecado, pero vivos para Dios en Cristo Jesús, Señor nuestro.", context: "'Consider' is an accounting term — reckon it as fact. Mortification begins with faith that the verdict of Romans 6:6 is real. We fight sin by believing we are already free from its dominion." },
+  { ref: "Romans 8:13",         refEs: "Romanos 8:13",          theme: "Spirit & Mortification", color: "#cf9f56", text: "For if you live according to the flesh you will die, but if by the Spirit you put to death the deeds of the body, you will live.", textEs: "Porque si vivís conforme a la carne, moriréis; mas si por el Espíritu hacéis morir las obras de la carne, viviréis.", context: "The classic mortification text. John Owen drew his entire treatise from it: killing sin is a Spirit-empowered act, not mere self-discipline. We are the agents; the Spirit is the power." },
+  { ref: "Romans 8:29",         refEs: "Romanos 8:29",          theme: "God's Goal",          color: "#c9a961", text: "For those whom he foreknew he also predestined to be conformed to the image of his Son, in order that he might be the firstborn among many brothers.", textEs: "Porque a los que antes conoció, también los predestinó para que fuesen hechos conformes a la imagen de su Hijo.", context: "Conformity to Christ is the telos of election. God did not predestine us merely to escape hell but to be holy. Sanctification is the outworking of eternal purpose — not optional." },
+  { ref: "Romans 12:2",         refEs: "Romanos 12:2",          theme: "Mind Renewal",        color: "#d4a857", text: "Do not be conformed to this world, but be transformed by the renewal of your mind, that by testing you may discern what is the will of God, what is good and acceptable and perfect.", textEs: "No os conforméis a este siglo, sino transformaos por medio de la renovación de vuestro entendimiento.", context: "Sanctification moves from the mind outward. The Greek 'metamorphoo' (transform) contrasts with 'syschematizo' (conform). Real change is internal — a renewed mind that sees the world through Scripture." },
+  { ref: "Romans 13:14",        refEs: "Romanos 13:14",         theme: "Provision & Flesh",   color: "#dca15a", text: "But put on the Lord Jesus Christ, and make no provision for the flesh, to gratify its desires.", textEs: "Sino vestíos del Señor Jesucristo, y no proveáis para los deseos de la carne.", context: "Augustine read this verse and was converted. Mortification is partly environmental — stop arranging circumstances that feed sin. Put on Christ as armor against every temptation." },
+  { ref: "1 Corinthians 1:2",   refEs: "1 Corintios 1:2",       theme: "Called to Be Holy",   color: "#caa45e", text: "To the church of God that is in Corinth, to those sanctified in Christ Jesus, called to be saints together with all those who in every place call upon the name of our Lord Jesus Christ.", textEs: "A la iglesia de Dios que está en Corinto, a los santificados en Cristo Jesús, llamados a ser santos.", context: "Written to one of the most troubled churches in the NT. Their identity is 'sanctified' even in their failures. Our calling to holiness is grounded in what God has already declared, not earned." },
+  { ref: "1 Corinthians 6:11",  refEs: "1 Corintios 6:11",      theme: "Washed & Set Apart",  color: "#cf9f56", text: "But you were washed, you were sanctified, you were justified in the name of the Lord Jesus Christ and by the Spirit of our God.", textEs: "Y esto erais algunos; mas ya habéis sido lavados, ya habéis sido santificados, ya habéis sido justificados en el nombre del Señor Jesús.", context: "Paul lists former sins then declares: 'But you were…' Three aorist verbs — definitive acts. Sanctification here is positional (set apart), paired with justification, both secured through Christ and the Spirit." },
+  { ref: "1 Corinthians 9:27",  refEs: "1 Corintios 9:27",      theme: "Self-Discipline",     color: "#c9a961", text: "But I discipline my body and keep it under control, lest after preaching to others I myself should be disqualified.", textEs: "Sino que golpeo mi cuerpo, y lo pongo en servidumbre, no sea que habiendo sido heraldo para otros, yo mismo venga a ser eliminado.", context: "Even the apostle Paul fought bodily desires. Spiritual leadership does not exempt anyone from the battle. The body must be trained, not indulged, or even preachers can shipwreck." },
+  { ref: "2 Corinthians 7:1",   refEs: "2 Corintios 7:1",       theme: "Pursuing Holiness",   color: "#d6a652", text: "Since we have these promises, beloved, let us cleanse ourselves from every defilement of body and spirit, bringing holiness to completion in the fear of God.", textEs: "Así que, amados, puesto que tenemos tales promesas, limpiémonos de toda contaminación de carne y de espíritu, perfeccionando la santidad en el temor de Dios.", context: "Holiness is both gift and pursuit. The promises of God (being His people, dwelling with Him) are the motivation for cleansing. Fear of God — not fear of punishment alone — drives genuine sanctification." },
+  { ref: "Galatians 2:20",      refEs: "Gálatas 2:20",          theme: "Crucified with Christ", color: "#d4a857", text: "I have been crucified with Christ. It is no longer I who live, but Christ who lives in me. And the life I now live in the flesh I live by faith in the Son of God, who loved me and gave himself for me.", textEs: "Con Cristo estoy juntamente crucificado, y ya no vivo yo, mas vive Cristo en mí.", context: "The old 'I' — the self-ruled, sin-enslaved ego — was nailed to the cross with Christ. The new life is Christ-indwelt and faith-sustained. This is the heart of mortification: not self-effort but Christ living through us." },
+  { ref: "Galatians 5:1",       refEs: "Gálatas 5:1",           theme: "Freedom from Sin",    color: "#dca15a", text: "For freedom Christ has set us free; stand firm therefore, and do not submit again to a yoke of slavery.", textEs: "Estad, pues, firmes en la libertad con que Cristo nos hizo libres, y no estéis otra vez sujetos al yugo de esclavitud.", context: "Gospel freedom is not freedom to sin but freedom from sin's tyranny. Paul warns against returning to religious law as a means of justification — but the principle applies to any slavery that replaces Christ." },
+  { ref: "Galatians 5:13",      refEs: "Gálatas 5:13",          theme: "Love vs. Flesh",      color: "#caa45e", text: "For you were called to freedom, brothers. Only do not use your freedom as an opportunity for the flesh, but through love serve one another.", textEs: "Porque vosotros, hermanos, a libertad fuisteis llamados; solamente que no uséis la libertad como ocasión para la carne, sino servid los unos a los otros por el amor.", context: "Freedom becomes a snare when it feeds self-indulgence. The antidote is not law but love — outward-focused service that leaves no room for the flesh to operate in its self-seeking mode." },
+  { ref: "Galatians 5:24",      refEs: "Gálatas 5:24",          theme: "Crucifying the Flesh", color: "#cf9f56", text: "And those who belong to Christ Jesus have crucified the flesh with its passions and desires.", textEs: "Pero los que son de Cristo han crucificado la carne con sus pasiones y deseos.", context: "Belonging to Christ involves an act: crucifying sinful passions. This is not once-for-all (like our co-crucifixion in Romans 6) but ongoing mortification — daily taking the flesh to the cross through the Spirit." },
+  { ref: "Galatians 6:14",      refEs: "Gálatas 6:14",          theme: "Cross & World",       color: "#c9a961", text: "But far be it from me to boast except in the cross of our Lord Jesus Christ, by which the world has been crucified to me, and I to the world.", textEs: "Pero lejos esté de mí gloriarme, sino en la cruz de nuestro Señor Jesucristo, por quien el mundo me es crucificado a mí, y yo al mundo.", context: "The cross reorients the believer's entire value system. 'The world' — its approval, pleasures, and priorities — dies to the believer at the cross. This is why boasting in the cross is the death of worldly ambition." },
+  { ref: "Ephesians 2:10",      refEs: "Efesios 2:10",          theme: "Created for Holiness", color: "#d4a857", text: "For we are his workmanship, created in Christ Jesus for good works, which God prepared beforehand, that we should walk in them.", textEs: "Porque somos hechura suya, creados en Cristo Jesús para buenas obras, las cuales Dios preparó de antemano para que anduviésemos en ellas.", context: "Salvation is not merely rescue from hell but creation for fruitfulness. We are God's poem (poiema — craftsmanship). Good works are not the basis of salvation but the predetermined path of the saved life." },
+  { ref: "Ephesians 4:24",      refEs: "Efesios 4:24",          theme: "New Self",            color: "#dca15a", text: "…and to put on the new self, created after the likeness of God in true righteousness and holiness.", textEs: "…y vestíos del nuevo hombre, creado según Dios en la justicia y santidad de la verdad.", context: "The new self is not improved old self — it is created after the likeness of God. Sanctification is putting on what God has created: a character that reflects His righteousness and holiness in practice." },
+  { ref: "Ephesians 4:31",      refEs: "Efesios 4:31",          theme: "Putting Away Sin",    color: "#caa45e", text: "Let all bitterness and wrath and anger and clamor and slander be put away from you, along with all malice.", textEs: "Quítense de vosotros toda amargura, enojo, ira, gritería y maledicencia, y toda malicia.", context: "Paul lists specific relational sins — bitterness, rage, slander. Mortification is not abstract; it targets concrete sins of the heart and tongue. These are put away, not merely managed." },
+  { ref: "Ephesians 5:11",      refEs: "Efesios 5:11",          theme: "Exposing Darkness",   color: "#cf9f56", text: "Take no part in the unfruitful works of darkness, but instead expose them.", textEs: "Y no participéis en las obras infructuosas de las tinieblas, sino más bien reprendedlas.", context: "Passive avoidance of evil is not enough — the believer must actively expose darkness. This applies personally (sin cannot be hidden) and corporately (the church is a community of accountability)." },
+  { ref: "Ephesians 6:11",      refEs: "Efesios 6:11",          theme: "Spiritual Warfare",   color: "#c9a961", text: "Put on the whole armor of God, that you may be able to stand against the schemes of the devil.", textEs: "Vestíos de toda la armadura de Dios, para que podáis estar firmes contra las asechanzas del diablo.", context: "Sanctification is warfare. The enemy schemes — plans, exploits patterns of sin. The armor of God is not decorative but functional: truth, righteousness, peace, faith, salvation, Scripture. All are needed." },
+  { ref: "Philippians 1:6",     refEs: "Filipenses 1:6",        theme: "God's Faithfulness",  color: "#d6a652", text: "And I am sure of this, that he who began a good work in you will bring it to completion at the day of Jesus Christ.", textEs: "Estando persuadido de esto, que el que comenzó en vosotros la buena obra, la perfeccionará hasta el día de Jesucristo.", context: "Sanctification is God's project, not ours alone. He who started it guarantees its completion. This is the perseverance of the saints — not that we hold on, but that He holds us through to glory." },
+  { ref: "Philippians 2:13",    refEs: "Filipenses 2:13",       theme: "God Works in Us",     color: "#d4a857", text: "…for it is God who works in you, both to will and to work for his good pleasure.", textEs: "Porque Dios es el que en vosotros produce así el querer como el hacer, por su buena voluntad.", context: "The same passage commands 'work out your salvation with fear' (v.12) and immediately explains: God is working in you. Divine sovereignty and human effort coexist — God energizes the will and the action." },
+  { ref: "Colossians 3:5",      refEs: "Colosenses 3:5",        theme: "Mortification",       color: "#dca15a", text: "Put to death therefore what is earthly in you: sexual immorality, impurity, passion, evil desire, and covetousness, which is idolatry.", textEs: "Haced morir, pues, lo terrenal en vosotros: fornicación, impureza, pasiones desordenadas, malos deseos y avaricia, que es idolatría.", context: "The most direct mortification command in Scripture. 'Put to death' is nekrōsate — actively kill it. Paul lists five sins of desire, culminating in covetousness as idolatry: wanting anything more than God is false worship." },
+  { ref: "Colossians 3:10",     refEs: "Colosenses 3:10",       theme: "Renewed Knowledge",   color: "#caa45e", text: "…and have put on the new self, which is being renewed in knowledge after the image of its creator.", textEs: "Y revestido del nuevo, el cual conforme a la imagen del que lo creó se va renovando hasta el pleno conocimiento.", context: "Renewal is progressive and cognitive — 'being renewed in knowledge.' Sanctification reshapes how we think about reality. The new self increasingly reflects the Creator's image as we know Him more truly." },
+  { ref: "Colossians 3:12",     refEs: "Colosenses 3:12",       theme: "Virtues to Put On",   color: "#cf9f56", text: "Put on then, as God's chosen ones, holy and beloved, compassionate hearts, kindness, humility, meekness, and patience.", textEs: "Vestíos, pues, como escogidos de Dios, santos y amados, de entrañable misericordia, de benignidad, de humildad, de mansedumbre, de paciencia.", context: "Mortification (put to death) must be matched by vivification (put on). Killing sin creates space; virtue must fill it. Identity as 'chosen, holy, beloved' is the motivation — we dress to match who we are." },
+  { ref: "1 Thessalonians 4:3", refEs: "1 Tesalonicenses 4:3",  theme: "God's Will",          color: "#c9a961", text: "For this is the will of God, your sanctification: that you abstain from sexual immorality.", textEs: "Pues la voluntad de Dios es vuestra santificación; que os apartéis de fornicación.", context: "When believers ask 'What is God's will for my life?' this verse answers plainly: your holiness. Sexual purity is the first concrete application — Paul wrote to a culture saturated with immorality, as are we." },
+  { ref: "1 Thessalonians 4:7", refEs: "1 Tesalonicenses 4:7",  theme: "Called to Holiness",  color: "#d6a652", text: "For God has not called us for impurity, but in holiness.", textEs: "Pues no nos ha llamado Dios a inmundicia, sino a santificación.", context: "The call to holiness is built into the call to salvation. God did not call us to a more decent version of the old life — He called us into a holy state. Impurity is a contradiction of our calling itself." },
+  { ref: "1 Thessalonians 5:22", refEs: "1 Tesalonicenses 5:22", theme: "Abstaining from Evil", color: "#d4a857", text: "Abstain from every form of evil.", textEs: "Absteneos de toda especie de mal.", context: "A sweeping command that closes Paul's ethical instructions. Every form — not just gross sins, but subtle ones. The word 'abstain' (apechesthe) means to hold oneself away, maintaining deliberate distance from anything that participates in evil." },
+  { ref: "1 Thessalonians 5:23", refEs: "1 Tesalonicenses 5:23", theme: "Complete Sanctification", color: "#dca15a", text: "Now may the God of peace himself sanctify you completely, and may your whole spirit and soul and body be kept blameless at the coming of our Lord Jesus Christ.", textEs: "Y el mismo Dios de paz os santifique por completo; y todo vuestro ser, espíritu, alma y cuerpo, sea guardado irreprensible para la venida de nuestro Señor Jesucristo.", context: "Sanctification is total — spirit, soul, and body. Nothing is exempt. And it is ultimately God's work: 'the God of peace himself' does it. We cooperate with what He initiates, sustains, and completes." },
+  { ref: "2 Thessalonians 2:13", refEs: "2 Tesalonicenses 2:13", theme: "Election & Holiness", color: "#caa45e", text: "But we ought always to give thanks to God for you, brothers beloved by the Lord, because God chose you as the firstfruits to be saved, through sanctification by the Spirit and belief in the truth.", textEs: "Pero nosotros debemos dar siempre gracias a Dios respecto a vosotros, hermanos amados por el Señor, de que Dios os haya escogido desde el principio para salvación, mediante la santificación por el Espíritu y la fe en la verdad.", context: "Election and sanctification are inseparable. God's sovereign choice does not bypass the Spirit's sanctifying work — it operates through it. Both the Spirit's work and personal faith are instruments of salvation." },
+  { ref: "2 Timothy 2:21",      refEs: "2 Timoteo 2:21",        theme: "Vessels of Honor",    color: "#cf9f56", text: "Therefore, if anyone cleanses himself from what is dishonorable, he will be a vessel for honorable use, set apart as holy, useful to the master of the house, ready for every good work.", textEs: "Así que, si alguno se limpia de estas cosas, será instrumento para honra, santificado, útil al Señor, y dispuesto para toda buena obra.", context: "Holiness is prerequisite for usefulness in God's service. The image is household vessels: only clean ones are used for the table of honor. Our fitness for God's purposes depends on our purity." },
+  { ref: "2 Timothy 2:22",      refEs: "2 Timoteo 2:22",        theme: "Flee & Pursue",       color: "#c9a961", text: "So flee youthful passions and pursue righteousness, faith, love, and peace, along with those who call on the Lord from a pure heart.", textEs: "Huye también de las pasiones juveniles, y sigue la justicia, la fe, el amor y la paz, con los que de corazón limpio invocan al Señor.", context: "Two movements: flee and pursue. Mortification has a direction — away from passion, toward virtue. Critically, this is done 'with those who call on the Lord' — sanctification is communal, not solitary." },
+  { ref: "Hebrews 10:10",       refEs: "Hebreos 10:10",         theme: "Sanctified by Christ", color: "#d4a857", text: "And by that will we have been sanctified through the offering of the body of Jesus Christ once for all.", textEs: "En esa voluntad somos santificados mediante la ofrenda del cuerpo de Jesucristo hecha una vez para siempre.", context: "Definitive sanctification — accomplished at the cross, once for all. Christ's offering is the only ground of our holy standing before God. Progressive sanctification flows from this secured foundation." },
+  { ref: "Hebrews 10:14",       refEs: "Hebreos 10:14",         theme: "Perfected & Ongoing", color: "#dca15a", text: "For by a single offering he has perfected for all time those who are being sanctified.", textEs: "Porque con una sola ofrenda hizo perfectos para siempre a los que son santificados.", context: "Both tenses simultaneously: 'perfected' (complete) and 'being sanctified' (ongoing). We are positionally complete and progressively advancing — both truths are essential to a healthy view of sanctification." },
+  { ref: "Hebrews 12:1",        refEs: "Hebreos 12:1",          theme: "Running the Race",    color: "#caa45e", text: "Therefore, since we are surrounded by so great a cloud of witnesses, let us also lay aside every weight, and sin which clings so closely, and let us run with endurance the race that is set before us.", textEs: "Por tanto, nosotros también, teniendo en derredor nuestro tan grande nube de testigos, despojémonos de todo peso y del pecado que nos asedia, y corremos con paciencia la carrera que tenemos por delante.", context: "The metaphor is athletic. Weights are not sinful things but even good things that slow the runner. Sin 'clings closely' — it is the garment that entangles. Both must go for the race to be run with endurance." },
+  { ref: "Hebrews 12:14",       refEs: "Hebreos 12:14",         theme: "Holiness Required",   color: "#cf9f56", text: "Strive for peace with everyone, and for the holiness without which no one will see the Lord.", textEs: "Seguid la paz con todos, y la santidad, sin la cual nadie verá al Señor.", context: "One of the most sobering texts on holiness. 'Holiness' here is not perfection but the genuine pursuit of it — without which there is no vision of God. This is not a works-righteousness statement but a proof-of-regeneration one." },
+  { ref: "Hebrews 13:12",       refEs: "Hebreos 13:12",         theme: "Sanctified by Blood",  color: "#c9a961", text: "So Jesus also suffered outside the gate in order to sanctify the people through his own blood.", textEs: "Por lo cual también Jesús, para santificar al pueblo mediante su propia sangre, padeció fuera de la puerta.", context: "Christ's suffering outside the city gate — the place of shame and rejection — was the price of our sanctification. Holiness cost Him everything. This grounds our pursuit of holiness in gratitude, not self-achievement." },
+  { ref: "James 1:21",          refEs: "Santiago 1:21",         theme: "Receiving the Word",  color: "#d6a652", text: "Therefore put away all filthiness and rampant wickedness and receive with meekness the implanted word, which is able to save your souls.", textEs: "Por lo cual, desechando toda inmundicia y abundancia de malicia, recibid con mansedumbre la palabra implantada, la cual puede salvar vuestras almas.", context: "The Word is implanted — already within the believer by the Spirit. But it must be received with meekness: teachableness, humility, a readiness to be corrected. Soil preparation (putting away sin) enables the word to bear fruit." },
+  { ref: "1 Peter 1:2",         refEs: "1 Pedro 1:2",           theme: "Spirit's Work",       color: "#d4a857", text: "…according to the foreknowledge of God the Father, in the sanctification of the Spirit, for obedience to Jesus Christ and for sprinkling with his blood.", textEs: "…elegidos según la presciencia de Dios Padre en santificación del Espíritu, para obedecer y ser rociados con la sangre de Jesucristo.", context: "Trinitarian sanctification: the Father foreknows, the Spirit sanctifies, the Son's blood cleanses. The goal is obedience — sanctification is not an inward spiritual luxury but produces external conformity to Christ's lordship." },
+  { ref: "1 Peter 1:15",        refEs: "1 Pedro 1:15",          theme: "Be Holy",             color: "#dca15a", text: "…but as he who called you is holy, you also be holy in all your conduct.", textEs: "Sino, como aquel que os llamó es santo, sed también vosotros santos en toda vuestra manera de vivir.", context: "Holiness is the family resemblance of God's children. 'All your conduct' — not just religious activities but every domain of life. The standard is God's own character, which motivates awe rather than legalism." },
+  { ref: "1 Peter 2:1",         refEs: "1 Pedro 2:1",           theme: "Putting Sin Away",    color: "#caa45e", text: "So put away all malice and all deceit and hypocrisy and envy and all slander.", textEs: "Desechando, pues, toda malicia, todo engaño, hipocresía, envidias, y todas las detracciones.", context: "Preparation for spiritual growth: before the positive (craving the Word), the negative (putting away sin). Like weeding before planting, removing malice and deceit creates space for the Word to nourish." },
+  { ref: "1 Peter 2:11",        refEs: "1 Pedro 2:11",          theme: "War on the Flesh",    color: "#cf9f56", text: "Beloved, I urge you as sojourners and exiles to abstain from the passions of the flesh, which wage war against your soul.", textEs: "Amados, yo os ruego como a extranjeros y peregrinos, que os abstengáis de los deseos carnales que batallan contra el alma.", context: "We are strangers here — citizens of a kingdom our sinful passions cannot inherit. 'Wage war' is not metaphor: fleshly desires are an active insurgency against the soul. Abstaining is refusing to supply the enemy." },
+  { ref: "2 Peter 1:3",         refEs: "2 Pedro 1:3",           theme: "Divine Resources",    color: "#c9a961", text: "His divine power has granted to us all things that pertain to life and godliness, through the knowledge of him who called us to his own glory and excellence.", textEs: "Como todas las cosas que pertenecen a la vida y a la piedad nos han sido dadas por su divino poder, mediante el conocimiento de aquel que nos llamó por su gloria y excelencia.", context: "The basis of all mortification and sanctification: God has already supplied everything needed. We do not pursue holiness by striving for resources we lack but by drawing on resources already given through knowing Christ." },
+  { ref: "1 John 1:9",          refEs: "1 Juan 1:9",            theme: "Confession & Cleansing", color: "#d6a652", text: "If we confess our sins, he is faithful and just to forgive us our sins and to cleanse us from all unrighteousness.", textEs: "Si confesamos nuestros pecados, él es fiel y justo para perdonar nuestros pecados, y limpiarnos de toda maldad.", context: "Mortification includes confession — bringing sin into the light of God's presence. The promise is double: forgiveness (guilt removed) and cleansing (corruption addressed). God's faithfulness, not our contrition, is the guarantee." },
+  { ref: "1 John 2:15",         refEs: "1 Juan 2:15",           theme: "Not Loving the World", color: "#d4a857", text: "Do not love the world or the things in the world. If anyone loves the world, the love of the Father is not in him.", textEs: "No améis al mundo, ni las cosas que están en el mundo. Si alguno ama al mundo, el amor del Padre no está en él.", context: "Worldly love and love for the Father are mutually exclusive. 'World' here is not creation but the fallen system organized without God. Killing sin means uprooting the loves that rival God in our hearts." },
 ];
 
 const MEM_STORAGE_KEY = "ryc-mem-verse-state-v2";
@@ -395,6 +335,74 @@ function dayOfYearIndex(): number {
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
   return Math.floor(diff / 86400000);
+}
+
+// ─── Grace Gems Article Reader ────────────────────────────────────────────────
+
+function GgArticleReader({
+  title, author, content: localContent, onClose,
+}: { title: string; author: string; url?: string; content?: string; onClose: () => void }) {
+  const content = localContent ?? "";
+  const status: "ready" | "fallback" = content.length > 0 ? "ready" : "fallback";
+  const artTitle = title;
+
+  React.useEffect(() => {
+    document.body.style.overflow = "hidden";
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handler);
+    };
+  }, [onClose]);
+
+  return (
+    <div className="fixed inset-0 z-[250] flex flex-col" style={{ background: "#0a0b14", paddingTop: "env(safe-area-inset-top)" }}>
+      {/* Header */}
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-3 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{ background: "rgba(255,255,255,0.06)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </button>
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "rgba(201,169,97,0.60)" }}>
+            {author}
+          </p>
+          <p className="text-[13px] font-bold text-white leading-tight truncate">{artTitle || title}</p>
+        </div>
+      </div>
+
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ minHeight: 0 }}>
+        {status === "ready" && (
+          <div className="px-5 pt-6 pb-16">
+            <h1 className="text-[22px] font-bold leading-snug mb-1" style={{ color: "#c9a961", fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+              {artTitle || title}
+            </h1>
+            <p className="text-[12px] mb-7" style={{ color: "rgba(255,255,255,0.38)" }}>by {author}</p>
+            <div style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+              {content.split(/\n\n+/).filter(Boolean).map((para, i) => (
+                <p key={i} className="text-[16px] leading-[1.85] mb-5" style={{ color: "rgba(255,255,255,0.82)" }}>
+                  {para.trim()}
+                </p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {status === "fallback" && (
+          <div className="flex flex-col items-center justify-center h-full gap-2 px-8 text-center">
+            <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.40)" }}>Article text coming soon.</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
 
 // ─── Verse Memorization Widget ─────────────────────────────────────────────────
@@ -433,6 +441,7 @@ function VerseMemorizationWidget({
   const customAsVerses: MemVerse[] = memState.customVerses.map((c) => ({
     ref: c.ref, refEs: c.ref, text: c.text, textEs: c.text,
     theme: lang === "es" ? "Personal" : "My Verse", color: "#c9a961",
+    context: "",
   }));
   const allVerses: MemVerse[] = [...MEM_VERSES, ...customAsVerses];
 
@@ -595,6 +604,21 @@ function VerseMemorizationWidget({
         )}
       </div>
 
+      {/* Context summary — shown in learn mode */}
+      {memState.mode === "learn" && (activeVerse as MemVerse & { context?: string }).context && (
+        <div
+          className="mb-4 px-3 py-2.5 rounded-xl"
+          style={{ background: "rgba(201,169,97,0.06)", border: "1px solid rgba(201,169,97,0.13)" }}
+        >
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: "rgba(201,169,97,0.60)" }}>
+            {lang === "es" ? "Contexto" : "Context"}
+          </p>
+          <p className="text-[11.5px] leading-relaxed" style={{ color: "rgba(255,255,255,0.52)" }}>
+            {(activeVerse as MemVerse & { context?: string }).context}
+          </p>
+        </div>
+      )}
+
       {/* Mode toggle hint */}
       {isCommitted && memState.mode === "test" && (
         <p className="text-[10px] text-white/35 text-center mb-3">
@@ -618,8 +642,8 @@ function VerseMemorizationWidget({
           </button>
           <p className="text-[10.5px] text-white/35 text-center mt-2.5 leading-relaxed">
             {lang === "es"
-              ? "Cada día aparece un nuevo atributo de Dios hasta que elijas uno para memorizar."
-              : "A new attribute of God appears each day until you choose one to memorize."}
+              ? "49 versículos sobre santificación y la mortificación del pecado. Rota diariamente."
+              : "49 verses on sanctification & killing sin — rotates daily until you choose one."}
           </p>
         </>
       ) : memState.mode === "learn" ? (
@@ -877,8 +901,8 @@ function VerseMemorizationWidget({
             )}
           </div>
 
-          {/* Verse preview */}
-          <p className="text-[13px] text-white/70 leading-relaxed line-clamp-2 italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+          {/* Verse preview — full text, no clipping */}
+          <p className="text-[12.5px] text-white/70 leading-relaxed italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
             &ldquo;{verseText}&rdquo;
           </p>
 
@@ -933,10 +957,13 @@ export default function Home() {
   const [articles,       setArticles]       = useState<MarrowArticle[]>([]);
   const [articleLoading, setArticleLoading] = useState(false);
 
-  // In-app article reader
+  // In-app article reader (Marrow)
   const [openArticle,    setOpenArticle]    = useState<MarrowArticle | null>(null);
   const [articleContent, setArticleContent] = useState<ArticleContent | null>(null);
   const [contentLoading, setContentLoading] = useState(false);
+
+  // In-app Grace Gems reader
+  const [ggReader, setGgReader] = useState<{ title: string; author: string; url: string; content?: string } | null>(null);
 
   // Theme detection — drives background glow color
   const [theme, setTheme] = useState<string>(() => {
@@ -1293,6 +1320,16 @@ export default function Home() {
         </div>
       )}
 
+      {/* ── Grace Gems in-app reader ─────────────────────────────────────── */}
+      {ggReader && (
+        <GgArticleReader
+          title={ggReader.title}
+          author={ggReader.author}
+          content={ggReader.content}
+          onClose={() => setGgReader(null)}
+        />
+      )}
+
       {/* ── Badge unlock toast ────────────────────────────────────────────── */}
       {toastVisible && newBadgeIds.length > 0 && (
         <div
@@ -1437,38 +1474,30 @@ export default function Home() {
               </div>
             </button>
 
-            {/* Featured article */}
-            {weeklyArticle && (
-              <button
-                onClick={() => openArticleModal(weeklyArticle)}
-                className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
-              >
-                {/* Cover image — RSS image takes priority, Pilate art as fallback */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={weeklyArticle.imageUrl || "/article-cover.jpg"}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover object-top"
-                />
-                {/* Overlay */}
-                <div
-                  className="absolute inset-0"
-                  style={{ background: "linear-gradient(to top, rgba(0,0,0,0.88) 45%, rgba(0,0,0,0.22) 100%)" }}
-                />
-                {/* Content */}
-                <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : "white"} strokeWidth="2">
-                    <rect x="5" y="4" width="14" height="16" rx="1.5"/>
-                    <path d="M9 4v16"/>
-                  </svg>
-                </div>
-                <div className="relative z-10">
-                  <p className="text-[9px] font-bold tracking-[0.15em] uppercase text-yellow-300/90">Article</p>
-                  <p className="text-[12px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{weeklyArticle.title}</p>
-                  <p className="text-[10px] mt-1.5 text-white/55">5 min read</p>
-                </div>
-              </button>
-            )}
+            {/* Featured Grace Gems article — rotates every 3 days */}
+            {(() => {
+              const art = getRotatingArticle();
+              return (
+                <button
+                  onClick={() => setGgReader({ title: art.title, author: art.author, url: art.url, content: art.content })}
+                  className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
+                  style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.18) 0%, rgba(10,12,20,0.97) 60%)", border: "1px solid rgba(201,169,97,0.28)" }}
+                >
+                  {/* Book icon */}
+                  <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                  </div>
+                  <div className="relative z-10">
+                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>Article</p>
+                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{art.title}</p>
+                    <p className="text-[9px] mt-1.5" style={{ color: "rgba(201,169,97,0.70)" }}>{art.author}</p>
+                  </div>
+                </button>
+              );
+            })()}
 
             {/* Free Books */}
             <Link
@@ -1538,9 +1567,6 @@ export default function Home() {
 
           </div>
 
-          {articleLoading && articles.length === 0 && (
-            <div className="text-[10px] text-white/30 px-1 mt-2">Loading articles…</div>
-          )}
         </section>
 
         {/* ── Verse Memorization Widget ────────────────────────────────────── */}

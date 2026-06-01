@@ -27,10 +27,80 @@ function stripTags(html: string): string {
     .trim();
 }
 
+const ALLOWED_ORIGINS = [
+  "https://marrowministries.org/",
+  "https://www.gracegems.org/",
+  "https://gracegems.org/",
+];
+
 export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
-  if (!url || !url.startsWith("https://marrowministries.org/")) {
+  const isAllowed = url && ALLOWED_ORIGINS.some((o) => url.startsWith(o));
+  if (!url || !isAllowed) {
     return NextResponse.json({ error: "invalid url" }, { status: 400 });
+  }
+
+  // ── GraceGems: HTML scraping ─────────────────────────────────────────────
+  if (url.includes("gracegems.org")) {
+    try {
+      const headers = {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+        "Referer": "https://www.gracegems.org/",
+      };
+      const res = await fetch(url, { headers, signal: AbortSignal.timeout(10000) });
+      const html = await res.text();
+
+      // Detect CAPTCHA / BitNinja block
+      if (/bitninja|captcha|anti.?robot/i.test(html)) {
+        return NextResponse.json({ error: "blocked" }, { status: 503 });
+      }
+
+      // Extract title from <title> or first <h2>/<h3> (GraceGems puts article title there)
+      const titleMatch =
+        html.match(/<h2[^>]*>([\s\S]*?)<\/h2>/i) ??
+        html.match(/<h3[^>]*>([\s\S]*?)<\/h3>/i) ??
+        html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+      const title = titleMatch ? stripTags(titleMatch[1]).replace(/\s*[-|–].*$/, "").trim() : "";
+
+      // ── Strip everything that isn't article body ─────────────────────────
+      // GraceGems is table-based; nuke scripts, styles, nav-style blocks first
+      const cleaned = html
+        .replace(/<(script|style|noscript)[^>]*>[\s\S]*?<\/\1>/gi, "")
+        .replace(/<!--[\s\S]*?-->/g, "")
+        // Remove the top navigation/banner table (usually the first <table>)
+        .replace(/<table[^>]*>[\s\S]*?<\/table>/i, "");
+
+      // Collect ALL <p> paragraphs, then find the article's "run" —
+      // GraceGems article content is a long unbroken run of <p> tags.
+      // We identify the start of the run by finding where paragraphs first
+      // become consistently long (≥ 80 chars), then take everything from there.
+      const allParas = [...cleaned.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+        .map((m) => stripTags(m[1]).trim());
+
+      // Find first paragraph that looks like real prose (≥ 80 chars)
+      const startIdx = allParas.findIndex((t) => t.length >= 80);
+
+      const articleParas = startIdx >= 0
+        ? allParas.slice(startIdx).filter((t) => {
+            if (t.length < 20) return false;
+            if (/cookie|bitninja|subscribe|unsubscribe|email.*address|click here to|please enable/i.test(t)) return false;
+            // Stop if we hit footer boilerplate
+            if (/grace gems|gracegems\.org|all rights reserved|homelife church/i.test(t) && t.length < 120) return false;
+            return true;
+          })
+        : [];
+
+      const content = articleParas.join("\n\n");
+
+      if (content.length > 200) {
+        return NextResponse.json({ title, date: "", content, author: "", source: "gracegems" });
+      }
+      return NextResponse.json({ error: "no content" }, { status: 404 });
+    } catch (err) {
+      return NextResponse.json({ error: String(err) }, { status: 500 });
+    }
   }
 
   const headers = {

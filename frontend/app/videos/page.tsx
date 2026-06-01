@@ -216,6 +216,14 @@ function recordWatch(item: WatchItem) {
   }
 }
 
+function removeFromHistory(videoId: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const next = loadWatchHistory().filter((w) => w.videoId !== videoId);
+    window.localStorage.setItem(WATCH_KEY, JSON.stringify(next));
+  } catch { /* ignore */ }
+}
+
 // ─── Back arrow icon ───────────────────────────────────────────────────────────
 
 function BackArrow({ onClick }: { onClick: () => void }) {
@@ -410,31 +418,44 @@ function ShortCard({
 
 // ─── Continue Watching card ────────────────────────────────────────────────────
 
-function ContinueCard({ item, onClick }: { item: WatchItem; onClick: () => void }) {
+function ContinueCard({ item, onClick, onRemove }: { item: WatchItem; onClick: () => void; onRemove: () => void }) {
   return (
-    <button
-      onClick={onClick}
-      className="flex-shrink-0 w-[200px] rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all"
+    <div
+      className="flex-shrink-0 w-[200px] rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all relative"
       style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
     >
-      <div className="relative" style={{ aspectRatio: item.isShort ? "9/16" : "16/9", maxHeight: item.isShort ? 150 : undefined }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={ytThumb(item.videoId, "hq")} alt={item.title} className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(201,169,97,0.92)" }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="#08090f"><polygon points="6,3 20,12 6,21"/></svg>
+      {/* Remove button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+        className="absolute top-2 right-2 z-20 w-6 h-6 rounded-full flex items-center justify-center transition-all active:scale-90"
+        style={{ background: "rgba(0,0,0,0.60)", backdropFilter: "blur(4px)" }}
+        aria-label="Remove from history"
+      >
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.80)" strokeWidth="2.5" strokeLinecap="round">
+          <path d="M18 6L6 18M6 6l12 12"/>
+        </svg>
+      </button>
+
+      <button onClick={onClick} className="w-full text-left">
+        <div className="relative" style={{ aspectRatio: item.isShort ? "9/16" : "16/9", maxHeight: item.isShort ? 150 : undefined }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={ytThumb(item.videoId, "hq")} alt={item.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(201,169,97,0.92)" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="#08090f"><polygon points="6,3 20,12 6,21"/></svg>
+            </div>
+          </div>
+          {/* Faux resume progress bar */}
+          <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: "rgba(255,255,255,0.18)" }}>
+            <div className="h-full" style={{ width: "38%", background: AC }} />
           </div>
         </div>
-        {/* Faux resume progress bar */}
-        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: "rgba(255,255,255,0.18)" }}>
-          <div className="h-full" style={{ width: "38%", background: AC }} />
+        <div className="p-2.5">
+          {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{item.speaker}</p>}
+          <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{item.title}</p>
         </div>
-      </div>
-      <div className="p-2.5">
-        {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{item.speaker}</p>}
-        <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{item.title}</p>
-      </div>
-    </button>
+      </button>
+    </div>
   );
 }
 
@@ -1098,6 +1119,7 @@ export default function VideosPage() {
   const [sheetSection, setSheetSection] = useState<FundamentalsSection | null>(null);
   const [history, setHistory] = useState<WatchItem[]>([]);
   const [askOpen, setAskOpen] = useState(false);
+  const [showSubmitSheet, setShowSubmitSheet] = useState(false);
 
   useEffect(() => { setHistory(loadWatchHistory()); }, []);
 
@@ -1238,14 +1260,14 @@ export default function VideosPage() {
             <h1 className="text-[22px] font-bold text-white leading-none">Video Library</h1>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              href="/videos/submit"
+            <button
+              onClick={() => setShowSubmitSheet(true)}
               className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-[0.97]"
               style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
               Submit
-            </Link>
+            </button>
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
               className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
@@ -1321,6 +1343,10 @@ export default function VideosPage() {
                       key={item.videoId}
                       item={item}
                       onClick={() => playVideo(item.videoId, item.title, item.isShort, item.speaker)}
+                      onRemove={() => {
+                        removeFromHistory(item.videoId);
+                        setHistory(loadWatchHistory());
+                      }}
                     />
                   ))}
                 </div>
@@ -1449,50 +1475,65 @@ export default function VideosPage() {
               </section>
             )}
 
-            {/* ── Submit CTA (always visible) ───────────────────────────────── */}
-            <section className="mb-7 px-4">
-              <Link
-                href="/videos/submit"
-                className="flex items-center gap-4 p-4 rounded-2xl transition-all active:scale-[0.98]"
-                style={{ background: "rgba(201,169,97,0.07)", border: `1px solid ${AC_BORDER}` }}
-              >
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: AC_BG }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2" strokeLinecap="round">
-                    <path d="M12 5v14M5 12h14"/>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-[13px] font-bold" style={{ color: AC }}>Submit a Video</p>
-                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.40)" }}>
-                    Are you a pastor or teacher? Share biblical teaching with believers worldwide.
-                  </p>
-                </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="2" strokeLinecap="round" className="ml-auto flex-shrink-0">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              </Link>
-            </section>
-
-            {/* ── About banner ────────────────────────────────────────────────── */}
-            <div className="mx-4 rounded-2xl p-5 mb-4" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
-              <p className="text-[9px] font-black tracking-widest uppercase mb-2" style={{ color: AC }}>
-                Our Video Philosophy
-              </p>
-              <p className="text-[13px] text-white/70 leading-relaxed" style={{ fontFamily: SERIF }}>
-                All approved videos are published through the official Tulip Bible App YouTube channel and embedded here, keeping the experience native to the app while maintaining doctrinal accountability.
-              </p>
-              <a
-                href="https://www.youtube.com/@TulipBibleApp"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 flex items-center gap-2 text-[12px] font-bold transition-colors"
-                style={{ color: AC }}
-              >
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
-                Visit our YouTube channel
-              </a>
-            </div>
           </>
+        )}
+
+        {/* ── Submit Info Sheet ──────────────────────────────────────────────── */}
+        {showSubmitSheet && (
+          <div className="fixed inset-0 z-[450] flex flex-col justify-end">
+            <button
+              aria-label="Close"
+              onClick={() => setShowSubmitSheet(false)}
+              className="absolute inset-0"
+              style={{ background: "rgba(0,0,0,0.65)", backdropFilter: "blur(2px)" }}
+            />
+            <div
+              className="relative rounded-t-3xl overflow-hidden"
+              style={{ background: "#11131c", borderTop: `1px solid ${AC_BORDER}`, maxHeight: "85vh" }}
+            >
+              {/* Drag handle */}
+              <div className="flex justify-center pt-3 pb-1">
+                <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+              </div>
+
+              <div className="px-6 pt-4 pb-10 overflow-y-auto">
+                {/* Submit a Video */}
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>Submit a Video</p>
+                <h2 className="text-[20px] font-bold text-white mb-2">Share Biblical Teaching</h2>
+                <p className="text-[13px] leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                  Are you a pastor or teacher? Submit a video to be reviewed and published through the official Tulip Bible App YouTube channel — sharing sound doctrine with believers worldwide.
+                </p>
+                <Link
+                  href="/videos/submit"
+                  onClick={() => setShowSubmitSheet(false)}
+                  className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-[14px] font-extrabold mb-6 transition-all active:scale-[0.98]"
+                  style={{ background: `linear-gradient(135deg, #d9b970, #c9a961)`, color: "#08090f" }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                  Go to Submit Form
+                </Link>
+
+                {/* Divider */}
+                <div className="mb-6" style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />
+
+                {/* Video Philosophy */}
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>Our Video Philosophy</p>
+                <p className="text-[13px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)", fontFamily: SERIF }}>
+                  All approved videos are published through the official Tulip Bible App YouTube channel and embedded here — keeping the experience native to the app while maintaining doctrinal accountability.
+                </p>
+                <a
+                  href="https://www.youtube.com/@TulipBibleApp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-[12px] font-bold"
+                  style={{ color: AC }}
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+                  Visit our YouTube channel
+                </a>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </>
