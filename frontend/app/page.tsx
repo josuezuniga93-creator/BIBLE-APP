@@ -16,6 +16,7 @@ import {
   type DevotionalBadgeId,
 } from "./lib/devotionalProgress";
 import { useLanguage } from "./lib/useLanguage";
+import { translateToSpanish } from "./lib/googleTranslate";
 import { GeneratedBadgeLogo } from "./components/GeneratedArtwork";
 
 import { getRotatingArticle, daysUntilNextRotation } from "./lib/graceGemsArticles";
@@ -340,11 +341,17 @@ function dayOfYearIndex(): number {
 // ─── Grace Gems Article Reader ────────────────────────────────────────────────
 
 function GgArticleReader({
-  title, author, content: localContent, image, onClose,
-}: { title: string; author: string; url?: string; content?: string; image?: string; onClose: () => void }) {
-  const content = localContent ?? "";
-  const status: "ready" | "fallback" = content.length > 0 ? "ready" : "fallback";
-  const artTitle = title;
+  title, author, authorYears, content: localContent, image, lang, onClose,
+}: { title: string; author: string; authorYears?: string; url?: string; content?: string; image?: string; lang: string; onClose: () => void }) {
+  const englishContent = localContent ?? "";
+  const [esTitle, setEsTitle]     = React.useState<string | null>(null);
+  const [esContent, setEsContent] = React.useState<string | null>(null);
+  const [translating, setTranslating] = React.useState(false);
+
+  const isEs = lang === "es";
+  const content  = isEs ? (esContent ?? englishContent) : englishContent;
+  const artTitle = isEs ? (esTitle ?? title) : title;
+  const status: "ready" | "fallback" = englishContent.length > 0 ? "ready" : "fallback";
 
   React.useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -355,6 +362,27 @@ function GgArticleReader({
       window.removeEventListener("keydown", handler);
     };
   }, [onClose]);
+
+  // Auto-translate the whole article to Spanish (cached) — same approach as Family Worship
+  React.useEffect(() => {
+    if (!isEs || !englishContent) { setEsTitle(null); setEsContent(null); return; }
+    let cancelled = false;
+    setTranslating(true);
+    (async () => {
+      try {
+        const [t, c] = await Promise.all([
+          translateToSpanish(title, `art_title_${title}`),
+          translateToSpanish(englishContent, `art_body_${title}`),
+        ]);
+        if (!cancelled) { setEsTitle(t); setEsContent(c); }
+      } catch {
+        /* leave English text if translation fails */
+      } finally {
+        if (!cancelled) setTranslating(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isEs, englishContent, title]);
 
   return (
     <div className="fixed inset-0 z-[250] flex flex-col" style={{ background: "#0a0b14", paddingTop: "env(safe-area-inset-top)" }}>
@@ -390,7 +418,16 @@ function GgArticleReader({
             <h1 className="text-[22px] font-bold leading-snug mb-1" style={{ color: "#c9a961", fontFamily: "'Iowan Old Style','Georgia',serif" }}>
               {artTitle || title}
             </h1>
-            <p className="text-[12px] mb-7" style={{ color: "rgba(255,255,255,0.38)" }}>by {author}</p>
+            <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+              {lang === "es" ? "por" : "by"} {author}{authorYears ? ` · ${authorYears}` : ""}
+            </p>
+            {lang === "es" && translating && (
+              <p className="text-[11px] mt-2 flex items-center gap-2" style={{ color: "rgba(201,169,97,0.65)" }}>
+                <span className="inline-block w-3 h-3 rounded-full animate-spin" style={{ border: "2px solid rgba(201,169,97,0.25)", borderTopColor: "#c9a961" }} />
+                Traduciendo al español…
+              </p>
+            )}
+            <div className="mb-7" />
             <div style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
               {content.split(/\n\n+/).filter(Boolean).map((para, i) => (
                 <p key={i} className="text-[16px] leading-[1.85] mb-5" style={{ color: "rgba(255,255,255,0.82)" }}>
@@ -1013,7 +1050,7 @@ export default function Home() {
   const [contentLoading, setContentLoading] = useState(false);
 
   // In-app Grace Gems reader
-  const [ggReader, setGgReader] = useState<{ title: string; author: string; url: string; content?: string; image?: string } | null>(null);
+  const [ggReader, setGgReader] = useState<{ title: string; author: string; authorYears?: string; url: string; content?: string; image?: string } | null>(null);
 
   // Theme detection — drives background glow color
   const [theme, setTheme] = useState<string>(() => {
@@ -1375,8 +1412,10 @@ export default function Home() {
         <GgArticleReader
           title={ggReader.title}
           author={ggReader.author}
+          authorYears={ggReader.authorYears}
           content={ggReader.content}
           image={ggReader.image}
+          lang={lang}
           onClose={() => setGgReader(null)}
         />
       )}
@@ -1530,7 +1569,7 @@ export default function Home() {
               const art = getRotatingArticle();
               return (
                 <button
-                  onClick={() => setGgReader({ title: art.title, author: art.author, url: art.url, content: art.content, image: art.image })}
+                  onClick={() => setGgReader({ title: art.title, author: art.author, authorYears: art.authorYears, url: art.url, content: art.content, image: art.image })}
                   className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
                   style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.18) 0%, rgba(10,12,20,0.97) 60%)", border: "1px solid rgba(201,169,97,0.28)" }}
                 >
