@@ -429,6 +429,10 @@ function VerseMemorizationWidget({
   const [customRef,  setCustomRef]    = useState("");
   const [customText, setCustomText]   = useState("");
 
+  // Auto-fit: scale the verse text in full-screen so the whole verse is visible without scrolling
+  const verseTextRef = React.useRef<HTMLParagraphElement>(null);
+  const [fitPx, setFitPx] = useState(22);
+
   // Persisted state (hydrate from localStorage after mount to avoid SSR mismatch)
   const [memState, setMemState] = useState<MemState>(DEFAULT_MEM_STATE);
   useEffect(() => {
@@ -533,6 +537,29 @@ function VerseMemorizationWidget({
     return () => { document.body.style.overflow = ""; };
   }, [fullScreen]);
 
+  // Fit the verse to the screen (binary-search a font size so it never needs scrolling)
+  useEffect(() => {
+    if (!fullScreen || memState.mode !== "learn") return;
+    const fit = () => {
+      const el = verseTextRef.current;
+      if (!el) return;
+      // Budget the verse roughly half the viewport so it's fully visible up top
+      const target = Math.min(Math.max(window.innerHeight * 0.44, 200), 560);
+      let lo = 15, hi = 32, best = 15;
+      el.style.lineHeight = "1.55";
+      while (lo <= hi) {
+        const mid = (lo + hi) >> 1;
+        el.style.fontSize = `${mid}px`;
+        if (el.scrollHeight <= target) { best = mid; lo = mid + 1; } else { hi = mid - 1; }
+      }
+      el.style.fontSize = `${best}px`;
+      setFitPx(best);
+    };
+    const id = requestAnimationFrame(fit);
+    window.addEventListener("resize", fit);
+    return () => { cancelAnimationFrame(id); window.removeEventListener("resize", fit); };
+  }, [fullScreen, verseText, memState.mode]);
+
   const cardContent = (inFull: boolean) => (
     <div className={`relative flex flex-col ${inFull ? "h-full" : ""}`}>
       {/* Header row */}
@@ -544,6 +571,15 @@ function VerseMemorizationWidget({
               : (lang === "es" ? "Versículo de Hoy" : "Today's Verse")} · {activeVerse.theme}
           </p>
           <p className="text-[18px] font-bold text-white mt-0.5">{verseRef}</p>
+          {isCommitted && !isMastered && (
+            <span
+              className="inline-flex items-center gap-1 mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full"
+              style={{ background: `${accentColor}18`, color: accentColor, border: `1px solid ${accentColor}33` }}
+            >
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-4 1-2 2 1 4-3-1-4 4-1-4-4-1 4-4-1-3 4 1 2-2 1-4z"/></svg>
+              {lang === "es" ? "Fijado hasta completar" : "Pinned until complete"}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           {isMastered && (
@@ -569,12 +605,20 @@ function VerseMemorizationWidget({
 
       {/* Verse display */}
       <div
-        className={`flex-1 rounded-2xl p-4 mb-4 ${inFull ? "overflow-y-auto" : ""}`}
-        style={{ background: `linear-gradient(135deg, ${accentColor}14, rgba(26,29,39,0.6))`, border: `1px solid ${accentColor}28` }}
+        className={`flex-1 rounded-2xl p-4 mb-4 ${inFull ? (memState.mode === "learn" ? "flex items-center justify-center" : "overflow-y-auto") : ""}`}
+        style={{
+          background: `linear-gradient(135deg, ${accentColor}14, rgba(26,29,39,0.6))`,
+          border: `1px solid ${accentColor}28`,
+          ...(inFull && memState.mode === "learn" ? { maxHeight: "56vh" } : {}),
+        }}
       >
         {memState.mode === "learn" ? (
-          // Learn mode — full verse visible with soft highlight
-          <p className={`leading-[1.75] text-white/85 ${inFull ? "text-[17px]" : "text-[14px]"}`} style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+          // Learn mode — full verse visible, auto-sized in full screen so it never scrolls
+          <p
+            ref={inFull ? verseTextRef : undefined}
+            className={`text-white/85 ${inFull ? "text-center leading-[1.55]" : "text-[14px] leading-[1.75]"}`}
+            style={{ fontFamily: "'Iowan Old Style','Georgia',serif", ...(inFull ? { fontSize: `${fitPx}px` } : {}) }}
+          >
             &ldquo;{verseText}&rdquo;
           </p>
         ) : (
