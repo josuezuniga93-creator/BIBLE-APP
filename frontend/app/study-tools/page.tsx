@@ -34,6 +34,11 @@ type HenryHighlight = {
 };
 
 
+type RenderItem =
+  | { type: "highlight"; text: string; color: HenryHighlightColor; highlightId: string }
+  | { type: "phrase"; phrase: string; globalIdx: number }
+  | { type: "break" };
+
 const HIGHLIGHT_COLORS: Record<HenryHighlightColor, { label: string; bg: string; text: string; dot: string }> = {
   gold:  { label: "Gold",  bg: "rgba(201,169,97,0.35)", text: "#fff4cf", dot: "#c9a961" },
   blue:  { label: "Blue",  bg: "rgba(82,156,255,0.28)", text: "#dbeafe", dot: "#60a5fa" },
@@ -185,7 +190,11 @@ export default function StudyToolsPage() {
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
   const [commentaryResult, setCommentaryResult] = useState<CommentarySearchResult | null>(null);
   const [commentaryLoading, setCommentaryLoading] = useState(false);
+  const [dragSel, setDragSel] = useState<{ startIdx: number; endIdx: number; active: boolean } | null>(null);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
+  const longPressRef = useRef<number>(0);
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dragSelRef = useRef<typeof dragSel>(null);
   const commentaryChapters = listCommentaryChapters();
   const dictionaryEntries = useMemo(() => searchDictionary(query), [query]);
   const hasReferenceQuery = query.trim().length > 0;
@@ -207,6 +216,26 @@ export default function StudyToolsPage() {
     [readerPages, currentReaderPage, currentHighlights]
   );
 
+  const renderablePhrases = useMemo<RenderItem[]>(() => {
+    const items: RenderItem[] = [];
+    let globalIdx = 0;
+    for (const part of currentPageParts) {
+      if (part.highlight) {
+        items.push({ type: "highlight", text: part.text, color: part.highlight.color, highlightId: part.highlight.id });
+      } else {
+        for (const item of splitIntoTappablePhrases(part.text)) {
+          if (item === null) {
+            items.push({ type: "break" });
+          } else {
+            items.push({ type: "phrase", phrase: item, globalIdx });
+            globalIdx++;
+          }
+        }
+      }
+    }
+    return items;
+  }, [currentPageParts]);
+
   useEffect(() => {
     setHighlights(loadHenryHighlights());
   }, []);
@@ -215,6 +244,7 @@ export default function StudyToolsPage() {
     setReader(result);
     setReaderPage(0);
     setSelectedPhrases([]);
+    setDragSel(null);
   }
 
   const persistHighlights = useCallback((next: HenryHighlight[]) => {
@@ -254,6 +284,66 @@ export default function StudyToolsPage() {
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
+  }
+
+  function getPhraseIdxAt(x: number, y: number): number | null {
+    const el = document.elementFromPoint(x, y);
+    const span = el?.closest("[data-pidx]");
+    if (!span) return null;
+    const idx = parseInt(span.getAttribute("data-pidx") ?? "");
+    return isNaN(idx) ? null : idx;
+  }
+
+  function handleDragPointerDown(e: React.PointerEvent) {
+    if (selectedPhrases.length > 0) return;
+    const idx = getPhraseIdxAt(e.clientX, e.clientY);
+    if (idx === null) return;
+    dragStartRef.current = { x: e.clientX, y: e.clientY };
+    longPressRef.current = window.setTimeout(() => {
+      const next = { startIdx: idx, endIdx: idx, active: true };
+      setDragSel(next);
+      dragSelRef.current = next;
+      if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(25);
+    }, 380);
+  }
+
+  function handleDragPointerMove(e: React.PointerEvent) {
+    if (longPressRef.current && dragStartRef.current) {
+      const dy = Math.abs(e.clientY - dragStartRef.current.y);
+      if (dy > 14) {
+        window.clearTimeout(longPressRef.current);
+        longPressRef.current = 0;
+        dragStartRef.current = null;
+        return;
+      }
+    }
+    const current = dragSelRef.current;
+    if (!current?.active) return;
+    e.preventDefault();
+    const idx = getPhraseIdxAt(e.clientX, e.clientY);
+    if (idx !== null && idx !== current.endIdx) {
+      const next = { ...current, endIdx: idx };
+      setDragSel(next);
+      dragSelRef.current = next;
+    }
+  }
+
+  function handleDragPointerUp() {
+    window.clearTimeout(longPressRef.current);
+    longPressRef.current = 0;
+    dragStartRef.current = null;
+    const current = dragSelRef.current;
+    dragSelRef.current = null;
+    if (!current?.active) { setDragSel(null); return; }
+    const minIdx = Math.min(current.startIdx, current.endIdx);
+    const maxIdx = Math.max(current.startIdx, current.endIdx);
+    const selected = renderablePhrases
+      .filter((r): r is Extract<RenderItem, { type: "phrase" }> => r.type === "phrase")
+      .filter((r) => r.globalIdx >= minIdx && r.globalIdx <= maxIdx)
+      .map((r) => normalizeText(r.phrase))
+      .filter((p) => p.length >= 4);
+    if (selected.length > 0) setSelectedPhrases(selected);
+    setDragSel(null);
   }
 
   function openHighlightInReader(highlight: HenryHighlight) {
@@ -413,61 +503,90 @@ export default function StudyToolsPage() {
 
               <article
                 className="rounded-[30px] px-5 py-6"
-                style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{
+                  background: "rgba(255,255,255,0.045)",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  touchAction: dragSel?.active ? "none" : "pan-y",
+                }}
+                onPointerDown={handleDragPointerDown}
+                onPointerMove={handleDragPointerMove}
+                onPointerUp={handleDragPointerUp}
+                onPointerCancel={() => {
+                  window.clearTimeout(longPressRef.current);
+                  longPressRef.current = 0;
+                  dragSelRef.current = null;
+                  setDragSel(null);
+                }}
               >
-                <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="flex items-center justify-between gap-3 mb-4">
                   <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
                     {lang === "es" ? "Pagina" : "Page"} {currentReaderPage + 1} / {readerPages.length}
                   </p>
-                  <p className="text-[10px] font-bold text-white/32">
-                    {readerPages[currentReaderPage]?.length ?? 0} chars
-                  </p>
+                  {dragSel?.active ? (
+                    <p className="text-[10px] font-black" style={{ color: "#c9a961" }}>
+                      {Math.abs(dragSel.endIdx - dragSel.startIdx) + 1} {lang === "es" ? "frases" : "phrases"} ↑ {lang === "es" ? "suelta para confirmar" : "lift to confirm"}
+                    </p>
+                  ) : selectedPhrases.length === 0 ? (
+                    <p className="text-[10px] text-white/28 font-bold">
+                      {lang === "es" ? "Mantén y arrastra para resaltar" : "Hold & drag to highlight"}
+                    </p>
+                  ) : null}
                 </div>
-                <div
-                  className="text-[18px] leading-9 text-white/80 font-serif select-none"
-                >
-                  {currentPageParts.map((part, idx) =>
-                    part.highlight ? (
-                      <mark
-                        key={`${part.highlight.id}-${idx}`}
-                        onClick={() => removeHighlight(part.highlight!.id)}
-                        title={lang === "es" ? "Toca para eliminar" : "Tap to remove"}
+                <div className="text-[18px] leading-9 text-white/80 font-serif select-none">
+                  {renderablePhrases.map((item, ri) => {
+                    if (item.type === "break") {
+                      return <span key={`br-${ri}`} className="block mt-3" />;
+                    }
+                    if (item.type === "highlight") {
+                      return (
+                        <mark
+                          key={`hl-${item.highlightId}-${ri}`}
+                          onClick={() => removeHighlight(item.highlightId)}
+                          title={lang === "es" ? "Toca para eliminar" : "Tap to remove"}
+                          style={{
+                            background: HIGHLIGHT_COLORS[item.color].bg,
+                            color: HIGHLIGHT_COLORS[item.color].text,
+                            borderRadius: "6px",
+                            padding: "1px 3px",
+                          }}
+                        >
+                          {item.text}
+                        </mark>
+                      );
+                    }
+                    const normalized = normalizeText(item.phrase);
+                    const isSelected = selectedPhrases.includes(normalized);
+                    const inDragRange = dragSel?.active &&
+                      item.globalIdx >= Math.min(dragSel.startIdx, dragSel.endIdx) &&
+                      item.globalIdx <= Math.max(dragSel.startIdx, dragSel.endIdx);
+                    return (
+                      <span
+                        key={`p-${item.globalIdx}`}
+                        data-pidx={item.globalIdx}
+                        onClick={() => { if (!dragSel?.active) handlePhraseTap(item.phrase); }}
                         style={{
-                          background: HIGHLIGHT_COLORS[part.highlight.color].bg,
-                          color: HIGHLIGHT_COLORS[part.highlight.color].text,
-                          borderRadius: "6px",
-                          padding: "1px 3px",
+                          borderRadius: "5px",
+                          padding: "1px 2px",
+                          cursor: "pointer",
+                          userSelect: "none",
+                          WebkitUserSelect: "none",
+                          background: isSelected
+                            ? "rgba(201,169,97,0.22)"
+                            : inDragRange
+                              ? "rgba(201,169,97,0.16)"
+                              : "transparent",
+                          borderBottom: isSelected
+                            ? "2px dotted #c9a961"
+                            : inDragRange
+                              ? "2px solid rgba(201,169,97,0.60)"
+                              : "none",
+                          transition: "background 0.08s",
                         }}
                       >
-                        {part.text}
-                      </mark>
-                    ) : (
-                      splitIntoTappablePhrases(part.text).map((item, phraseIdx) =>
-                        item === null ? (
-                          <span key={`${idx}-br-${phraseIdx}`} className="block mt-3" />
-                        ) : (
-                          <span
-                            key={`${idx}-p-${phraseIdx}`}
-                            onClick={() => handlePhraseTap(item)}
-                            style={{
-                              borderRadius: "5px",
-                              padding: "1px 2px",
-                              cursor: "pointer",
-                              background: selectedPhrases.includes(normalizeText(item))
-                                ? "rgba(201,169,97,0.18)"
-                                : "transparent",
-                              borderBottom: selectedPhrases.includes(normalizeText(item))
-                                ? "2px dotted #c9a961"
-                                : "none",
-                              transition: "background 0.15s",
-                            }}
-                          >
-                            {item}{" "}
-                          </span>
-                        )
-                      )
-                    )
-                  )}
+                        {item.phrase}{" "}
+                      </span>
+                    );
+                  })}
                 </div>
               </article>
 
