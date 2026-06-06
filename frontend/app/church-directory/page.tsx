@@ -185,6 +185,7 @@ function emptyApplication(): ChurchApplication {
 }
 
 function SubmitChurchForm({ onClose }: { onClose: () => void }) {
+  const { lang } = useLanguage();
   const [form, setForm] = useState<ChurchApplication>(emptyApplication());
   const [sent, setSent] = useState(false);
 
@@ -230,8 +231,10 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
           </svg>
         </button>
         <div>
-          <p className="text-base font-bold text-white">Submit Your Church</p>
-          <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>Confessional Reformed churches only</p>
+          <p className="text-base font-bold text-white">{lang === "es" ? "Enviar tu iglesia" : "Submit Your Church"}</p>
+          <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>
+            {lang === "es" ? "Solo iglesias reformadas confesionales" : "Confessional Reformed churches only"}
+          </p>
         </div>
       </div>
 
@@ -239,54 +242,58 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
         {sent ? (
           <div className="py-20 text-center space-y-4">
             <div className="text-5xl">✉️</div>
-            <p className="text-base font-bold text-white">Application sent!</p>
+            <p className="text-base font-bold text-white">{lang === "es" ? "¡Solicitud preparada!" : "Application sent!"}</p>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
-              Your email app should have opened with the pre-filled message. Please send it to complete your application.
+              {lang === "es"
+                ? "Tu aplicación de correo debe haberse abierto con el mensaje preparado. Envíalo para completar la solicitud."
+                : "Your email app should have opened with the pre-filled message. Please send it to complete your application."}
             </p>
             <button
               onClick={onClose}
               className="mt-4 px-6 py-3 rounded-xl text-sm font-bold text-white"
               style={{ background: "#c9a961" }}
             >
-              Done
+              {lang === "es" ? "Listo" : "Done"}
             </button>
           </div>
         ) : (
           <>
             <div className="rounded-xl border px-4 py-3 text-xs leading-relaxed" style={{ borderColor: "rgba(201,169,97,0.25)", background: "rgba(201,169,97,0.07)", color: "rgba(255,255,255,0.5)" }}>
-              Only churches holding to a formal confession (Westminster, 1689 LBC, Heidelberg, Belgic, etc.) and subscribing to the Doctrines of Grace will be listed. Applications are reviewed before publishing.
+              {lang === "es"
+                ? "Solo se listarán iglesias que sostienen una confesión formal (Westminster, 1689, Heidelberg, Belga, etc.) y suscriben las Doctrinas de la Gracia. Las solicitudes se revisan antes de publicarse."
+                : "Only churches holding to a formal confession (Westminster, 1689 LBC, Heidelberg, Belgic, etc.) and subscribing to the Doctrines of Grace will be listed. Applications are reviewed before publishing."}
             </div>
 
             <div className="space-y-3">
               {/* Church name */}
               <div>
-                <label className={label}>Church Name *</label>
+                <label className={label}>{lang === "es" ? "Nombre de la iglesia *" : "Church Name *"}</label>
                 <input type="text" value={form.churchName} onChange={set("churchName")} placeholder="Grace Reformed Church" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* Pastor */}
               <div>
-                <label className={label}>Pastor / Contact Name *</label>
+                <label className={label}>{lang === "es" ? "Pastor / Nombre de contacto *" : "Pastor / Contact Name *"}</label>
                 <input type="text" value={form.pastor} onChange={set("pastor")} placeholder="Rev. John Smith" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* City + State */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={label}>City *</label>
+                  <label className={label}>{lang === "es" ? "Ciudad *" : "City *"}</label>
                   <input type="text" value={form.city} onChange={set("city")} placeholder="Nashville" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
                 </div>
                 <div>
-                  <label className={label}>State *</label>
+                  <label className={label}>{lang === "es" ? "Estado *" : "State *"}</label>
                   <input type="text" value={form.state} onChange={set("state")} placeholder="TN" maxLength={2} className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
                 </div>
               </div>
 
               {/* Confession */}
               <div>
-                <label className={label}>Confession *</label>
+                <label className={label}>{lang === "es" ? "Confesión *" : "Confession *"}</label>
                 <select value={form.confession} onChange={set("confession")} className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={{ ...inputStyle, appearance: "none" as const }}>
-                  <option value="">Select confession…</option>
+                  <option value="">{lang === "es" ? "Selecciona una confesión…" : "Select confession…"}</option>
                   <option>Westminster Confession of Faith</option>
                   <option>1689 London Baptist Confession</option>
                   <option>Heidelberg Catechism</option>
@@ -294,41 +301,41 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
                   <option>New Hampshire Confession of Faith</option>
                   <option>Second Helvetic Confession</option>
                   <option>Three Forms of Unity</option>
-                  <option>Other (specify in description)</option>
+                  <option>{lang === "es" ? "Otra (especifica en la descripción)" : "Other (specify in description)"}</option>
                 </select>
               </div>
 
               {/* Denomination */}
               <div>
-                <label className={label}>Denomination / Network *</label>
+                <label className={label}>{lang === "es" ? "Denominación / Red *" : "Denomination / Network *"}</label>
                 <input type="text" value={form.denomination} onChange={set("denomination")} placeholder="e.g. PCA, Reformed Baptist, RPCNA…" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* Website */}
               <div>
-                <label className={label}>Website</label>
+                <label className={label}>{lang === "es" ? "Sitio web" : "Website"}</label>
                 <input type="url" value={form.website} onChange={set("website")} placeholder="https://yourchurch.org" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* Contact email */}
               <div>
-                <label className={label}>Contact Email *</label>
+                <label className={label}>{lang === "es" ? "Correo de contacto *" : "Contact Email *"}</label>
                 <input type="email" value={form.email} onChange={set("email")} placeholder="pastor@yourchurch.org" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* Phone */}
               <div>
-                <label className={label}>Contact Phone</label>
+                <label className={label}>{lang === "es" ? "Teléfono de contacto" : "Contact Phone"}</label>
                 <input type="tel" value={form.phone} onChange={set("phone")} placeholder="+1 555 000 0000" className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none" style={inputStyle} />
               </div>
 
               {/* Description */}
               <div>
-                <label className={label}>Brief Description</label>
+                <label className={label}>{lang === "es" ? "Breve descripción" : "Brief Description"}</label>
                 <textarea
                   value={form.description}
                   onChange={set("description")}
-                  placeholder="Tell us a bit about your congregation — history, preaching style, ministries, etc."
+                  placeholder={lang === "es" ? "Cuéntanos un poco sobre tu congregación: historia, predicación, ministerios, etc." : "Tell us a bit about your congregation — history, preaching style, ministries, etc."}
                   rows={4}
                   className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
                   style={inputStyle}
@@ -342,11 +349,13 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
               className="w-full py-3.5 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
               style={{ background: "#c9a961" }}
             >
-              Send Application
+              {lang === "es" ? "Enviar solicitud" : "Send Application"}
             </button>
 
             <p className="text-[10px] text-center" style={{ color: "rgba(255,255,255,0.2)" }}>
-              Tapping "Send Application" opens your email app with a pre-filled message.
+              {lang === "es"
+                ? "Al tocar \"Enviar solicitud\" se abrirá tu correo con un mensaje preparado."
+                : "Tapping \"Send Application\" opens your email app with a pre-filled message."}
             </p>
 
             <div style={{ height: "max(env(safe-area-inset-bottom), 12px)" }} />
@@ -599,7 +608,9 @@ export default function ChurchDirectoryPage() {
         <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 space-y-1">
           <p className="text-xs font-bold text-white/50">{t(lang, "church_about")}</p>
           <p className="text-[11px] text-white/30 leading-relaxed">
-            Lists confessional Reformed churches holding to the Westminster Confession, 1689 London Baptist Confession, New Hampshire Confession, or the Doctrines of Grace. More churches are added regularly.
+            {lang === "es"
+              ? "Lista iglesias reformadas confesionales que sostienen la Confesión de Westminster, la Confesión Bautista de Londres de 1689, la Confesión de New Hampshire o las Doctrinas de la Gracia. Se agregan más iglesias regularmente."
+              : "Lists confessional Reformed churches holding to the Westminster Confession, 1689 London Baptist Confession, New Hampshire Confession, or the Doctrines of Grace. More churches are added regularly."}
           </p>
         </div>
 
@@ -608,8 +619,10 @@ export default function ChurchDirectoryPage() {
           <div className="flex items-center gap-3">
             <span className="text-2xl">⛪</span>
             <div>
-              <p className="text-sm font-bold text-white">Is your church listed?</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>Pastors and church planters can apply to be added.</p>
+              <p className="text-sm font-bold text-white">{lang === "es" ? "¿Tu iglesia aparece en la lista?" : "Is your church listed?"}</p>
+              <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>
+                {lang === "es" ? "Pastores y plantadores de iglesias pueden solicitar ser agregados." : "Pastors and church planters can apply to be added."}
+              </p>
             </div>
           </div>
           <button
@@ -617,7 +630,7 @@ export default function ChurchDirectoryPage() {
             className="w-full py-3 rounded-xl text-sm font-bold text-white active:scale-95 transition-transform"
             style={{ background: "#c9a961" }}
           >
-            Submit Your Church
+            {lang === "es" ? "Enviar tu iglesia" : "Submit Your Church"}
           </button>
         </div>
 

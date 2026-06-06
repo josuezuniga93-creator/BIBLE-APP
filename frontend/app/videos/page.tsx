@@ -12,7 +12,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
-import type { FundamentalsTopic, FundamentalsCategory, Video } from "../lib/videoTypes";
+import type { FundamentalsCategory, VideoLanguage } from "../lib/videoTypes";
 
 // ─── Design constants (matches app-wide system) ────────────────────────────────
 const AC        = "#c9a961";
@@ -40,6 +40,7 @@ interface VideoEntry {
   scriptureRefs?: string[];
   isShort?: boolean;        // ≤ 6 min
   isFeatured?: boolean;
+  language?: VideoLanguage; // defaults to English for existing content
 }
 
 // Videos loaded from Supabase (Phase 7). Empty until first content is approved.
@@ -57,13 +58,8 @@ const TESTIMONIES_VIDEOS: VideoEntry[] = [
     category: "testimonies",
     description: "A testimony of God's grace shared through ForCry Ministry.",
     isShort: true,
+    language: "en",
   },
-];
-
-// All vertical short-form videos, pooled from every section.
-const ALL_SHORTS: VideoEntry[] = [
-  ...SHORT_VIDEOS,
-  ...TESTIMONIES_VIDEOS.filter((v) => v.isShort),
 ];
 
 // ─── Phase 2: Fundamentals of the Faith data ───────────────────────────────────
@@ -1116,7 +1112,7 @@ type Screen =
   | { id: "fundamentals-detail"; section: FundamentalsSection; focusTopicId?: string };
 
 export default function VideosPage() {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const [screen, setScreen] = useState<Screen>({ id: "home" });
   const [player, setPlayer] = useState<{ videoId: string; title: string; isShort?: boolean } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1135,8 +1131,27 @@ export default function VideosPage() {
     setHistory(loadWatchHistory());
   }, []);
 
+  const activeVideoLanguage: VideoLanguage = lang === "es" ? "es" : "en";
+  const matchesLanguage = (video: VideoEntry) => (video.language ?? "en") === activeVideoLanguage;
+  const currentFeatured = CURRENT_FEATURED && matchesLanguage(CURRENT_FEATURED) ? CURRENT_FEATURED : null;
+  const archiveVideos = ARCHIVE_VIDEOS.filter(matchesLanguage);
+  const shortVideos = SHORT_VIDEOS.filter(matchesLanguage);
+  const communityVideos = COMMUNITY_VIDEOS.filter(matchesLanguage);
+  const testimoniesVideos = TESTIMONIES_VIDEOS.filter(matchesLanguage);
+  const allShorts = [...shortVideos, ...testimoniesVideos.filter((v) => v.isShort)];
+  const visibleVideoIds = new Set(
+    [
+      ...(currentFeatured ? [currentFeatured] : []),
+      ...archiveVideos,
+      ...shortVideos,
+      ...communityVideos,
+      ...testimoniesVideos,
+    ].map((video) => video.id)
+  );
+  const visibleHistory = history.filter((item) => visibleVideoIds.has(item.videoId));
+
   // Filtered home results
-  const allVideos = [...(CURRENT_FEATURED ? [CURRENT_FEATURED] : []), ...ARCHIVE_VIDEOS, ...SHORT_VIDEOS, ...COMMUNITY_VIDEOS, ...TESTIMONIES_VIDEOS];
+  const allVideos = [...(currentFeatured ? [currentFeatured] : []), ...archiveVideos, ...shortVideos, ...communityVideos, ...testimoniesVideos];
   const searchResults = searchQuery
     ? allVideos.filter(
         (v) =>
@@ -1153,7 +1168,7 @@ export default function VideosPage() {
         {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
         <VideoListView
           title="Featured Video Archive"
-          videos={ARCHIVE_VIDEOS}
+          videos={archiveVideos}
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
@@ -1167,7 +1182,7 @@ export default function VideosPage() {
       <>
         {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
         <ShortsGridView
-          videos={ALL_SHORTS}
+          videos={allShorts}
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
         />
@@ -1181,7 +1196,7 @@ export default function VideosPage() {
         {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
         <VideoListView
           title="Community Videos"
-          videos={COMMUNITY_VIDEOS}
+          videos={communityVideos}
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
@@ -1196,7 +1211,7 @@ export default function VideosPage() {
         {player && <VideoPlayerModal videoId={player.videoId} title={player.title} vertical={player.isShort} onClose={() => setPlayer(null)} />}
         <VideoListView
           title="Testimonies"
-          videos={TESTIMONIES_VIDEOS}
+          videos={testimoniesVideos}
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
@@ -1262,7 +1277,7 @@ export default function VideosPage() {
             <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: AC }}>
               Tulip Bible App
             </p>
-            <h1 className="text-[22px] font-bold text-white leading-none">Video Library</h1>
+            <h1 className="text-[22px] font-bold text-white leading-none">{t("videos_heading")}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -1271,7 +1286,7 @@ export default function VideosPage() {
               style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-              Submit
+              {lang === "es" ? "Enviar" : "Submit"}
             </button>
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
@@ -1295,7 +1310,7 @@ export default function VideosPage() {
               <input
                 autoFocus
                 className="flex-1 bg-transparent text-[14px] text-white placeholder-white/30 outline-none"
-                placeholder="Search videos, speakers…"
+                placeholder={t("videos_search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -1310,7 +1325,7 @@ export default function VideosPage() {
         {searchQuery && (
           <div className="px-4 pb-6">
             <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.30)" }}>
-              {searchResults.length} result{searchResults.length !== 1 ? "s" : ""}
+              {searchResults.length} {lang === "es" ? (searchResults.length === 1 ? "resultado" : "resultados") : `result${searchResults.length !== 1 ? "s" : ""}`}
             </p>
             <div className="grid grid-cols-2 gap-3">
               {searchResults.map((v) => (
@@ -1318,7 +1333,7 @@ export default function VideosPage() {
               ))}
             </div>
             {searchResults.length === 0 && (
-              <p className="text-center text-white/30 text-[14px] mt-8">No results for &ldquo;{searchQuery}&rdquo;</p>
+              <p className="text-center text-white/30 text-[14px] mt-8">{lang === "es" ? "Sin resultados para" : "No results for"} &ldquo;{searchQuery}&rdquo;</p>
             )}
           </div>
         )}
@@ -1326,12 +1341,12 @@ export default function VideosPage() {
         {!searchQuery && (
           <>
             {/* ── Cinematic hero ────────────────────────────────────────────── */}
-            {CURRENT_FEATURED ? (
+            {currentFeatured ? (
               <div className="pt-4">
-                <SectionHeader label="This Week" title="Featured Video" color={AC} />
+                <SectionHeader label={lang === "es" ? "Esta Semana" : "This Week"} title={lang === "es" ? "Video Destacado" : "Featured Video"} color={AC} />
                 <FeaturedVideoBanner
-                  video={CURRENT_FEATURED}
-                  onWatch={() => playVideo(CURRENT_FEATURED.id, CURRENT_FEATURED.title)}
+                  video={currentFeatured}
+                  onWatch={() => playVideo(currentFeatured.id, currentFeatured.title)}
                 />
               </div>
             ) : (
@@ -1339,11 +1354,11 @@ export default function VideosPage() {
             )}
 
             {/* ── Continue Watching (only when there's history) ─────────────── */}
-            {history.length > 0 && (
+            {visibleHistory.length > 0 && (
               <section className="mb-8">
-                <SectionHeader label="Pick up where you left off" title="Continue Watching" color={AC} />
+                <SectionHeader label={lang === "es" ? "Continúa donde lo dejaste" : "Pick up where you left off"} title={t("videos_continue_watching")} color={AC} />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
-                  {history.map((item) => (
+                  {visibleHistory.map((item) => (
                     <ContinueCard
                       key={item.videoId}
                       item={item}
@@ -1361,14 +1376,14 @@ export default function VideosPage() {
             {/* ── Short Videos (vertical 9:16, always present) ───────────────── */}
             <section className="mb-7">
               <SectionHeader
-                label="Quick Teachings · Made for your phone"
-                title="Short Videos"
+                label={lang === "es" ? "Enseñanzas breves · Hechas para tu teléfono" : "Quick Teachings · Made for your phone"}
+                title={lang === "es" ? "Videos Cortos" : "Short Videos"}
                 onViewAll={() => go({ id: "short" })}
                 color="#c9a961"
               />
-              {ALL_SHORTS.length > 0 ? (
+              {allShorts.length > 0 ? (
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
-                  {ALL_SHORTS.map((v) => (
+                  {allShorts.map((v) => (
                     <ShortCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, true, v.speaker)} />
                   ))}
                 </div>
@@ -1386,9 +1401,9 @@ export default function VideosPage() {
             {/* ── Featured Videos (landscape grid, 231-style) ────────────────── */}
             <section className="mb-8 px-4">
               <h3 className="text-[16px] font-bold text-white mb-3">Featured Videos</h3>
-              {ARCHIVE_VIDEOS.length > 0 ? (
+              {archiveVideos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
-                  {ARCHIVE_VIDEOS.map((v) => (
+                  {archiveVideos.map((v) => (
                     <button
                       key={v.id}
                       onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)}
@@ -1447,7 +1462,7 @@ export default function VideosPage() {
             </section>
 
             {/* ── Community Videos (only when content exists) ────────────────── */}
-            {COMMUNITY_VIDEOS.length > 0 && (
+            {communityVideos.length > 0 && (
               <section className="mb-7">
                 <SectionHeader
                   label="Approved Submissions"
@@ -1456,7 +1471,7 @@ export default function VideosPage() {
                   color="#10b981"
                 />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
-                  {COMMUNITY_VIDEOS.map((v) => (
+                  {communityVideos.map((v) => (
                     <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
                   ))}
                 </div>
@@ -1464,7 +1479,7 @@ export default function VideosPage() {
             )}
 
             {/* ── Testimonies (only when content exists) ────────────────────── */}
-            {TESTIMONIES_VIDEOS.length > 0 && (
+            {testimoniesVideos.length > 0 && (
               <section className="mb-7">
                 <SectionHeader
                   label="Stories of Grace"
@@ -1473,7 +1488,7 @@ export default function VideosPage() {
                   color="#c9a961"
                 />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
-                  {TESTIMONIES_VIDEOS.map((v) => (
+                  {testimoniesVideos.map((v) => (
                     <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
                   ))}
                 </div>
@@ -1503,10 +1518,12 @@ export default function VideosPage() {
 
               <div className="px-6 pt-4 pb-10 overflow-y-auto">
                 {/* Submit a Video */}
-                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>Submit a Video</p>
-                <h2 className="text-[20px] font-bold text-white mb-2">Share Biblical Teaching</h2>
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>{lang === "es" ? "Enviar un Video" : "Submit a Video"}</p>
+                <h2 className="text-[20px] font-bold text-white mb-2">{lang === "es" ? "Comparte Enseñanza Bíblica" : "Share Biblical Teaching"}</h2>
                 <p className="text-[13px] leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
-                  Are you a pastor or teacher? Submit a video to be reviewed and published through the official Tulip Bible App YouTube channel — sharing sound doctrine with believers worldwide.
+                  {lang === "es"
+                    ? "¿Eres pastor o maestro? Envía un video para revisión y publicación en el canal oficial de YouTube de Tulip Bible App — compartiendo sana doctrina con creyentes en todo el mundo."
+                    : "Are you a pastor or teacher? Submit a video to be reviewed and published through the official Tulip Bible App YouTube channel — sharing sound doctrine with believers worldwide."}
                 </p>
                 <Link
                   href="/videos/submit"
@@ -1515,16 +1532,18 @@ export default function VideosPage() {
                   style={{ background: `linear-gradient(135deg, #d9b970, #c9a961)`, color: "#08090f" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-                  Go to Submit Form
+                  {lang === "es" ? "Ir al Formulario" : "Go to Submit Form"}
                 </Link>
 
                 {/* Divider */}
                 <div className="mb-6" style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />
 
                 {/* Video Philosophy */}
-                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>Our Video Philosophy</p>
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>{lang === "es" ? "Nuestra Filosofía de Video" : "Our Video Philosophy"}</p>
                 <p className="text-[13px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)", fontFamily: SERIF }}>
-                  All approved videos are published through the official Tulip Bible App YouTube channel and embedded here — keeping the experience native to the app while maintaining doctrinal accountability.
+                  {lang === "es"
+                    ? "Todos los videos aprobados se publican en el canal oficial de YouTube de Tulip Bible App y se integran aquí — manteniendo la experiencia nativa de la app con responsabilidad doctrinal."
+                    : "All approved videos are published through the official Tulip Bible App YouTube channel and embedded here — keeping the experience native to the app while maintaining doctrinal accountability."}
                 </p>
                 <a
                   href="https://www.youtube.com/@TulipBibleApp"

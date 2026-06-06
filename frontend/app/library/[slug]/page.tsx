@@ -17,6 +17,7 @@ import { useTheme } from "../../lib/useTheme";
 import { BookmarkModal } from "../../components/BookmarkModal";
 import { isAnySaved } from "../../lib/collections";
 import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
+import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
 
 // ─── Inline markdown → HTML ───────────────────────────────────────────────────
 function renderInline(text: string): string {
@@ -335,8 +336,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   if (error || !book) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4 text-center" style={{ backgroundColor: th.pageBg }}>
-        <p className="text-red-400 text-sm">{error ?? "Book not found"}</p>
-        <Link href="/library" className="text-sm hover:underline" style={{ color: th.accent }}>← Back to Library</Link>
+        <p className="text-red-400 text-sm">{error ?? (lang === "es" ? "Libro no encontrado" : "Book not found")}</p>
+        <Link href="/library" className="text-sm hover:underline" style={{ color: th.accent }}>{lang === "es" ? "← Volver a la Biblioteca" : "← Back to Library"}</Link>
       </div>
     );
   }
@@ -351,13 +352,13 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
         style={{ backgroundColor: th.pageBg }}
         onClick={() => setPresentationMode(false)}
       >
-        <div className="absolute top-4 right-4 text-xs pointer-events-none" style={{ color: th.textVeryMuted }}>Press F or tap to exit</div>
+        <div className="absolute top-4 right-4 text-xs pointer-events-none" style={{ color: th.textVeryMuted }}>{lang === "es" ? "Presiona F o toca para salir" : "Press F or tap to exit"}</div>
         <div className="px-8 pt-10 pb-4 flex-shrink-0 max-w-2xl mx-auto w-full" style={{ borderBottom: `1px solid ${th.borderLight}` }}>
           <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: th.accentLight }}>
-            {book.title} · Ch. {currentChapter}
+            {bookTitle(book, lang)} · {lang === "es" ? "Cap." : "Ch."} {currentChapter}
           </p>
           <p className="text-xl md:text-2xl font-bold leading-snug" style={{ color: th.textPrimary }}
-            dangerouslySetInnerHTML={{ __html: chapter ? renderInline(chapter.chapter_title) : "" }} />
+            dangerouslySetInnerHTML={{ __html: chapter ? renderInline(bookSectionTitle(slug, chapter.chapter_title, lang)) : "" }} />
         </div>
         <div className="flex-1 overflow-y-auto px-8 py-6">
           {chapterLoading ? (
@@ -375,13 +376,13 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           <button disabled={!chapter?.has_prev} onClick={goPrev}
             className="px-5 py-2.5 rounded-lg font-bold text-sm transition-colors"
             style={{ backgroundColor: chapter?.has_prev ? th.prevBtnBg : "transparent", color: chapter?.has_prev ? th.addLibText : th.textVeryMuted, cursor: chapter?.has_prev ? "pointer" : "not-allowed" }}>
-            ← Previous
+            {lang === "es" ? "← Anterior" : "← Previous"}
           </button>
           <span style={{ color: th.textVeryMuted, fontSize: "14px" }}>{currentChapter} / {book.chapter_count}</span>
           <button disabled={!chapter?.has_next} onClick={goNext}
             className="px-5 py-2.5 rounded-lg font-bold text-sm transition-colors"
             style={{ background: chapter?.has_next ? th.nextBtnGradient : "transparent", color: chapter?.has_next ? "white" : th.textVeryMuted, cursor: chapter?.has_next ? "pointer" : "not-allowed" }}>
-            Next →
+            {lang === "es" ? "Siguiente →" : "Next →"}
           </button>
         </div>
       </div>
@@ -406,10 +407,10 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
-            Back
+            {lang === "es" ? "Volver" : "Back"}
           </button>
           <span className="text-xs font-medium truncate max-w-[60%] text-center" style={{ color: th.textMuted }}>
-            {book.title}
+            {bookTitle(book, lang)}
           </span>
           <div className="w-12" />
         </div>
@@ -453,7 +454,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
-              <span className="text-[9px] font-bold">Contents</span>
+              <span className="text-[9px] font-bold">{lang === "es" ? "Índice" : "Contents"}</span>
             </button>
             <button
               onClick={() => {
@@ -466,7 +467,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <path d="M4 20L10 4l6 16M6 15h8M16 20l2-4 2 4M17.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              <span className="text-[9px] font-bold">Text Size</span>
+              <span className="text-[9px] font-bold">{lang === "es" ? "Texto" : "Text Size"}</span>
             </button>
             <button
               onClick={() => setShowSettings((v) => !v)}
@@ -476,7 +477,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
               </svg>
-              <span className="text-[9px] font-bold">More</span>
+              <span className="text-[9px] font-bold">{lang === "es" ? "Más" : "More"}</span>
             </button>
           </div>
         </div>
@@ -485,7 +486,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
         <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
           <main className="px-5 pt-8 pb-8 max-w-2xl mx-auto">
             <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-              Chapter {currentChapter}
+              {lang === "es" ? "Capítulo" : "Chapter"} {currentChapter}
               {totalPages > 1 && (
                 <span style={{ color: th.textVeryMuted, fontWeight: "normal", letterSpacing: "0.05em" }}>
                   {" "}· p. {currentPage}/{totalPages}
@@ -497,7 +498,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               <h2
                 className="text-2xl font-black mb-8 leading-tight"
                 style={{ color: th.textPrimary }}
-                dangerouslySetInnerHTML={{ __html: chapter ? renderInline(chapter.chapter_title) : "Loading…" }}
+                dangerouslySetInnerHTML={{ __html: chapter ? renderInline(bookSectionTitle(slug, chapter.chapter_title, lang)) : (lang === "es" ? "Cargando…" : "Loading…") }}
               />
             )}
             {/* Spanish translation status bar */}
@@ -537,7 +538,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               </div>
             )}
             <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-              Public domain text • Free to read, share, and distribute
+              {lang === "es" ? "Texto de dominio público • Gratis para leer, compartir y distribuir" : "Public domain text • Free to read, share, and distribute"}
             </p>
           </main>
         </div>
@@ -559,7 +560,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               cursor: (!isFirstPage || chapter?.has_prev) ? "pointer" : "not-allowed",
             }}
           >
-            ← Prev
+            {lang === "es" ? "← Ant." : "← Prev"}
           </button>
 
           {/* Center page indicator */}
@@ -580,7 +581,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               cursor: (!isLastPage || chapter?.has_next) ? "pointer" : "not-allowed",
             }}
           >
-            Next →
+            {lang === "es" ? "Sig. →" : "Next →"}
           </button>
         </div>
 
@@ -594,7 +595,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.borderMed}` }}>
-                <p className="text-sm font-bold" style={{ color: th.textMuted }}>Table of Contents</p>
+                <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Índice" : "Table of Contents"}</p>
                 <button onClick={() => setShowToc(false)} className="transition-colors text-lg" style={{ color: th.textVeryMuted }}>✕</button>
               </div>
               <div className="p-3 space-y-0.5">
@@ -609,7 +610,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                       fontWeight: ch.number === currentChapter ? "bold" : "normal",
                     }}
                   >
-                    {ch.number}. {ch.title}
+                    {ch.number}. {bookSectionTitle(slug, ch.title, lang)}
                   </button>
                 ))}
               </div>
@@ -626,9 +627,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               style={{ backgroundColor: th.drawerBg, border: `1px solid ${th.borderMed}` }}
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
+              <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>{lang === "es" ? "Ajustes de Lectura" : "Display Settings"}</p>
               <div className="mb-5">
-                <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>Text Size</p>
+                <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>{lang === "es" ? "Tamaño del Texto" : "Text Size"}</p>
                 <div className="flex gap-2">
                   {(["sm", "md", "lg", "xl"] as FontSize[]).map((fs) => (
                     <button
@@ -641,7 +642,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                         color: fontSize === fs ? th.settingsBtnActiveText : th.settingsBtnInactiveText,
                       }}
                     >
-                      {FONT_SIZE_LABELS[fs]}
+                      {lang === "es" ? ({ sm: "Pequeño", md: "Mediano", lg: "Grande", xl: "Muy Grande" } as Record<FontSize, string>)[fs] : FONT_SIZE_LABELS[fs]}
                     </button>
                   ))}
                 </div>
@@ -651,7 +652,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                 className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
                 style={{ backgroundColor: th.presentBtnBg, border: `1px solid ${th.presentBtnBorder}`, color: th.presentBtnText }}
               >
-                ⛶ Presentation / Sunday Mode
+                {lang === "es" ? "⛶ Modo Presentación / Domingo" : "⛶ Presentation / Sunday Mode"}
               </button>
             </div>
           </div>
@@ -696,7 +697,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
         </Link>
 
         <p className="text-sm font-bold truncate px-2 max-w-[55vw]" style={{ color: th.textPrimary }}>
-          {book.title}
+          {bookTitle(book, lang)}
         </p>
 
         <div className="flex items-center gap-1 min-w-[80px] justify-end">
@@ -745,7 +746,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             </div>
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>
-                {book.title}
+                {bookTitle(book, lang)}
               </h1>
               <p className="text-sm font-semibold mb-2" style={{ color: th.accent }}>{book.author}</p>
               <div className="flex items-center gap-1 mb-3">
@@ -765,8 +766,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               {/* Free badge */}
               <div className="flex items-center gap-1.5">
                 <span style={{ color: "#34d399", fontSize: "12px" }}>✓</span>
-                <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>Free</span>
-                <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>100% free to read</span>
+                <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
+                <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
               </div>
             </div>
           </div>
@@ -778,7 +779,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
               style={{ background: th.readNowGradient }}
             >
-              Read Now
+              {lang === "es" ? "Leer Ahora" : "Read Now"}
             </button>
             <button
               onClick={toggleBookmark}
@@ -788,17 +789,17 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c9a961" : th.addLibText }}>
                 <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
               </svg>
-              {bookmarked ? "Bookmarked" : "Add to Library"}
+              {bookmarked ? (lang === "es" ? "Guardado" : "Bookmarked") : (lang === "es" ? "Agregar a Biblioteca" : "Add to Library")}
             </button>
           </div>
 
           {/* About */}
           <div className="px-4 mb-5">
-            <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>About the book</p>
+            <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>{lang === "es" ? "Acerca del libro" : "About the book"}</p>
             <p className="text-xs leading-relaxed" style={{ color: th.textMuted }}>
               {descExpanded ? book.description : (book.description?.slice(0, 160) ?? "")}
               {!descExpanded && (book.description?.length ?? 0) > 160 && (
-                <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>More</button>
+                <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>{lang === "es" ? "Más" : "More"}</button>
               )}
             </p>
           </div>
@@ -806,8 +807,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           {/* Metadata chips */}
           <div className="flex gap-4 px-4 mb-6">
             {[
-              { icon: "sections", label: `${book.chapter_count} Chapters` },
-              { icon: "language", label: "English" },
+              { icon: "sections", label: `${book.chapter_count} ${lang === "es" ? "Capítulos" : "Chapters"}` },
+              { icon: "language", label: lang === "es" ? "Español automático" : "English" },
               { icon: "year", label: book.year ? String(book.year) : "" },
             ].filter(m => m.label).map((m) => (
               <div key={m.label} className="flex items-center gap-1.5">
@@ -825,7 +826,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               onClick={() => setShowDetail(false)}
               className="text-xs font-bold" style={{ color: th.accent }}
             >
-              Skip to reading ↓
+              {lang === "es" ? "Ir a la lectura ↓" : "Skip to reading ↓"}
             </button>
           </div>
         </div>
@@ -841,7 +842,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.borderMed}` }}>
-              <p className="text-sm font-bold" style={{ color: th.textMuted }}>Table of Contents</p>
+              <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Índice" : "Table of Contents"}</p>
               <button onClick={() => setShowToc(false)} className="transition-colors text-lg" style={{ color: th.textVeryMuted }}>✕</button>
             </div>
             <div className="p-3 space-y-0.5">
@@ -856,7 +857,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                     fontWeight: ch.number === currentChapter ? "bold" : "normal",
                   }}
                 >
-                  {ch.number}. {ch.title}
+                  {ch.number}. {bookSectionTitle(slug, ch.title, lang)}
                 </button>
               ))}
             </div>
@@ -873,9 +874,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             style={{ backgroundColor: th.drawerBg, border: `1px solid ${th.borderMed}` }}
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>{lang === "es" ? "Ajustes de Lectura" : "Display Settings"}</p>
             <div className="mb-5">
-              <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>Text Size</p>
+              <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>{lang === "es" ? "Tamaño del Texto" : "Text Size"}</p>
               <div className="flex gap-2">
                 {(["sm", "md", "lg", "xl"] as FontSize[]).map((fs) => (
                   <button
@@ -888,7 +889,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                       color: fontSize === fs ? th.settingsBtnActiveText : th.settingsBtnInactiveText,
                     }}
                   >
-                    {FONT_SIZE_LABELS[fs]}
+                    {lang === "es" ? ({ sm: "Pequeño", md: "Mediano", lg: "Grande", xl: "Muy Grande" } as Record<FontSize, string>)[fs] : FONT_SIZE_LABELS[fs]}
                   </button>
                 ))}
               </div>
@@ -898,7 +899,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
               style={{ backgroundColor: th.presentBtnBg, border: `1px solid ${th.presentBtnBorder}`, color: th.presentBtnText }}
             >
-              ⛶ Presentation / Sunday Mode
+              {lang === "es" ? "⛶ Modo Presentación / Domingo" : "⛶ Presentation / Sunday Mode"}
             </button>
           </div>
         </div>
@@ -926,8 +927,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
       {showBookmarkModal && book && (
         <BookmarkModal
-          item={{ id: `book::${slug}`, type: "book", title: book.title, subtitle: book.author ?? undefined, preview: book.year ? String(book.year) : undefined }}
-          label={book.title}
+          item={{ id: `book::${slug}`, type: "book", title: bookTitle(book, lang), subtitle: book.author ?? undefined, preview: book.year ? String(book.year) : undefined }}
+          label={bookTitle(book, lang)}
           onClose={() => { setShowBookmarkModal(false); refreshBookmarked(); }}
         />
       )}

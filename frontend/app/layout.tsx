@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { BadgeRuntime } from "./components/BadgeRuntime";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,6 +53,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#0f0f0f",
 };
@@ -68,7 +70,7 @@ export default function RootLayout({
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','gold-navy','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'gold-navy');if(localStorage.getItem('ryc-android-mode')!=='true'){document.documentElement.setAttribute('data-iphone-mode','true');}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','gold-navy','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'gold-navy');if(localStorage.getItem('ryc-device-mode')!=='android'){document.documentElement.setAttribute('data-iphone-mode','true');}}catch(e){}})();`,
           }}
         />
       </head>
@@ -77,6 +79,7 @@ export default function RootLayout({
         <AppNav />
         {/* md:pt-14 = top nav height (hidden on mobile); pb-36 on mobile = bottom nav height */}
         <div className="layout-children md:pt-14 pb-36 md:pb-0">{children}</div>
+        <BadgeRuntime />
         <BottomNav />
         {/* Service Worker registration */}
         <script

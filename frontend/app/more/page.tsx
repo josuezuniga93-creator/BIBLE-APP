@@ -130,6 +130,16 @@ function CollectionsAppIcon() {
   );
 }
 
+function StudyToolsAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M4 5.5h6.5A3.5 3.5 0 0114 9v12a3.5 3.5 0 00-3.5-3.5H4V5.5z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M20 5.5h-4A3.5 3.5 0 0012.5 9v12a3.5 3.5 0 013.5-3.5h4V5.5z" stroke="currentColor" strokeWidth="1.7" />
+      <path d="M8 10h3M16 10h2M8 13h2.5M16 13h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // ─── App grid config ──────────────────────────────────────────────────────────
 
 const APP_TILE_DEFS = [
@@ -139,6 +149,7 @@ const APP_TILE_DEFS = [
   { href: "/bible-tracker",     Icon: TrackerAppIcon,      labelKey: "more_tile_tracker"     as const, color: "#065f46" },
   { href: "/kids-books",        Icon: KidsAppIcon,         labelKey: "more_tile_kids"        as const, color: "#c2410c" },
   { href: "/videos",            Icon: VideosAppIcon,       labelKey: "more_tile_videos"      as const, color: "#1e3a8a" },
+  { href: "/study-tools",       Icon: StudyToolsAppIcon,   labelKey: "more_tile_study_tools" as const, color: "#8a6b2d" },
   { href: "/collections",       Icon: CollectionsAppIcon,  labelKey: "more_tile_collections" as const, color: "#92400e" },
   { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed" },
   { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a" },
@@ -147,8 +158,8 @@ const APP_TILE_DEFS = [
 
 const TILE_GROUP_DEFS = [
   { titleKey: "more_group_rhythms" as const, dekKey: "more_group_rhythms_dek" as const, columns: 2, indices: [0, 3] },
-  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 4] },
-  { titleKey: "more_group_connect" as const, dekKey: "more_group_connect_dek" as const, columns: 2, indices: [6, 7, 8, 9] },
+  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 6, 4] },
+  { titleKey: "more_group_connect" as const, dekKey: "more_group_connect_dek" as const, columns: 2, indices: [7, 8, 9, 10] },
 ];
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -158,25 +169,32 @@ export default function MorePage() {
   const { theme, setTheme } = useTheme();
   const themeKeys = Object.keys(THEMES) as Theme[];
 
-  // ── Android Mode state (iPhone safe-area padding is ON by default) ──────────
-  const [androidMode, setAndroidMode] = useState(false);
+  // ── iPhone Mode state (safe-area padding is ON by default) ──────────────────
+  const [iphoneMode, setIphoneMode] = useState(true);
 
   useEffect(() => {
     try {
-      setAndroidMode(localStorage.getItem("ryc-android-mode") === "true");
+      const androidMode = localStorage.getItem("ryc-device-mode") === "android";
+      setIphoneMode(!androidMode);
+      if (!androidMode) {
+        document.documentElement.setAttribute("data-iphone-mode", "true");
+      } else {
+        document.documentElement.removeAttribute("data-iphone-mode");
+      }
     } catch { /**/ }
   }, []);
 
   function handleIphoneMode(enabled: boolean) {
-    setAndroidMode(enabled);
+    setIphoneMode(enabled);
     try {
-      localStorage.setItem("ryc-android-mode", enabled ? "true" : "false");
+      localStorage.setItem("ryc-device-mode", enabled ? "iphone" : "android");
+      localStorage.setItem("ryc-android-mode", enabled ? "false" : "true");
       if (enabled) {
+        // iPhone mode ON → restore notch / Dynamic Island padding
+        document.documentElement.setAttribute("data-iphone-mode", "true");
+      } else {
         // Android mode ON → remove iPhone notch padding
         document.documentElement.removeAttribute("data-iphone-mode");
-      } else {
-        // Android mode OFF → restore iPhone notch padding
-        document.documentElement.setAttribute("data-iphone-mode", "true");
       }
     } catch { /**/ }
   }
@@ -400,14 +418,14 @@ export default function MorePage() {
               <p className="text-xs text-white/40 mt-0.5 max-w-[220px] leading-relaxed">{t(lang, "more_iphone_mode_desc")}</p>
             </div>
             <button
-              onClick={() => handleIphoneMode(!androidMode)}
+              onClick={() => handleIphoneMode(!iphoneMode)}
               className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ml-3 ${
-                androidMode ? "bg-white/25" : "bg-white/[0.08]"
+                iphoneMode ? "bg-white/25" : "bg-white/[0.08]"
               }`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
-                  androidMode ? "translate-x-6" : "translate-x-0"
+                  iphoneMode ? "translate-x-6" : "translate-x-0"
                 }`}
               />
             </button>

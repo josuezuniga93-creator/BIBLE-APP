@@ -10,6 +10,7 @@ const COLORS: { key: HLColor; dot: string; label: string }[] = [
   { key: "blue",   dot: "", label: "Blue" },
   { key: "lime",   dot: "", label: "Lime" },
   { key: "pink",   dot: "", label: "Pink" },
+  { key: "gold",   dot: "", label: "Gold" },
 ];
 
 interface Props {
@@ -64,7 +65,7 @@ export function HighlightToolbar({ x, y, onHighlight, onDismiss }: Props) {
           onClick={() => onHighlight(key)}
           title={label}
           className={`w-5 h-5 rounded-full ${dot} hover:scale-125 active:scale-95 transition-transform ring-2 ring-transparent hover:ring-white/20`}
-          style={{ backgroundColor: { purple: "#7546e3", yellow: "#f2f06d", red: "#e34646", blue: "#46d3e3", lime: "#a9f558", pink: "#f558f2" }[key] }}
+          style={{ backgroundColor: { purple: "#7546e3", yellow: "#f2f06d", red: "#e34646", blue: "#46d3e3", lime: "#a9f558", pink: "#f558f2", gold: "#c9a961" }[key] }}
         />
       ))}
     </div>

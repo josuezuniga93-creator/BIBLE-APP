@@ -343,8 +343,7 @@ html[data-theme="light-pink"] .translation-picker-panel {
   --tp-shadow: 0 24px 58px rgba(91,12,48,0.14);
 }
 
-/* Generated artwork: badges, category marks, book covers, document covers */
-.generated-badge-logo,
+/* Generated artwork: category marks, book covers, document covers */
 .generated-category-mark,
 .generated-meta-icon {
   display: inline-flex;
@@ -354,16 +353,11 @@ html[data-theme="light-pink"] .translation-picker-panel {
   color: var(--accent-text);
 }
 
-.generated-badge-logo,
 .generated-category-mark {
   border: 1px solid var(--border);
   background:
     radial-gradient(circle at 30% 20%, rgba(255,255,255,0.12), transparent 46%),
     var(--accent-soft);
-}
-
-.generated-badge-logo {
-  border-radius: 999px;
 }
 
 .generated-category-mark {
@@ -377,7 +371,6 @@ html[data-theme="light-pink"] .translation-picker-panel {
   border-color: var(--accent);
 }
 
-.generated-badge-logo svg,
 .generated-category-mark svg,
 .generated-meta-icon svg {
   width: 68%;
@@ -388,7 +381,6 @@ html[data-theme="light-pink"] .translation-picker-panel {
   stroke-linejoin: round;
 }
 
-.generated-badge-logo svg,
 .generated-category-mark svg {
   fill: none;
 }
@@ -584,7 +576,6 @@ html[data-theme="light-elegant"] .generated-cover::after {
     radial-gradient(circle at 50% 12%, rgba(255,255,255,0.35), transparent 36%);
 }
 
-html[data-theme="premium-neon"] .generated-badge-logo,
 html[data-theme="premium-neon"] .generated-category-mark,
 html[data-theme="premium-neon"] .generated-cover {
   box-shadow: 0 0 18px rgba(124,58,237,0.20), inset 0 0 18px rgba(56,189,248,0.04);
@@ -734,6 +725,7 @@ html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
 .axiom-hl-blue   { background-color: #46d3e3; color: #000; }
 .axiom-hl-lime   { background-color: #a9f558; color: #000; }
 .axiom-hl-pink   { background-color: #f558f2; color: #000; }
+.axiom-hl-gold   { background-color: rgba(201,169,97,0.35); color: #000; }
 
 /* ── Google Translate — hide all default UI chrome ──────────────────────────── */
 #google_translate_element          { display: none !important; }
@@ -1503,9 +1495,10 @@ html[data-theme="gold-navy"] .home-streak-card {
   background: rgba(26,29,39,0.72) !important;
   border-color: rgba(201,169,97,0.14) !important;
 }
-html[data-theme="gold-navy"] .home-badge-card {
-  background: rgba(201,169,97,0.08) !important;
-  border-color: rgba(201,169,97,0.18) !important;
+
+html[data-theme="gold-navy"] .home-badge-shelf {
+  background: rgba(26,29,39,0.72) !important;
+  border-color: rgba(201,169,97,0.14) !important;
 }
 
 /* VotD card */
@@ -1907,9 +1900,9 @@ html[data-theme="light-elegant"] .home-streak-card {
   border-color: rgba(126,91,30,0.14) !important;
 }
 
-html[data-theme="light-elegant"] .home-badge-card {
-  background: rgba(155,114,40,0.09) !important;
-  border-color: rgba(126,91,30,0.18) !important;
+html[data-theme="light-elegant"] .home-badge-shelf {
+  background: rgba(245,241,235,0.72) !important;
+  border-color: rgba(126,91,30,0.14) !important;
 }
 
 /* Focus ring: amber */
@@ -2207,9 +2200,9 @@ html[data-theme="light-pink"] .home-streak-dot-center {
   background: var(--accent) !important;
 }
 
-html[data-theme="light-pink"] .home-badge-card {
-  background: rgba(219,39,119,0.08) !important;
-  border-color: rgba(219,39,119,0.18) !important;
+html[data-theme="light-pink"] .home-badge-shelf {
+  background: rgba(255,255,255,0.58) !important;
+  border-color: rgba(219,39,119,0.14) !important;
 }
 
 /* Keep keyboard focus visible without an illuminated ring. */

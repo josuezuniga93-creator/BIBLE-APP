@@ -13,7 +13,7 @@
  *   NEXT_PUBLIC_EMAILJS_PUBLIC_KEY       — EmailJS public key
  */
 
-import { useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../../lib/useLanguage";
 
@@ -126,6 +126,11 @@ const VIDEO_CATEGORIES = [
   "Short Teaching (under 6 min)",
   "Community Teaching",
   "Other",
+];
+
+const VIDEO_LANGUAGES = [
+  { value: "en", label: "English" },
+  { value: "es", label: "Spanish / Español" },
 ];
 
 const CONFESSIONS = [
@@ -370,6 +375,7 @@ export default function VideoSubmitPage() {
   const [videoDesc,    setVideoDesc]    = useState("");
   const [scriptureRef, setScriptureRef] = useState("");
   const [category,     setCategory]     = useState("");
+  const [videoLanguage, setVideoLanguage] = useState<"en" | "es">(lang === "es" ? "es" : "en");
   const [churchWeb,    setChurchWeb]    = useState("");
   const [confession,   setConfession]   = useState("");
   const [creatorBio,   setCreatorBio]   = useState("");
@@ -391,6 +397,10 @@ export default function VideoSubmitPage() {
   const [submitting, setSubmitting] = useState(false);
   const [errors,     setErrors]     = useState<string[]>([]);
 
+  useEffect(() => {
+    setVideoLanguage(lang === "es" ? "es" : "en");
+  }, [lang]);
+
   const allAgreed = agreedChurch && agreedFaith && agreedPermission;
 
   const hasVideo = videoMode === "file" ? !!videoFile : videoLink.trim().length > 0;
@@ -403,6 +413,7 @@ export default function VideoSubmitPage() {
     if (!videoTitle.trim()) errs.push("Video title is required.");
     if (!videoDesc.trim())  errs.push("Video description is required.");
     if (!category)          errs.push("Please select a video category.");
+    if (!videoLanguage)     errs.push("Please select the video language.");
     if (!hasVideo)          errs.push("Please attach your video file or provide a Drive / Dropbox link.");
     if (videoMode === "link" && videoLink.toLowerCase().includes("youtube.com"))
       errs.push("Please share a Google Drive or Dropbox link, not a YouTube link.");
@@ -435,6 +446,7 @@ export default function VideoSubmitPage() {
         video_description: videoDesc,
         video_url:       videoUrl,
         video_source:    videoMode === "file" ? "Uploaded file (Cloudinary)" : "Drive / Dropbox link",
+        video_language:  videoLanguage === "es" ? "Spanish" : "English",
         category,
         scripture_refs:  scriptureRef || "—",
         confession:      confession   || "—",
@@ -649,6 +661,24 @@ export default function VideoSubmitPage() {
                 options={VIDEO_CATEGORIES}
                 placeholder="Select a category…"
               />
+            </div>
+            <div>
+              <FieldLabel>Video Language *</FieldLabel>
+              <select
+                className="w-full px-3 py-2.5 rounded-xl text-[14px] text-white outline-none"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                value={videoLanguage}
+                onChange={(e) => setVideoLanguage(e.target.value as "en" | "es")}
+              >
+                {VIDEO_LANGUAGES.map((option) => (
+                  <option key={option.value} value={option.value} style={{ background: "#0f0f18" }}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] mt-2" style={{ color: "rgba(255,255,255,0.32)" }}>
+                This determines whether the approved video appears in English mode or Spanish mode.
+              </p>
             </div>
           </div>
         </div>

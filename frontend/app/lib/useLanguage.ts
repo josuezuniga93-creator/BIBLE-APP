@@ -21,6 +21,15 @@ function readLangFromCookie(): Lang {
   return /googtrans=\/en\/es/.test(document.cookie) ? "es" : "en";
 }
 
+function readStoredLang(): Lang {
+  if (typeof window === "undefined") return "en";
+  try {
+    const ls = localStorage.getItem("ryc-lang") as Lang | null;
+    if (ls === "es" || ls === "en") return ls;
+  } catch {}
+  return readLangFromCookie();
+}
+
 // ─── Google Translate trigger ─────────────────────────────────────────────────
 
 function triggerGT(attempt = 0) {
@@ -37,17 +46,20 @@ function triggerGT(attempt = 0) {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useLanguage() {
-  const [lang, setLangState] = useState<Lang>("en");
+  const [lang, setLangState] = useState<Lang>(() => readStoredLang());
   const pathname = usePathname();
 
   // On mount: read language — check localStorage first (faster), then cookie
   useEffect(() => {
-    try {
-      const ls = localStorage.getItem("ryc-lang") as Lang | null;
-      if (ls === "es" || ls === "en") { setLangState(ls); return; }
-    } catch {}
-    const stored = readLangFromCookie();
-    setLangState(stored);
+    setLangState(readStoredLang());
+
+    const syncLang = () => setLangState(readStoredLang());
+    window.addEventListener("ryc-lang-change", syncLang);
+    window.addEventListener("storage", syncLang);
+    return () => {
+      window.removeEventListener("ryc-lang-change", syncLang);
+      window.removeEventListener("storage", syncLang);
+    };
   }, []);
 
   // Re-trigger translation after every client-side navigation (Next.js SPA)
@@ -68,6 +80,7 @@ export function useLanguage() {
     setGTCookie(next);
     try { localStorage.setItem("ryc-lang", next); } catch {}
     setLangState(next);
+    window.dispatchEvent(new CustomEvent("ryc-lang-change", { detail: next }));
     if (next === "es") {
       // Re-trigger GT without a full reload so translation feels instant
       setTimeout(() => triggerGT(), 300);

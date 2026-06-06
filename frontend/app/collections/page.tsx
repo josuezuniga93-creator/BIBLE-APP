@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   loadCollections, deleteCollection, renameCollection,
   COLLECTION_COLORS, COLLECTION_EMOJIS,
   type Collection, type SavedItem,
 } from "../lib/collections";
+import { getBookmarks, removeBookmark as removeBookmarkById, type Bookmark } from "../lib/bookmarks";
 import type { Highlight, HLColor } from "../lib/highlights";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
@@ -20,7 +21,7 @@ interface AggregatedHighlight extends Highlight {
 
 type ColorNames = Record<HLColor, string>;
 const HL_NAMES_KEY = "axiom-hl-colornames";
-const DEFAULT_NAMES: ColorNames = { purple: "Purple", yellow: "Yellow", red: "Red", blue: "Blue", lime: "Lime Green", pink: "Pink" };
+const DEFAULT_NAMES: ColorNames = { purple: "Purple", yellow: "Yellow", red: "Red", blue: "Blue", lime: "Lime Green", pink: "Pink", gold: "Gold" };
 
 function loadColorNames(): ColorNames {
   try {
@@ -134,6 +135,7 @@ function HighlightColorDetail({
   highlights: AggregatedHighlight[];
   onClose: () => void;
 }) {
+  const { lang } = useLanguage();
   const router = useRouter();
   const [highlights, setHighlights] = useState(initialHighlights);
 
@@ -177,9 +179,13 @@ function HighlightColorDetail({
         {highlights.length === 0 ? (
           <div className="text-center py-20">
             <div className="text-4xl mb-3">🖊️</div>
-            <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>No highlights yet</p>
+            <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {lang === "es" ? "Aún no hay resaltados" : "No highlights yet"}
+            </p>
             <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>
-              Highlight text in Scripture, books, or documents to see it here.
+              {lang === "es"
+                ? "Resalta texto en Escritura, libros o documentos para verlo aquí."
+                : "Highlight text in Scripture, books, or documents to see it here."}
             </p>
           </div>
         ) : (
@@ -219,14 +225,14 @@ function HighlightColorDetail({
                       {bibleRef ?? hl.contextLabel}
                     </span>
                     <span className="text-[9px] pl-1" style={{ color: "rgba(255,255,255,0.2)" }}>
-                      {new Date(hl.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      {new Date(hl.createdAt).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                     </span>
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleDelete(hl); }}
                     className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
                     style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.2)" }}
-                    title="Delete highlight"
+                    title={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                       <path d="M18 6L6 18M6 6l12 12"/>
@@ -245,6 +251,7 @@ function HighlightColorDetail({
 // ─── Highlights section ───────────────────────────────────────────────────────
 
 function HighlightsSection() {
+  const { lang } = useLanguage();
   const [allHighlights, setAllHighlights] = useState<AggregatedHighlight[]>([]);
   const [colorNames, setColorNames]       = useState<ColorNames>(DEFAULT_NAMES);
   const [editingColor, setEditingColor]   = useState<HLColor | null>(null);
@@ -291,10 +298,10 @@ function HighlightsSection() {
     <section className="space-y-3">
       <div className="flex items-center justify-between">
         <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
-          My Highlights
+          {lang === "es" ? "Mis Resaltados" : "My Highlights"}
         </h2>
         <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
-          {allHighlights.length} total
+          {allHighlights.length} {lang === "es" ? "total" : "total"}
         </span>
       </div>
 
@@ -588,12 +595,152 @@ function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () =
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
+// ─── Bookmarks section ───────────────────────────────────────────────────────
 
-export default function CollectionsPage() {
+function BookmarksSection() {
   const { lang } = useLanguage();
+  const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setBookmarks(getBookmarks());
+  }, []);
+
+  const handleRemove = (id: string) => {
+    removeBookmarkById(id);
+    setBookmarks((prev) => prev.filter((b) => b.id !== id));
+  };
+
+  const toggleCategory = (cat: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(cat)) next.delete(cat); else next.add(cat);
+      return next;
+    });
+  };
+
+  if (bookmarks.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+        <div className="text-4xl mb-3">🔖</div>
+        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+          {lang === "es" ? "Sin marcadores aún" : "No bookmarks yet"}
+        </p>
+        <p className="text-xs mt-1 max-w-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.2)" }}>
+          {lang === "es"
+            ? "Toca 'Guardar' en cualquier versículo para marcarlo aquí."
+            : "Tap 'Save' on any verse to bookmark it."}
+        </p>
+      </div>
+    );
+  }
+
+  // Group by category, sort categories alphabetically
+  const grouped = bookmarks.reduce<Record<string, Bookmark[]>>((acc, bm) => {
+    const cat = bm.category || "General";
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(bm);
+    return acc;
+  }, {});
+  const sortedCategories = Object.keys(grouped).sort((a, b) => a.localeCompare(b));
+
+  return (
+    <div className="space-y-4">
+      {sortedCategories.map((cat) => {
+        const items = grouped[cat]; // already newest-first from getBookmarks()
+        const isOpen = !collapsed.has(cat);
+        return (
+          <div key={cat}>
+            {/* Category header */}
+            <button
+              onClick={() => toggleCategory(cat)}
+              className="w-full flex items-center justify-between px-1 py-1.5 mb-2"
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-[11px] font-black uppercase tracking-widest"
+                  style={{ color: "#c9a961" }}
+                >
+                  {cat}
+                </span>
+                <span
+                  className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
+                  style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                >
+                  {items.length}
+                </span>
+              </div>
+              <svg
+                width="13" height="13"
+                viewBox="0 0 24 24" fill="none"
+                stroke="rgba(201,169,97,0.5)" strokeWidth="2.5"
+                strokeLinecap="round" strokeLinejoin="round"
+                style={{ transform: isOpen ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
+              >
+                <path d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+
+            {/* Verse cards */}
+            {isOpen && (
+              <div className="space-y-2.5">
+                {items.map((bm) => (
+                  <div
+                    key={bm.id}
+                    className="rounded-2xl px-4 py-3.5 space-y-2"
+                    style={{ background: "rgba(201,169,97,0.07)", border: "1px solid rgba(201,169,97,0.18)" }}
+                  >
+                    {/* Reference */}
+                    <span
+                      className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full inline-block"
+                      style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                    >
+                      {bm.ref}
+                    </span>
+                    {/* Verse text */}
+                    <p
+                      className="text-sm leading-relaxed"
+                      style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Georgia, serif", borderLeft: "3px solid rgba(201,169,97,0.5)", paddingLeft: "10px" }}
+                    >
+                      {bm.text}
+                    </p>
+                    {/* Date + remove */}
+                    <div className="flex items-center justify-between gap-2 pt-0.5">
+                      <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+                        {new Date(bm.date).toLocaleDateString(lang === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      </span>
+                      <button
+                        onClick={() => handleRemove(bm.id)}
+                        className="w-6 h-6 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
+                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.25)" }}
+                        title={lang === "es" ? "Eliminar marcador" : "Remove bookmark"}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                          <path d="M18 6L6 18M6 6l12 12"/>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Main page (inner — needs useSearchParams) ────────────────────────────────
+
+type CollectionsTab = "highlights" | "collections" | "bookmarks";
+
+function CollectionsInner() {
+  const { lang } = useLanguage();
+  const searchParams = useSearchParams();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selected, setSelected]       = useState<Collection | null>(null);
+  const [activeTab, setActiveTab]     = useState<CollectionsTab>("highlights");
 
   function refresh() {
     setCollections(loadCollections());
@@ -601,7 +748,21 @@ export default function CollectionsPage() {
 
   useEffect(() => { refresh(); }, []);
 
+  // Auto-select tab from ?tab= query param
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab === "bookmarks") setActiveTab("bookmarks");
+    else if (tab === "collections") setActiveTab("collections");
+    else if (tab === "highlights") setActiveTab("highlights");
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   const activeCol = selected ? collections.find((c) => c.id === selected.id) ?? null : null;
+
+  const tabs: { key: CollectionsTab; labelEn: string; labelEs: string }[] = [
+    { key: "highlights",  labelEn: "Highlights",   labelEs: "Resaltados" },
+    { key: "collections", labelEn: "Collections",  labelEs: "Colecciones" },
+    { key: "bookmarks",   labelEn: "Bookmarks",    labelEs: "Marcadores" },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
@@ -612,44 +773,76 @@ export default function CollectionsPage() {
         <p className="text-xs text-white/30 mt-0.5">{t(lang, "col_sub")}</p>
       </div>
 
-      <main className="max-w-lg mx-auto px-4 pb-24 space-y-8 mt-4">
+      {/* Tab bar */}
+      <div className="flex gap-1 px-4 pt-2 pb-0 max-w-lg mx-auto">
+        {tabs.map(({ key, labelEn, labelEs }) => {
+          const active = activeTab === key;
+          return (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className="flex-1 py-2 rounded-xl text-[11px] font-bold transition-all"
+              style={{
+                background: active ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.04)",
+                border: active ? "1px solid rgba(201,169,97,0.3)" : "1px solid rgba(255,255,255,0.07)",
+                color: active ? "#c9a961" : "rgba(255,255,255,0.35)",
+              }}
+            >
+              {lang === "es" ? labelEs : labelEn}
+            </button>
+          );
+        })}
+      </div>
 
-        {/* ── Highlights section ─────────────────────────────────────────── */}
-        <HighlightsSection />
+      <main className="max-w-lg mx-auto px-4 pb-24 mt-4">
 
-        {/* ── Divider ────────────────────────────────────────────────────── */}
-        <div className="border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }} />
+        {/* ── Highlights tab ─────────────────────────────────────────────── */}
+        {activeTab === "highlights" && <HighlightsSection />}
 
-        {/* ── Collections section ────────────────────────────────────────── */}
-        <section className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
-              {t(lang, "col_heading")}
-            </h2>
-            {collections.length > 0 && (
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}>
-                {collections.length}
-              </span>
+        {/* ── Collections tab ────────────────────────────────────────────── */}
+        {activeTab === "collections" && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+                {t(lang, "col_heading")}
+              </h2>
+              {collections.length > 0 && (
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}>
+                  {collections.length}
+                </span>
+              )}
+            </div>
+
+            {collections.length === 0 ? (
+              <EmptyState lang={lang} />
+            ) : (
+              <div className="grid grid-cols-2 gap-3">
+                {collections.map((col) => (
+                  <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} lang={lang} />
+                ))}
+              </div>
             )}
-          </div>
 
-          {collections.length === 0 ? (
-            <EmptyState lang={lang} />
-          ) : (
-            <div className="grid grid-cols-2 gap-3">
-              {collections.map((col) => (
-                <CollectionCard key={col.id} col={col} onClick={() => setSelected(col)} lang={lang} />
-              ))}
-            </div>
-          )}
+            {collections.length > 0 && (
+              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
+                <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
+                <p className="text-xs text-white/25 leading-relaxed">{t(lang, "col_add_more_sub")}</p>
+              </div>
+            )}
+          </section>
+        )}
 
-          {collections.length > 0 && (
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
-              <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
-              <p className="text-xs text-white/25 leading-relaxed">{t(lang, "col_add_more_sub")}</p>
+        {/* ── Bookmarks tab ──────────────────────────────────────────────── */}
+        {activeTab === "bookmarks" && (
+          <section className="space-y-3">
+            <div className="flex items-center justify-between mb-1">
+              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+                {lang === "es" ? "Mis Marcadores" : "My Bookmarks"}
+              </h2>
             </div>
-          )}
-        </section>
+            <BookmarksSection />
+          </section>
+        )}
       </main>
 
       {/* Collection detail overlay */}
@@ -657,5 +850,15 @@ export default function CollectionsPage() {
         <CollectionDetail col={activeCol} onClose={() => setSelected(null)} onUpdated={refresh} lang={lang} />
       )}
     </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
+
+export default function CollectionsPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+      <CollectionsInner />
+    </Suspense>
   );
 }

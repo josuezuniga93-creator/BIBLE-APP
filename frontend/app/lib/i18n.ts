@@ -6,6 +6,15 @@ export type Lang = "en" | "es";
 const translations = {
   en: {
     // Nav
+    nav_home:          "Home",
+    nav_bible:         "Bible",
+    nav_worship:       "Worship",
+    nav_extras:        "Extras",
+    nav_more:          "More",
+    nav_timeline:      "Timeline",
+    nav_videos:        "Videos",
+    nav_give:          "Give",
+    nav_fellowship:    "Fellowship",
     nav_scripture:     "Scripture",
     nav_learn:         "Learn",
     nav_free_books:    "Free Books",
@@ -320,6 +329,7 @@ const translations = {
     more_tile_history: "Historical Documents",
     more_tile_kids:    "Kids Books",
     more_tile_videos:  "Videos",
+    more_tile_study_tools: "Study Tools",
     more_tile_collections: "Collections",
     more_tile_fellowship: "Fellowship",
     more_tile_church:  "Find a Church",
@@ -328,6 +338,27 @@ const translations = {
     more_iphone_mode:  "Android Mode",
     more_iphone_mode_desc: "Enable if you use an Android device — removes the iPhone notch/Dynamic Island padding.",
     more_display:      "Display",
+
+    // Give page
+    give_badge:        "Support the Mission",
+    give_heading:      "This App Is 100% Free",
+    give_sub:          "Tulip Bible App is built on faith and sustained by generous supporters like you. There are no subscriptions, no ads, no paywalls — just the Word of God, freely given.",
+    give_quote:        "“Freely you have received; freely give.” — Matthew 10:8",
+    give_ways:         "Ways to Give",
+    give_one_time:     "One-Time Gift",
+    give_one_time_sub: "Give whatever's on your heart — any amount makes a difference.",
+    give_custom:       "Custom",
+    give_via:          "via Ko-fi · no account required",
+    give_popular:      "Popular",
+    give_monthly:      "Monthly Support",
+    give_monthly_sub:  "Partner with us monthly and keep this ministry running for everyone.",
+    give_monthly_cta:  "Become a Monthly Partner",
+    give_cancel:       "Cancel anytime · no lock-in",
+    give_help_title:   "How Your Gift Helps",
+    give_help_servers: "Keeps servers running so the app stays free for everyone",
+    give_help_features:"Funds new features — offline mode, more translations, tools",
+    give_help_global:  "Supports multilingual access for believers around the world",
+    give_footer:       "We are not a 501(c)(3). Gifts are not tax-deductible but they are deeply appreciated. Every dollar goes directly to keeping this app free and improving it.",
 
     // Collections page
     col_heading:       "Collections",
@@ -378,6 +409,15 @@ const translations = {
 
   es: {
     // Nav
+    nav_home:          "Inicio",
+    nav_bible:         "Biblia",
+    nav_worship:       "Adoración",
+    nav_extras:        "Extras",
+    nav_more:          "Más",
+    nav_timeline:      "Cronología",
+    nav_videos:        "Videos",
+    nav_give:          "Dar",
+    nav_fellowship:    "Comunión",
     nav_scripture:     "Escritura",
     nav_learn:         "Aprender",
     nav_free_books:    "Libros Gratis",
@@ -692,6 +732,7 @@ const translations = {
     more_tile_history: "Documentos Históricos",
     more_tile_kids:    "Libros para Niños",
     more_tile_videos:  "Videos",
+    more_tile_study_tools: "Herramientas",
     more_tile_collections: "Colecciones",
     more_tile_fellowship: "Comunión",
     more_tile_church:  "Encontrar Iglesia",
@@ -700,6 +741,27 @@ const translations = {
     more_iphone_mode:  "Modo Android",
     more_iphone_mode_desc: "Activa si usas un dispositivo Android — elimina el relleno del notch/Dynamic Island.",
     more_display:      "Pantalla",
+
+    // Give page
+    give_badge:        "Apoya la Misión",
+    give_heading:      "Esta App Es 100% Gratis",
+    give_sub:          "Tulip Bible App se sostiene por fe y por colaboradores generosos como tú. No hay suscripciones, anuncios ni muros de pago — solo la Palabra de Dios, dada gratuitamente.",
+    give_quote:        "«De gracia recibisteis, dad de gracia.» — Mateo 10:8",
+    give_ways:         "Maneras de Dar",
+    give_one_time:     "Donativo Único",
+    give_one_time_sub: "Da lo que esté en tu corazón — cualquier cantidad ayuda.",
+    give_custom:       "Personalizado",
+    give_via:          "por Ko-fi · no requiere cuenta",
+    give_popular:      "Popular",
+    give_monthly:      "Apoyo Mensual",
+    give_monthly_sub:  "Colabora mensualmente y ayuda a mantener este ministerio disponible para todos.",
+    give_monthly_cta:  "Ser Colaborador Mensual",
+    give_cancel:       "Cancela cuando quieras · sin contrato",
+    give_help_title:   "Cómo Ayuda Tu Donativo",
+    give_help_servers: "Mantiene los servidores funcionando para que la app siga gratis para todos",
+    give_help_features:"Financia nuevas funciones — modo offline, más traducciones y herramientas",
+    give_help_global:  "Apoya el acceso multilingüe para creyentes alrededor del mundo",
+    give_footer:       "No somos una organización 501(c)(3). Los donativos no son deducibles de impuestos, pero son profundamente apreciados. Cada dólar va directamente a mantener esta app gratis y mejorarla.",
 
     // Collections page
     col_heading:       "Colecciones",

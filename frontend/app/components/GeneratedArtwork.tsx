@@ -231,79 +231,6 @@ function DocumentSeal({ seed }: { seed: string }) {
   );
 }
 
-function BadgeGlyph({ id }: { id: string }) {
-  if (id.includes("three") || id.includes("week")) {
-    return (
-      <>
-        <path d="M12 20c4-2 6-5 5-10 4 3 6 7 6 11 0 5-4 9-9 9s-9-4-9-9c0-4 2-7 5-10-.2 4 .5 7 2 9Z" />
-        <path d="M14 29c-2-2-2-5 1-8 3 3 4 6 1 8" />
-      </>
-    );
-  }
-  if (id.includes("first")) {
-    return (
-      <>
-        <path d="M15 30V13" />
-        <path d="M15 17c-6-1-9 2-9 7 5 1 8-1 9-7Z" />
-        <path d="M15 17c6-1 9 2 9 7-5 1-8-1-9-7Z" />
-      </>
-    );
-  }
-  if (id.includes("fortnight") || id.includes("two")) {
-    return (
-      <>
-        <path d="M5 27 13 11l6 11 4-7 7 12" />
-        <path d="M8 27h20" />
-      </>
-    );
-  }
-  if (id.includes("month")) {
-    return (
-      <>
-        <circle cx="15" cy="15" r="4" />
-        <path d="M15 19v11" />
-        <path d="M10 24h10" />
-        <path d="M8 30h14" />
-      </>
-    );
-  }
-  if (id.includes("century") || id.includes("90")) {
-    return (
-      <>
-        <path d="M10 27c-4-4-4-10 0-14" />
-        <path d="M22 13c4 4 4 10 0 14" />
-        <path d="M11 26c3 3 8 3 11 0" />
-        <path d="M12 14c3-3 7-3 10 0" />
-        <path d="M16 11v18" />
-      </>
-    );
-  }
-  if (id.includes("year")) {
-    return (
-      <>
-        <path d="m6 26 2-13 6 6 6-6 2 13H6Z" />
-        <path d="M7 30h14" />
-      </>
-    );
-  }
-  if (id.includes("devotional")) {
-    return (
-      <>
-        <path d="M8 12c4-2 9-2 13 1v15c-4-3-9-3-13-1V12Z" />
-        <path d="M8 12v15" />
-        <path d="M14 14v11" />
-      </>
-    );
-  }
-  return (
-    <>
-      <path d="M15 5v20" />
-      <path d="M8 13h14" />
-      <path d="M7 30h16" />
-    </>
-  );
-}
-
 function CategoryGlyph({ id }: { id: string }) {
   const key = id.toLowerCase();
   if (key.includes("book") || key === "all" || key.includes("library")) {
@@ -410,28 +337,6 @@ function MetaGlyph({ type }: { type: string }) {
       <path d="M8 11c4-2 8-2 12 1v14c-4-2-8-2-12 0V11Z" />
       <path d="M20 12c2-1 4-1 6 0v14c-2-1-4-1-6 0" />
     </>
-  );
-}
-
-export function GeneratedBadgeLogo({
-  id,
-  family = "streak",
-  size = 30,
-}: {
-  id: string;
-  family?: "streak" | "devotional";
-  size?: number;
-}) {
-  return (
-    <span
-      className={`generated-badge-logo generated-badge-logo--${family}`}
-      style={{ width: size, height: size }}
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 32 32" fill="none">
-        <BadgeGlyph id={id} />
-      </svg>
-    </span>
   );
 }
 

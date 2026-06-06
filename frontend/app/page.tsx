@@ -3,23 +3,19 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
-  loadStreak,
   recordLogin,
-  getNewBadges,
-  BADGES,
   type StreakData,
-  type BadgeId,
 } from "./lib/streakData";
-import {
-  loadDevotionalProgress,
-  DEVOTIONAL_BADGES,
-  type DevotionalBadgeId,
-} from "./lib/devotionalProgress";
 import { useLanguage } from "./lib/useLanguage";
 import { translateToSpanish } from "./lib/googleTranslate";
-import { GeneratedBadgeLogo } from "./components/GeneratedArtwork";
+import { localizeReference } from "./lib/spanishContent";
 
 import { getRotatingArticle, daysUntilNextRotation } from "./lib/graceGemsArticles";
+import { getDailyGreeting } from "./lib/greetings";
+import QuoteOfWeek from "./components/QuoteOfWeek";
+import BookOfMonth from "./components/BookOfMonth";
+import { BadgeShelf } from "./components/BadgeShelf";
+import { OnboardingPopup } from "./components/OnboardingPopup";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
 
@@ -241,6 +237,10 @@ const AC_BORDER  = "rgba(201,169,97,0.40)";
 const AC_BORDER_SM = "rgba(201,169,97,0.30)";
 const AC_CTA_GRAD = "linear-gradient(135deg, rgba(201,169,97,0.18), rgba(201,169,97,0.05))";
 const SERIF = "'Iowan Old Style','Georgia','Times New Roman',serif";
+
+const ARTICLE_TITLE_ES: Record<string, string> = {
+  "Means to Make Grace Victorious": "Medios para que la Gracia Triunfe",
+};
 
 // ─── Attributes of God — Memorization Verses ─────────────────────────────────
 // Gold Navy palette: gold (#c9a961) is the dominant accent. Each attribute carries
@@ -529,6 +529,13 @@ function VerseMemorizationWidget({
     saveState({ ...memState, committedRef: null, mastered, hiddenWords: [], revealedAll: false, mode: "learn" });
   };
 
+  // Undo accidental mastered toggle — remove this verse from the mastered list.
+  // Keeps the verse pinned and the current mode so the user stays in context.
+  const unmarkMastered = () => {
+    const mastered = memState.mastered.filter((r) => r !== activeVerse.ref);
+    saveState({ ...memState, mastered });
+  };
+
   // Stop memorizing the committed verse and go back to the daily recommendation
   const releaseVerse = () =>
     saveState({ ...memState, committedRef: null, hiddenWords: [], revealedAll: false, mode: "learn" });
@@ -743,11 +750,17 @@ function VerseMemorizationWidget({
             {lang === "es" ? "Ponerse a Prueba" : "Test Myself"}
           </button>
           <button
-            onClick={markMastered}
+            onClick={isMastered ? unmarkMastered : markMastered}
             className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
-            style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.30)" }}
+            style={
+              isMastered
+                ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.14)" }
+                : { background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.30)" }
+            }
           >
-            {lang === "es" ? "Lo Memoricé →" : "I Mastered It →"}
+            {isMastered
+              ? (lang === "es" ? "↩ Desmarcar" : "↩ Unmark as Mastered")
+              : (lang === "es" ? "Lo Memoricé →" : "I Mastered It →")}
           </button>
         </div>
       ) : (
@@ -767,11 +780,17 @@ function VerseMemorizationWidget({
             {lang === "es" ? "← Volver" : "← Back"}
           </button>
           <button
-            onClick={markMastered}
+            onClick={isMastered ? unmarkMastered : markMastered}
             className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
-            style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.30)" }}
+            style={
+              isMastered
+                ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.14)" }
+                : { background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.30)" }
+            }
           >
-            {lang === "es" ? "¡Memoricé!" : "Mastered!"}
+            {isMastered
+              ? (lang === "es" ? "↩ Desmarcar" : "↩ Unmark")
+              : (lang === "es" ? "¡Memoricé!" : "Mastered!")}
           </button>
         </div>
       )}
@@ -1002,7 +1021,7 @@ function VerseMemorizationWidget({
                 style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", color: "#0e1018" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
-                {lang === "es" ? "Comprometerme a memorizarlo" : "Commit to memorize this verse"}
+                {lang === "es" ? "Empezar a memorizar" : "Start memorizing"}
               </button>
               <p className="text-[10px] text-white/35 text-center mt-2 leading-relaxed">
                 {lang === "es"
@@ -1058,9 +1077,6 @@ export default function Home() {
   const todayHV = hvPool[today.getDate() % hvPool.length];
 
   const [streakData,       setStreakData]       = useState<StreakData | null>(null);
-  const [newBadgeIds,      setNewBadgeIds]      = useState<BadgeId[]>([]);
-  const [toastVisible,     setToastVisible]     = useState(false);
-  const [devotionalBadges, setDevotionalBadges] = useState<DevotionalBadgeId[]>([]);
   const [videoOpen,        setVideoOpen]        = useState(false);
   const [historyOpen,      setHistoryOpen]      = useState(false);
   const featuredVideo = FEATURED_VIDEOS[lang as "en" | "es"] ?? FEATURED_VIDEOS.en;
@@ -1092,23 +1108,28 @@ export default function Home() {
     return () => window.removeEventListener("ryc-theme-change", sync);
   }, []);
 
-  // Streak / badges
+  // Onboarding — user name
+  const [userName, setUserName] = useState<string>("");
   useEffect(() => {
-    const prev = loadStreak();
-    const next = recordLogin();
-    const earned = getNewBadges(prev, next);
-    setStreakData(next);
-    if (earned.length > 0) {
-      setNewBadgeIds(earned);
-      setToastVisible(true);
-      const timer = setTimeout(() => setToastVisible(false), 4000);
-      return () => clearTimeout(timer);
-    }
+    try {
+      const saved = localStorage.getItem("tulip_user_name");
+      if (saved) setUserName(saved);
+    } catch { /**/ }
+    // Re-read after onboarding completes
+    const handler = () => {
+      try {
+        const saved = localStorage.getItem("tulip_user_name");
+        setUserName(saved ?? "");
+      } catch { /**/ }
+    };
+    window.addEventListener("tulip-onboarded", handler);
+    return () => window.removeEventListener("tulip-onboarded", handler);
   }, []);
 
+  // Streak
   useEffect(() => {
-    const dp = loadDevotionalProgress();
-    setDevotionalBadges(dp.badges as DevotionalBadgeId[]);
+    const next = recordLogin();
+    setStreakData(next);
   }, []);
 
   // Fetch articles
@@ -1229,22 +1250,33 @@ export default function Home() {
   const sectionHdColor = isLightElegant ? "#1c1409"                  : isLightPink ? "#4a0020"                  : undefined;
   const seeAllColor    = isLightElegant ? "rgba(28,20,9,0.38)"       : isLightPink ? "rgba(74,0,32,0.35)"       : undefined;
 
-  // Background gradient baked into root div — never a separate child element
+  // Background gradient baked into root div — never a separate child element.
+  // Gold-navy uses a flat colour here; the lamp image div handles the top glow.
+  // For gradient themes we pin background-size to 100vw 100vh so the radial
+  // doesn't stretch/shift as the page grows taller (see rootBgStyle below).
   const rootBackground = isPremiumNeon
     ? `radial-gradient(60% 80% at 50% 0%, rgba(124,58,237,0.45) 0%, transparent 70%), radial-gradient(120% 80% at 50% 0%, rgba(59,42,107,0.50) 0%, rgba(17,10,38,0.0) 60%), #07080d`
     : isGoldNavy
-    ? `radial-gradient(60% 80% at 50% 0%, rgba(201,169,97,0.32) 0%, transparent 70%), radial-gradient(120% 80% at 50% 0%, rgba(30,22,5,0.45) 0%, rgba(14,16,24,0.0) 60%), #0e1018`
+    ? `#0e1018`
     : isLightPink
     ? `radial-gradient(60% 80% at 50% 0%, rgba(244,114,182,0.22) 0%, transparent 70%), #fff0f5`
     : isLightElegant
     ? `radial-gradient(60% 80% at 50% 0%, rgba(155,114,40,0.10) 0%, transparent 70%), #f5f0e8`
     : `radial-gradient(60% 80% at 50% 0%, ${todayHV.glow} 0%, transparent 70%), radial-gradient(120% 80% at 50% 0%, rgba(59,42,107,0.35) 0%, rgba(17,10,38,0.0) 60%), #050507`;
 
-  const earnedBadgeIds = (streakData?.badges ?? []) as BadgeId[];
+  // Pin gradient layers to viewport size so they don't rescale as the page
+  // grows taller (which caused a brownish shift at the bottom of long pages).
+  // Flat-colour themes (gold-navy, light-*) don't need this.
+  const rootBgStyle: React.CSSProperties = (isPremiumNeon || (!isGoldNavy && !isLightPink && !isLightElegant))
+    ? { background: rootBackground, backgroundSize: "100% 100vh", backgroundRepeat: "no-repeat", backgroundColor: isPremiumNeon ? "#07080d" : "#050507" }
+    : { background: rootBackground };
+
   const todayIdx  = dayOfWeekIndex();
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayLabels = lang === "es"
+    ? ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+    : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const streak    = streakData?.streak ?? 0;
-  const dayUpper  = today.toLocaleDateString("en-US", { weekday: "long" }).toUpperCase();
+  const dayUpper  = today.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { weekday: "long" }).toUpperCase();
 
   // Two-line hero headline
   const heroHeadline = todayHV.event === "Diet of Worms"
@@ -1254,8 +1286,10 @@ export default function Home() {
   return (
     <div
       className={`min-h-screen text-white relative ${isGoldNavy ? "" : "overflow-hidden"}`}
-      style={{ background: rootBackground }}
+      style={rootBgStyle}
     >
+      {/* ── First-launch onboarding ───────────────────────────────────────── */}
+      <OnboardingPopup onComplete={(name, _lang) => { if (name) setUserName(name); }} />
 
       {/* ── History verse modal ───────────────────────────────────────────── */}
       {historyOpen && (
@@ -1295,7 +1329,7 @@ export default function Home() {
                 className="block w-full text-center py-2.5 rounded-xl text-xs font-bold transition-all"
                 style={{ background: AC_BG, border: `1px solid ${AC_BORDER}`, color: AC }}
               >
-                Read {todayHV.reference} →
+                {lang === "es" ? "Leer" : "Read"} {localizeReference(todayHV.reference, lang)} →
               </Link>
             </div>
           </div>
@@ -1445,19 +1479,6 @@ export default function Home() {
         />
       )}
 
-      {/* ── Badge unlock toast ────────────────────────────────────────────── */}
-      {toastVisible && newBadgeIds.length > 0 && (
-        <div
-          className="fixed top-5 left-1/2 -translate-x-1/2 z-[400] flex items-center gap-2 px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-sm"
-          style={{ background: "#050507", border: `1px solid ${AC_BORDER_SM}` }}
-        >
-          <GeneratedBadgeLogo id={newBadgeIds[0]} family="streak" size={24} />
-          <span className="text-[12px] font-bold" style={{ color: AC }}>
-            {newBadgeIds.map((id) => BADGES[id].label).join(", ")} {lang === "es" ? "¡desbloqueado!" : "unlocked!"}
-          </span>
-        </div>
-      )}
-
       {/* ── Gold Navy lamp background ─────────────────────────────────────── */}
       {isGoldNavy && (
         <div
@@ -1488,7 +1509,7 @@ export default function Home() {
 
         {/* Hero — date label */}
         <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: AC }}>
-          {dayUpper}{streak > 0 ? ` · DAY ${streak}` : ""}
+          {dayUpper}{streak > 0 ? ` · ${lang === "es" ? "DÍA" : "DAY"} ${streak}` : ""}
         </p>
 
         {/* h1/h2 serif headline */}
@@ -1548,6 +1569,21 @@ export default function Home() {
           </svg>
         </button>
 
+        {/* Personalized greeting */}
+        {userName && (() => {
+          const g = getDailyGreeting(userName, new Date().getHours(), lang);
+          return (
+            <div className="px-1 pt-4 pb-2">
+              <p className="text-[16px] font-semibold leading-snug" style={{ color: "rgba(255,255,255,0.88)", fontFamily: "Georgia, serif" }}>
+                {g.line1}
+              </p>
+              <p className="text-[12px] mt-0.5 leading-snug" style={{ color: "rgba(201,169,97,0.65)" }}>
+                {g.line2}
+              </p>
+            </div>
+          );
+        })()}
+
         {/* ── Continue section ─────────────────────────────────────────────── */}
         <section className="mt-9">
           <div className="flex items-center justify-between mb-3">
@@ -1592,9 +1628,10 @@ export default function Home() {
             {/* Featured Grace Gems article — rotates every 3 days */}
             {(() => {
               const art = getRotatingArticle();
+              const articleTitle = lang === "es" ? ARTICLE_TITLE_ES[art.title] ?? art.title : art.title;
               return (
                 <button
-                  onClick={() => setGgReader({ title: art.title, author: art.author, authorYears: art.authorYears, url: art.url, content: art.content, image: art.image })}
+                  onClick={() => setGgReader({ title: articleTitle, author: art.author, authorYears: art.authorYears, url: art.url, content: art.content, image: art.image })}
                   className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
                   style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.18) 0%, rgba(10,12,20,0.97) 60%)", border: "1px solid rgba(201,169,97,0.28)" }}
                 >
@@ -1623,7 +1660,7 @@ export default function Home() {
                   </div>
                   <div className="relative z-10">
                     <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>{lang === "es" ? "Artículo" : "Article"}</p>
-                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{art.title}</p>
+                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{articleTitle}</p>
                     <p className="text-[9px] mt-1.5" style={{ color: "rgba(201,169,97,0.70)" }}>{art.author}</p>
                   </div>
                 </button>
@@ -1705,64 +1742,85 @@ export default function Home() {
 
         {/* ── Video section promo ──────────────────────────────────────────── */}
         <section className="mt-9">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>
-              {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
-            </h3>
-            <Link href="/videos" className="text-[11px] font-bold transition-colors" style={{ color: "rgba(201,169,97,0.7)" }}>
-              {lang === "es" ? "Ver todo →" : "See all →"}
-            </Link>
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-[17px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>
+                {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
+              </h3>
+              <Link href="/videos" className="text-[11px] font-bold transition-colors" style={{ color: "rgba(201,169,97,0.7)" }}>
+                {lang === "es" ? "Ver todo →" : "See all →"}
+              </Link>
+            </div>
           </div>
 
           <Link href="/videos" className="block group">
             <div
-              className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
-              style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.13) 0%, rgba(10,12,20,0.98) 55%)", border: "1px solid rgba(201,169,97,0.24)" }}
+              className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all relative"
+              style={{ background: "#0d0d18", border: "1px solid rgba(201,169,97,0.24)" }}
             >
-              {/* Header row */}
-              <div className="flex items-center gap-3.5 px-4 pt-4 pb-3">
+              {/* Background image — 16:9 hero, figure stays on the right */}
+              <div className="relative" style={{ aspectRatio: "16 / 9" }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="/home-banner.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  style={{ objectPosition: "right center" }}
+                />
+
+                {/* Left-to-right darkening so overlay text reads cleanly */}
                 <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", boxShadow: "0 6px 20px rgba(201,169,97,0.28)" }}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0e1018" style={{ marginLeft: 2 }}>
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      "linear-gradient(to right, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.65) 45%, rgba(8,9,15,0.15) 78%, transparent 100%)",
+                  }}
+                />
+                {/* Bottom blend into the topic pills row */}
+                <div
+                  className="absolute inset-x-0 bottom-0 h-1/3"
+                  style={{ background: "linear-gradient(to bottom, transparent, rgba(13,13,24,0.95))" }}
+                />
+
+                {/* Overlay — flex row: play button left, text stacked right */}
+                {/* Overlay — flex row: play button left, text stacked right */}
+                <div className="absolute inset-0 flex items-center" style={{ paddingLeft: "12px", paddingRight: "45%" }}>
+                  <div className="flex items-center gap-3 w-full">
+                    {/* Play button */}
+                    <div
+                      className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
+                      style={{ background: "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="#08090f" style={{ marginLeft: 3 }}>
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                    {/* Text block */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: AC }}>
+                        {lang === "es" ? "Aprende. Mira. Crece." : "Learn. Watch. Grow."}
+                      </p>
+                      <p className="text-[14px] font-bold text-white leading-snug">
+                        {lang === "es" ? (
+                          <><span className="block whitespace-nowrap">Voces de la iglesia.</span><span className="block whitespace-nowrap">Verdad bíblica.</span><span className="block whitespace-nowrap">Crecimiento cristiano.</span></>
+                        ) : (
+                          <><span className="block whitespace-nowrap">Church voices.</span><span className="block whitespace-nowrap">Biblical Truth.</span><span className="block whitespace-nowrap">Christian growth.</span></>
+                        )}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: "rgba(201,169,97,0.65)" }}>
-                    {lang === "es" ? "Fundamentos de la Fe" : "Fundamentals of the Faith"}
-                  </p>
-                  <p className="text-[16px] font-bold text-white leading-tight mt-0.5">
-                    {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
-                  </p>
-                </div>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,97,0.45)" strokeWidth="2.2" strokeLinecap="round" className="flex-shrink-0">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
               </div>
 
-              {/* Divider */}
-              <div className="mx-4 mb-3" style={{ height: "1px", background: "rgba(201,169,97,0.11)" }} />
-
-              {/* Topic pills */}
-              <div className="flex gap-1.5 px-4 pb-4 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-                {(lang === "es"
-                  ? ["Dios", "Cristo", "El Evangelio", "Salvación", "Escritura", "El Espíritu"]
-                  : ["God", "Christ", "The Gospel", "Salvation", "Scripture", "The Church"]
-                ).map((c) => (
-                  <span
-                    key={c}
-                    className="flex-shrink-0 text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                    style={{ background: "rgba(201,169,97,0.08)", color: "rgba(201,169,97,0.78)", border: "1px solid rgba(201,169,97,0.15)" }}
-                  >
-                    {c}
-                  </span>
-                ))}
-              </div>
             </div>
           </Link>
         </section>
+
+        {/* ── Quote of the Week ────────────────────────────────────────────── */}
+        <QuoteOfWeek />
+
+        {/* ── Book of the Month ────────────────────────────────────────────── */}
+        <BookOfMonth />
 
         {/* ── Your streak ─────────────────────────────────────────────────── */}
         <section className="mt-9">
@@ -1803,45 +1861,7 @@ export default function Home() {
           </div>
         </section>
 
-        {/* ── Badges showcase ───────────────────────────────────────────────── */}
-        {(earnedBadgeIds.length > 0 || devotionalBadges.length > 0) && (
-          <section className="mt-9">
-            <h3 className="text-[15px] font-bold text-white mb-3" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Insignias" : "Badges"}</h3>
-            <div className="grid grid-cols-5 gap-1.5">
-              {earnedBadgeIds.map((id) => {
-                const badge = BADGES[id];
-                return (
-                  <div
-                    key={id}
-                    title={badge.desc}
-                    className="flex flex-col items-center gap-1 p-1.5 rounded-xl"
-                    style={{ border: `1px solid ${AC_BORDER_SM}`, background: AC_BG }}
-                  >
-                    <GeneratedBadgeLogo id={id} family="streak" size={30} />
-                    <span className="text-[8px] font-bold text-center leading-tight" style={{ color: AC_SUB }}>
-                      {badge.label}
-                    </span>
-                  </div>
-                );
-              })}
-              {devotionalBadges.map((id) => {
-                const badge = DEVOTIONAL_BADGES[id];
-                return (
-                  <div
-                    key={`dev-${id}`}
-                    title={badge.desc}
-                    className="flex flex-col items-center gap-1 p-1.5 rounded-xl border border-amber-600/35 bg-amber-600/10"
-                  >
-                    <GeneratedBadgeLogo id={id} family="devotional" size={30} />
-                    <span className="text-[8px] font-bold text-center leading-tight text-amber-300/90">
-                      {badge.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </section>
-        )}
+        <BadgeShelf />
 
       </main>
     </div>

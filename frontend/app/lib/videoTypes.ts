@@ -6,6 +6,7 @@
 
 export type ApprovalStatus  = "pending" | "approved" | "rejected" | "revision_requested";
 export type PublicationStatus = "draft" | "ready_for_upload" | "published" | "removed";
+export type VideoLanguage = "en" | "es";
 export type VideoCategory =
   | "Fundamentals"
   | "Short"
@@ -49,6 +50,7 @@ export interface Video {
   category: VideoCategory;
   youtubeVideoId: string;           // e.g. "dQw4w9WgXcQ"
   youtubeUrl: string;               // full URL
+  language: VideoLanguage;          // app language bucket for filtering
   thumbnailUrl?: string;            // custom thumbnail; falls back to YT
   scriptureReferences: string[];    // e.g. ["Romans 3:23", "John 3:16"]
   fundamentalsTopicId?: string;     // links to FundamentalsTopic
@@ -100,6 +102,7 @@ export interface VideoSubmission {
   videoDescription: string;
   scriptureReferences: string[];
   videoCategory: string;
+  videoLanguage: VideoLanguage;
   churchWebsite?: string;
   confessionOfFaith?: string;
   creatorBio?: string;
@@ -140,6 +143,7 @@ export interface ReviewQueueEntry {
   durationSeconds?: number;
   submittedAt: string;
   category: string;
+  language: VideoLanguage;
   approvalStatus: ApprovalStatus;
   publicationStatus: PublicationStatus;
   isFeatured: boolean;

@@ -12,7 +12,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { ApprovalStatus, PublicationStatus } from "../../lib/videoTypes";
+import type { ApprovalStatus, PublicationStatus, VideoLanguage } from "../../lib/videoTypes";
 
 // ─── Design constants ─────────────────────────────────────────────────────────
 
@@ -34,6 +34,7 @@ interface QueueEntry {
   duration?: string;
   submittedAt: string;
   category: string;
+  language: VideoLanguage;
   approvalStatus: ApprovalStatus;
   publicationStatus: PublicationStatus;
   isFeatured: boolean;
@@ -52,6 +53,7 @@ const MOCK_QUEUE: QueueEntry[] = [
     duration: "28 min",
     submittedAt: "2024-05-28",
     category: "The Gospel",
+    language: "en",
     approvalStatus: "pending",
     publicationStatus: "draft",
     isFeatured: false,
@@ -65,6 +67,7 @@ const MOCK_QUEUE: QueueEntry[] = [
     duration: "35 min",
     submittedAt: "2024-05-25",
     category: "The Church",
+    language: "en",
     approvalStatus: "approved",
     publicationStatus: "ready_for_upload",
     isFeatured: false,
@@ -78,6 +81,7 @@ const MOCK_QUEUE: QueueEntry[] = [
     duration: "40 min",
     submittedAt: "2024-05-20",
     category: "Salvation",
+    language: "en",
     approvalStatus: "approved",
     publicationStatus: "published",
     isFeatured: false,
@@ -92,6 +96,7 @@ const MOCK_QUEUE: QueueEntry[] = [
     duration: "22 min",
     submittedAt: "2024-05-18",
     category: "God",
+    language: "en",
     approvalStatus: "revision_requested",
     publicationStatus: "draft",
     isFeatured: false,
@@ -105,6 +110,7 @@ const MOCK_QUEUE: QueueEntry[] = [
     duration: "55 min",
     submittedAt: "2024-05-15",
     category: "Jesus Christ",
+    language: "en",
     approvalStatus: "approved",
     publicationStatus: "published",
     isFeatured: true,
@@ -198,6 +204,12 @@ function QueueCard({
           <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
             {entry.category}
           </span>
+          <span
+            className="text-[9px] font-bold px-1.5 py-0.5 rounded"
+            style={{ background: entry.language === "es" ? "rgba(59,130,246,0.15)" : AC_BG, color: entry.language === "es" ? "#60a5fa" : AC }}
+          >
+            {entry.language === "es" ? "Spanish" : "English"}
+          </span>
           {entry.duration && (
             <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.30)" }}>
               {entry.duration}
@@ -237,6 +249,18 @@ function QueueCard({
           {/* YouTube URL input (for approved videos) */}
           {entry.approvalStatus === "approved" && entry.publicationStatus !== "published" && (
             <div className="mb-4">
+              <label className="block text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.30)" }}>
+                Video Language
+              </label>
+              <select
+                className="w-full px-3 py-2 mb-3 rounded-xl text-[13px] text-white outline-none"
+                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                value={entry.language}
+                onChange={(e) => onAction(entry.id, `set_language:${e.target.value}`)}
+              >
+                <option value="en" style={{ background: "#0f0f18" }}>English</option>
+                <option value="es" style={{ background: "#0f0f18" }}>Spanish / Español</option>
+              </select>
               <label className="block text-[10px] font-bold tracking-widest uppercase mb-1.5" style={{ color: "rgba(255,255,255,0.30)" }}>
                 YouTube URL (after upload)
               </label>
@@ -326,6 +350,11 @@ export default function VideoAdminPage() {
         if (action === "feature")          return { ...e, isFeatured: true };
         if (action === "unfeature")        return { ...e, isFeatured: false };
         if (action === "remove")           return { ...e, publicationStatus: "removed" as PublicationStatus };
+        if (action.startsWith("set_language:")) {
+          const language = action.replace("set_language:", "") as VideoLanguage;
+          showToast(`Language set to ${language === "es" ? "Spanish" : "English"}.`);
+          return { ...e, language };
+        }
         if (action.startsWith("add_youtube_url:")) {
           const url = action.replace("add_youtube_url:", "");
           const videoId = url.split("v=")[1]?.split("&")[0] ?? "";

@@ -15,10 +15,8 @@ import {
   loadDevotionalProgress,
   markDevotionalComplete,
   isDevotionalComplete,
-  DEVOTIONAL_BADGES,
-  type DevotionalBadgeId,
 } from "../lib/devotionalProgress";
-import { GeneratedBadgeLogo } from "../components/GeneratedArtwork";
+import { localizeReference } from "../lib/spanishContent";
 
 // ─── Theme ─────────────────────────────────────────────────────────────────────
 
@@ -327,6 +325,26 @@ const LABEL_STYLE: React.CSSProperties = {
   fontWeight: 600,
 };
 
+const RYLE_THEME_ES: Record<string, string> = {
+  "The Eternal Word": "El Verbo Eterno",
+  "The Witness and the Children of God": "El Testigo y los Hijos de Dios",
+  "The Word Made Flesh": "El Verbo Hecho Carne",
+  "Grace and Truth in Christ": "Gracia y Verdad en Cristo",
+  "The Voice in the Wilderness": "La Voz en el Desierto",
+  "The Lamb of God": "El Cordero de Dios",
+  "Behold the Lamb": "He Aquí el Cordero",
+  "Come and See": "Ven y Ve",
+  "The First Sign": "La Primera Señal",
+  "Zeal for the Father's House": "Celo por la Casa del Padre",
+  "You Must Be Born Again": "Debes Nacer de Nuevo",
+  "The Love of God in the Son": "El Amor de Dios en el Hijo",
+  "He Must Increase": "Es Necesario que Él Crezca",
+};
+
+function familyThemeTitle(theme: string, lang: "en" | "es") {
+  return lang === "es" ? RYLE_THEME_ES[theme] ?? theme : theme;
+}
+
 const BOOK_NAME_TO_NUM = new Map(
   BIBLE_BOOKS.flatMap((book) => {
     const names: Array<[string, number]> = [[book.name.toLowerCase(), book.num]];
@@ -532,7 +550,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
           {t(lang, "family_ryle_label")}
         </p>
         <p style={{ fontSize: "1.75rem", fontWeight: 700, color: tk.textPrimary, lineHeight: 1.1 }}>
-          {entry.scripture.reference}
+          {localizeReference(entry.scripture.reference, lang)}
         </p>
         <p className="mt-1" style={{ fontSize: "0.72rem", color: tk.textFaint, letterSpacing: "0.06em" }}>
           {scriptureStatus === "fallback"
@@ -561,7 +579,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
             {scriptureStatus === "loading" ? t(lang, "family_loading_passage") : scriptureText}
           </p>
           <p className="mt-3" style={{ fontSize: "0.85rem", fontWeight: 600, color: tk.accent }}>
-            — {entry.scripture.reference}
+            — {localizeReference(entry.scripture.reference, lang)}
           </p>
         </blockquote>
         <p className="mt-4" style={{ fontSize: "0.78rem", lineHeight: 1.6, color: tk.textFaint }}>
@@ -935,7 +953,7 @@ function CompletionCard({
 }: {
   dateStr: string;
   isToday: boolean;
-  onComplete: (newBadges: DevotionalBadgeId[]) => void;
+  onComplete: () => void;
 }) {
   const { lang } = useLanguage();
   const tk = useTheme();
@@ -944,9 +962,9 @@ function CompletionCard({
   useEffect(() => { setDone(isDevotionalComplete(dateStr)); }, [dateStr]);
 
   function handleComplete() {
-    const { newBadges } = markDevotionalComplete(dateStr);
+    markDevotionalComplete(dateStr);
     setDone(true);
-    onComplete(newBadges);
+    onComplete();
   }
 
   if (done) {
@@ -1135,31 +1153,6 @@ function ReminderCard() {
   );
 }
 
-// ─── Badge Toast ──────────────────────────────────────────────────────────────
-
-function BadgeToast({ badges }: { badges: DevotionalBadgeId[] }) {
-  const { lang } = useLanguage();
-  const tk = useTheme();
-  if (badges.length === 0) return null;
-  const badge = DEVOTIONAL_BADGES[badges[0]];
-  return (
-    <div className="fixed bottom-28 left-1/2 -translate-x-1/2 z-50 animate-pop-in">
-      <div
-        className="flex items-center gap-3 px-5 py-3.5 rounded-2xl"
-        style={{ backgroundColor: tk.toastBg, border: `1px solid ${tk.cardBorder}`, boxShadow: tk.toastShadow }}
-      >
-        <GeneratedBadgeLogo id={badges[0]} family="devotional" size={40} />
-        <div>
-          <p className="font-black text-sm" style={{ color: tk.accent }}>{t(lang, "family_new_badge")}</p>
-          <p className="text-xs mt-0.5" style={{ color: tk.toastMuted }}>
-            {lang === "es" ? badge.labelEs : badge.label} — {lang === "es" ? badge.descEs : badge.desc}
-          </p>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function FamilyWorshipPage() {
@@ -1172,8 +1165,6 @@ export default function FamilyWorshipPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [newBadges, setNewBadges] = useState<DevotionalBadgeId[]>([]);
-  const [earnedBadges, setEarnedBadges] = useState<DevotionalBadgeId[]>([]);
 
   const [appTheme, setAppTheme] = useState<AppTheme>(() => readStoredAppTheme());
 
@@ -1186,30 +1177,9 @@ export default function FamilyWorshipPage() {
 
   const tokens = useMemo(() => buildTokens(appTheme), [appTheme]);
 
-  useEffect(() => {
-    try {
-      const progress = loadDevotionalProgress();
-      setEarnedBadges(progress.badges as DevotionalBadgeId[]);
-    } catch { /* ignore */ }
-  }, []);
-
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("axiom-fw-date");
-      if (stored) {
-        const d = new Date(stored);
-        if (!isNaN(d.getTime())) {
-          d.setHours(0, 0, 0, 0);
-          if (toDateStr(d) >= toDateStr(today)) {
-            setSelectedDate(d);
-          } else {
-            localStorage.removeItem("axiom-fw-date");
-          }
-        }
-      }
-    } catch { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Always start on today — never restore a persisted date on mount.
+  // (Navigation within a session still saves to localStorage via goToDate,
+  //  but a fresh page load / refresh always shows today's devotional.)
 
   function goToDate(d: Date) {
     setSelectedDate(d);
@@ -1221,15 +1191,9 @@ export default function FamilyWorshipPage() {
     try { localStorage.removeItem("axiom-fw-date"); } catch { /**/ }
   }
 
-  const handleComplete = useCallback((earned: DevotionalBadgeId[]) => {
+  const handleComplete = useCallback(() => {
     setShowConfetti(true);
-    if (earned.length > 0) setNewBadges(earned);
     setTimeout(() => setShowConfetti(false), 2500);
-    setTimeout(() => setNewBadges([]), 4000);
-    try {
-      const progress = loadDevotionalProgress();
-      setEarnedBadges(progress.badges as DevotionalBadgeId[]);
-    } catch { /* ignore */ }
   }, []);
 
   const isToday =
@@ -1244,7 +1208,6 @@ export default function FamilyWorshipPage() {
     <ThemeCtx.Provider value={tokens}>
       <div className="min-h-screen" style={{ background: tokens.rootBg }}>
         {showConfetti && <ConfettiOverlay />}
-        {newBadges.length > 0 && <BadgeToast badges={newBadges} />}
 
         {/* ── Header (no card — floats on bg) ─────────────────────────────── */}
         <div className="max-w-2xl mx-auto px-5 pt-12 pb-6">
@@ -1355,7 +1318,7 @@ export default function FamilyWorshipPage() {
                     className="truncate"
                     style={{ ...LABEL_STYLE, color: tokens.textSecondary, letterSpacing: "0.10em" }}
                   >
-                    {dailyEntry.theme}
+                    {familyThemeTitle(dailyEntry.theme, lang)}
                   </p>
                 </div>
                 {isToday ? (
@@ -1415,47 +1378,6 @@ export default function FamilyWorshipPage() {
               >
                 {t(lang, "family_go_today")}
               </button>
-            </div>
-          )}
-
-          {/* Devotional Badges */}
-          {earnedBadges.length > 0 && (
-            <div
-              className="px-5 py-5 space-y-4"
-              style={{
-                borderRadius: 16,
-                border: `1px solid ${tokens.badgeSectionBorder}`,
-                backgroundColor: tokens.badgeSectionBg,
-                boxShadow: tokens.cardShadow,
-              }}
-            >
-              <p style={{ ...LABEL_STYLE, color: tokens.badgeSectionLabel }}>
-                {t(lang, "family_faithfulness")}
-              </p>
-              <div className="grid grid-cols-3 gap-2">
-                {earnedBadges.map((id) => {
-                  const badge = DEVOTIONAL_BADGES[id];
-                  return (
-                    <div
-                      key={id}
-                      title={badge.desc}
-                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl"
-                      style={{
-                        border: `1px solid ${tokens.badgeCardBorder}`,
-                        backgroundColor: tokens.badgeCardBg,
-                      }}
-                    >
-                      <GeneratedBadgeLogo id={id} family="devotional" size={32} />
-                      <span className="text-[9px] font-bold text-center leading-tight" style={{ color: tokens.badgeLabelColor }}>
-                        {lang === "es" ? badge.labelEs : badge.label}
-                      </span>
-                      <span className="text-[8px] font-mono" style={{ color: tokens.badgeSectionLabel }}>
-                        ✓ {t(lang, "family_earned")}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           )}
 

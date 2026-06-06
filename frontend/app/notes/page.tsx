@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
+import { bibleBookName } from "../lib/spanishContent";
 import {
   SermonNote,
   loadNotes,
@@ -30,6 +31,16 @@ function formatDate(iso: string, lang: "en" | "es" = "en") {
 
 function refToHref(ref: string) {
   return `/lexicon?ref=${encodeURIComponent(ref)}`;
+}
+
+function NotesIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M7 3.75h8.8c1.25 0 2.45 1.2 2.45 2.45v12.05c0 .55-.45 1-1 1H7A2.25 2.25 0 014.75 17V6A2.25 2.25 0 017 3.75z" stroke="currentColor" strokeWidth="1.7"/>
+      <path d="M8.25 8.25h6.25M8.25 11.75h5.25M8.25 15.25h3.25" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/>
+      <path d="M17.25 19.25l-3.2-2.1-3.2 2.1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity=".55"/>
+    </svg>
+  );
 }
 
 // ─── Note color palette (keyed by Bible section) ─────────────────────────────
@@ -274,28 +285,29 @@ function NoteCard({
   return (
     <button
       onClick={onView}
-      className="w-full text-left rounded-2xl shadow-lg transition-all duration-200 overflow-hidden active:scale-[0.99] hover:shadow-xl"
-      style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
+      className="group w-full text-left rounded-[24px] shadow-lg transition-all duration-200 overflow-hidden active:scale-[0.99] hover:-translate-y-0.5 hover:shadow-xl"
+      style={{ background: "linear-gradient(180deg, rgba(255,255,255,0.045), transparent), var(--bg-2)", border: "1px solid var(--border)" }}
     >
       {/* Colored accent bar */}
       <div className={`h-1 w-full bg-gradient-to-r ${clr.bar}`} />
 
-      <div className="p-5 space-y-3">
+      <div className="p-[18px] space-y-3">
         {/* Title + quick actions */}
         <div className="flex items-start justify-between gap-3">
-          <h4 className="text-[15px] font-bold text-white/90 leading-snug flex-1 tracking-tight">
+          <h4 className="text-[16px] font-black leading-snug flex-1 tracking-tight transition-colors" style={{ color: "var(--fg)" }}>
             {note.title || t(lang, "notes_untitled")}
           </h4>
           <div className="flex items-center gap-1.5 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
             <button
               onClick={onEdit}
-              className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border transition-all ${clr.accent} border-white/[0.12] hover:bg-white/[0.07] hover:border-white/[0.22]`}
+              className={`px-3 py-1.5 rounded-xl text-[11px] font-bold border transition-all ${clr.accent} border-white/[0.12] hover:bg-white/[0.07] hover:border-white/[0.22]`}
             >
-              Edit
+              {lang === "es" ? "Editar" : "Edit"}
             </button>
             <button
               onClick={onDelete}
-              className="w-7 h-7 rounded-lg flex items-center justify-center text-white/20 border border-white/[0.07] hover:bg-red-500/10 hover:text-red-400/70 hover:border-red-500/20 transition-all text-xs"
+              className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/[0.07] hover:bg-red-500/10 hover:text-red-400/70 hover:border-red-500/20 transition-all text-xs"
+              style={{ color: "var(--fg-dim)" }}
             >
               ✕
             </button>
@@ -303,10 +315,10 @@ function NoteCard({
         </div>
 
         {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px] text-white/35">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]" style={{ color: "var(--fg-dim)" }}>
           <span className="font-medium">{formatDate(note.date, lang)}</span>
-          {note.pastor && <><span className="text-white/15">·</span><span className="text-white/40">{note.pastor}</span></>}
-          {note.church && <><span className="text-white/15">·</span><span className="text-white/30">{note.church}</span></>}
+          {note.pastor && <><span className="opacity-40">·</span><span>{note.pastor}</span></>}
+          {note.church && <><span className="opacity-40">·</span><span>{note.church}</span></>}
         </div>
 
         {/* Passage + Tags */}
@@ -334,7 +346,7 @@ function NoteCard({
 
         {/* Preview snippet */}
         {note.notes && (
-          <p className="text-[12px] text-white/35 leading-relaxed line-clamp-2">
+          <p className="text-[13px] leading-relaxed line-clamp-2" style={{ color: "var(--fg-lo)" }}>
             {note.notes}
           </p>
         )}
@@ -536,7 +548,7 @@ function NoteEditorModal({
               value={draft.notes}
               onChange={(e) => { patch({ notes: e.target.value }); autoResize(e.target); }}
               onInput={(e) => autoResize(e.target as HTMLTextAreaElement)}
-              placeholder="Start writing your notes…"
+              placeholder={lang === "es" ? "Empieza a escribir tus notas…" : "Start writing your notes…"}
               rows={12}
               className="w-full resize-none bg-transparent border-none outline-none leading-relaxed"
               style={{
@@ -568,7 +580,9 @@ function NoteEditorModal({
             {/* Auto-detected refs */}
             {detectedRefs.length > 0 && (
               <div className="mt-4 rounded-xl px-3.5 py-3" style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
-                <p className="text-[11px] font-bold mb-2" style={{ color: "var(--accent-text)" }}>✦ References detected — tap to add</p>
+                <p className="text-[11px] font-bold mb-2" style={{ color: "var(--accent-text)" }}>
+                  ✦ {lang === "es" ? "Referencias detectadas — toca para agregar" : "References detected — tap to add"}
+                </p>
                 <div className="flex flex-wrap gap-1.5">
                   {detectedRefs.map((ref) => (
                     <button key={ref} type="button" onClick={() => addRef(ref)}
@@ -596,14 +610,14 @@ function NoteEditorModal({
                   className="bg-transparent text-sm font-semibold focus:outline-none [color-scheme:inherit] flex-shrink-0"
                   style={{ color: "var(--fg-mid)" }}
                 >
-                  <optgroup label="— Old Testament —">
+                  <optgroup label={lang === "es" ? "— Antiguo Testamento —" : "— Old Testament —"}>
                     {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
-                      <option key={b.num} value={b.num}>{b.name}</option>
+                      <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>
                     ))}
                   </optgroup>
-                  <optgroup label="— New Testament —">
+                  <optgroup label={lang === "es" ? "— Nuevo Testamento —" : "— New Testament —"}>
                     {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
-                      <option key={b.num} value={b.num}>{b.name}</option>
+                      <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>
                     ))}
                   </optgroup>
                 </select>
@@ -629,9 +643,9 @@ function NoteEditorModal({
               style={{ color: "var(--fg-lo)" }}
             >
               <span className="text-base font-bold" style={{ color: "var(--accent)" }}>+</span>
-              <span>Add Details</span>
+              <span>{lang === "es" ? "Agregar detalles" : "Add Details"}</span>
               <span className="text-xs font-normal" style={{ color: "var(--fg-dim)" }}>
-                Add more information to organize your note
+                {lang === "es" ? "Agrega más información para organizar tu nota" : "Add more information to organize your note"}
               </span>
             </button>
 
@@ -662,12 +676,12 @@ function NoteEditorModal({
             <input autoFocus type="text" value={scriptureInput}
               onChange={(e) => setScriptureInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") insertScripture(); if (e.key === "Escape") setShowScriptureInput(false); }}
-              placeholder="e.g. John 3:16"
+              placeholder={lang === "es" ? "ej. Juan 3:16" : "e.g. John 3:16"}
               className="flex-1 bg-transparent text-sm focus:outline-none"
               style={{ color: "var(--fg)" }} />
             <button onClick={insertScripture}
               className="px-3 py-1.5 rounded-xl text-xs font-bold text-white"
-              style={{ background: "var(--accent)" }}>Insert</button>
+              style={{ background: "var(--accent)" }}>{lang === "es" ? "Insertar" : "Insert"}</button>
             <button onClick={() => setShowScriptureInput(false)}
               className="px-2 py-1.5 rounded-xl text-xs font-semibold"
               style={{ color: "var(--fg-lo)" }}>✕</button>
@@ -693,7 +707,7 @@ function NoteEditorModal({
             patch({ notes: draft.notes.slice(0, s) + (sel ? `**${sel}**` : "**bold**") + draft.notes.slice(e) });
           }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
             <span className="text-base font-black leading-none">B</span>
-            <span className="text-[9px]">Bold</span>
+            <span className="text-[9px]">{lang === "es" ? "Negrita" : "Bold"}</span>
           </button>
 
           {/* Italic */}
@@ -704,7 +718,7 @@ function NoteEditorModal({
             patch({ notes: draft.notes.slice(0, s) + (sel ? `_${sel}_` : "_italic_") + draft.notes.slice(e) });
           }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
             <span className="text-base italic font-bold leading-none">I</span>
-            <span className="text-[9px]">Italic</span>
+            <span className="text-[9px]">{lang === "es" ? "Cursiva" : "Italic"}</span>
           </button>
 
           {/* Highlight */}
@@ -799,8 +813,10 @@ function NoteEditorModal({
             <div className="flex items-center justify-between px-5 py-4"
               style={{ borderBottom: "1px solid var(--border)", position: "sticky", top: 0, background: "var(--bg)", zIndex: 1 }}>
               <div>
-                <h3 className="text-sm font-bold" style={{ color: "var(--fg)" }}>Add Details</h3>
-                <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-dim)" }}>Add more information to organize your note</p>
+                <h3 className="text-sm font-bold" style={{ color: "var(--fg)" }}>{lang === "es" ? "Agregar detalles" : "Add Details"}</h3>
+                <p className="text-[11px] mt-0.5" style={{ color: "var(--fg-dim)" }}>
+                  {lang === "es" ? "Agrega más información para organizar tu nota" : "Add more information to organize your note"}
+                </p>
               </div>
               <button onClick={() => setShowDetails(false)}
                 className="px-4 py-1.5 rounded-xl text-sm font-bold transition-opacity active:opacity-60"
@@ -816,7 +832,9 @@ function NoteEditorModal({
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
                 <span className="text-xl mt-0.5 flex-shrink-0">🎙</span>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Sermon Title</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
+                    {lang === "es" ? "Título del sermón" : "Sermon Title"}
+                  </label>
                   <input type="text" value={draft.title} onChange={(e) => patch({ title: e.target.value })}
                     placeholder="Optional"
                     className="w-full text-xs bg-transparent border-none outline-none"
@@ -828,7 +846,9 @@ function NoteEditorModal({
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
                 <span className="text-xl mt-0.5 flex-shrink-0">👤</span>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Speaker / Pastor</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
+                    {lang === "es" ? "Predicador / Pastor" : "Speaker / Pastor"}
+                  </label>
                   <input type="text" value={draft.pastor ?? ""} onChange={(e) => patch({ pastor: e.target.value })}
                     placeholder="Optional"
                     className="w-full text-xs bg-transparent border-none outline-none"
@@ -840,12 +860,14 @@ function NoteEditorModal({
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
                 <span className="text-xl mt-0.5 flex-shrink-0">📖</span>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Bible Book</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
+                    {lang === "es" ? "Libro de la Biblia" : "Bible Book"}
+                  </label>
                   <div className="flex gap-1.5 items-center">
                     <select value={draft.bookNum} onChange={(e) => handleBookChange(Number(e.target.value))}
                       className="flex-1 text-xs bg-transparent border-none outline-none [color-scheme:inherit] min-w-0"
                       style={{ color: "var(--fg-mid)" }}>
-                      {BIBLE_BOOKS.map((b) => <option key={b.num} value={b.num}>{b.name}</option>)}
+                      {BIBLE_BOOKS.map((b) => <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>)}
                     </select>
                     <input type="text" inputMode="numeric" value={chapterText}
                       onChange={(e) => setChapterText(e.target.value.replace(/\D/g, ""))}
@@ -857,7 +879,7 @@ function NoteEditorModal({
                       style={{ color: "var(--fg-mid)" }} />
                   </div>
                   <input type="text" value={draft.passage} onChange={(e) => patch({ passage: e.target.value })}
-                    placeholder={`e.g. ${selectedBook.name} 3:16`}
+                    placeholder={lang === "es" ? `ej. ${bibleBookName(selectedBook, lang)} 3:16` : `e.g. ${selectedBook.name} 3:16`}
                     className="w-full text-[11px] bg-transparent border-none outline-none mt-1"
                     style={{ color: "var(--fg-lo)" }} />
                 </div>
@@ -867,7 +889,9 @@ function NoteEditorModal({
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
                 <span className="text-xl mt-0.5 flex-shrink-0">🔖</span>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Scripture References</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
+                    {lang === "es" ? "Referencias bíblicas" : "Scripture References"}
+                  </label>
                   <div className="flex flex-wrap gap-1 mb-1.5">
                     {draft.scriptureRefs.filter(Boolean).map((ref) => (
                       <span key={ref} className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-semibold"
@@ -880,7 +904,7 @@ function NoteEditorModal({
                   <div className="flex gap-1">
                     <input type="text" value={newRef} onChange={(e) => setNewRef(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") { addRef(newRef); setNewRef(""); } }}
-                      placeholder="e.g. John 3:16, Romans 8:1"
+                      placeholder={lang === "es" ? "ej. Juan 3:16, Romanos 8:1" : "e.g. John 3:16, Romans 8:1"}
                       className="flex-1 text-[11px] bg-transparent border-none outline-none min-w-0"
                       style={{ color: "var(--fg-mid)" }} />
                     <button type="button" onClick={() => { addRef(newRef); setNewRef(""); }}
@@ -894,7 +918,9 @@ function NoteEditorModal({
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
                 <span className="text-xl mt-0.5 flex-shrink-0">🏷</span>
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>Tags</label>
+                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>
+                    {lang === "es" ? "Etiquetas" : "Tags"}
+                  </label>
                   <div className="flex flex-wrap gap-1">
                     {PRESET_TAGS.slice(0, 6).map((tag) => (
                       <button key={tag} type="button" onClick={() => toggleTag(tag)}
@@ -1102,6 +1128,8 @@ export default function NotesPage() {
 
   // All tags for filter dropdown
   const allTags = [...new Set(notes.flatMap((n) => n.tags))].sort();
+  const activeCount = activeTab === "sermon" ? sermonNoteCount : generalNoteCount;
+  const hasActiveFilters = searchQuery || filterTestament !== "all" || filterTag || filterDate !== "all" || sortOrder !== "newest";
 
   // ── Actions ──────────────────────────────────────────────────────────────────
 
@@ -1211,100 +1239,88 @@ export default function NotesPage() {
       )}
 
       <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--fg)" }}>
-        {/* ── Action strip ─────────────────────────────────────────────────────── */}
-        <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
-          <div className="max-w-screen-xl mx-auto px-4">
-            <div className="flex items-center gap-2 py-2.5">
-              <span className="text-sm">📓</span>
-              {/* Breadcrumb */}
-              {activeTab === "sermon" ? (
-                <>
-                  <button
-                    onClick={() => setSelectedBookNum(null)}
-                    className={`text-sm font-bold transition-colors ${
-                      selectedBook ? "text-white/40 hover:text-white/70" : "text-white/70"
-                    }`}
-                  >
+        {/* ── Premium Header + Controls ───────────────────────────────────────── */}
+        <div className="relative overflow-hidden" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_20%_0%,rgba(201,169,97,0.14),transparent_42%),radial-gradient(circle_at_92%_14%,rgba(201,169,97,0.10),transparent_38%)]" />
+          <div className="relative max-w-screen-xl mx-auto px-4 pt-5 pb-4 space-y-4">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border border-white/[0.09] bg-white/[0.045] text-[#c9a961] shadow-[0_14px_36px_rgba(0,0,0,0.22)]">
+                  <NotesIcon />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: "var(--accent)" }}>
+                    {lang === "es" ? "Archivo personal" : "Personal archive"}
+                  </p>
+                  <h1 className="mt-0.5 text-[24px] font-black leading-none tracking-tight" style={{ color: "var(--fg)" }}>
                     {t(lang, "notes_title")}
-                  </button>
-                  {sermonNoteCount > 0 && !selectedBook && (
-                    <span className="text-[10px] font-mono text-white/20">
-                      {sermonNoteCount} note{sermonNoteCount !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                  {selectedBook && (
-                    <>
-                      <span className="text-white/20 text-xs">/</span>
-                      <span className="text-sm font-bold text-emerald-300/80">{selectedBook.name}</span>
-                      {bookNotes.length > 0 && (
-                        <span className="text-[10px] font-mono text-white/20">
-                          {bookNotes.length} note{bookNotes.length !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </>
-                  )}
-                </>
-              ) : (
-                <>
-                  <span className="text-sm font-bold text-white/70">{t(lang, "notes_tab_general")} Notes</span>
-                  {generalNoteCount > 0 && (
-                    <span className="text-[10px] font-mono text-white/20">
-                      {generalNoteCount} note{generalNoteCount !== 1 ? "s" : ""}
-                    </span>
-                  )}
-                </>
-              )}
-
-              {/* Tab switcher */}
-              <div className="ml-auto flex items-center gap-0.5 bg-white/[0.05] rounded-xl p-0.5 mr-2">
-                <button
-                  onClick={() => setActiveTab("sermon")}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                    activeTab === "sermon"
-                      ? "bg-white/[0.12] text-white/85 shadow-sm"
-                      : "text-white/30 hover:text-white/55"
-                  }`}
-                >
-                  {t(lang, "notes_tab_sermon")}
-                </button>
-                <button
-                  onClick={() => setActiveTab("general")}
-                  className={`px-3 py-1.5 rounded-lg text-[11px] font-bold transition-all ${
-                    activeTab === "general"
-                      ? "bg-white/[0.12] text-white/85 shadow-sm"
-                      : "text-white/30 hover:text-white/55"
-                  }`}
-                >
-                  {t(lang, "notes_tab_general")}
-                </button>
+                  </h1>
+                  <p className="mt-1 text-[12px]" style={{ color: "var(--fg-dim)" }}>
+                    {activeCount} {lang === "es" ? (activeCount === 1 ? "nota" : "notas") : `note${activeCount !== 1 ? "s" : ""}`}
+                    {selectedBook && activeTab === "sermon" ? ` · ${bibleBookName(selectedBook, lang)}` : ""}
+                  </p>
+                </div>
               </div>
 
               <button
                 onClick={() => openNewNote(activeTab === "sermon" ? (selectedBookNum ?? undefined) : undefined)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white text-xs font-bold hover:from-violet-500 hover:to-indigo-500 active:scale-[0.97] transition-all shadow-sm shadow-indigo-900/30"
+                className="flex min-h-12 flex-shrink-0 items-center gap-2 rounded-2xl px-4 text-[12px] font-black text-[#08090f] transition-all active:scale-[0.97]"
+                style={{
+                  background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 74%, #ffffff 26%))",
+                  boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 20%, transparent)",
+                }}
               >
-                <span className="text-sm font-black leading-none">+</span>
-                {t(lang, "notes_new")}
+                <span className="text-lg leading-none">+</span>
+                <span className="leading-tight">{t(lang, "notes_new")}</span>
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* ── Search + Filters — scroll away naturally ─────────────────────────── */}
-        <div style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
-          <div className="max-w-screen-xl mx-auto px-4 pt-3 pb-3 space-y-2">
-            <input
-              type="text"
-              placeholder={t(lang, "notes_search")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-1.5 text-xs text-white/70 placeholder:text-white/20 focus:outline-none focus:border-violet-500/40"
-            />
-            <div className="flex gap-2 overflow-x-auto scrollbar-none">
+            <div className="grid grid-cols-2 gap-2 rounded-[22px] border border-white/[0.07] bg-black/[0.18] p-1">
+              {(["sermon", "general"] as const).map((tab) => {
+                const active = activeTab === tab;
+                const count = tab === "sermon" ? sermonNoteCount : generalNoteCount;
+                return (
+                  <button
+                    key={tab}
+                    onClick={() => { setActiveTab(tab); if (tab === "general") setSelectedBookNum(null); }}
+                    className="rounded-[18px] px-3 py-3 text-left transition-all active:scale-[0.98]"
+                    style={{
+                      background: active ? "rgba(255,255,255,0.09)" : "transparent",
+                      border: active ? "1px solid rgba(255,255,255,0.08)" : "1px solid transparent",
+                      boxShadow: active ? "0 10px 26px rgba(0,0,0,0.18)" : "none",
+                    }}
+                  >
+                    <span className="block text-[13px] font-black" style={{ color: active ? "var(--fg)" : "var(--fg-lo)" }}>
+                      {tab === "sermon" ? t(lang, "notes_tab_sermon") : t(lang, "notes_tab_general")}
+                    </span>
+                    <span className="mt-0.5 block text-[10px] font-bold" style={{ color: active ? "var(--accent)" : "var(--fg-dim)" }}>
+                      {count} {lang === "es" ? (count === 1 ? "nota" : "notas") : `note${count !== 1 ? "s" : ""}`}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="rounded-[24px] border border-white/[0.07] bg-white/[0.035] p-3 shadow-[0_18px_48px_rgba(0,0,0,0.18)]">
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2" width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-dim)" }}>
+                  <path d="M21 21l-4.3-4.3M11 18a7 7 0 100-14 7 7 0 000 14z" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+                <input
+                  type="text"
+                  placeholder={t(lang, "notes_search")}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-2xl border bg-black/[0.14] py-3 pl-10 pr-4 text-[14px] focus:outline-none"
+                  style={{ borderColor: "var(--border)", color: "var(--fg)", caretColor: "var(--accent)" }}
+                />
+              </div>
+              <div className="mt-3 flex gap-2 overflow-x-auto scrollbar-none">
               <select
                 value={filterTestament}
                 onChange={(e) => setFilterTestament(e.target.value as "all" | "OT" | "NT")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
+                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
+                style={{ background: "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
               >
                 <option value="all">{t(lang, "notes_filter_all_books")}</option>
                 <option value="OT">{t(lang, "notes_filter_ot")}</option>
@@ -1314,7 +1330,8 @@ export default function NotesPage() {
                 <select
                   value={filterTag}
                   onChange={(e) => setFilterTag(e.target.value)}
-                  className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
+                  className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
+                  style={{ background: "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
                 >
                   <option value="">All Tags</option>
                   {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
@@ -1323,7 +1340,8 @@ export default function NotesPage() {
               <select
                 value={filterDate}
                 onChange={(e) => setFilterDate(e.target.value as "all" | "this-year" | "last-year")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
+                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
+                style={{ background: "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
               >
                 <option value="all">{t(lang, "notes_filter_all_time")}</option>
                 <option value="this-year">{t(lang, "notes_filter_this_year")}</option>
@@ -1332,12 +1350,29 @@ export default function NotesPage() {
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "by-book")}
-                className="flex-shrink-0 bg-white/[0.04] border border-white/[0.08] rounded-lg px-2.5 py-1.5 text-xs text-white/45 focus:outline-none focus:border-violet-500/40 [color-scheme:inherit]"
+                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
+                style={{ background: "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
               >
                 <option value="newest">{t(lang, "notes_sort_newest")}</option>
                 <option value="oldest">{t(lang, "notes_sort_oldest")}</option>
                 <option value="by-book">{t(lang, "notes_sort_by_book")}</option>
               </select>
+              {hasActiveFilters && (
+                <button
+                  onClick={() => {
+                    setSearchQuery("");
+                    setFilterTestament("all");
+                    setFilterTag("");
+                    setFilterDate("all");
+                    setSortOrder("newest");
+                  }}
+                  className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-black transition-opacity active:opacity-70"
+                  style={{ background: "var(--accent-soft)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-text)" }}
+                >
+                  {lang === "es" ? "Limpiar" : "Clear"}
+                </button>
+              )}
+              </div>
             </div>
           </div>
         </div>
@@ -1355,8 +1390,8 @@ export default function NotesPage() {
                 <div className="px-4 py-10 text-center">
                   <p className="text-white/15 text-xs">
                     {notes.length === 0
-                      ? "No notes yet"
-                      : "No matches for these filters"}
+                      ? (lang === "es" ? "Aún no hay notas" : "No notes yet")
+                      : (lang === "es" ? "No hay resultados para estos filtros" : "No matches for these filters")}
                   </p>
                 </div>
               ) : (
@@ -1369,7 +1404,7 @@ export default function NotesPage() {
                         className="w-full flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-white/20 hover:text-white/35 transition-colors"
                       >
                         <span className="text-[8px]">{otExpanded ? "▾" : "▸"}</span>
-                        Old Testament
+                        {lang === "es" ? "Antiguo Testamento" : "Old Testament"}
                         <span className="ml-auto text-white/15">{otBooks.length}</span>
                       </button>
                       {otExpanded &&
@@ -1388,7 +1423,7 @@ export default function NotesPage() {
                                   : "border-l-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
                               }`}
                             >
-                              <span className="text-xs font-semibold flex-1 truncate">{book.name}</span>
+                              <span className="text-xs font-semibold flex-1 truncate">{bibleBookName(book, lang)}</span>
                               <span
                                 className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
                                   active
@@ -1396,7 +1431,7 @@ export default function NotesPage() {
                                     : "bg-white/[0.06] text-white/20"
                                 }`}
                               >
-                                {chCnt}ch
+                                {chCnt}{lang === "es" ? "cap" : "ch"}
                               </span>
                             </button>
                           );
@@ -1412,7 +1447,7 @@ export default function NotesPage() {
                         className="w-full flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-[0.12em] text-white/20 hover:text-white/35 transition-colors"
                       >
                         <span className="text-[8px]">{ntExpanded ? "▾" : "▸"}</span>
-                        New Testament
+                        {lang === "es" ? "Nuevo Testamento" : "New Testament"}
                         <span className="ml-auto text-white/15">{ntBooks.length}</span>
                       </button>
                       {ntExpanded &&
@@ -1431,7 +1466,7 @@ export default function NotesPage() {
                                   : "border-l-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
                               }`}
                             >
-                              <span className="text-xs font-semibold flex-1 truncate">{book.name}</span>
+                              <span className="text-xs font-semibold flex-1 truncate">{bibleBookName(book, lang)}</span>
                               <span
                                 className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
                                   active
@@ -1439,7 +1474,7 @@ export default function NotesPage() {
                                     : "bg-white/[0.06] text-white/20"
                                 }`}
                               >
-                                {chCnt}ch
+                                {chCnt}{lang === "es" ? "cap" : "ch"}
                               </span>
                             </button>
                           );
@@ -1463,27 +1498,39 @@ export default function NotesPage() {
             {activeTab === "general" && (
               <div>
                 {sorted.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center min-h-[55vh] gap-7 text-center">
-                    <div className="relative">
-                      <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-emerald-600/20 via-teal-500/15 to-sky-500/10 border border-white/[0.09] flex items-center justify-center shadow-2xl">
-                        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" className="text-white/40">
+                  <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
+                    <div className="w-full rounded-[32px] border border-white/[0.08] bg-white/[0.035] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+                      <div className="relative mx-auto mb-5 w-fit">
+                        <div
+                          className="w-24 h-24 rounded-[30px] border border-white/[0.09] flex items-center justify-center shadow-2xl"
+                          style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))" }}
+                        >
+                          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-lo)" }}>
                           <path d="M12 20h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                          </svg>
+                        </div>
+                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black" style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>+</div>
                       </div>
-                      <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 border-2 flex items-center justify-center text-white text-xs font-black" style={{ borderColor: "var(--bg)" }}>+</div>
+                      <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>{t(lang, "notes_general_empty_title")}</h2>
+                      <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>{t(lang, "notes_general_empty_sub")}</p>
+                      <div className="mt-5 flex justify-center gap-2">
+                        <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Ideas" : "Ideas"}</span>
+                        <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Oración" : "Prayer"}</span>
+                      </div>
+                      <button
+                        onClick={() => openNewNote()}
+                        className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all shadow-lg"
+                        style={{
+                          background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
+                          color: "#08090f",
+                          boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
+                        }}
+                      >
+                        <span className="text-base font-black">+</span>
+                        {t(lang, "notes_add_first")}
+                      </button>
                     </div>
-                    <div className="max-w-[260px]">
-                      <h2 className="text-[17px] font-bold text-white/60 mb-2.5 tracking-tight">{t(lang, "notes_general_empty_title")}</h2>
-                      <p className="text-white/30 text-[13px] leading-relaxed">{t(lang, "notes_general_empty_sub")}</p>
-                    </div>
-                    <button
-                      onClick={() => openNewNote()}
-                      className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-bold text-sm hover:from-emerald-500 hover:to-teal-500 active:scale-[0.97] transition-all shadow-lg shadow-emerald-900/40"
-                    >
-                      <span className="text-base font-black">+</span>
-                      {t(lang, "notes_add_first")}
-                    </button>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1507,36 +1554,49 @@ export default function NotesPage() {
 
             {/* ── Empty state (no sermon notes) ──────────────────────────────── */}
             {sermonNoteCount === 0 && (
-              <div className="flex flex-col items-center justify-center min-h-[55vh] gap-7 text-center">
-                <div className="relative">
-                  <div className="w-24 h-24 rounded-[28px] bg-gradient-to-br from-violet-600/20 via-sky-500/15 to-emerald-500/15 border border-white/[0.09] flex items-center justify-center shadow-2xl">
-                    <svg width="38" height="38" viewBox="0 0 24 24" fill="none" className="text-white/40">
+              <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
+                <div className="w-full rounded-[32px] border border-white/[0.08] bg-white/[0.035] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+                  <div className="relative mx-auto mb-5 w-fit">
+                    <div
+                      className="w-24 h-24 rounded-[30px] border border-white/[0.09] flex items-center justify-center shadow-2xl"
+                      style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))" }}
+                    >
+                      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-lo)" }}>
                       <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       <line x1="9" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       <line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                    </svg>
+                      </svg>
+                    </div>
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black" style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>
+                      +
+                    </div>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-gradient-to-br from-violet-500 to-sky-500 border-2 flex items-center justify-center text-white text-xs font-black" style={{ borderColor: "var(--bg)" }}>
-                    +
-                  </div>
-                </div>
-                <div className="max-w-[260px]">
-                  <h2 className="text-[17px] font-bold text-white/60 mb-2.5 tracking-tight">
+                  <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>
                     {t(lang, "notes_sermon_empty_title")}
                   </h2>
-                  <p className="text-white/30 text-[13px] leading-relaxed">
+                  <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>
                     {t(lang, "notes_sermon_empty_sub")}
                   </p>
+                  <div className="mt-5 flex justify-center gap-2">
+                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Libro" : "Book"}</span>
+                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Capítulo" : "Chapter"}</span>
+                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Pasaje" : "Passage"}</span>
+                  </div>
+                  <button
+                    onClick={() => openNewNote()}
+                    className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all shadow-lg"
+                    style={{
+                      background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
+                      color: "#08090f",
+                      boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
+                    }}
+                  >
+                    <span className="text-base font-black">+</span>
+                    {t(lang, "notes_add_first")}
+                  </button>
                 </div>
-                <button
-                  onClick={() => openNewNote()}
-                  className="flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-bold text-sm hover:from-violet-500 hover:to-indigo-500 active:scale-[0.97] transition-all shadow-lg shadow-indigo-900/40"
-                >
-                  <span className="text-base font-black">+</span>
-                  Add First Note
-                </button>
               </div>
             )}
 
@@ -1546,8 +1606,8 @@ export default function NotesPage() {
                 {/* Mobile: book grid */}
                 <div className="md:hidden space-y-4 mb-4">
                   {[
-                    { label: "Old Testament", books: otBooks },
-                    { label: "New Testament", books: ntBooks },
+                    { label: lang === "es" ? "Antiguo Testamento" : "Old Testament", books: otBooks },
+                    { label: lang === "es" ? "Nuevo Testamento" : "New Testament", books: ntBooks },
                   ].map(
                     ({ label, books }) =>
                       books.length > 0 && (
@@ -1657,31 +1717,32 @@ export default function NotesPage() {
                   onClick={() => setSelectedBookNum(null)}
                   className="md:hidden flex items-center gap-1.5 text-xs text-emerald-400/60 hover:text-emerald-300 font-semibold mb-4 transition-colors"
                 >
-                  ← Library
+                  ← {lang === "es" ? "Biblioteca" : "Library"}
                 </button>
 
                 {/* Book heading */}
                 <div className="flex items-start justify-between gap-3 mb-6">
                   <div>
-                    <h2 className="text-xl font-bold text-white/80">{selectedBook.name}</h2>
+                    <h2 className="text-xl font-bold text-white/80">{bibleBookName(selectedBook, lang)}</h2>
                     <p className="text-xs text-white/25 mt-1">
-                      {chaptersWithNotes.length} chapter
-                      {chaptersWithNotes.length !== 1 ? "s" : ""} ·{" "}
-                      {bookNotes.length} note{bookNotes.length !== 1 ? "s" : ""}
+                      {chaptersWithNotes.length} {lang === "es" ? (chaptersWithNotes.length === 1 ? "capítulo" : "capítulos") : `chapter${chaptersWithNotes.length !== 1 ? "s" : ""}`} ·{" "}
+                      {bookNotes.length} {lang === "es" ? (bookNotes.length === 1 ? "nota" : "notas") : `note${bookNotes.length !== 1 ? "s" : ""}`}
                     </p>
                   </div>
                   <button
                     onClick={() => openNewNote(selectedBook.num)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/25 text-emerald-400/65 text-xs font-bold hover:bg-emerald-500/[0.08] hover:text-emerald-300 transition-colors flex-shrink-0"
                   >
-                    + Add Note
+                    + {lang === "es" ? "Agregar nota" : "Add Note"}
                   </button>
                 </div>
 
                 {/* No notes after filter */}
                 {chaptersWithNotes.length === 0 && (
                   <p className="text-white/20 text-sm text-center py-12">
-                    No notes match your current filters for {selectedBook.name}
+                    {lang === "es"
+                      ? `No hay notas que coincidan con los filtros para ${bibleBookName(selectedBook, lang)}`
+                      : `No notes match your current filters for ${selectedBook.name}`}
                   </p>
                 )}
 

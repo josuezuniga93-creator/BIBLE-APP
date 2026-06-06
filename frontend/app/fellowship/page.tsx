@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useLanguage } from "../lib/useLanguage";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -388,6 +389,7 @@ function GatheringCard({
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function FellowshipPage() {
+  const { lang, t } = useLanguage();
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -484,10 +486,10 @@ export default function FellowshipPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <h1 className="text-2xl font-black tracking-tight" style={{ color: "var(--fg, #fff)" }}>
-              Fellowship
+              {t("fellowship_heading")}
             </h1>
             <p className="text-xs mt-0.5" style={{ color: "var(--fg, rgba(255,255,255,0.35))", opacity: 0.7 }}>
-              Home gatherings &amp; reminders
+              {t("fellowship_sub")}
             </p>
           </div>
           <button
@@ -498,21 +500,21 @@ export default function FellowshipPage() {
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
               <path d="M12 5v14M5 12h14" stroke="white" strokeWidth="2.5" strokeLinecap="round" />
             </svg>
-            New
+            {t("fellowship_new").replace("+ ", "")}
           </button>
         </div>
 
         {/* ── Notification denied banner ────────────────────────────────────── */}
         {notifPerm === "denied" && (
           <div className="rounded-xl border border-amber-500/30 bg-amber-500/[0.07] px-4 py-3 text-xs text-amber-300">
-            Notifications are blocked. Enable them in browser settings to receive gathering reminders.
+            {lang === "es" ? "Las notificaciones están bloqueadas. Actívalas en la configuración del navegador para recibir recordatorios." : "Notifications are blocked. Enable them in browser settings to receive gathering reminders."}
           </div>
         )}
 
         {/* ── Clipboard toast ───────────────────────────────────────────────── */}
         {copyMsg && (
           <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-xl text-xs font-bold text-white bg-black/80 backdrop-blur shadow-lg">
-            Copied to clipboard
+            {lang === "es" ? "Copiado al portapapeles" : "Copied to clipboard"}
           </div>
         )}
 
@@ -520,7 +522,7 @@ export default function FellowshipPage() {
         <section className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "var(--accent, #7c3aed)" }}>
-              Upcoming
+              {t("fellowship_upcoming")}
             </h2>
             {upcoming.length > 0 && (
               <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "var(--accent, #7c3aed)", color: "#fff", opacity: 0.85 }}>
@@ -532,8 +534,8 @@ export default function FellowshipPage() {
           {upcoming.length === 0 ? (
             <div className="rounded-2xl border border-dashed py-10 text-center space-y-2" style={{ borderColor: "var(--accent, #7c3aed)", opacity: 0.35 }}>
               <div className="text-3xl">🏠</div>
-              <p className="text-sm font-semibold" style={{ color: "var(--fg, #fff)" }}>No upcoming gatherings</p>
-              <p className="text-xs" style={{ color: "var(--fg, rgba(255,255,255,0.4))" }}>Tap + New to schedule your next meeting</p>
+              <p className="text-sm font-semibold" style={{ color: "var(--fg, #fff)" }}>{t("fellowship_empty")}</p>
+              <p className="text-xs" style={{ color: "var(--fg, rgba(255,255,255,0.4))" }}>{t("fellowship_empty_sub")}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -559,7 +561,7 @@ export default function FellowshipPage() {
               className="flex items-center justify-between w-full"
             >
               <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "var(--fg, rgba(255,255,255,0.35))", opacity: 0.7 }}>
-                Past Gatherings
+                {lang === "es" ? "Reuniones Pasadas" : "Past Gatherings"}
               </h2>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold" style={{ color: "var(--fg, rgba(255,255,255,0.3))", opacity: 0.6 }}>
@@ -602,18 +604,18 @@ export default function FellowshipPage() {
               onClick={(e) => e.stopPropagation()}
             >
               <p className="text-sm font-black" style={{ color: "var(--fg, #fff)" }}>
-                {editId ? "Edit Gathering" : "New Gathering"}
+                {editId ? (lang === "es" ? "Editar Reunión" : "Edit Gathering") : (lang === "es" ? "Nueva Reunión" : "New Gathering")}
               </p>
 
               <div className="space-y-3">
                 {/* Title */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>Title</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>{lang === "es" ? "Título" : "Title"}</label>
                   <input
                     type="text"
                     value={form.title}
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-                    placeholder="e.g. Tuesday Bible Study"
+                    placeholder={lang === "es" ? "ej. Estudio Bíblico del martes" : "e.g. Tuesday Bible Study"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
                     style={{ background: "var(--fg, rgba(255,255,255,0.06))", opacity: 1, color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     autoFocus
@@ -622,12 +624,12 @@ export default function FellowshipPage() {
 
                 {/* Location */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>Location</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>{lang === "es" ? "Ubicación" : "Location"}</label>
                   <input
                     type="text"
                     value={form.location}
                     onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-                    placeholder="e.g. John's home / 123 Oak St"
+                    placeholder={lang === "es" ? "ej. Casa de Juan / 123 Oak St" : "e.g. John's home / 123 Oak St"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
                     style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
@@ -636,7 +638,7 @@ export default function FellowshipPage() {
                 {/* Date & Time */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>Date</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>{lang === "es" ? "Fecha" : "Date"}</label>
                     <input
                       type="date"
                       value={form.date}
@@ -646,7 +648,7 @@ export default function FellowshipPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>Time</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>{lang === "es" ? "Hora" : "Time"}</label>
                     <input
                       type="time"
                       value={form.time}
@@ -659,11 +661,11 @@ export default function FellowshipPage() {
 
                 {/* Notes */}
                 <div>
-                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>Notes (optional)</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>{lang === "es" ? "Notas (opcional)" : "Notes (optional)"}</label>
                   <textarea
                     value={form.notes}
                     onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-                    placeholder="Study topic, what to bring, etc."
+                    placeholder={lang === "es" ? "Tema de estudio, qué traer, etc." : "Study topic, what to bring, etc."}
                     rows={3}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
                     style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
@@ -673,7 +675,7 @@ export default function FellowshipPage() {
                 {/* Phone to notify */}
                 <div>
                   <label className="text-[10px] font-bold uppercase tracking-widest mb-1 block" style={{ color: "var(--fg, rgba(255,255,255,0.3))" }}>
-                    Phone to notify <span style={{ opacity: 0.45, fontWeight: 400, textTransform: "none" }}>(optional)</span>
+                    {lang === "es" ? "Teléfono para notificar" : "Phone to notify"} <span style={{ opacity: 0.45, fontWeight: 400, textTransform: "none" }}>({lang === "es" ? "opcional" : "optional"})</span>
                   </label>
                   <input
                     type="tel"
@@ -684,7 +686,7 @@ export default function FellowshipPage() {
                     style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                   <p className="text-[9px] mt-1" style={{ color: "var(--fg, rgba(255,255,255,0.25))" }}>
-                    A "Send Message" button will appear on this gathering's card.
+                    {lang === "es" ? "Aparecerá un botón de “Enviar Mensaje” en la tarjeta de esta reunión." : 'A "Send Message" button will appear on this gathering\'s card.'}
                   </p>
                 </div>
 
@@ -704,9 +706,9 @@ export default function FellowshipPage() {
                     </svg>
                     <div className="text-left">
                       <p className="text-sm font-semibold" style={{ color: form.reminder ? "var(--accent, #7c3aed)" : "rgba(255,255,255,0.6)" }}>
-                        Set reminder
+                        {lang === "es" ? "Activar recordatorio" : "Set reminder"}
                       </p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>1 day before + morning of</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "es" ? "1 día antes + la mañana de la reunión" : "1 day before + morning of"}</p>
                     </div>
                   </div>
                   <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" style={{
@@ -725,7 +727,7 @@ export default function FellowshipPage() {
                   className="flex-1 py-3 rounded-xl border font-bold text-sm transition-colors"
                   style={{ borderColor: "rgba(255,255,255,0.1)", color: "var(--fg, rgba(255,255,255,0.5))" }}
                 >
-                  Cancel
+                  {t("notes_cancel")}
                 </button>
                 <button
                   onClick={handleSave}
@@ -733,7 +735,7 @@ export default function FellowshipPage() {
                   className="flex-1 py-3 rounded-xl text-white font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-95"
                   style={{ background: "var(--accent, #7c3aed)" }}
                 >
-                  {editId ? "Save Changes" : "Add Gathering"}
+                  {editId ? (lang === "es" ? "Guardar Cambios" : "Save Changes") : (lang === "es" ? "Agregar Reunión" : "Add Gathering")}
                 </button>
               </div>
 
@@ -751,7 +753,7 @@ export default function FellowshipPage() {
               style={{ background: "var(--bg, #1a1a1a)", border: "1px solid var(--accent, #7c3aed)" + "33" }}
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-sm font-black" style={{ color: "var(--fg, #fff)" }}>Send Gathering Details</p>
+              <p className="text-sm font-black" style={{ color: "var(--fg, #fff)" }}>{lang === "es" ? "Enviar Detalles de la Reunión" : "Send Gathering Details"}</p>
 
               {/* Preview */}
               <div className="rounded-xl px-4 py-3 text-xs leading-relaxed whitespace-pre-line" style={{ background: "rgba(255,255,255,0.04)", color: "var(--fg, rgba(255,255,255,0.6))", border: "1px solid rgba(255,255,255,0.07)" }}>

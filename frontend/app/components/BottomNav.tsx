@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
+import type { TranslationKey } from "../lib/i18n";
 
 // ─── SVG Icons — use currentColor so theme CSS variables drive the color ─────
 
@@ -71,18 +72,11 @@ function YouIcon({ active }: { active: boolean }) {
 
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
-const PRIMARY_TABS_EN = [
-  { href: "/",               label: "Home"     },
-  { href: "/lexicon",        label: "Bible"    },
-  { href: "/notes",          label: "Notes"    },
-  { href: "/family-worship", label: "Worship"  },
-];
-
-const PRIMARY_TABS_ES = [
-  { href: "/",               label: "Inicio"    },
-  { href: "/lexicon",        label: "Biblia"    },
-  { href: "/notes",          label: "Notas"     },
-  { href: "/family-worship", label: "Adoración" },
+const PRIMARY_TABS: Array<{ href: string; labelKey: TranslationKey }> = [
+  { href: "/",               labelKey: "nav_home"     },
+  { href: "/lexicon",        labelKey: "nav_bible"    },
+  { href: "/notes",          labelKey: "nav_notes"    },
+  { href: "/family-worship", labelKey: "nav_worship"  },
 ];
 
 // ─── Sheet link SVG icons ─────────────────────────────────────────────────────
@@ -171,15 +165,15 @@ function TimelineIcon({ active }: { active: boolean }) {
   );
 }
 
-const MORE_LINKS = [
-  { href: "/timeline",      Icon: TimelineIcon, label: "Timeline"      },
-  { href: "/library",       Icon: LibraryIcon,  label: "Free Books"    },
-  { href: "/bible-tracker", Icon: TrackerIcon,  label: "Bible Tracker" },
-  { href: "/bible-plans",   Icon: PlansIcon,    label: "Plans"         },
-  { href: "/kids-books",    Icon: KidsIcon,     label: "Kids Books"    },
-  { href: "/videos",        Icon: VideosIcon,   label: "Videos"        },
-  { href: "/give",          Icon: GiveIcon,     label: "Give"          },
-  { href: "/fellowship",    Icon: GiveIcon,     label: "Fellowship"    },
+const MORE_LINKS: Array<{ href: string; Icon: (props: { active: boolean }) => JSX.Element; labelKey: TranslationKey }> = [
+  { href: "/timeline",      Icon: TimelineIcon, labelKey: "nav_timeline"   },
+  { href: "/library",       Icon: LibraryIcon,  labelKey: "nav_free_books" },
+  { href: "/bible-tracker", Icon: TrackerIcon,  labelKey: "nav_tracker"    },
+  { href: "/bible-plans",   Icon: PlansIcon,    labelKey: "nav_plans"      },
+  { href: "/kids-books",    Icon: KidsIcon,     labelKey: "nav_kids"       },
+  { href: "/videos",        Icon: VideosIcon,   labelKey: "nav_videos"     },
+  { href: "/give",          Icon: GiveIcon,     labelKey: "nav_give"       },
+  { href: "/fellowship",    Icon: GiveIcon,     labelKey: "nav_fellowship" },
 ] as const;
 
 // Family Worship nav tab icon — cross/hearth style
@@ -212,8 +206,7 @@ function TabIcon({ href, active }: { href: string; active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { lang } = useLanguage();
-  const PRIMARY_TABS = lang === "es" ? PRIMARY_TABS_ES : PRIMARY_TABS_EN;
+  const { t } = useLanguage();
 
   const youActive = MORE_LINKS.some((l) => pathname.startsWith(l.href)) ||
     pathname === "/more";
@@ -229,7 +222,7 @@ export function BottomNav() {
     >
       <div className="mobile-nav-surface flex items-stretch h-[58px]">
 
-        {PRIMARY_TABS.map(({ href, label }) => {
+        {PRIMARY_TABS.map(({ href, labelKey }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
             <Link
@@ -241,7 +234,7 @@ export function BottomNav() {
             >
               <TabIcon href={href} active={active} />
               <span className="text-[10px] font-bold tracking-wide leading-none">
-                {label}
+                {t(labelKey)}
               </span>
             </Link>
           );
@@ -256,7 +249,7 @@ export function BottomNav() {
         >
           <YouIcon active={youActive} />
           <span className="text-[10px] font-bold tracking-wide leading-none">
-            {lang === "es" ? "Más" : "Extras"}
+            {t("nav_extras")}
           </span>
         </Link>
 

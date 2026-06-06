@@ -8,6 +8,8 @@ import {
   getTodaysPlanDay,
   getPlanProgress,
 } from "../lib/biblePlansData";
+import { useLanguage } from "../lib/useLanguage";
+import { bibleBookName, localizeReference, planDescription, planName } from "../lib/spanishContent";
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
 
@@ -88,6 +90,12 @@ function buildLexiconUrl(label: string): string {
   return `/lexicon?book=${encodeURIComponent(parsed.book)}&chapter=${parsed.chapter}`;
 }
 
+function readingLabel(reading: { bookNum: number; bookName: string; chapter: number; label: string }, lang: "en" | "es") {
+  return lang === "es"
+    ? `${bibleBookName({ num: reading.bookNum, name: reading.bookName }, "es")} ${reading.chapter}`
+    : reading.label;
+}
+
 // ─── Plan Card (catalog) ──────────────────────────────────────────────────────
 
 function PlanCard({
@@ -101,6 +109,14 @@ function PlanCard({
   onStart: () => void;
   onView: () => void;
 }) {
+  const { lang, t } = useLanguage();
+  const testamentLabel =
+    plan.testament === "FULL"
+      ? t("plans_full_bible")
+      : plan.testament === "OT"
+      ? t("tracker_ot")
+      : t("tracker_nt");
+
   return (
     <div
       className={`rounded-2xl border p-5 transition-all ${
@@ -113,22 +129,22 @@ function PlanCard({
         <span className="text-2xl">{plan.icon}</span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-white font-bold text-base">{plan.name}</h3>
+            <h3 className="text-white font-bold text-base">{planName(plan, lang)}</h3>
             {isActive && (
               <span className="text-[10px] font-black text-violet-300 bg-violet-500/20 border border-violet-500/30 px-2 py-0.5 rounded-full uppercase tracking-widest">
-                Active
+                {lang === "es" ? "Activo" : "Active"}
               </span>
             )}
           </div>
           <div className="flex items-center gap-3 mt-0.5">
             <span className="text-xs text-white/30">
-              {plan.totalDays} days
+              {plan.totalDays} {t("plans_days")}
             </span>
             <span className="text-white/15">·</span>
             <span className="text-xs text-white/30">
               {typeof plan.chaptersPerDay === "number"
-                ? `${plan.chaptersPerDay} ch/day`
-                : "~3–4 ch/day"}
+                ? `${plan.chaptersPerDay} ${t("plans_ch_day")}`
+                : `~3–4 ${t("plans_ch_day")}`}
             </span>
             <span className="text-white/15">·</span>
             <span
@@ -140,30 +156,26 @@ function PlanCard({
                   : "text-emerald-400"
               }`}
             >
-              {plan.testament === "FULL"
-                ? "Full Bible"
-                : plan.testament === "OT"
-                ? "Old Testament"
-                : "New Testament"}
+              {testamentLabel}
             </span>
           </div>
         </div>
       </div>
-      <p className="text-white/50 text-sm leading-6 mb-4">{plan.description}</p>
+      <p className="text-white/50 text-sm leading-6 mb-4">{planDescription(plan, lang)}</p>
       <div className="flex gap-2">
         {isActive ? (
           <button
             onClick={onView}
             className="flex-1 py-2.5 rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-300 text-sm font-bold hover:bg-violet-600/30 transition-colors"
           >
-            View My Plan
+            {lang === "es" ? "Ver Mi Plan" : "View My Plan"}
           </button>
         ) : (
           <button
             onClick={onStart}
             className="flex-1 py-2.5 rounded-xl bg-white/[0.05] border border-white/10 text-white/60 text-sm font-bold hover:text-white/90 hover:bg-white/[0.10] transition-colors"
           >
-            Start This Plan
+            {t("plans_start")}
           </button>
         )}
       </div>
@@ -184,6 +196,7 @@ function ActivePlanView({
   onClose: () => void;
   onRemove: () => void;
 }) {
+  const { lang } = useLanguage();
   const start = useMemo(() => {
     const [y, m, d] = startDate.split("-").map(Number);
     return new Date(y, m - 1, d);
@@ -237,7 +250,7 @@ function ActivePlanView({
         onClick={onClose}
         className="flex items-center gap-2 text-sm text-white/40 hover:text-white/70 transition-colors"
       >
-        ← Back to plans
+        {lang === "es" ? "← Volver a planes" : "← Back to plans"}
       </button>
 
       {/* Plan header */}
@@ -245,9 +258,9 @@ function ActivePlanView({
         <div className="flex items-start gap-3 mb-4">
           <span className="text-2xl">{plan.icon}</span>
           <div>
-            <h2 className="text-white font-bold text-lg">{plan.name}</h2>
+            <h2 className="text-white font-bold text-lg">{planName(plan, lang)}</h2>
             <p className="text-white/40 text-xs mt-0.5">
-              Started {formatDate(startDate)} · Ends {formatDate(endIso)}
+              {lang === "es" ? "Inicia" : "Started"} {formatDate(startDate)} · {lang === "es" ? "Termina" : "Ends"} {formatDate(endIso)}
             </p>
           </div>
         </div>
@@ -255,8 +268,8 @@ function ActivePlanView({
         {/* Progress bar */}
         <div className="mb-2">
           <div className="flex justify-between text-xs text-white/40 mb-1.5">
-            <span>Day {progress.daysElapsed} of {progress.totalDays}</span>
-            <span>{progress.percentComplete}% complete</span>
+            <span>{lang === "es" ? "Día" : "Day"} {progress.daysElapsed} {lang === "es" ? "de" : "of"} {progress.totalDays}</span>
+            <span>{progress.percentComplete}% {lang === "es" ? "completo" : "complete"}</span>
           </div>
           <div className="h-2 rounded-full bg-white/[0.06] overflow-hidden">
             <div
@@ -272,11 +285,11 @@ function ActivePlanView({
         <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.05] p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest">
-              📖 Today&apos;s Reading — Day {todayEntry.day}
+              📖 {lang === "es" ? "Lectura de Hoy" : "Today's Reading"} — {lang === "es" ? "Día" : "Day"} {todayEntry.day}
             </p>
             {todayTotal > 0 && (
               <span className="text-xs text-emerald-300/70 font-semibold">
-                {todayReadCount}/{todayTotal} read
+                {todayReadCount}/{todayTotal} {lang === "es" ? "leídos" : "read"}
               </span>
             )}
           </div>
@@ -302,7 +315,7 @@ function ActivePlanView({
                         ? "bg-emerald-500 border-emerald-500 text-white"
                         : "border-white/20 hover:border-emerald-500/60 hover:bg-emerald-500/10"
                     }`}
-                    aria-label={done ? "Mark unread" : "Mark read"}
+                    aria-label={done ? (lang === "es" ? "Marcar no leído" : "Mark unread") : (lang === "es" ? "Marcar leído" : "Mark read")}
                   >
                     {done && (
                       <span className="text-[10px] font-black leading-none">✓</span>
@@ -318,7 +331,7 @@ function ActivePlanView({
                         : "text-white/80 hover:text-white"
                     }`}
                   >
-                    {r.label}
+                    {readingLabel(r, lang)}
                   </a>
 
                   <span className="text-white/20 text-xs flex-shrink-0">📖</span>
@@ -339,14 +352,14 @@ function ActivePlanView({
         </div>
       ) : progress.daysElapsed === 0 ? (
         <div className="rounded-2xl border border-amber-500/20 bg-amber-500/[0.04] p-5 text-center">
-          <p className="text-amber-400 font-semibold text-sm">Plan starts {formatDate(startDate)}</p>
-          <p className="text-white/30 text-xs mt-1">Your first reading will appear here when the plan begins.</p>
+          <p className="text-amber-400 font-semibold text-sm">{lang === "es" ? "El plan inicia" : "Plan starts"} {formatDate(startDate)}</p>
+          <p className="text-white/30 text-xs mt-1">{lang === "es" ? "Tu primera lectura aparecerá aquí cuando el plan comience." : "Your first reading will appear here when the plan begins."}</p>
         </div>
       ) : progress.daysElapsed >= progress.totalDays ? (
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-5 text-center">
           <p className="text-3xl mb-2">🎉</p>
-          <p className="text-emerald-400 font-bold text-base">You completed this plan!</p>
-          <p className="text-white/30 text-sm mt-1">God&apos;s Word is a lamp to your feet and a light to your path.</p>
+          <p className="text-emerald-400 font-bold text-base">{lang === "es" ? "¡Completaste este plan!" : "You completed this plan!"}</p>
+          <p className="text-white/30 text-sm mt-1">{lang === "es" ? "La Palabra de Dios es lámpara a tus pies y lumbrera a tu camino." : "God's Word is a lamp to your feet and a light to your path."}</p>
         </div>
       ) : null}
 
@@ -354,7 +367,7 @@ function ActivePlanView({
       {upcomingEntries.length > 0 && (
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
           <p className="text-xs font-bold text-white/30 uppercase tracking-widest mb-3">
-            Upcoming Readings
+            {lang === "es" ? "Próximas Lecturas" : "Upcoming Readings"}
           </p>
           <div className="space-y-2">
             {upcomingEntries.map(([isoDate, entry]) => {
@@ -374,9 +387,9 @@ function ActivePlanView({
                         isToday ? "text-emerald-400" : "text-white/25"
                       }`}
                     >
-                      {isToday ? "Today" : formatDate(isoDate).split(",")[0]}
+                      {isToday ? (lang === "es" ? "Hoy" : "Today") : formatDate(isoDate).split(",")[0]}
                     </p>
-                    <p className="text-[9px] text-white/20">Day {entry.day}</p>
+                    <p className="text-[9px] text-white/20">{lang === "es" ? "Día" : "Day"} {entry.day}</p>
                   </div>
                   <div className="flex-1 min-w-0 space-y-0.5">
                     {entry.readings.map((r, i) => (
@@ -397,10 +410,10 @@ function ActivePlanView({
                             href={buildLexiconUrl(r.label)}
                             className="hover:text-white/90 transition-colors"
                           >
-                            {r.label}
+                            {readingLabel(r, lang)}
                           </a>
                         ) : (
-                          r.label
+                          readingLabel(r, lang)
                         )}
                       </p>
                     ))}
@@ -418,7 +431,7 @@ function ActivePlanView({
           onClick={onRemove}
           className="text-xs text-white/20 hover:text-red-400 transition-colors"
         >
-          Remove this plan
+          {lang === "es" ? "Eliminar este plan" : "Remove this plan"}
         </button>
       </div>
     </div>
@@ -436,18 +449,19 @@ function StartPlanModal({
   onConfirm: (startDate: string) => void;
   onCancel: () => void;
 }) {
+  const { lang, t } = useLanguage();
   const [startDate, setStartDate] = useState(todayIso());
 
   return (
     <div className="rounded-2xl border border-white/[0.10] bg-[#1a1a1a] p-6 space-y-5">
       <div>
-        <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-1">Starting</p>
-        <h3 className="text-white font-bold text-lg">{plan.name}</h3>
-        <p className="text-white/40 text-sm mt-1">{plan.description}</p>
+        <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-1">{lang === "es" ? "Iniciando" : "Starting"}</p>
+        <h3 className="text-white font-bold text-lg">{planName(plan, lang)}</h3>
+        <p className="text-white/40 text-sm mt-1">{planDescription(plan, lang)}</p>
       </div>
       <div>
         <label className="text-xs text-white/40 font-bold uppercase tracking-widest block mb-2">
-          Start Date
+          {lang === "es" ? "Fecha de Inicio" : "Start Date"}
         </label>
         <input
           type="date"
@@ -456,7 +470,7 @@ function StartPlanModal({
           className="w-full bg-black/30 border border-white/10 rounded-xl px-4 py-3 text-white/80 text-sm focus:outline-none focus:border-violet-500/50 transition-colors"
         />
         <p className="text-xs text-white/25 mt-2">
-          You&apos;ll finish on {formatDate(endDateIso(startDate, plan.totalDays))}
+          {lang === "es" ? "Terminarás el" : "You'll finish on"} {formatDate(endDateIso(startDate, plan.totalDays))}
         </p>
       </div>
       <div className="flex gap-2">
@@ -464,13 +478,13 @@ function StartPlanModal({
           onClick={() => onConfirm(startDate)}
           className="flex-1 py-3 rounded-xl bg-violet-600 text-white text-sm font-bold hover:bg-violet-500 transition-colors"
         >
-          Start Plan
+          {lang === "es" ? "Iniciar Plan" : "Start Plan"}
         </button>
         <button
           onClick={onCancel}
           className="px-5 py-3 rounded-xl border border-white/10 text-white/40 text-sm font-semibold hover:text-white/60 transition-colors"
         >
-          Cancel
+          {t("notes_cancel")}
         </button>
       </div>
     </div>
@@ -480,6 +494,7 @@ function StartPlanModal({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BiblePlansPage() {
+  const { lang, t } = useLanguage();
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [mounted, setMounted] = useState(false);
   const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
@@ -529,15 +544,14 @@ export default function BiblePlansPage() {
       <div className="max-w-2xl mx-auto px-4 pt-12 pb-6">
         <div className="mb-2">
           <span className="text-xs font-bold uppercase tracking-widest text-violet-400 bg-violet-500/10 border border-violet-500/20 px-3 py-1 rounded-full">
-            Bible Reading Plans
+            {t("plans_badge")}
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-white mt-4 mb-2">
-          Read Through the Bible
+          {t("plans_heading")}
         </h1>
         <p className="text-white/40 text-sm leading-relaxed">
-          Structured plans to guide you through God&apos;s Word — at your own pace. Start any plan,
-          see today&apos;s reading, and stay on track all year.
+          {t("plans_sub")}
         </p>
       </div>
 
@@ -546,7 +560,7 @@ export default function BiblePlansPage() {
         {savedPlans.length > 0 && !viewingPlanId && (
           <div className="mb-6 space-y-2">
             <p className="text-xs text-white/30 font-bold uppercase tracking-widest mb-2">
-              Your Active Plans
+              {lang === "es" ? "Tus Planes Activos" : "Your Active Plans"}
             </p>
             {savedPlans.map((sp) => {
               const plan = BIBLE_PLANS.find((p) => p.id === sp.planId);
@@ -563,9 +577,9 @@ export default function BiblePlansPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{plan.icon}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white/80 text-sm font-semibold">{plan.name}</p>
+                      <p className="text-white/80 text-sm font-semibold">{planName(plan, lang)}</p>
                       <p className="text-white/30 text-xs">
-                        Day {progress.daysElapsed}/{progress.totalDays} · {progress.percentComplete}% complete
+                        {lang === "es" ? "Día" : "Day"} {progress.daysElapsed}/{progress.totalDays} · {progress.percentComplete}% {lang === "es" ? "completo" : "complete"}
                       </p>
                     </div>
                     <span className="text-white/25 text-xs">→</span>
@@ -607,7 +621,7 @@ export default function BiblePlansPage() {
             {!startingPlan && (
               <>
                 <p className="text-xs text-white/25 font-bold uppercase tracking-widest mb-3">
-                  All Reading Plans
+                  {t("plans_all_label")}
                 </p>
                 <div className="space-y-4">
                   {BIBLE_PLANS.map((plan) => (
@@ -627,25 +641,25 @@ export default function BiblePlansPage() {
             {!startingPlan && (
               <div className="mt-8 rounded-2xl border border-white/[0.06] bg-white/[0.01] p-6">
                 <p className="text-xs text-white/25 font-bold uppercase tracking-widest mb-4">
-                  Why Read Through the Entire Bible?
+                  {lang === "es" ? "¿Por Qué Leer Toda la Biblia?" : "Why Read Through the Entire Bible?"}
                 </p>
                 <div className="space-y-3">
                   {[
                     {
                       icon: "📖",
-                      text: "Scripture is one unified story of redemption — reading it fully reveals how every part connects to Christ.",
+                      text: lang === "es" ? "La Escritura es una historia unificada de redención — leerla completa revela cómo cada parte se conecta con Cristo." : "Scripture is one unified story of redemption — reading it fully reveals how every part connects to Christ.",
                     },
                     {
                       icon: "🌱",
-                      text: '"Man does not live by bread alone, but by every word that comes from the mouth of God." — Matthew 4:4',
+                      text: lang === "es" ? "«No solo de pan vivirá el hombre, sino de toda palabra que sale de la boca de Dios.» — Mateo 4:4" : '"Man does not live by bread alone, but by every word that comes from the mouth of God." — Matthew 4:4',
                     },
                     {
                       icon: "🛡",
-                      text: "The whole counsel of God protects against error. Selective reading leaves you vulnerable to distortion.",
+                      text: lang === "es" ? "Todo el consejo de Dios protege contra el error. La lectura selectiva te deja vulnerable a la distorsión." : "The whole counsel of God protects against error. Selective reading leaves you vulnerable to distortion.",
                     },
                     {
                       icon: "🔥",
-                      text: '"Is not my word like fire, declares the LORD, and like a hammer that breaks the rock in pieces?" — Jeremiah 23:29',
+                      text: lang === "es" ? "«¿No es mi palabra como fuego, declara el SEÑOR, y como martillo que quebranta la roca?» — Jeremías 23:29" : '"Is not my word like fire, declares the LORD, and like a hammer that breaks the rock in pieces?" — Jeremiah 23:29',
                     },
                   ].map((item, i) => (
                     <div key={i} className="flex gap-3 items-start">

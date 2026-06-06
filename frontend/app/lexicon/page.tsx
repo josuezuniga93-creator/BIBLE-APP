@@ -9,15 +9,17 @@ import type {
   WordToken,
   ChapterData,
   StrongsEntry,
-  CommentaryEntry,
 } from "../lib/types";
 import {
   fetchBooks,
   fetchChapter,
-  fetchCommentary,
   fetchStrongs,
   searchStrongs,
 } from "../lib/api";
+
+import { exportVerseAsQuoteImage } from "../lib/verseQuoteExport";
+import { recordScriptureShareForBadges } from "../lib/badges";
+import BookmarkPopup from "../components/BookmarkPopup";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -32,10 +34,12 @@ const FONT_SIZE_CLASSES: Record<FontSize, string> = {
   "2xl":"text-2xl",
 };
 
-type ScriptureFont = "georgia" | "palatino" | "modern" | "typewriter" | "baskerville";
+type ScriptureFont = "georgia" | "palatino" | "modern" | "typewriter" | "baskerville" | "garamond" | "charter";
 const SCRIPTURE_FONTS: { key: ScriptureFont; label: string; family: string; desc: string }[] = [
   { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif",                          desc: "Classic & warm" },
   { key: "baskerville", label: "Baskerville", family: "Baskerville, 'Baskerville Old Face', 'Book Antiqua', serif",  desc: "Sharp & elegant" },
+  { key: "garamond",    label: "Garamond",    family: "Garamond, 'EB Garamond', 'Cormorant Garamond', Georgia, serif", desc: "Old-world literary" },
+  { key: "charter",     label: "Charter",     family: "Charter, 'Bitstream Charter', Georgia, serif",                 desc: "Premium readable" },
   { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",         desc: "Calligraphic" },
   { key: "modern",      label: "Modern",      family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",    desc: "Clean sans-serif" },
   { key: "typewriter",  label: "Typewriter",  family: "'Courier New', Courier, 'Lucida Console', monospace",          desc: "Vintage & faithful" },
@@ -155,6 +159,7 @@ const HIGHLIGHT_COLORS = {
   blue:   { dot: "#46d3e3", label: "Blue",       bgRgb: "70,211,227",  textColor: "#000" },
   lime:   { dot: "#a9f558", label: "Lime Green", bgRgb: "169,245,88",  textColor: "#000" },
   pink:   { dot: "#f558f2", label: "Pink",       bgRgb: "245,88,242",  textColor: "#000" },
+  gold:   { dot: "#c9a961", label: "Gold",       bgRgb: "201,169,97",  textColor: "#000" },
 } as const;
 type HighlightColor = keyof typeof HIGHLIGHT_COLORS;
 
@@ -317,157 +322,282 @@ function StrongsPanel({
   );
 }
 
-// ─── Commentary panel ─────────────────────────────────────────────────────────
+// ─── Verse Selection Tray ─────────────────────────────────────────────────────
+// Slides down from the top when one or more verses are selected.
 
-function CommentaryPanel({ entries, bookName, chapter }: { entries: CommentaryEntry[]; bookName: string; chapter: number }) {
-  const [expanded, setExpanded] = useState<Set<number>>(new Set([0]));
-  const toggle = (v: number) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(v)) next.delete(v); else next.add(v);
-      return next;
-    });
-
-  if (entries.length === 0) return null;
-
-  return (
-    <div className="rounded-2xl border border-violet-500/25 bg-violet-500/[0.06] overflow-hidden">
-      <div className="px-5 py-4 border-b border-violet-500/20 flex items-center gap-2">
-        <span className="text-lg">📖</span>
-        <div>
-          <p className="text-xs font-black uppercase tracking-widest text-violet-400/70">Matthew Henry Commentary</p>
-          <p className="text-[10px] text-violet-300/40 mt-0.5">{bookName} Chapter {chapter} · c. 1706, public domain</p>
-        </div>
-      </div>
-      <div className="divide-y divide-violet-500/10">
-        {entries.map(({ verse, text }) => {
-          const isOpen = expanded.has(verse);
-          const label = verse === 0 ? "Chapter Overview" : `Verse ${verse}`;
-          const preview = text.length > 220 ? text.slice(0, 220) + "…" : text;
-          return (
-            <div key={verse} className="px-5 py-3">
-              <button className="w-full flex items-center justify-between gap-2 text-left" onClick={() => toggle(verse)}>
-                <span className="text-xs font-bold text-violet-300/70">{label}</span>
-                <svg className={`w-3 h-3 text-violet-400/40 flex-shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              <p className="text-white/55 text-xs leading-relaxed mt-2">{isOpen ? text : preview}</p>
-              {!isOpen && text.length > 220 && (
-                <button onClick={() => toggle(verse)} className="text-[10px] text-violet-400/60 hover:text-violet-300 mt-1 font-semibold transition-colors">Read more ↓</button>
-              )}
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+function formatVerseRange(verses: number[]): string {
+  const sorted = [...new Set(verses)].sort((a, b) => a - b);
+  if (sorted.length === 0) return "";
+  const ranges: string[] = [];
+  let start = sorted[0];
+  let prev = sorted[0];
+  for (let i = 1; i < sorted.length; i += 1) {
+    const current = sorted[i];
+    if (current === prev + 1) {
+      prev = current;
+      continue;
+    }
+    ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+    start = current;
+    prev = current;
+  }
+  ranges.push(start === prev ? `${start}` : `${start}-${prev}`);
+  return ranges.join(", ");
 }
 
-// ─── Verse Highlight Popover ──────────────────────────────────────────────────
-// Appears near the tap point. Three modes:
-//   "pick"           — verse not highlighted yet → show color swatches
-//   "edit"           — verse already highlighted → show swatches + Remove button
-//   "confirm-remove" — user pressed Remove → show confirmation prompt
-
-type VHMode = "pick" | "edit" | "confirm-remove";
-
-interface VersePopoverState {
-  verseNum: number;
-  x: number; // viewport x of tap
-  y: number; // viewport y of tap
-  mode: VHMode;
-}
-
-function VerseHighlightPopover({
-  state,
-  current,
+function VerseSelectionTray({
+  visible,
+  selectedVerseNums,
+  selectedText,
+  selectedReference,
+  bookName,
+  chapter,
+  verseColors,
   onSelect,
-  onRequestConfirm,
   onRemove,
-  onClose,
+  onClearSelection,
+  onBookmark,
 }: {
-  state: VersePopoverState;
-  current: HighlightColor | undefined;
+  visible: boolean;
+  selectedVerseNums: number[];
+  selectedText: string;
+  selectedReference: string;
+  bookName: string;
+  chapter: number;
+  verseColors: Record<number, HighlightColor>;
   onSelect: (color: HighlightColor) => void;
-  onRequestConfirm: () => void;
   onRemove: () => void;
-  onClose: () => void;
+  onClearSelection: () => void;
+  onBookmark: (data: { ref: string; text: string }) => void;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const { lang } = useLanguage();
+  const [isExporting, setIsExporting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    const handle = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
-    };
-    document.addEventListener("mousedown", handle, true);
-    return () => document.removeEventListener("mousedown", handle, true);
-  }, [onClose]);
+  // Determine current color (meaningful when exactly one verse is selected and highlighted)
+  const currentColor: HighlightColor | undefined =
+    selectedVerseNums.length === 1 ? verseColors[selectedVerseNums[0]] : undefined;
 
-  const W = 232;
-  const estimatedH = state.mode === "confirm-remove" ? 104 : 88;
-  const vx = Math.max(W / 2 + 8, Math.min(state.x, window.innerWidth - W / 2 - 8));
-  const rawTop = state.y - estimatedH - 14;
-  const top = rawTop < 8 ? state.y + 14 : rawTop;
+  // Whether any selected verse is already highlighted (show Remove button)
+  const anyHighlighted =
+    selectedVerseNums.length > 0 &&
+    selectedVerseNums.some((v) => v in verseColors);
+
+  const refLabel = selectedReference || `${bookName} ${chapter}:${formatVerseRange(selectedVerseNums)}`;
+
+  const handleShare = async () => {
+    if (!selectedText) return;
+    const text = `${selectedText}\n\n— ${refLabel}`;
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        recordScriptureShareForBadges();
+        return;
+      } catch { /* fall through to copy */ }
+    }
+    // Fallback: copy
+    try {
+      await navigator.clipboard?.writeText(text);
+      recordScriptureShareForBadges();
+    } catch {}
+  };
+
+  const handleBookmark = () => {
+    if (!selectedText || !refLabel) return;
+    onBookmark({ ref: refLabel, text: selectedText });
+  };
 
   return (
     <>
-      <div className="fixed inset-0 z-40" onClick={(e) => { e.stopPropagation(); onClose(); }} />
+      {/* Top-down sheet */}
       <div
-        ref={ref}
-        className="fixed z-50 bg-[#1a1a1a] border border-white/[0.12] rounded-2xl shadow-2xl p-4 flex flex-col gap-3"
-        style={{ width: W, left: vx - W / 2, top }}
-        onClick={(e) => e.stopPropagation()}
+        className="fixed left-0 right-0 top-0 print:hidden"
+        style={{
+          zIndex: 60,
+          transform: visible ? "translateY(0)" : "translateY(-100%)",
+          transition: "transform 0.3s ease",
+          background: "var(--bg)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: "1px solid rgba(201,169,97,0.15)",
+          paddingTop: "env(safe-area-inset-top, 12px)",
+          paddingBottom: 12,
+        }}
       >
-        {state.mode !== "confirm-remove" ? (
-          <>
-            <div className="flex items-center justify-between">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30">
-                {state.mode === "pick" ? `Highlight v.​${state.verseNum}` : `v.​${state.verseNum} · change color`}
-              </p>
-              <button onClick={onClose} className="text-white/20 hover:text-white/50 transition-colors text-sm leading-none">✕</button>
-            </div>
-            <div className="flex gap-2 justify-center">
-              {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
-                <button
-                  key={key}
-                  onClick={() => { onSelect(key); onClose(); }}
-                  title={val.label}
-                  className={`w-9 h-9 rounded-full transition-transform hover:scale-110 active:scale-95 border-2 ${current === key ? "border-white/60 scale-110" : "border-transparent"}`}
-                  style={{ backgroundColor: val.dot }}
-                />
-              ))}
-            </div>
-            {state.mode === "edit" && (
-              <button
-                onClick={onRequestConfirm}
-                className="text-[11px] text-white/25 hover:text-red-400/70 font-bold text-center transition-colors pt-0.5"
-              >
-                Remove highlight
-              </button>
-            )}
-          </>
-        ) : (
-          <>
-            <p className="text-sm text-white/60 text-center leading-snug px-1">
-              Remove highlight from verse {state.verseNum}?
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={onClose}
-                className="flex-1 py-2 rounded-xl border border-white/10 text-white/40 text-xs font-bold hover:bg-white/[0.05] transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => { onRemove(); onClose(); }}
-                className="flex-1 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors"
-              >
-                Remove
-              </button>
-            </div>
-          </>
+        {/* Reference — Row 0 */}
+        <p
+          className="text-center text-[13px] font-bold truncate pt-3 pb-2 px-4"
+          style={{ color: "rgba(201,169,97,1)" }}
+        >
+          {refLabel}
+        </p>
+
+        {/* Row 1 — Highlights: swatches spread across full width */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-evenly",
+            alignItems: "center",
+            width: "100%",
+            paddingLeft: 16,
+            paddingRight: 16,
+            paddingTop: 8,
+            paddingBottom: 4,
+          }}
+        >
+          {(Object.entries(HIGHLIGHT_COLORS) as [HighlightColor, typeof HIGHLIGHT_COLORS[HighlightColor]][]).map(([key, val]) => (
+            <button
+              key={key}
+              onClick={() => { onSelect(key); onClearSelection(); }}
+              title={val.label}
+              className="transition-all active:scale-95"
+              style={{
+                width: 30,
+                height: 30,
+                borderRadius: "50%",
+                flexShrink: 0,
+                background: val.dot,
+                outline: currentColor === key ? "3px solid rgba(201,169,97,1)" : "none",
+                outlineOffset: currentColor === key ? 2 : 0,
+                boxShadow: currentColor === key ? "none" : "0 0 0 1.5px rgba(255,255,255,0.15)",
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Remove Highlight row — only when any selected verse has a highlight */}
+        {anyHighlighted && (
+          <div style={{ paddingLeft: 16, paddingRight: 16, paddingBottom: 4 }}>
+            <button
+              onClick={() => { onRemove(); onClearSelection(); }}
+              className="flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all active:scale-95 text-[11px] font-semibold"
+              style={{
+                width: "100%",
+                background: "rgba(239,68,68,0.15)",
+                color: "rgba(239,68,68,0.8)",
+                border: "none",
+              }}
+            >
+              {/* Trash icon 13×13 */}
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+                <path d="M9 6V4h6v2"/>
+              </svg>
+              <span>{lang === "es" ? "Quitar color" : "Remove Highlight"}</span>
+            </button>
+          </div>
         )}
+
+        {/* Row 2 — Actions: horizontally scrollable pill buttons */}
+        <div style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+          <div
+            className="flex flex-row items-center gap-3"
+            style={{ paddingLeft: 16, paddingRight: 16, paddingTop: 4, paddingBottom: 4 }}
+          >
+            {/* Copy */}
+            <button
+              onClick={async () => {
+                if (!selectedText) return;
+                const text = `${selectedText}\n\n${refLabel}`;
+                try {
+                  await navigator.clipboard?.writeText(text);
+                  setCopied(true);
+                  window.setTimeout(() => setCopied(false), 1400);
+                } catch {}
+              }}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                color: "rgba(255,255,255,0.72)",
+              }}
+            >
+              {/* Clipboard icon 14×14 */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="2" width="6" height="4" rx="1"/>
+                <path d="M9 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2h-3"/>
+                <line x1="9" y1="12" x2="15" y2="12"/>
+                <line x1="9" y1="16" x2="13" y2="16"/>
+              </svg>
+              <span>{copied ? (lang === "es" ? "Copiado" : "Copied") : (lang === "es" ? "Copiar" : "Copy")}</span>
+            </button>
+
+            {/* Create Quote — gold */}
+            <button
+              disabled={isExporting}
+              onClick={async () => {
+                if (!selectedText) return;
+                setIsExporting(true);
+                try {
+                  await exportVerseAsQuoteImage({
+                    verseText: selectedText,
+                    reference: refLabel,
+                    logoSrc: "/tulip-logo.png",
+                  });
+                } finally {
+                  setIsExporting(false);
+                }
+              }}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97] disabled:opacity-45 disabled:cursor-not-allowed"
+              style={{
+                background: "rgba(201,169,97,1)",
+                border: "1px solid rgba(201,169,97,0.4)",
+                color: "#08090f",
+              }}
+            >
+              {/* Sparkle icon 14×14 */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.09 6.26L20 10l-5.91 1.74L12 18l-2.09-6.26L4 10l5.91-1.74L12 2z"/>
+              </svg>
+              <span>
+                {isExporting
+                  ? "…"
+                  : (lang === "es" ? "Crear Cita" : "Create Quote")}
+              </span>
+            </button>
+
+            {/* Share */}
+            <button
+              onClick={handleShare}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                color: "rgba(255,255,255,0.72)",
+              }}
+            >
+              {/* Share icon 14×14 */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3"/>
+                <circle cx="6" cy="12" r="3"/>
+                <circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              <span>{lang === "es" ? "Compartir" : "Share"}</span>
+            </button>
+
+            {/* Bookmark / Save */}
+            <button
+              onClick={handleBookmark}
+              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              style={{
+                background: "rgba(255,255,255,0.06)",
+                border: "1px solid rgba(255,255,255,0.09)",
+                color: "rgba(255,255,255,0.72)",
+              }}
+            >
+              {/* Bookmark icon 14×14 */}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+              </svg>
+              <span>{lang === "es" ? "Guardar" : "Save"}</span>
+            </button>
+
+          </div>
+        </div>
       </div>
     </>
   );
@@ -517,7 +647,6 @@ function LexiconInner() {
   const searchParams = useSearchParams();
   const [books, setBooks]       = useState<BookMeta[]>([]);
   const [hasStrongs, setHasStrongs] = useState(false);
-  const [hasMhc, setHasMhc]     = useState(false);
   const [booksError, setBooksError] = useState(false);
   const [booksLoading, setBooksLoading] = useState(true);
 
@@ -525,7 +654,6 @@ function LexiconInner() {
   const [selectedChapter, setSelectedChapter] = useState(1);
   const [chapterData, setChapterData]         = useState<ChapterData | null>(null);
   const [chapterError, setChapterError]       = useState<string | null>(null);
-  const [commentary, setCommentary]           = useState<CommentaryEntry[]>([]);
   const [loadingChapter, setLoadingChapter]   = useState(false);
 
   const [activeToken, setActiveToken]         = useState<WordToken | null>(null);
@@ -538,7 +666,6 @@ function LexiconInner() {
   const [searching, setSearching]       = useState(false);
 
   const [activeTab, setActiveTab]             = useState<"reader" | "search">("reader");
-  const [showCommentary, setShowCommentary]   = useState(true);
   const [testamentFilter, setTestamentFilter] = useState<"ALL" | "OT" | "NT">("ALL");
 
   const [translation, setTranslation]         = useState<BibleTranslation>(() => {
@@ -587,9 +714,13 @@ function LexiconInner() {
   // Navigation search (type "Romans 3")
   const [showNavSearch, setShowNavSearch]   = useState(false);
   const [navQuery,      setNavQuery]        = useState("");
+  const [pendingVerseJump, setPendingVerseJump] = useState<number | null>(null);
 
-  // Verse highlight popover (tap-to-highlight whole verse)
-  const [versePopover, setVersePopover] = useState<VersePopoverState | null>(null);
+  // Verse selection tray (tap-to-highlight whole verse)
+  const [selectedVerseNums, setSelectedVerseNums] = useState<number[]>([]);
+
+  // Bookmark popup
+  const [bookmarkPopup, setBookmarkPopup] = useState<{ ref: string; text: string } | null>(null);
 
   // Verse color highlights (tap-to-highlight whole verse)
   const [verseColors, setVerseColors] = useState<Record<number, HighlightColor>>({});
@@ -610,6 +741,8 @@ function LexiconInner() {
     const saved = localStorage.getItem(VERSE_COLOR_KEY(selectedBook.num, selectedChapter));
     try { setVerseColors(saved ? JSON.parse(saved) : {}); }
     catch { setVerseColors({}); }
+    setSelectedVerseNums([]);
+    // tray auto-hides when selectedVerseNums goes to []
   }, [selectedBook, selectedChapter]);
 
   useEffect(() => {
@@ -639,17 +772,30 @@ function LexiconInner() {
     if (book) removeBibleHighlight(book.name, book.num, selectedChapter, verseNum);
   }, [selectedBook, selectedChapter]);
 
+  const selectedVerses = selectedVerseNums
+    .flatMap((verseNum) => {
+      const verse = chapterData?.verses.find((candidate) => candidate.verse === verseNum);
+      return verse ? [verse] : [];
+    })
+    .sort((a, b) => a.verse - b.verse);
+
+  const selectedReference = selectedBook && selectedVerses.length > 0
+    ? `${getBookDisplayName(selectedBook, translation)} ${selectedChapter}:${formatVerseRange(selectedVerses.map((verse) => verse.verse))}`
+    : "";
+
+  const selectedVerseText = selectedVerses
+    .map((verse) => `${verse.verse}. ${verse.text}`)
+    .join(" ");
+
   // ── Tap-to-highlight handler ──────────────────────────────────────────────
   const handleVerseClick = useCallback((verseNum: number, e: React.MouseEvent) => {
     e.stopPropagation();
-    const isHighlighted = verseNum in verseColors;
-    setVersePopover({
-      verseNum,
-      x: e.clientX,
-      y: e.clientY,
-      mode: isHighlighted ? "edit" : "pick",
-    });
-  }, [verseColors]);
+    const nextSelected = selectedVerseNums.includes(verseNum)
+      ? selectedVerseNums.filter((selected) => selected !== verseNum)
+      : [...selectedVerseNums, verseNum].sort((a, b) => a - b);
+    setSelectedVerseNums(nextSelected);
+    // Tray visibility is driven by nextSelected.length > 0 — no extra state needed
+  }, [selectedVerseNums]);
 
   // ── Chapter notes load/save ───────────────────────────────────────────────
   const selectedBookRef    = useRef(selectedBook);
@@ -691,11 +837,14 @@ function LexiconInner() {
     const trimmed = q.trim();
     if (!trimmed || !books.length) return;
     // Match: BookName Chapter[:Verse] — e.g. "Romans 3", "Hechos 1", "Juan 3:16"
-    const match = trimmed.match(/^(.+?)\s+(\d+)(?::\d+)?$/);
-    if (!match) return;
-    const [, rawBook, chStr] = match;
+    const match = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+    // If no chapter number found, treat the whole query as a book name and default to chapter 1
+    const rawBook = match ? match[1] : trimmed;
+    const chStr   = match ? match[2] : "1";
+    const verseStr = match?.[3];
     const bookQuery = rawBook.toLowerCase().trim();
     const ch = parseInt(chStr, 10);
+    const verseJump = verseStr ? parseInt(verseStr, 10) : null;
 
     // Spanish → English name aliases
     const ES_TO_EN: Record<string, string> = {
@@ -746,11 +895,30 @@ function LexiconInner() {
     if (found) {
       setSelectedBook(found);
       setSelectedChapter(Math.max(1, Math.min(ch, found.chapters)));
+      setPendingVerseJump(verseJump && verseJump > 0 ? verseJump : null);
       setActiveTab("reader");
       setShowNavSearch(false);
       setNavQuery("");
     }
   }, [books]);
+
+  useEffect(() => {
+    if (!pendingVerseJump || !chapterData) return;
+    const targetVerse = chapterData.verses.find((verse) => verse.verse === pendingVerseJump);
+    if (!targetVerse) {
+      setPendingVerseJump(null);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      const el = verseRefs.current[pendingVerseJump];
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      setSelectedVerseNums([pendingVerseJump]);
+      setPendingVerseJump(null);
+    }, 120);
+
+    return () => window.clearTimeout(timer);
+  }, [pendingVerseJump, chapterData]);
 
   // ── Books + chapter loading ───────────────────────────────────────────────
   useEffect(() => {
@@ -760,10 +928,9 @@ function LexiconInner() {
     setBooksLoading(true);
     setBooksError(false);
     fetchBooks()
-      .then(({ books: bks, hasStrongs: hs, hasMhc: hm }) => {
+      .then(({ books: bks, hasStrongs: hs }) => {
         setBooks(bks);
         setHasStrongs(hs);
-        setHasMhc(hm);
         setBooksLoading(false);
 
         // If URL params specify a book, navigate there; otherwise default to John 3.
@@ -800,29 +967,23 @@ function LexiconInner() {
     setLoadingChapter(true);
     setChapterData(null);
     setChapterError(null);
-    setCommentary([]);
     setActiveToken(null);
     setStrongsEntry(null);
-    setVersePopover(null);
+    setSelectedVerseNums([]);
 
-    const chFetch  = fetchChapter(selectedBook.num, selectedChapter, translation);
-    const mhcFetch = hasMhc
-      ? fetchCommentary(selectedBook.num, selectedChapter).catch(() => [] as CommentaryEntry[])
-      : Promise.resolve([] as CommentaryEntry[]);
-
-    Promise.allSettled([chFetch, mhcFetch]).then(([chRes, mhcRes]) => {
+    fetchChapter(selectedBook.num, selectedChapter, translation).then((data) => {
       if (fetchId !== fetchIdRef.current) return; // stale fetch — discard
-      if (chRes.status === "fulfilled") {
-        setChapterData(chRes.value);
-        setChapterError(null);
-      } else {
-        const msg = chRes.reason instanceof Error ? chRes.reason.message : String(chRes.reason);
-        setChapterError(`Could not load chapter. ${msg}`);
-      }
-      if (mhcRes.status === "fulfilled") setCommentary(mhcRes.value as CommentaryEntry[]);
+      setChapterData(data);
+      setChapterError(null);
+    }).catch((err) => {
+      if (fetchId !== fetchIdRef.current) return;
+      const msg = err instanceof Error ? err.message : String(err);
+      setChapterError(`Could not load chapter. ${msg}`);
+    }).finally(() => {
+      if (fetchId !== fetchIdRef.current) return;
       setLoadingChapter(false);
     });
-  }, [selectedBook, selectedChapter, hasMhc, translation]);
+  }, [selectedBook, selectedChapter, translation]);
 
   const handleWordSelect = useCallback(async (token: WordToken) => {
     setActiveToken(token);
@@ -860,7 +1021,7 @@ function LexiconInner() {
       if (e.key === "ArrowLeft") {
         if (selectedChapter > 1) setSelectedChapter((c) => c - 1);
       }
-      if (e.key === "Escape") setVersePopover(null);
+      if (e.key === "Escape") setSelectedVerseNums([]);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -954,7 +1115,6 @@ function LexiconInner() {
   return (
     <div
       className="min-h-screen bg-[#0f0f0f] text-white"
-      onClick={() => setVersePopover(null)}
     >
       {/* ── Books error banner ── */}
       {booksError && (
@@ -969,8 +1129,8 @@ function LexiconInner() {
                   setBooksError(false);
                   setBooksLoading(true);
                   fetchBooks()
-                    .then(({ books: bks, hasStrongs: hs, hasMhc: hm }) => {
-                      setBooks(bks); setHasStrongs(hs); setHasMhc(hm); setBooksLoading(false);
+                    .then(({ books: bks, hasStrongs: hs }) => {
+                      setBooks(bks); setHasStrongs(hs); setBooksLoading(false);
                       const john = bks.find((b) => b.name === "John");
                       if (john) { setSelectedBook(john); setSelectedChapter(3); }
                       else if (bks.length) { setSelectedBook(bks[0]); setSelectedChapter(1); }
@@ -1089,7 +1249,7 @@ function LexiconInner() {
 
       {/* ── Minimal sticky header ── */}
       <header className="border-b border-white/[0.06] bg-[#0f0f0f]/95 backdrop-blur-sm sticky top-0 md:top-14 z-30 print:hidden">
-        <div className="max-w-screen-xl mx-auto px-4 h-11 flex items-center gap-1">
+        <div className="max-w-screen-xl mx-auto px-4 min-h-12 py-1.5 flex items-center gap-1">
 
           {/* Font size */}
           <button
@@ -1109,17 +1269,113 @@ function LexiconInner() {
           <button
             onClick={() => setShowFontPicker((v) => !v)}
             className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors text-white/30 hover:text-white/60 hover:bg-white/[0.07] font-bold text-[13px]"
-            title="Change scripture font">
+            title={lang === "es" ? "Cambiar fuente bíblica" : "Change scripture font"}>
             Ff
           </button>
 
           {/* Translation pill — opens picker */}
           <button
             onClick={openTranslationPicker}
-            className="ml-1 px-2.5 py-1 rounded-full border border-white/[0.12] bg-white/[0.04] text-[11px] font-bold text-white/50 hover:border-white/25 hover:text-white/70 transition-colors">
+            className="ml-1 h-9 px-3 rounded-full border border-white/[0.12] bg-white/[0.04] text-[11px] font-bold text-white/58 hover:border-white/25 hover:text-white/75 transition-colors">
             {currentTranslation.abbr}
           </button>
+
+          {/* Navigation search — immediately to the right of translation */}
+          {activeTab === "reader" && (
+            <button
+              onClick={() => setShowNavSearch((v) => !v)}
+              className="ml-1 h-9 px-3 rounded-full border text-[11px] font-bold transition-all flex items-center gap-1.5"
+              style={{
+                background: showNavSearch ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.045)",
+                borderColor: showNavSearch ? "rgba(201,169,97,0.4)" : "rgba(255,255,255,0.12)",
+                color: showNavSearch ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.58)",
+                boxShadow: showNavSearch ? "0 10px 28px rgba(201,169,97,0.12)" : "none",
+              }}
+              aria-label={lang === "es" ? "Buscar pasaje bíblico" : "Search Bible passage"}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/>
+              </svg>
+              <span>{lang === "es" ? "Buscar" : "Search"}</span>
+            </button>
+          )}
         </div>
+
+        {activeTab === "reader" && showNavSearch && (
+          <div className="max-w-screen-xl mx-auto px-4 pb-3">
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
+              className="rounded-2xl border p-3"
+              style={{
+                background:
+                  "radial-gradient(circle at 15% 0%, rgba(201,169,97,0.14), transparent 34%), linear-gradient(135deg, rgba(18,20,29,0.98), rgba(8,9,15,0.98))",
+                borderColor: "rgba(201,169,97,0.24)",
+                boxShadow: "0 18px 54px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05)",
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "rgba(201,169,97,0.78)" }}>
+                    {lang === "es" ? "Buscar Pasaje" : "Scripture Search"}
+                  </p>
+                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.34)" }}>
+                    {lang === "es" ? "Ve directo a un libro, capítulo o versículo" : "Jump straight to a book and chapter"}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setShowNavSearch(false); setNavQuery(""); }}
+                  className="h-8 w-8 rounded-full text-sm transition-colors"
+                  style={{ background: "rgba(255,255,255,0.055)", color: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  aria-label={lang === "es" ? "Cerrar búsqueda" : "Close search"}
+                >
+                  ✕
+                </button>
+              </div>
+
+              <div
+                className="flex items-center gap-2 rounded-2xl border px-3 py-2.5"
+                style={{
+                  background: "rgba(255,255,255,0.055)",
+                  borderColor: "rgba(255,255,255,0.09)",
+                }}
+              >
+                <div
+                  className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.12)", color: "rgba(201,169,97,0.92)" }}
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                    <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <input
+                  autoFocus
+                  type="text"
+                  value={navQuery}
+                  onChange={(e) => setNavQuery(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
+                  placeholder={lang === "es" ? "Juan 3, Romanos 8, Hechos 1..." : "John 3, Romans 8, Acts 1..."}
+                  style={{ fontSize: "16px" }}
+                  className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-white/28 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="rounded-xl px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
+                  style={{
+                    background: "linear-gradient(135deg, #d8bc78, #c9a961)",
+                    color: "#08090f",
+                    boxShadow: "0 8px 20px rgba(201,169,97,0.18)",
+                  }}
+                >
+                  {lang === "es" ? "Ir" : "Go"}
+                </button>
+              </div>
+
+            </form>
+          </div>
+        )}
 
       </header>
 
@@ -1128,7 +1384,9 @@ function LexiconInner() {
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 print:hidden" onClick={() => setShowFontPicker(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
           <div className="relative bg-[#1a1a1a] rounded-2xl border border-white/[0.08] px-5 pb-6 pt-5 w-full max-w-sm overflow-y-auto" style={{ maxHeight: "80vh" }} onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">Scripture Font</p>
+            <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">
+              {lang === "es" ? "Fuente de Escritura" : "Scripture Font"}
+            </p>
             <div className="space-y-2">
               {SCRIPTURE_FONTS.map((f) => (
                 <button
@@ -1142,9 +1400,21 @@ function LexiconInner() {
                 >
                   <div className="text-left">
                     <p className="text-sm font-semibold" style={{ color: scriptureFont === f.key ? "#c4b5fd" : "rgba(255,255,255,0.7)", fontFamily: f.family }}>
-                      {f.label} — In the beginning was the Word
+                      {f.label} — {lang === "es" ? "En el principio era el Verbo" : "In the beginning was the Word"}
                     </p>
-                    <p className="text-[10px] text-white/30 mt-0.5">{f.desc}</p>
+                    <p className="text-[10px] text-white/30 mt-0.5">
+                      {lang === "es"
+                        ? ({
+                            georgia: "Clásica y cálida",
+                            baskerville: "Nítida y elegante",
+                            garamond: "Literaria clásica",
+                            charter: "Premium y legible",
+                            palatino: "Caligráfica",
+                            modern: "Limpia y moderna",
+                            typewriter: "Vintage y fiel",
+                          } as Record<ScriptureFont, string>)[f.key]
+                        : f.desc}
+                    </p>
                   </div>
                   {scriptureFont === f.key && <span className="text-violet-400 text-xs flex-shrink-0 ml-2">✓</span>}
                 </button>
@@ -1174,6 +1444,7 @@ function LexiconInner() {
             <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleSearch()}
               placeholder="e.g. love · H430 · G2316 · agapao"
+              style={{ fontSize: "16px" }}
               className="flex-1 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white/80 placeholder-white/20 focus:outline-none focus:border-violet-500/50 transition-colors" />
             <button onClick={handleSearch} disabled={searching || !searchQuery.trim()}
               className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:bg-white/[0.05] disabled:text-white/20 text-white text-sm font-bold transition-colors">
@@ -1232,7 +1503,7 @@ function LexiconInner() {
             </div>
           )}
 
-          <div className={`grid gap-6 ${strongsEntry || loadingStrongs || (showCommentary && commentary.length > 0) ? "lg:grid-cols-[1fr_380px]" : "grid-cols-1 max-w-2xl mx-auto"}`}>
+          <div className={`grid gap-6 ${strongsEntry || loadingStrongs ? "lg:grid-cols-[1fr_380px]" : "grid-cols-1 max-w-2xl mx-auto"}`}>
 
             {/* ── Verses ── */}
             <div>
@@ -1265,21 +1536,31 @@ function LexiconInner() {
                   {chapterData.verses.map((verse) => {
                     const color = verseColors[verse.verse];
                     const colorCfg = color ? HIGHLIGHT_COLORS[color] : null;
+                    const isSelected = selectedVerseNums.includes(verse.verse);
                     return (
                       <span
                         key={verse.verse}
                         ref={(el) => { if (el) verseRefs.current[verse.verse] = el as unknown as HTMLDivElement; }}
                         className="relative inline cursor-pointer"
-                        style={colorCfg ? {
-                          backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,
-                          color: colorCfg.textColor,
+                        style={{
+                          ...(colorCfg ? {
+                            backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,
+                            color: colorCfg.textColor,
+                          } : {}),
+                          ...(isSelected ? {
+                            textDecorationLine: "underline",
+                            textDecorationStyle: "dotted",
+                            textDecorationColor: colorCfg ? colorCfg.dot : "rgba(201,169,97,0.95)",
+                            textUnderlineOffset: "5px",
+                            textDecorationThickness: "2px",
+                          } : {}),
                           borderRadius: "4px",
                           padding: "2px 4px",
                           boxDecorationBreak: "clone",
                           WebkitBoxDecorationBreak: "clone",
-                        } : undefined}
+                        }}
                         onClick={(e) => handleVerseClick(verse.verse, e)}
-                        title={color ? "Tap to change or remove highlight" : "Tap to highlight this verse"}
+                        title={isSelected ? "Selected. Tap another verse to add it." : color ? "Tap to change or remove highlight" : "Tap to select this verse"}
                       >
                         <span
                           className="text-[11px] font-black align-super mr-[3px] ml-[3px] select-none"
@@ -1288,7 +1569,7 @@ function LexiconInner() {
                             borderRadius: "3px",
                             padding: "0 3px",
                             color: "rgba(255,255,255,0.9)",
-                          } : { color: "rgba(167,139,250,0.5)" }}
+                          } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : "rgba(167,139,250,0.5)" }}
                         >
                           {verse.verse}
                         </span>
@@ -1301,15 +1582,6 @@ function LexiconInner() {
               )}
 
             </div>
-
-            {/* ── Commentary (desktop sidebar only) ── */}
-            {(showCommentary && commentary.length > 0) && (
-              <div className="hidden lg:block space-y-4 lg:sticky lg:top-28 lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:pr-1">
-                {showCommentary && commentary.length > 0 && (
-                  <CommentaryPanel entries={commentary} bookName={selectedBook?.name ?? ""} chapter={selectedChapter} />
-                )}
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -1351,37 +1623,6 @@ function LexiconInner() {
       )}
 
 
-      {/* ── Floating search button (above reader bar, left) ── */}
-      {activeTab === "reader" && (
-        <div className="fixed left-4 z-40 print:hidden"
-          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 80px)" }}>
-          {showNavSearch ? (
-            <form onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
-              className="flex items-center gap-1.5 bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl border border-white/[0.08] shadow-2xl px-3 py-2">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-white/40 flex-shrink-0">
-                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
-                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-              </svg>
-              <input autoFocus type="text" value={navQuery} onChange={(e) => setNavQuery(e.target.value)}
-                onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
-                placeholder="John 3 · Hechos 1 · Rom 8…"
-                className="bg-transparent text-xs text-white/80 placeholder:text-white/30 focus:outline-none w-32" />
-              <button type="submit" className="text-[10px] px-2 py-1 rounded-lg bg-violet-600 text-white font-bold">Go</button>
-              <button type="button" onClick={() => { setShowNavSearch(false); setNavQuery(""); }} className="text-white/30 hover:text-white/60 text-sm">✕</button>
-            </form>
-          ) : (
-            <button
-              onClick={() => setShowNavSearch(true)}
-              className="w-11 h-11 rounded-2xl bg-[#1c1c1e]/95 backdrop-blur-md border border-white/[0.08] shadow-2xl flex items-center justify-center text-white/50 hover:text-white transition-colors">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
-                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
-
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
         <div className="fixed left-0 right-0 z-40 px-4 print:hidden"
@@ -1411,21 +1652,6 @@ function LexiconInner() {
               </span>
             </button>
 
-            {/* Commentary toggle */}
-            {hasMhc && (
-              <button
-                onClick={() => setShowCommentary((s) => !s)}
-                className={`w-11 h-11 rounded-xl flex items-center justify-center transition-colors ${
-                  showCommentary ? "bg-violet-500/20 text-violet-400" : "text-white/25 hover:text-white/55 hover:bg-white/[0.07]"
-                }`}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <rect x="4" y="2" width="16" height="20" rx="3" stroke="currentColor" strokeWidth="1.8"/>
-                  <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                  <line x1="8" y1="12" x2="13" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            )}
-
             {/* Next chapter */}
             <button
               onClick={goNext}
@@ -1453,7 +1679,11 @@ function LexiconInner() {
                       className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
                         testamentFilter === tf ? "bg-violet-600 text-white" : "bg-white/[0.06] text-white/40 hover:text-white/60"
                       }`}>
-                      {tf === "ALL" ? "All Books" : tf === "OT" ? "Old Testament" : "New Testament"}
+                      {tf === "ALL"
+                        ? (lang === "es" ? "Todos" : "All Books")
+                        : tf === "OT"
+                          ? (lang === "es" ? "Antiguo" : "Old Testament")
+                          : (lang === "es" ? "Nuevo" : "New Testament")}
                     </button>
                   ))}
                 </div>
@@ -1467,8 +1697,10 @@ function LexiconInner() {
                             ? "bg-violet-600/20 border border-violet-500/30 text-white"
                             : "bg-white/[0.04] border border-white/[0.06] text-white/60 hover:bg-white/[0.08] hover:text-white/80"
                         }`}>
-                        <p className="text-sm font-semibold truncate">{b.name}</p>
-                        <p className="text-[10px] text-white/30 mt-0.5">{b.chapters} ch.</p>
+                        <p className="text-sm font-semibold truncate">{getBookDisplayName(b, translation)}</p>
+                        <p className="text-[10px] text-white/30 mt-0.5">
+                          {b.chapters} {lang === "es" ? "cap." : "ch."}
+                        </p>
                       </button>
                     ))}
                   </div>
@@ -1488,8 +1720,10 @@ function LexiconInner() {
                     </svg>
                   </button>
                   <div>
-                    <p className="text-white font-bold">{pickerBook.name}</p>
-                    <p className="text-white/30 text-xs">{pickerBook.chapters} chapters</p>
+                    <p className="text-white font-bold">{getBookDisplayName(pickerBook, translation)}</p>
+                    <p className="text-white/30 text-xs">
+                      {pickerBook.chapters} {lang === "es" ? "capítulos" : "chapters"}
+                    </p>
                   </div>
                 </div>
                 <div className="overflow-y-auto flex-1 pb-10 p-4">
@@ -1518,17 +1752,35 @@ function LexiconInner() {
         </div>
       )}
 
-      {/* Verse highlight popover */}
-      {versePopover && (
-        <VerseHighlightPopover
-          state={versePopover}
-          current={verseColors[versePopover.verseNum]}
-          onSelect={(c) => setVerseColor(versePopover.verseNum, c)}
-          onRequestConfirm={() =>
-            setVersePopover((p) => p ? { ...p, mode: "confirm-remove" } : null)
-          }
-          onRemove={() => clearVerseColor(versePopover.verseNum)}
-          onClose={() => setVersePopover(null)}
+      {/* Verse selection tray — slides up from bottom */}
+      <VerseSelectionTray
+        visible={selectedVerseNums.length > 0}
+        selectedVerseNums={selectedVerseNums}
+        selectedText={selectedVerseText}
+        selectedReference={selectedReference}
+        bookName={selectedBook?.name ?? ""}
+        chapter={selectedChapter}
+        verseColors={verseColors}
+        onSelect={(c) => {
+          selectedVerseNums.forEach((verseNum) => setVerseColor(verseNum, c));
+          setSelectedVerseNums([]);
+        }}
+        onRemove={() => {
+          selectedVerseNums.forEach((verseNum) => clearVerseColor(verseNum));
+          setSelectedVerseNums([]);
+        }}
+        onClearSelection={() => setSelectedVerseNums([])}
+        onBookmark={(data) => setBookmarkPopup(data)}
+      />
+
+      {/* Bookmark popup — category picker */}
+      {bookmarkPopup && (
+        <BookmarkPopup
+          ref_={bookmarkPopup.ref}
+          text={bookmarkPopup.text}
+          lang={lang}
+          onClose={() => setBookmarkPopup(null)}
+          onSaved={() => setBookmarkPopup(null)}
         />
       )}
     </div>

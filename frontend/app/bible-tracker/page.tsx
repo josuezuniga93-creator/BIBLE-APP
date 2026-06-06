@@ -11,6 +11,8 @@ import {
   getBookGroups,
   getBooksInGroup,
 } from "../lib/bibleBooks";
+import { useLanguage } from "../lib/useLanguage";
+import { BIBLE_GROUP_ES, bibleBookName } from "../lib/spanishContent";
 
 // ─── localStorage key ─────────────────────────────────────────────────────────
 
@@ -91,6 +93,7 @@ function BookRow({
   onToggle: (bookNum: number, ch: number) => void;
   onMarkAll: (bookNum: number, chapters: number, read: boolean) => void;
 }) {
+  const { lang } = useLanguage();
   const [expanded, setExpanded] = useState(false);
 
   const readCount = useMemo(() => {
@@ -126,10 +129,10 @@ function BookRow({
         {/* Name + count */}
         <div className="flex-1 min-w-0">
           <p className={`text-sm font-semibold ${allRead ? "text-emerald-400" : "text-white/80"}`}>
-            {name}
+            {lang === "es" ? bibleBookName({ num: bookNum, name }, "es") : name}
           </p>
           <p className="text-xs text-white/30">
-            {readCount}/{chapters} chapters
+            {readCount}/{chapters} {lang === "es" ? "capítulos" : "chapters"}
           </p>
         </div>
 
@@ -145,7 +148,7 @@ function BookRow({
               : "border-white/10 text-white/30 hover:text-white/60 hover:bg-white/[0.05]"
           }`}
         >
-          {allRead ? "Unmark all" : "Mark all"}
+          {allRead ? (lang === "es" ? "Desmarcar todo" : "Unmark all") : (lang === "es" ? "Marcar todo" : "Mark all")}
         </button>
 
         <span className="text-white/20 text-xs ml-1">{expanded ? "▲" : "▼"}</span>
@@ -174,7 +177,7 @@ function BookRow({
               );
             })}
           </div>
-          <p className="text-[10px] text-white/20 mt-3">Tap a chapter to mark it read</p>
+          <p className="text-[10px] text-white/20 mt-3">{lang === "es" ? "Toca un capítulo para marcarlo como leído" : "Tap a chapter to mark it read"}</p>
         </div>
       )}
     </div>
@@ -184,6 +187,7 @@ function BookRow({
 // ─── Overall Stats Bar ────────────────────────────────────────────────────────
 
 function StatsBar({ readMap }: { readMap: ReadMap }) {
+  const { lang, t } = useLanguage();
   const totalRead = useMemo(() => {
     let n = 0;
     for (const book of BIBLE_BOOKS) {
@@ -221,9 +225,9 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
         </div>
         <div>
           <p className="text-white font-bold text-lg">{totalRead.toLocaleString()}</p>
-          <p className="text-white/40 text-sm">of {TOTAL_CHAPTERS.toLocaleString()} chapters read</p>
+          <p className="text-white/40 text-sm">{lang === "es" ? "de" : "of"} {TOTAL_CHAPTERS.toLocaleString()} {t("tracker_chapters_read")}</p>
           {pct === 100 && (
-            <p className="text-emerald-400 text-xs font-bold mt-0.5">🎉 You&apos;ve read the entire Bible!</p>
+            <p className="text-emerald-400 text-xs font-bold mt-0.5">{lang === "es" ? "🎉 ¡Has leído toda la Biblia!" : "🎉 You've read the entire Bible!"}</p>
           )}
         </div>
       </div>
@@ -231,7 +235,7 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
       {/* OT / NT breakdown */}
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/15 px-4 py-3">
-          <p className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-1">Old Testament</p>
+          <p className="text-xs text-amber-400 font-bold uppercase tracking-widest mb-1">{t("tracker_ot")}</p>
           <p className="text-white font-bold">{otRead}/{OT_CHAPTERS}</p>
           <div className="h-1.5 rounded-full bg-white/[0.06] mt-2 overflow-hidden">
             <div
@@ -242,7 +246,7 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
           <p className="text-white/30 text-xs mt-1">{otPct}%</p>
         </div>
         <div className="rounded-xl bg-violet-500/[0.06] border border-violet-500/15 px-4 py-3">
-          <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-1">New Testament</p>
+          <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-1">{t("tracker_nt")}</p>
           <p className="text-white font-bold">{ntRead}/{NT_CHAPTERS}</p>
           <div className="h-1.5 rounded-full bg-white/[0.06] mt-2 overflow-hidden">
             <div
@@ -260,11 +264,12 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
 // ─── What's Next ──────────────────────────────────────────────────────────────
 
 function WhatsNext({ readMap }: { readMap: ReadMap }) {
+  const { lang } = useLanguage();
   const next = useMemo(() => {
     for (const book of BIBLE_BOOKS) {
       for (let ch = 1; ch <= book.chapters; ch++) {
         if (!readMap[chapterKey(book.num, ch)]) {
-          return { book: book.name, chapter: ch };
+          return { book, chapter: ch };
         }
       }
     }
@@ -277,9 +282,9 @@ function WhatsNext({ readMap }: { readMap: ReadMap }) {
     <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] px-4 py-3 mb-4 flex items-center gap-3">
       <span className="text-violet-400 text-lg">→</span>
       <div>
-        <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-0.5">Read Next</p>
+        <p className="text-xs text-violet-400 font-bold uppercase tracking-widest mb-0.5">{lang === "es" ? "Leer Después" : "Read Next"}</p>
         <p className="text-white/80 text-sm font-semibold">
-          {next.book} {next.chapter}
+          {bibleBookName(next.book, lang)} {next.chapter}
         </p>
       </div>
     </div>
@@ -289,6 +294,7 @@ function WhatsNext({ readMap }: { readMap: ReadMap }) {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function BibleTrackerPage() {
+  const { lang, t } = useLanguage();
   const [readMap, setReadMap] = useState<ReadMap>({});
   const [mounted, setMounted] = useState(false);
   const [testament, setTestament] = useState<"ALL" | "OT" | "NT">("ALL");
@@ -354,15 +360,14 @@ export default function BibleTrackerPage() {
       <div className="max-w-2xl mx-auto px-4 pt-12 pb-6">
         <div className="mb-2">
           <span className="text-xs font-bold uppercase tracking-widest text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
-            Bible Reading Tracker
+            {t("tracker_badge")}
           </span>
         </div>
         <h1 className="text-3xl sm:text-4xl font-bold text-white mt-4 mb-2">
-          Track Your Bible Reading
+          {t("tracker_heading")}
         </h1>
         <p className="text-white/40 text-sm leading-relaxed">
-          Check off chapters as you read. Your progress is saved automatically on this device.
-          Never lose your place in God&apos;s Word.
+          {t("tracker_sub")}
         </p>
       </div>
 
@@ -377,7 +382,7 @@ export default function BibleTrackerPage() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search books…"
+            placeholder={t("tracker_search")}
             className="flex-1 bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-2.5 text-sm text-white/80 placeholder-white/25 focus:outline-none focus:border-violet-500/50 transition-colors"
           />
           {/* Testament filter */}
@@ -392,7 +397,7 @@ export default function BibleTrackerPage() {
                     : "text-white/30 hover:text-white/60"
                 }`}
               >
-                {t === "ALL" ? "All" : t}
+                {t === "ALL" ? (lang === "es" ? "Todos" : "All") : t}
               </button>
             ))}
           </div>
@@ -407,7 +412,7 @@ export default function BibleTrackerPage() {
             return (
               <div key={group}>
                 <p className="text-xs font-bold text-white/25 uppercase tracking-widest mb-2 px-1">
-                  {group}
+                  {lang === "es" ? BIBLE_GROUP_ES[group] ?? group : group}
                 </p>
                 <div className="space-y-2">
                   {groupBooks.map((book) => (
@@ -431,19 +436,19 @@ export default function BibleTrackerPage() {
         <div className="mt-10 pt-6 border-t border-white/[0.06] text-center">
           {confirmReset ? (
             <div className="space-y-3">
-              <p className="text-white/50 text-sm">Reset all reading progress? This cannot be undone.</p>
+              <p className="text-white/50 text-sm">{lang === "es" ? "¿Restablecer todo el progreso de lectura? Esto no se puede deshacer." : "Reset all reading progress? This cannot be undone."}</p>
               <div className="flex justify-center gap-3">
                 <button
                   onClick={resetAll}
                   className="px-4 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-sm font-bold hover:bg-red-500/30 transition-colors"
                 >
-                  Yes, reset everything
+                  {lang === "es" ? "Sí, restablecer todo" : "Yes, reset everything"}
                 </button>
                 <button
                   onClick={() => setConfirmReset(false)}
                   className="px-4 py-2 rounded-xl border border-white/10 text-white/40 text-sm font-semibold hover:text-white/60 transition-colors"
                 >
-                  Cancel
+                  {t("notes_cancel")}
                 </button>
               </div>
             </div>
@@ -452,7 +457,7 @@ export default function BibleTrackerPage() {
               onClick={() => setConfirmReset(true)}
               className="text-xs text-white/20 hover:text-red-400 transition-colors"
             >
-              Reset all progress
+              {t("reset_progress")}
             </button>
           )}
         </div>

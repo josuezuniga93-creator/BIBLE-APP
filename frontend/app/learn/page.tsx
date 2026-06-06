@@ -17,6 +17,7 @@ import { getDocumentCoverImage } from "../lib/documentCoverImages";
 import { useLanguage } from "../lib/useLanguage";
 import { translateToSpanish } from "../lib/googleTranslate";
 import { t } from "../lib/i18n";
+import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -312,7 +313,7 @@ function SectionReader({
           </svg>
         </button>
         <p className="text-sm font-bold truncate px-2 max-w-[55vw]" style={{ color: th.textSecondary }}>
-          {doc.shortTitle}
+          {documentTitle(doc, lang)}
         </p>
         <div className="flex items-center gap-1 min-w-[80px] justify-end">
           <button onClick={() => setShowToc((v) => !v)} className="w-9 h-9 flex items-center justify-center rounded-lg"
@@ -340,7 +341,7 @@ function SectionReader({
             style={{ backgroundColor: th.drawerBg, borderRight: `1px solid ${th.drawerBorder}` }}
             onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.drawerBorder}` }}>
-              <p className="text-sm font-bold" style={{ color: th.textMuted }}>Sections</p>
+              <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Secciones" : "Sections"}</p>
               <button onClick={() => setShowToc(false)} className="text-lg" style={{ color: th.textMuted }}>✕</button>
             </div>
             <div className="p-3 space-y-0.5">
@@ -348,7 +349,7 @@ function SectionReader({
                 <button key={s.id} onClick={() => { onJump(s.id); setShowToc(false); }}
                   className="w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors min-h-[40px]"
                   style={{ backgroundColor: s.id === section.id ? th.drawerItemActive : "transparent", color: s.id === section.id ? th.drawerItemActiveColor : th.drawerItemColor, fontWeight: s.id === section.id ? "bold" : "normal" }}>
-                  {idx + 1}. {s.title}
+                  {idx + 1}. {documentSectionTitle(doc.id, s.title, lang)}
                 </button>
               ))}
             </div>
@@ -363,12 +364,14 @@ function SectionReader({
           <div className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
             style={{ backgroundColor: th.settingsBg, border: `1px solid ${th.settingsBorder}` }}
             onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>Display Settings</p>
+            <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>{lang === "es" ? "Ajustes de Lectura" : "Display Settings"}</p>
             <div className="flex gap-2">
               {(["sm","md","lg","xl"] as FontSize[]).map((fs) => (
                 <button key={fs} onClick={() => setFontSize(fs)} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
                   style={{ backgroundColor: fontSize === fs ? th.settingsBtnActive : th.settingsBtnInactive, border: fontSize === fs ? `1px solid ${th.settingsBtnActiveBorder}` : `1px solid ${th.settingsBtnInactiveBorder}`, color: fontSize === fs ? th.accentLight : th.textMuted }}>
-                  {fs === "sm" ? "Small" : fs === "md" ? "Medium" : fs === "lg" ? "Large" : "X-Large"}
+                  {lang === "es"
+                    ? fs === "sm" ? "Pequeño" : fs === "md" ? "Mediano" : fs === "lg" ? "Grande" : "Muy Grande"
+                    : fs === "sm" ? "Small" : fs === "md" ? "Medium" : fs === "lg" ? "Large" : "X-Large"}
                 </button>
               ))}
             </div>
@@ -380,7 +383,7 @@ function SectionReader({
       <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
         <main className="max-w-2xl mx-auto px-5 pt-8 pb-8">
           <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-            {modeLabel} · {section.label}
+            {lang === "es" ? (modeLabel === "Full document" ? "Documento completo" : "Resumen") : modeLabel} · {documentSectionTitle(doc.id, section.label, lang)}
             {totalPages > 1 && (
               <span style={{ color: th.textFaint, fontWeight: "normal", letterSpacing: "0.05em" }}>
                 {" "}· p. {currentPage}/{totalPages}
@@ -390,7 +393,7 @@ function SectionReader({
           {/* Title only on first page */}
           {isFirstPage && (
             <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
-              {section.title}
+              {documentSectionTitle(doc.id, section.title, lang)}
             </h2>
           )}
           <div
@@ -433,7 +436,7 @@ function SectionReader({
                 cursor: (!isFirstPage || hasPrev) ? "pointer" : "not-allowed",
               }}
             >
-              ← Prev
+              {lang === "es" ? "← Ant." : "← Prev"}
             </button>
 
             {/* Center page indicator */}
@@ -448,7 +451,7 @@ function SectionReader({
               hasNext ? (
                 <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
                   style={{ background: th.navNextGradient, color: "white" }}>
-                  Next →
+                  {lang === "es" ? "Siguiente →" : "Next →"}
                 </button>
               ) : (
                 <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
@@ -459,12 +462,14 @@ function SectionReader({
             ) : (
               <button onClick={() => goNextPage()} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
                 style={{ background: th.navNextGradient, color: "white" }}>
-                Next →
+                {lang === "es" ? "Siguiente →" : "Next →"}
               </button>
             )}
           </div>
           <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-            All documents are public domain • Free to read, share, and distribute
+            {lang === "es"
+              ? "Todos los documentos son de dominio público • Gratis para leer, compartir y distribuir"
+              : "All documents are public domain • Free to read, share, and distribute"}
           </p>
         </main>
       </div>
@@ -485,10 +490,10 @@ function SectionReader({
         </div>
         <div className="flex items-center justify-around px-4 pb-1 pt-1" style={{ borderTop: `1px solid ${th.bottomBarDivider}` }}>
           {[
-            { label: "Display", icon: <span style={{ fontFamily:"serif", fontWeight:"bold", fontSize:"13px" }}>Aa</span>, action: () => setShowSettings((v)=>!v) },
-            { label: "Contents", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>, action: () => setShowToc((v)=>!v) },
-            { label: "Text Size", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20L10 4l6 16M6 15h8M16 20l2-4 2 4M17.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, action: () => setFontSize(prev => { const o:FontSize[]=["sm","md","lg","xl"]; return o[(o.indexOf(prev)+1)%o.length]; }) },
-            { label: "More", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>, action: () => setShowSettings((v)=>!v) },
+            { label: lang === "es" ? "Vista" : "Display", icon: <span style={{ fontFamily:"serif", fontWeight:"bold", fontSize:"13px" }}>Aa</span>, action: () => setShowSettings((v)=>!v) },
+            { label: lang === "es" ? "Índice" : "Contents", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>, action: () => setShowToc((v)=>!v) },
+            { label: lang === "es" ? "Texto" : "Text Size", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20L10 4l6 16M6 15h8M16 20l2-4 2 4M17.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, action: () => setFontSize(prev => { const o:FontSize[]=["sm","md","lg","xl"]; return o[(o.indexOf(prev)+1)%o.length]; }) },
+            { label: lang === "es" ? "Más" : "More", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>, action: () => setShowSettings((v)=>!v) },
           ].map(({ label, icon, action }) => (
             <button key={label} onClick={action} className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl"
               style={{ color: th.bottomIconColor }}>
@@ -507,11 +512,11 @@ function SectionReader({
           item={{
             id: itemId,
             type: "learn",
-            title: section.title,
-            subtitle: doc.shortTitle,
+            title: documentSectionTitle(doc.id, section.title, lang),
+            subtitle: documentTitle(doc, lang),
             preview: section.content.replace(/[#*_`>]/g, "").slice(0, 120).trim(),
           }}
-          label={`${doc.shortTitle} — ${section.title}`}
+          label={`${documentTitle(doc, lang)} — ${documentSectionTitle(doc.id, section.title, lang)}`}
           onClose={() => { setShowBookmark(false); setBookmarked(isAnySaved(itemId)); }}
         />
       )}
@@ -523,6 +528,7 @@ function SectionReader({
 
 function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose: () => void; allDocs: LearnDocument[] }) {
   const { theme } = useTheme();
+  const { lang } = useLanguage();
   const isLight = theme === "light-elegant";
   const isGoldNavy = theme === "gold-navy";
   const d = <T,>(light: T, gold: T, dark: T): T => isLight ? light : isGoldNavy ? gold : dark;
@@ -574,6 +580,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   const [reading, setReading] = useState<string | null>(null);
   const [readerMode, setReaderMode] = useState<ReaderMode>(hasFullDocument ? "full" : "overview");
   const [descExpanded, setDescExpanded] = useState(false);
+  const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
   const [bookmarked, setBookmarked] = useState(() => isAnySaved(`learn::${doc.id}`));
   const [showBookmarkModal, setShowBookmarkModal] = useState(false);
 
@@ -582,7 +589,24 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
     setReading(null);
     setReaderMode(hasFullDocument ? "full" : "overview");
     setDescExpanded(false);
+    setTranslatedDescription(null);
   }, [doc.id, hasFullDocument]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (lang !== "es") {
+      setTranslatedDescription(null);
+      return;
+    }
+    translateToSpanish(doc.description, `learn-desc-${doc.id}`)
+      .then((value) => {
+        if (!cancelled) setTranslatedDescription(value);
+      })
+      .catch(() => {
+        if (!cancelled) setTranslatedDescription(null);
+      });
+    return () => { cancelled = true; };
+  }, [doc.description, lang]);
 
   const toggleSection = useCallback((sectionId: string) => {
     setCompleted((prev) => {
@@ -597,6 +621,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   const completedInReader = readerSections.filter((section) => completed.has(section.id)).length;
   const progress = readerSections.length > 0 ? Math.round((completedInReader / readerSections.length) * 100) : 0;
   const readerModeLabel = readerMode === "full" ? "Full document" : "Overview";
+  const descriptionText = lang === "es" ? translatedDescription ?? doc.description : doc.description;
 
   const sectionIndex = reading ? readerSections.findIndex((s) => s.id === reading) : -1;
   const currentSection = sectionIndex >= 0 ? readerSections[sectionIndex] : null;
@@ -636,27 +661,27 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
           <DocCover doc={doc} />
         </div>
         <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>{doc.title}</h1>
+          <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</h1>
           <p className="text-sm font-semibold mb-1" style={{ color: th.accent }}>{doc.origin}</p>
           <div className="flex items-center gap-1 mb-2">
             <span style={{ color: th.star }}>★</span>
             <span className="text-xs font-bold" style={{ color: th.starText }}>4.8</span>
-            <span className="text-xs" style={{ color: th.starFaint }}>(Historic)</span>
+            <span className="text-xs" style={{ color: th.starFaint }}>{lang === "es" ? "(Histórico)" : "(Historic)"}</span>
           </div>
           <div className="flex flex-wrap gap-1.5 mb-2">
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
               style={{ backgroundColor: th.tagBg, border: `1px solid ${th.tagBorder}`, color: th.tagColor }}>
-              {typeLabel}
+              {lang === "es" ? ({ confession: "Confesión", catechism: "Catecismo", creed: "Credo", council: "Concilio", debate: "Debate", history: "Historia", theses: "Tesis", solas: "Solas" } as Record<string, string>)[doc.category] ?? typeLabel : typeLabel}
             </span>
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
               style={{ backgroundColor: th.tagBg, border: `1px solid ${th.tagBorder}`, color: th.tagColor }}>
-              Doctrinal
+              {lang === "es" ? "Doctrinal" : "Doctrinal"}
             </span>
           </div>
           <div className="flex items-center gap-1.5">
             <span style={{ color: "#34d399", fontSize: "12px" }}>✓</span>
-            <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>Free</span>
-            <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>100% free to read</span>
+            <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
+            <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
           </div>
         </div>
       </div>
@@ -674,7 +699,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
                   className="py-2.5 rounded-xl text-xs font-black transition-all active:scale-[0.98]"
                   style={{ backgroundColor: active ? th.modeActiveBg : "transparent", color: active ? th.modeActiveText : th.modeInactiveText }}
                 >
-                  {mode === "full" ? "Full document" : "Overview"}
+                  {lang === "es" ? (mode === "full" ? "Documento completo" : "Resumen") : (mode === "full" ? "Full document" : "Overview")}
                 </button>
               );
             })}
@@ -682,24 +707,24 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
         )}
         <button onClick={() => setReading(readerSections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
           style={{ background: th.readGradient }}>
-          {readerMode === "full" ? "Read Full Document" : "Read Overview"}
+          {lang === "es" ? (readerMode === "full" ? "Leer Documento Completo" : "Leer Resumen") : (readerMode === "full" ? "Read Full Document" : "Read Overview")}
         </button>
         <button onClick={() => setShowBookmarkModal(true)} className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
           style={{ border: `1px solid ${th.btnBorder}`, color: th.textSecondary }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c4973a" : "currentColor" }}>
             <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
           </svg>
-          {bookmarked ? "Bookmarked" : "Add to Library"}
+          {bookmarked ? (lang === "es" ? "Guardado" : "Bookmarked") : (lang === "es" ? "Agregar a Biblioteca" : "Add to Library")}
         </button>
       </div>
 
       {/* About */}
       <div className="px-4 mb-4">
-        <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>About this document</p>
+        <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>{lang === "es" ? "Acerca de este documento" : "About this document"}</p>
         <p className="text-xs leading-relaxed" style={{ color: th.textMuted }}>
-          {descExpanded ? doc.description : doc.description.slice(0, 160)}
-          {!descExpanded && doc.description.length > 160 && (
-            <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>More</button>
+          {descExpanded ? descriptionText : descriptionText.slice(0, 160)}
+          {!descExpanded && descriptionText.length > 160 && (
+            <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>{lang === "es" ? "Más" : "More"}</button>
           )}
         </p>
       </div>
@@ -707,9 +732,9 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {/* Metadata */}
       <div className="flex gap-4 px-4 mb-5">
         {[
-          { icon: "sections", label: `${readerSections.length} ${readerMode === "full" ? "Document Sections" : "Overview Sections"}` },
-          { icon: "language", label: "English" },
-          { icon: "year", label: `Published ${doc.year}` },
+          { icon: "sections", label: `${readerSections.length} ${lang === "es" ? (readerMode === "full" ? "Secciones del Documento" : "Secciones de Resumen") : (readerMode === "full" ? "Document Sections" : "Overview Sections")}` },
+          { icon: "language", label: lang === "es" ? "Español automático" : "English" },
+          { icon: "year", label: lang === "es" ? `Publicado ${doc.year}` : `Published ${doc.year}` },
         ].map((m) => (
           <div key={m.label} className="flex items-center gap-1.5">
             <GeneratedMetaIcon type={m.icon as "sections" | "language" | "year"} size={15} />
@@ -722,7 +747,11 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {progress > 0 && (
         <div className="px-4 mb-5">
           <div className="flex justify-between text-xs mb-1.5" style={{ color: th.textFaint }}>
-            <span>{completedInReader} of {readerSections.length} {readerMode === "full" ? "document" : "overview"} sections read</span>
+            <span>
+              {lang === "es"
+                ? `${completedInReader} de ${readerSections.length} secciones ${readerMode === "full" ? "del documento" : "del resumen"} leídas`
+                : `${completedInReader} of ${readerSections.length} ${readerMode === "full" ? "document" : "overview"} sections read`}
+            </span>
             <span>{progress}%</span>
           </div>
           <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
@@ -736,12 +765,12 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {/* Section list */}
       <div className="px-4 mb-6">
         <p className="text-sm font-bold mb-1" style={{ color: th.textPrimary }}>
-          {readerMode === "full" ? "Full document sections" : "Overview sections"}
+          {lang === "es" ? (readerMode === "full" ? "Secciones del documento completo" : "Secciones de resumen") : (readerMode === "full" ? "Full document sections" : "Overview sections")}
         </p>
         <p className="text-[11px] leading-relaxed mb-3" style={{ color: th.textMuted }}>
           {readerMode === "full"
-            ? "Read the primary text by chapter, article, question, canon, or sermon section."
-            : "Use the overview for historical context, theology, and study notes."}
+            ? lang === "es" ? "Lee el texto primario por capítulos, artículos, preguntas, cánones o secciones." : "Read the primary text by chapter, article, question, canon, or sermon section."
+            : lang === "es" ? "Usa el resumen para contexto histórico, teología y notas de estudio." : "Use the overview for historical context, theology, and study notes."}
         </p>
         <div className="space-y-2">
           {readerSections.map((section, idx) => {
@@ -758,8 +787,10 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
                          : <span style={{ color: th.sectionPendingNum, fontSize: "11px" }}>{idx + 1}</span>}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold truncate" style={{ color: done ? th.sectionDoneTitle : th.sectionTitle }}>{section.title}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: th.sectionLabel }}>{section.label}</p>
+                  <p className="text-xs font-bold truncate" style={{ color: done ? th.sectionDoneTitle : th.sectionTitle }}>
+                    {documentSectionTitle(doc.id, section.title, lang)}
+                  </p>
+                  <p className="text-[10px] mt-0.5" style={{ color: th.sectionLabel }}>{documentSectionTitle(doc.id, section.label, lang)}</p>
                 </div>
                 <span style={{ color: th.sectionArrow, fontSize: "12px" }}>›</span>
               </button>
@@ -771,14 +802,14 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
       {/* You may also like */}
       {related.length > 0 && (
         <div className="px-4 pb-10">
-          <p className="text-sm font-bold mb-3" style={{ color: th.textPrimary }}>You may also like</p>
+          <p className="text-sm font-bold mb-3" style={{ color: th.textPrimary }}>{lang === "es" ? "También te puede gustar" : "You may also like"}</p>
           <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
             {related.map((d) => (
                 <button key={d.id} onClick={() => onClose()} className="flex-shrink-0 w-24 text-left active:scale-95 transition-transform">
                   <div className="w-24 h-32 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.btnBorder}` }}>
                     <DocCover doc={d} />
                   </div>
-                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{d.shortTitle}</p>
+                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{documentTitle(d, lang)}</p>
                   <p className="text-[9px] mt-0.5" style={{ color: th.textMuted }}>{d.year}</p>
                 </button>
             ))}
@@ -788,8 +819,8 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
 
       {showBookmarkModal && (
         <BookmarkModal
-          item={{ id: `learn::${doc.id}`, type: "learn", title: doc.title, subtitle: doc.origin, preview: String(doc.year) }}
-          label={doc.title}
+          item={{ id: `learn::${doc.id}`, type: "learn", title: documentTitle(doc, lang), subtitle: doc.origin, preview: String(doc.year) }}
+          label={documentTitle(doc, lang)}
           onClose={() => { setShowBookmarkModal(false); setBookmarked(isAnySaved(`learn::${doc.id}`)); }}
         />
       )}
@@ -952,8 +983,8 @@ function LearnPageInner() {
       {/* Timeline Highlights */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Timeline Highlights</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_timeline")}</p>
+          <button className="text-xs font-semibold" style={{ color: th.accent }}>{t(lang, "learn_view_all")}</button>
         </div>
         <div className="px-4 overflow-x-auto pb-2 scrollbar-none">
           <div className="flex items-start gap-0 relative" style={{ minWidth: "max-content" }}>
@@ -996,18 +1027,26 @@ function LearnPageInner() {
       {/* Browse by Type */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Browse by Type</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_browse_type")}</p>
+          <button className="text-xs font-semibold" style={{ color: th.accent }}>{t(lang, "learn_view_all")}</button>
         </div>
         <div className="flex gap-2.5 px-4 overflow-x-auto pb-1 scrollbar-none">
           {DOC_TYPES.map(({ key, label }) => {
             const active = activeType === key;
+            const labelText =
+              key === "all" ? t(lang, "learn_type_all") :
+              key === "confession" ? t(lang, "learn_type_confessions") :
+              key === "creed" ? t(lang, "learn_type_creeds") :
+              key === "debate" ? t(lang, "learn_type_debates") :
+              key === "council" ? t(lang, "learn_type_councils") :
+              lang === "es" && key === "catechism" ? "Catecismos" :
+              label;
             return (
               <button key={key} onClick={() => { setActiveType(key); setActiveTab("all"); }}
                 className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-2xl transition-all active:scale-95"
                 style={{ border: active ? `1px solid ${th.catActiveBorder}` : `1px solid ${th.catInactiveBorder}`, backgroundColor: active ? th.catActiveBg : th.catInactiveBg, color: active ? th.accentLight : th.textMuted }}>
                 <GeneratedCategoryMark id={key} active={active} size={30} />
-                <span className="text-[10px] font-bold whitespace-nowrap">{label}</span>
+                <span className="text-[10px] font-bold whitespace-nowrap">{labelText}</span>
               </button>
             );
           })}
@@ -1018,7 +1057,7 @@ function LearnPageInner() {
       {LEARN_DOCUMENTS.some(d => (progressMap[d.id] ?? 0) > 0 && (progressMap[d.id] ?? 0) < 100) && (
         <div className="mb-6">
           <div className="flex items-center justify-between px-4 mb-3">
-            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Continue Reading</p>
+            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_continue")}</p>
           </div>
           <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
             {[...LEARN_DOCUMENTS.filter(doc => (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100)].sort((a, b) => getDocLastRead(b.id) - getDocLastRead(a.id)).map(doc => {
@@ -1030,7 +1069,7 @@ function LearnPageInner() {
                     <DocCover doc={doc} />
                   </div>
                   <button onClick={() => setSelected(doc.id)} className="w-full text-left">
-                    <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.title}</p>
+                    <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
                     <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
                     <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: th.progressBar }} />
@@ -1070,7 +1109,7 @@ function LearnPageInner() {
                   </button>
                 </div>
                 <button onClick={() => setSelected(doc.id)} className="w-full text-left">
-                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.title}</p>
+                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
                   <div className="flex items-center gap-1 mt-0.5">
                     <span style={{ color: th.star, fontSize: "10px" }}>★</span>
@@ -1118,8 +1157,12 @@ function LearnPageInner() {
             <div className="mb-3 flex justify-center">
               <GeneratedMetaIcon type="document" size={44} />
             </div>
-            <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>No documents found</p>
-            <p className="text-xs" style={{ color: th.textFaint }}>Try selecting a different type or tab</p>
+            <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>
+              {lang === "es" ? "No se encontraron documentos" : "No documents found"}
+            </p>
+            <p className="text-xs" style={{ color: th.textFaint }}>
+              {lang === "es" ? "Prueba otro tipo o pestaña" : "Try selecting a different type or tab"}
+            </p>
           </div>
         )}
 
@@ -1136,10 +1179,10 @@ function LearnPageInner() {
                   <DocCover doc={doc} size="small" />
                 </button>
                 <button onClick={() => setSelected(doc.id)} className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>{doc.title}</p>
+                  <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
                   <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>{doc.origin} · {doc.year}</p>
                   {isDone ? (
-                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>Completed</p>
+                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>{lang === "es" ? "Completado" : "Completed"}</p>
                   ) : pct > 0 ? (
                     <div className="mt-2.5 flex items-center gap-2">
                       <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
@@ -1148,7 +1191,7 @@ function LearnPageInner() {
                       <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
                     </div>
                   ) : (
-                    <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>Start reading →</p>
+                    <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>{lang === "es" ? "Empezar a leer →" : "Start reading →"}</p>
                   )}
                 </button>
                 {isDone ? (

@@ -12,6 +12,7 @@ import { isAnySaved } from "../lib/collections";
 import { GeneratedBookCover, GeneratedCategoryMark, GeneratedMetaIcon } from "../components/GeneratedArtwork";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
+import { bookTitle } from "../lib/spanishContent";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -264,7 +265,7 @@ export default function LibraryPage() {
                   <Link href={`/library/${book.slug}`} className="absolute inset-0 z-10 active:scale-95 transition-transform" />
                 </div>
                 <Link href={`/library/${book.slug}`} className="block">
-                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{book.title}</p>
+                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{bookTitle(book, lang)}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
                     <div className="h-full rounded-full" style={{ width: `${Math.round((chapter / total) * 100)}%`, backgroundColor: th.accent }} />
@@ -304,7 +305,7 @@ export default function LibraryPage() {
                 </div>
                 <Link href={`/library/${book.slug}`}>
                   <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
-                    {book.title}
+                    {bookTitle(book, lang)}
                   </p>
                   <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="flex items-center gap-1 mt-0.5">
@@ -322,7 +323,7 @@ export default function LibraryPage() {
       {comingSoon.length > 0 && (
         <div className="mb-6">
           <div className="flex items-center justify-between px-4 mb-3">
-            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Coming Soon</p>
+            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{lang === "es" ? "Próximamente" : "Coming Soon"}</p>
             <button className="text-xs font-semibold" style={{ color: th.accent }}>{t(lang, "lib_view_all")}</button>
           </div>
           <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
@@ -332,10 +333,10 @@ export default function LibraryPage() {
                   <BookCover book={book} />
                 </div>
                 <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textMuted }}>
-                  {book.title}
+                  {bookTitle(book, lang)}
                 </p>
                 <p className="text-[10px] mt-0.5 font-bold uppercase tracking-wide" style={{ color: th.comingSoonLabel }}>
-                  In preparation
+                  {lang === "es" ? "En preparación" : "In preparation"}
                 </p>
               </div>
             ))}
@@ -346,7 +347,7 @@ export default function LibraryPage() {
       {/* ── My Library ───────────────────────────────────────────────────────── */}
       <div id="my-library" className="px-4 pb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-base font-bold" style={{ color: th.textPrimary }}>My Library</p>
+          <p className="text-base font-bold" style={{ color: th.textPrimary }}>{lang === "es" ? "Mi Biblioteca" : "My Library"}</p>
           <div className="flex items-center gap-3">
             <button className="transition-colors" style={{ color: th.iconMuted }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -365,7 +366,9 @@ export default function LibraryPage() {
         {/* Tab strip */}
         <div className="flex mb-5" style={{ borderBottom: `1px solid ${th.tabStripBorder}` }}>
           {(["books", "reading", "completed"] as const).map((tab) => {
-            const labels: Record<LibTab, string> = { books: "All Books", reading: "Reading", completed: "Completed" };
+            const labels: Record<LibTab, string> = lang === "es"
+              ? { books: "Todos", reading: "Leyendo", completed: "Completados" }
+              : { books: "All Books", reading: "Reading", completed: "Completed" };
             const active = activeTab === tab;
             return (
               <button
@@ -391,10 +394,14 @@ export default function LibraryPage() {
               <GeneratedMetaIcon type={activeTab === "completed" ? "community" : "book"} size={44} />
             </div>
             <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>
-              {activeTab === "completed" ? "No books completed yet" : activeTab === "reading" ? "No books in progress" : "No books found"}
+              {lang === "es"
+                ? activeTab === "completed" ? "No hay libros completados" : activeTab === "reading" ? "No hay libros en progreso" : "No se encontraron libros"
+                : activeTab === "completed" ? "No books completed yet" : activeTab === "reading" ? "No books in progress" : "No books found"}
             </p>
             <p className="text-xs" style={{ color: th.textFaint }}>
-              {activeTab === "books" ? "Try selecting a different category" : "Start reading a book to see it here"}
+              {lang === "es"
+                ? activeTab === "books" ? "Prueba otra categoría" : "Empieza a leer un libro para verlo aquí"
+                : activeTab === "books" ? "Try selecting a different category" : "Start reading a book to see it here"}
             </p>
           </div>
         )}
@@ -423,12 +430,12 @@ export default function LibraryPage() {
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>
-                    {book.title}
+                    {bookTitle(book, lang)}
                   </p>
                   <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
 
                   {isDone ? (
-                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>Completed</p>
+                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>{lang === "es" ? "Completado" : "Completed"}</p>
                   ) : prog ? (
                     <>
                       <div className="mt-2.5 flex items-center gap-2">
@@ -509,11 +516,11 @@ export default function LibraryPage() {
         item={{
           id: `book::${bookmarkTarget.slug}`,
           type: "book",
-          title: bookmarkTarget.title,
+          title: bookTitle(bookmarkTarget, lang),
           subtitle: bookmarkTarget.author,
           preview: bookmarkTarget.description?.slice(0, 120) ?? undefined,
         }}
-        label={bookmarkTarget.title}
+        label={bookTitle(bookmarkTarget, lang)}
         onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
       />
     )}

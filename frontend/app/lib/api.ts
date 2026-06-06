@@ -11,6 +11,7 @@ import type {
   CommentaryEntry,
 } from "./types";
 import { BIBLE_BOOKS } from "./bibleBooks";
+import { getCommentaryEntries } from "./studyToolsData";
 
 // ─── Base config ──────────────────────────────────────────────────────────────
 
@@ -125,7 +126,8 @@ const STATIC_BOOKS: BookMeta[] = BIBLE_BOOKS.map(
 /**
  * Books are bundled statically — no network call needed.
  * All 66 books, chapter counts, and testament info are in bibleBooks.ts.
- * Railway is only needed for hasStrongs/hasMhc, which are disabled for now.
+ * Commentary now lives in the dedicated Study Tools section, not inside
+ * Scripture navigation.
  */
 export async function fetchBooks(): Promise<BooksResponse> {
   return { books: STATIC_BOOKS, hasStrongs: false, hasMhc: false };
@@ -514,9 +516,14 @@ export function fetchCommentary(
   book: number,
   chapter: number
 ): Promise<CommentaryEntry[]> {
+  const localEntries = getCommentaryEntries(book, chapter);
+  if (localEntries.length > 0) return Promise.resolve(localEntries);
+
   return railwayFetch<{ entries: CommentaryEntry[] }>(
     `/api/commentary/chapter?book=${book}&chapter=${chapter}`
-  ).then((r) => r.entries);
+  )
+    .then((r) => r.entries)
+    .catch(() => []);
 }
 
 export function fetchStrongs(id: string): Promise<StrongsEntry> {
