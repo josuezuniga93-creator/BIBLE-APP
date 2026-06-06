@@ -33,11 +33,6 @@ type HenryHighlight = {
   source: string;
 };
 
-type SelectionState = {
-  text: string;
-  x: number;
-  y: number;
-};
 
 const HIGHLIGHT_COLORS: Record<HenryHighlightColor, { label: string; bg: string; text: string; dot: string }> = {
   gold:  { label: "Gold",  bg: "rgba(201,169,97,0.35)", text: "#fff4cf", dot: "#c9a961" },
@@ -87,6 +82,20 @@ function saveHenryHighlights(highlights: HenryHighlight[]) {
 
 function normalizeText(value: string) {
   return value.replace(/\s+/g, " ").trim();
+}
+
+// Split commentary text into tappable sentence-level phrases
+function splitIntoTappablePhrases(text: string): Array<string | null> {
+  if (!text.trim()) return [];
+  return text
+    .split(/\n\n+/)
+    .flatMap((para, i): Array<string | null> => {
+      const sentences = para
+        .split(/(?<=[.!?])\s+(?=[A-Z0-9])/)
+        .map((s) => s.trim())
+        .filter((s) => s.length >= 4);
+      return i > 0 ? [null, ...sentences] : sentences;
+    });
 }
 
 function splitPageIntoParts(page: string, highlights: HenryHighlight[]) {
@@ -171,7 +180,7 @@ export default function StudyToolsPage() {
   const [query, setQuery] = useState("");
   const [reader, setReader] = useState<CommentarySearchResult | null>(null);
   const [readerPage, setReaderPage] = useState(0);
-  const [selection, setSelection] = useState<SelectionState | null>(null);
+  const [selectedPhrases, setSelectedPhrases] = useState<string[]>([]);
   const [highlights, setHighlights] = useState<HenryHighlight[]>([]);
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
   const [commentaryResult, setCommentaryResult] = useState<CommentarySearchResult | null>(null);
@@ -205,7 +214,7 @@ export default function StudyToolsPage() {
   function openReader(result: CommentarySearchResult) {
     setReader(result);
     setReaderPage(0);
-    setSelection(null);
+    setSelectedPhrases([]);
   }
 
   const persistHighlights = useCallback((next: HenryHighlight[]) => {
@@ -214,47 +223,38 @@ export default function StudyToolsPage() {
     saveHenryHighlights(sorted);
   }, []);
 
-  function addHighlight(color: HenryHighlightColor) {
-    if (!reader || !selection?.text.trim()) return;
-    const text = normalizeText(selection.text);
-    const next = [
-      {
-        id: `mh_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-        text,
-        color,
-        createdAt: Date.now(),
-        reference: currentReference,
-        sectionTitle: reader.title ?? `${reader.bookName} ${reader.chapter}`,
-        book: reader.book,
-        bookName: reader.bookName,
-        chapter: reader.chapter,
-        verse: reader.requestedVerse,
-        source: reader.source,
-      },
-      ...highlights,
-    ];
-    persistHighlights(next);
-    setSelection(null);
-    window.getSelection()?.removeAllRanges();
+  function handlePhraseTap(phrase: string) {
+    const normalized = normalizeText(phrase);
+    if (!normalized || normalized.length < 4) return;
+    setSelectedPhrases((prev) =>
+      prev.includes(normalized)
+        ? prev.filter((p) => p !== normalized)
+        : [...prev, normalized]
+    );
+  }
+
+  function addHighlightForSelected(color: HenryHighlightColor) {
+    if (!reader || selectedPhrases.length === 0) return;
+    const newItems: HenryHighlight[] = selectedPhrases.map((text) => ({
+      id: `mh_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      text,
+      color,
+      createdAt: Date.now(),
+      reference: currentReference,
+      sectionTitle: reader.title ?? `${reader.bookName} ${reader.chapter}`,
+      book: reader.book,
+      bookName: reader.bookName,
+      chapter: reader.chapter,
+      verse: reader.requestedVerse,
+      source: reader.source,
+    }));
+    persistHighlights([...newItems, ...highlights]);
+    setSelectedPhrases([]);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
   }
-
-  const handleReaderSelection = useCallback(() => {
-    const selected = window.getSelection();
-    const text = normalizeText(selected?.toString() ?? "");
-    if (!text || text.length < 4) return;
-    const range = selected?.rangeCount ? selected.getRangeAt(0) : null;
-    const rect = range?.getBoundingClientRect();
-    if (!rect) return;
-    setSelection({
-      text,
-      x: Math.min(Math.max(rect.left + rect.width / 2, 88), window.innerWidth - 88),
-      y: Math.max(rect.top - 12, 70),
-    });
-  }, []);
 
   function openHighlightInReader(highlight: HenryHighlight) {
     openReader({
@@ -269,20 +269,6 @@ export default function StudyToolsPage() {
     });
     setShowHighlightPocket(false);
   }
-
-  useEffect(() => {
-    if (!reader) return;
-    let timer: number;
-    function onSelectionChange() {
-      clearTimeout(timer);
-      timer = window.setTimeout(handleReaderSelection, 300);
-    }
-    document.addEventListener("selectionchange", onSelectionChange);
-    return () => {
-      document.removeEventListener("selectionchange", onSelectionChange);
-      clearTimeout(timer);
-    };
-  }, [reader, handleReaderSelection]);
 
   useEffect(() => {
     if (tab !== "commentaries" || !query.trim()) {
@@ -311,9 +297,9 @@ export default function StudyToolsPage() {
     <div className="min-h-screen bg-[#0b101d] text-white">
       {reader && (
         <div className="fixed inset-0 z-50 bg-[#0b101d] text-white">
-          {selection && (
+          {selectedPhrases.length > 0 && (
             <>
-              <div className="fixed inset-0 z-[68]" onClick={() => setSelection(null)} />
+              <div className="fixed inset-0 z-[68]" onClick={() => setSelectedPhrases([])} />
               <div
                 className="fixed bottom-0 left-0 right-0 z-[70]"
                 style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
@@ -330,14 +316,16 @@ export default function StudyToolsPage() {
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="flex-1 min-w-0">
                         <p className="text-[10px] uppercase tracking-[0.2em] font-black mb-1" style={{ color: "#c9a961" }}>
-                          {lang === "es" ? "Guardar resaltado" : "Highlight selection"}
+                          {selectedPhrases.length === 1
+                            ? lang === "es" ? "1 frase seleccionada" : "1 phrase selected"
+                            : lang === "es" ? `${selectedPhrases.length} frases seleccionadas` : `${selectedPhrases.length} phrases selected`}
                         </p>
-                        <p className="text-xs text-white/40 leading-relaxed line-clamp-2">
-                          &ldquo;{selection.text.length > 90 ? `${selection.text.slice(0, 90)}…` : selection.text}&rdquo;
+                        <p className="text-xs text-white/40 leading-relaxed line-clamp-1">
+                          &ldquo;{selectedPhrases[0]?.slice(0, 70)}{(selectedPhrases[0]?.length ?? 0) > 70 ? "…" : ""}&rdquo;
                         </p>
                       </div>
                       <button
-                        onClick={() => setSelection(null)}
+                        onClick={() => setSelectedPhrases([])}
                         className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white/40 font-black text-sm"
                         style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
                       >
@@ -348,7 +336,7 @@ export default function StudyToolsPage() {
                       {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
                         <button
                           key={color}
-                          onClick={() => addHighlight(color)}
+                          onClick={() => addHighlightForSelected(color)}
                           className="h-12 rounded-2xl active:scale-95 flex items-center justify-center gap-2 font-black text-xs"
                           style={{
                             background: HIGHLIGHT_COLORS[color].bg,
@@ -435,34 +423,58 @@ export default function StudyToolsPage() {
                     {readerPages[currentReaderPage]?.length ?? 0} chars
                   </p>
                 </div>
-                <p
-                  className="text-[18px] leading-9 text-white/80 font-serif whitespace-pre-line select-text"
-                  onMouseUp={handleReaderSelection}
+                <div
+                  className="text-[18px] leading-9 text-white/80 font-serif select-none"
                 >
-                  {currentPageParts.map((part, idx) => part.highlight ? (
-                    <mark
-                      key={`${part.highlight.id}-${idx}`}
-                      onClick={() => removeHighlight(part.highlight!.id)}
-                      title={lang === "es" ? "Toca para eliminar" : "Tap to remove"}
-                      style={{
-                        background: HIGHLIGHT_COLORS[part.highlight.color].bg,
-                        color: HIGHLIGHT_COLORS[part.highlight.color].text,
-                        borderRadius: "6px",
-                        padding: "1px 3px",
-                      }}
-                    >
-                      {part.text}
-                    </mark>
-                  ) : (
-                    <span key={idx}>{part.text}</span>
-                  ))}
-                </p>
+                  {currentPageParts.map((part, idx) =>
+                    part.highlight ? (
+                      <mark
+                        key={`${part.highlight.id}-${idx}`}
+                        onClick={() => removeHighlight(part.highlight!.id)}
+                        title={lang === "es" ? "Toca para eliminar" : "Tap to remove"}
+                        style={{
+                          background: HIGHLIGHT_COLORS[part.highlight.color].bg,
+                          color: HIGHLIGHT_COLORS[part.highlight.color].text,
+                          borderRadius: "6px",
+                          padding: "1px 3px",
+                        }}
+                      >
+                        {part.text}
+                      </mark>
+                    ) : (
+                      splitIntoTappablePhrases(part.text).map((item, phraseIdx) =>
+                        item === null ? (
+                          <span key={`${idx}-br-${phraseIdx}`} className="block mt-3" />
+                        ) : (
+                          <span
+                            key={`${idx}-p-${phraseIdx}`}
+                            onClick={() => handlePhraseTap(item)}
+                            style={{
+                              borderRadius: "5px",
+                              padding: "1px 2px",
+                              cursor: "pointer",
+                              background: selectedPhrases.includes(normalizeText(item))
+                                ? "rgba(201,169,97,0.18)"
+                                : "transparent",
+                              borderBottom: selectedPhrases.includes(normalizeText(item))
+                                ? "2px dotted #c9a961"
+                                : "none",
+                              transition: "background 0.15s",
+                            }}
+                          >
+                            {item}{" "}
+                          </span>
+                        )
+                      )
+                    )
+                  )}
+                </div>
               </article>
 
               {readerPages.length > 1 && (
                 <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                   <button
-                    onClick={() => setReaderPage((page) => Math.max(0, page - 1))}
+                    onClick={() => { setReaderPage((page) => Math.max(0, page - 1)); setSelectedPhrases([]); }}
                     disabled={currentReaderPage === 0}
                     className="h-12 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
                     style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)" }}
@@ -480,7 +492,7 @@ export default function StudyToolsPage() {
                     {readerPages.length > 7 && <span className="text-white/25 text-xs">+</span>}
                   </div>
                   <button
-                    onClick={() => setReaderPage((page) => Math.min(readerPages.length - 1, page + 1))}
+                    onClick={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); setSelectedPhrases([]); }}
                     disabled={currentReaderPage >= readerPages.length - 1}
                     className="h-12 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
                     style={{ background: "#c9a961", color: "#10131d" }}
