@@ -295,7 +295,6 @@ export default function StudyToolsPage() {
   }
 
   function handleDragPointerDown(e: React.PointerEvent) {
-    if (selectedPhrases.length > 0) return;
     const idx = getPhraseIdxAt(e.clientX, e.clientY);
     if (idx === null) return;
     dragStartRef.current = { x: e.clientX, y: e.clientY };
@@ -342,7 +341,7 @@ export default function StudyToolsPage() {
       .filter((r) => r.globalIdx >= minIdx && r.globalIdx <= maxIdx)
       .map((r) => normalizeText(r.phrase))
       .filter((p) => p.length >= 4);
-    if (selected.length > 0) setSelectedPhrases(selected);
+    if (selected.length > 0) setSelectedPhrases((prev) => [...new Set([...prev, ...selected])]);
     setDragSel(null);
   }
 
@@ -389,7 +388,6 @@ export default function StudyToolsPage() {
         <div className="fixed inset-0 z-50 bg-[#0b101d] text-white">
           {selectedPhrases.length > 0 && (
             <>
-              <div className="fixed inset-0 z-[68]" onClick={() => setSelectedPhrases([])} />
               <div
                 className="fixed bottom-0 left-0 right-0 z-[70]"
                 style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
@@ -570,16 +568,12 @@ export default function StudyToolsPage() {
                           cursor: "pointer",
                           userSelect: "none",
                           WebkitUserSelect: "none",
-                          background: isSelected
-                            ? "rgba(201,169,97,0.22)"
-                            : inDragRange
-                              ? "rgba(201,169,97,0.16)"
-                              : "transparent",
-                          borderBottom: isSelected
-                            ? "2px dotted #c9a961"
-                            : inDragRange
-                              ? "2px solid rgba(201,169,97,0.60)"
-                              : "none",
+                          background: isSelected || inDragRange
+                            ? "rgba(255,255,255,0.06)"
+                            : "transparent",
+                          borderBottom: isSelected || inDragRange
+                            ? "2px dotted rgba(255,255,255,0.32)"
+                            : "none",
                           transition: "background 0.08s",
                         }}
                       >
