@@ -313,26 +313,60 @@ export default function StudyToolsPage() {
         <div className="fixed inset-0 z-50 bg-[#0b101d] text-white">
           {selection && (
             <>
-            <div className="fixed inset-0 z-[68]" onClick={() => setSelection(null)} />
-            <div
-              className="fixed z-[70] -translate-x-1/2 rounded-2xl px-3 py-3 shadow-2xl"
-              style={{ left: selection.x, top: selection.y, background: "#121827", border: "1px solid rgba(201,169,97,0.28)" }}
-            >
-              <p className="text-[10px] uppercase tracking-[0.18em] font-black mb-2" style={{ color: "#c9a961" }}>
-                {lang === "es" ? "Guardar resaltado" : "Save highlight"}
-              </p>
-              <div className="flex items-center gap-2">
-                {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
-                  <button
-                    key={color}
-                    onClick={() => addHighlight(color)}
-                    className="w-9 h-9 rounded-full active:scale-95"
-                    style={{ background: HIGHLIGHT_COLORS[color].dot, border: "2px solid rgba(255,255,255,0.72)" }}
-                    aria-label={HIGHLIGHT_COLORS[color].label}
-                  />
-                ))}
+              <div className="fixed inset-0 z-[68]" onClick={() => setSelection(null)} />
+              <div
+                className="fixed bottom-0 left-0 right-0 z-[70]"
+                style={{ paddingBottom: "max(env(safe-area-inset-bottom), 12px)" }}
+              >
+                <div className="max-w-lg mx-auto px-4 pb-2">
+                  <div
+                    className="rounded-[28px] px-5 pt-4 pb-5"
+                    style={{
+                      background: "#121827",
+                      border: "1px solid rgba(201,169,97,0.30)",
+                      boxShadow: "0 -8px 48px rgba(0,0,0,0.65)",
+                    }}
+                  >
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-[0.2em] font-black mb-1" style={{ color: "#c9a961" }}>
+                          {lang === "es" ? "Guardar resaltado" : "Highlight selection"}
+                        </p>
+                        <p className="text-xs text-white/40 leading-relaxed line-clamp-2">
+                          &ldquo;{selection.text.length > 90 ? `${selection.text.slice(0, 90)}…` : selection.text}&rdquo;
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setSelection(null)}
+                        className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 text-white/40 font-black text-sm"
+                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => addHighlight(color)}
+                          className="h-12 rounded-2xl active:scale-95 flex items-center justify-center gap-2 font-black text-xs"
+                          style={{
+                            background: HIGHLIGHT_COLORS[color].bg,
+                            border: `1.5px solid ${HIGHLIGHT_COLORS[color].dot}`,
+                            color: HIGHLIGHT_COLORS[color].dot,
+                          }}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full flex-shrink-0"
+                            style={{ background: HIGHLIGHT_COLORS[color].dot }}
+                          />
+                          {HIGHLIGHT_COLORS[color].label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
             </>
           )}
           <div className="h-full max-w-lg mx-auto flex flex-col">
