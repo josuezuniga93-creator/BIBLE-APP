@@ -563,7 +563,7 @@ export default function StudyToolsPage() {
                       <span
                         key={`p-${item.globalIdx}`}
                         data-pidx={item.globalIdx}
-                        onClick={() => { if (!dragSel?.active) handlePhraseTap(item.phrase); }}
+                        onClick={() => {}}
                         style={{
                           borderRadius: "5px",
                           padding: "1px 2px",
