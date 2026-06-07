@@ -868,7 +868,10 @@ export default function StudyToolsPage() {
                         data-index={token.index}
                         data-highlighted-word={token.highlight ? "true" : undefined}
                         className="relative z-10"
-                        onPointerDown={() => startWordPress(token.index, token.highlight)}
+                        onPointerDown={(e) => {
+                          if (token.highlight) e.preventDefault();
+                          startWordPress(token.index, token.highlight);
+                        }}
                         onPointerUp={(e) => {
                           finishWordPress();
                           if (token.highlight && !didStartSelectionPress.current) {
