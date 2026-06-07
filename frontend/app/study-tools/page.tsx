@@ -472,18 +472,27 @@ export default function StudyToolsPage() {
     clearLongPressTimer();
   }
 
-  function openHighlightInReader(highlight: HenryHighlight) {
-    openReader({
-      book: highlight.book,
-      bookName: highlight.bookName,
-      chapter: highlight.chapter,
-      requestedVerse: highlight.verse,
-      matchedVerse: highlight.verse ?? 1,
-      source: highlight.source as CommentarySearchResult["source"],
-      title: highlight.sectionTitle,
-      text: highlight.text,
-    });
+  async function openHighlightInReader(highlight: HenryHighlight) {
     setShowHighlightPocket(false);
+    setCommentaryLoading(true);
+    const ref = `${highlight.bookName} ${highlight.chapter}${highlight.verse ? `:${highlight.verse}` : ""}`;
+    const result = await findCompleteCommentaryByReference(ref);
+    setCommentaryLoading(false);
+    if (result) {
+      openReader(result);
+    } else {
+      // fallback: open with the saved text
+      openReader({
+        book: highlight.book,
+        bookName: highlight.bookName,
+        chapter: highlight.chapter,
+        requestedVerse: highlight.verse,
+        matchedVerse: highlight.verse ?? 1,
+        source: highlight.source as CommentarySearchResult["source"],
+        title: highlight.sectionTitle,
+        text: highlight.text,
+      });
+    }
   }
 
   function getRectsForWordRange(start: number, end: number, color: string, idPrefix: string): HighlightRect[] {
