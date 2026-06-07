@@ -869,10 +869,14 @@ export default function StudyToolsPage() {
                         data-highlighted-word={token.highlight ? "true" : undefined}
                         className="relative z-10"
                         onPointerDown={() => startWordPress(token.index, token.highlight)}
-                        onPointerUp={finishWordPress}
+                        onPointerUp={(e) => {
+                          finishWordPress();
+                          if (token.highlight && !didStartSelectionPress.current) {
+                            e.stopPropagation();
+                            setPendingRemoveId(token.highlight.id);
+                          }
+                        }}
                         onPointerCancel={finishWordPress}
-                        onClick={() => token.highlight ? setPendingRemoveId(token.highlight.id) : undefined}
-                        title={token.highlight ? (lang === "es" ? "Toca para eliminar" : "Tap to remove") : undefined}
                       >
                         {token.text}
                       </span>
