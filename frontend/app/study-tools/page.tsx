@@ -618,67 +618,54 @@ export default function StudyToolsPage() {
           {selection && selectedText && (
             <div
               className="fixed left-0 right-0 z-[70] px-4"
-              style={{ bottom: "calc(76px + max(env(safe-area-inset-bottom), 10px))" }}
+              style={{ bottom: "calc(118px + max(env(safe-area-inset-bottom), 14px))" }}
               onPointerDown={(event) => event.stopPropagation()}
             >
               <div
-                className="max-w-lg mx-auto rounded-[24px] px-4 py-3"
+                className="max-w-lg mx-auto rounded-[28px] px-5 pt-4 pb-5"
                 style={{
-                  background: "rgba(20,22,30,0.98)",
-                  border: "1px solid rgba(201,169,97,0.24)",
-                  boxShadow: "0 18px 52px rgba(0,0,0,0.55)",
+                  background: "rgba(16,18,26,0.98)",
+                  border: "1px solid rgba(255,255,255,0.10)",
+                  boxShadow: "0 -4px 40px rgba(0,0,0,0.70)",
                 }}
               >
-                <div className="flex items-center gap-3 overflow-x-auto scrollbar-none">
-                  <button
-                    onClick={() => addHighlightForSelection("gold")}
-                    className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[66px] text-white/82"
-                  >
-                    <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "#c9a961", color: "#10131d" }}>
-                      ●
-                    </span>
-                    <span className="text-[11px] font-black">{lang === "es" ? "Resaltar" : "Highlight"}</span>
-                  </button>
-                  {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).filter((c) => c !== "gold").map((color) => (
+                <p className="text-[11px] font-black text-center mb-4 truncate" style={{ color: "#c9a961" }}>
+                  {reader?.bookName} {reader?.chapter}{reader?.requestedVerse ? `:${reader.requestedVerse}` : ""}
+                </p>
+                <div className="flex items-center justify-center gap-4 mb-4">
+                  {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
                     <button
                       key={color}
                       onClick={() => addHighlightForSelection(color)}
-                      className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[54px]"
-                      style={{ color: HIGHLIGHT_COLORS[color].dot }}
-                    >
-                      <span className="w-9 h-9 rounded-full" style={{ background: HIGHLIGHT_COLORS[color].dot }} />
-                      <span className="text-[10px] font-black">{HIGHLIGHT_COLORS[color].label}</span>
-                    </button>
+                      className="w-12 h-12 rounded-full active:scale-90 transition-transform"
+                      style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 4px 12px ${HIGHLIGHT_COLORS[color].dot}55` }}
+                      aria-label={HIGHLIGHT_COLORS[color].label}
+                    />
                   ))}
+                </div>
+                <div className="flex items-center gap-2">
                   <button
                     onClick={copySelection}
-                    className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[58px] text-white/72"
+                    className="flex-1 h-11 rounded-2xl flex items-center justify-center text-sm font-black text-white/80 active:scale-95"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
                   >
-                    <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
-                      ⧉
-                    </span>
-                    <span className="text-[11px] font-black">{lang === "es" ? "Copiar" : "Copy"}</span>
+                    {lang === "es" ? "Copiar" : "Copy"}
                   </button>
                   <button
                     onClick={() => setShowHighlightPocket(true)}
-                    className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[58px] text-white/72"
+                    className="flex-1 h-11 rounded-2xl flex items-center justify-center text-sm font-black active:scale-95"
+                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.22)" }}
                   >
-                    <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>
-                      ◇
-                    </span>
-                    <span className="text-[11px] font-black">{lang === "es" ? "Bolsa" : "Pocket"}</span>
+                    {lang === "es" ? "Bolsa" : "Pocket"}
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white/40"
-                    style={{ background: "rgba(255,255,255,0.07)" }}
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/40 text-lg font-black active:scale-95 flex-shrink-0"
+                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
                   >
-                    ✕
+                    {"×"}
                   </button>
                 </div>
-                <p className="mt-3 line-clamp-2 text-xs leading-5 text-white/45">
-                  “{selectedText}”
-                </p>
               </div>
             </div>
           )}
@@ -976,7 +963,7 @@ export default function StudyToolsPage() {
                     <button onClick={() => removeHighlight(highlight.id)} className="text-white/30 text-sm font-black">✕</button>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-white/64">
-                    “{highlight.text}”
+                    "{highlight.text}"
                   </p>
                   <button
                     onClick={() => openHighlightInReader(highlight)}
