@@ -39,6 +39,20 @@ export interface MatthewHenryChapterFile {
   sections: MatthewHenrySection[];
 }
 
+export interface MatthewHenryManifestBook {
+  book: number;
+  bookName: string;
+  chapters: number;
+}
+
+export interface MatthewHenryManifest {
+  source: string;
+  sourceUrl?: string;
+  rights?: string;
+  books: MatthewHenryManifestBook[];
+  totalChapters: number;
+}
+
 export interface OriginalLanguageNote {
   language: "Hebrew" | "Greek";
   lemma: string;
@@ -376,6 +390,10 @@ const BOOK_ALIASES: Record<string, number> = {
   salmos: 19,
   psalm: 19,
   psalms: 19,
+  prov: 20,
+  proverb: 20,
+  proverbs: 20,
+  proverbios: 20,
   mateo: 40,
   matthew: 40,
   matt: 40,
@@ -385,6 +403,21 @@ const BOOK_ALIASES: Record<string, number> = {
   romans: 45,
   romanos: 45,
 };
+
+export function parseBibleBook(input: string): { book: number; bookName: string } | null {
+  const bookText = normalizeBookName(input)
+    .replace(/[.;,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!bookText || /\d/.test(bookText)) return null;
+
+  const book =
+    BOOK_ALIASES[bookText] ??
+    BIBLE_BOOKS.find((item) => normalizeBookName(item.name) === bookText || normalizeBookName(item.abbr) === bookText)?.num;
+  if (!book) return null;
+
+  return { book, bookName: getBookName(book) };
+}
 
 export function parseBibleReference(input: string): { book: number; chapter: number; verse?: number } | null {
   const normalized = normalizeBookName(input)
@@ -404,6 +437,16 @@ export function parseBibleReference(input: string): { book: number; chapter: num
     chapter: Number(match[2]),
     verse: match[3] ? Number(match[3]) : undefined,
   };
+}
+
+export async function loadMatthewHenryManifest(): Promise<MatthewHenryManifest | null> {
+  try {
+    const res = await fetch("/commentaries/matthew-henry-complete/manifest.json", { cache: "force-cache" });
+    if (!res.ok) return null;
+    return (await res.json()) as MatthewHenryManifest;
+  } catch {
+    return null;
+  }
 }
 
 export function findCommentaryByReference(input: string): CommentarySearchResult | null {

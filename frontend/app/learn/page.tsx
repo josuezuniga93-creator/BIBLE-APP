@@ -5,10 +5,7 @@ import { usePagination } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
-import { useHighlights } from "../lib/useHighlights";
 import { applyHighlightsToHtml } from "../lib/highlights";
-import { HighlightToolbar } from "../components/HighlightToolbar";
-import { RemoveHighlightBubble } from "../components/RemoveHighlightBubble";
 import { useTheme } from "../lib/useTheme";
 import { BookmarkModal } from "../components/BookmarkModal";
 import { isAnySaved } from "../lib/collections";
@@ -18,8 +15,11 @@ import { useLanguage } from "../lib/useLanguage";
 import { translateToSpanish } from "../lib/googleTranslate";
 import { t } from "../lib/i18n";
 import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
+import { BracketHighlightReader } from "../components/BracketHighlightReader";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
+
+type ReaderMode = "full" | "overview";
 
 function storageKey(docId: string) { return `axiom_learn_${docId}`; }
 
@@ -35,6 +35,35 @@ function loadProgress(docId: string): Set<string> {
 function saveProgress(docId: string, completed: Set<string>) {
   if (typeof window === "undefined") return;
   localStorage.setItem(storageKey(docId), JSON.stringify([...completed]));
+  localStorage.setItem(`axiom_learn_lastread_${docId}`, String(Date.now()));
+}
+
+type ReaderProgress = {
+  sectionId: string;
+  page: number;
+  total: number;
+  percent: number;
+  updatedAt: number;
+};
+
+function readerProgressKey(docId: string, mode: ReaderMode) {
+  return `axiom_learn_reader_${docId}_${mode}`;
+}
+
+function loadReaderProgress(docId: string, mode: ReaderMode): ReaderProgress | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(readerProgressKey(docId, mode));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as ReaderProgress;
+    if (!parsed.sectionId || !parsed.total) return null;
+    return parsed;
+  } catch { return null; }
+}
+
+function saveReaderProgress(docId: string, mode: ReaderMode, progress: ReaderProgress) {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(readerProgressKey(docId, mode), JSON.stringify(progress));
   localStorage.setItem(`axiom_learn_lastread_${docId}`, String(Date.now()));
 }
 
@@ -121,7 +150,6 @@ const DOC_TYPES = [
 
 // ─── Tab keys ─────────────────────────────────────────────────────────────────
 type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism";
-type ReaderMode = "full" | "overview";
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
 function renderContent(
@@ -176,13 +204,14 @@ type FontSize = "sm" | "md" | "lg" | "xl";
 const FONT_SIZES: Record<FontSize, string> = { sm: "text-sm", md: "text-base", lg: "text-lg", xl: "text-xl" };
 
 function SectionReader({
-  doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, onJump, modeLabel,
+  doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, onJump, modeLabel, readerMode,
 }: {
   doc: LearnDocument; sections: LearnSection[]; section: LearnSection; completed: Set<string>;
   onToggle: (id: string) => void; onClose: () => void;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean;
   onJump: (id: string) => void;
   modeLabel: string;
+  readerMode: ReaderMode;
 }) {
   const { theme } = useTheme();
   const isLight = theme === "light-elegant";
@@ -264,9 +293,6 @@ function SectionReader({
   // Refresh bookmarked state when section changes
   useEffect(() => { setBookmarked(isAnySaved(itemId)); }, [itemId]);
 
-  const hlContext = `learn-${doc.id}-${section.id}`;
-  const { highlights, selection, addHighlight, removeHighlight, dismissSelection } = useHighlights(hlContext);
-  const [pendingRemove, setPendingRemove] = useState<{ id: string; x: number; y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // ── In-section pagination ─────────────────────────────────────────────────
@@ -293,11 +319,23 @@ function SectionReader({
 
   const sectionIndex = sections.findIndex((s) => s.id === section.id);
   const progressPct = sections.length > 0 ? Math.round(((sectionIndex + 1) / sections.length) * 100) : 0;
+  const sectionPageLabel = lang === "es" ? "Página" : "Page";
+  const sectionOfLabel = lang === "es" ? "de" : "of";
 
   const sliderCss = `.hist-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.hist-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};${th.sliderThumbShadow}border:2px solid rgba(255,255,255,0.3)}.hist-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};border:2px solid rgba(255,255,255,0.3)}`;
 
   useEffect(() => { contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }, [section.id]);
   useEffect(() => { if (!completed.has(section.id)) onToggle(section.id); }, [section.id]);
+  useEffect(() => {
+    if (sectionIndex < 0) return;
+    saveReaderProgress(doc.id, readerMode, {
+      sectionId: section.id,
+      page: sectionIndex + 1,
+      total: sections.length,
+      percent: progressPct,
+      updatedAt: Date.now(),
+    });
+  }, [doc.id, readerMode, section.id, sectionIndex, sections.length, progressPct]);
 
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
@@ -416,10 +454,15 @@ function SectionReader({
                 )}
               </div>
             )}
-            {renderContent(
-              lang === "es" && translatedSection ? translatedSection : sectionPages[currentPage - 1] ?? "",
-              th.textContent, highlights, (id, x, y) => setPendingRemove({ id, x, y })
-            )}
+            <BracketHighlightReader
+              context={`learn-${doc.id}-${section.id}`}
+              text={lang === "es" && translatedSection ? translatedSection : sectionPages[currentPage - 1] ?? ""}
+              title={documentSectionTitle(doc.id, section.title, lang)}
+              reference={`${documentTitle(doc, lang)} · ${documentSectionTitle(doc.id, section.label, lang)}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
+              textColor={th.textContent}
+              fontSizeClass={FONT_SIZES[fontSize]}
+              scrollRef={contentRef}
+            />
           </div>
 
           {/* Nav buttons — pages first, then sections */}
@@ -478,15 +521,16 @@ function SectionReader({
       <div className="flex-shrink-0"
         style={{ backgroundColor: th.bottomBarBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
         <div className="px-5 pt-3 pb-2">
+          <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.bottomIconColor }}>
+            <span>{sectionPageLabel} {sectionIndex + 1} {sectionOfLabel} {sections.length}</span>
+            <span>{progressPct}% {lang === "es" ? "completo" : "complete"}</span>
+          </div>
           <style>{sliderCss}</style>
           <input type="range" min={0} max={Math.max(1, sections.length - 1)} value={sectionIndex}
             onChange={(e) => { const idx = Number(e.target.value); if (sections[idx]) onJump(sections[idx].id); }}
             className="hist-slider w-full"
             style={{ background: `${th.sliderTrack}${progressPct}%,${th.sliderTrackBg} ${progressPct}%)` }}
           />
-          <p className="text-center mt-2 text-[11px]" style={{ color: th.bottomIconColor }}>
-            {sectionIndex + 1} / {sections.length}
-          </p>
         </div>
         <div className="flex items-center justify-around px-4 pb-1 pt-1" style={{ borderTop: `1px solid ${th.bottomBarDivider}` }}>
           {[
@@ -503,9 +547,6 @@ function SectionReader({
           ))}
         </div>
       </div>
-
-      {selection && <HighlightToolbar x={selection.x} y={selection.y} onHighlight={addHighlight} onDismiss={dismissSelection} />}
-      {pendingRemove && <RemoveHighlightBubble x={pendingRemove.x} y={pendingRemove.y} onConfirm={() => { removeHighlight(pendingRemove.id); setPendingRemove(null); }} onDismiss={() => setPendingRemove(null)} />}
 
       {showBookmark && (
         <BookmarkModal
@@ -583,6 +624,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
   const [bookmarked, setBookmarked] = useState(() => isAnySaved(`learn::${doc.id}`));
   const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+  const [savedReaderProgress, setSavedReaderProgress] = useState<ReaderProgress | null>(null);
 
   useEffect(() => { setCompleted(loadProgress(doc.id)); }, [doc.id]);
   useEffect(() => {
@@ -590,7 +632,12 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
     setReaderMode(hasFullDocument ? "full" : "overview");
     setDescExpanded(false);
     setTranslatedDescription(null);
+    setSavedReaderProgress(loadReaderProgress(doc.id, hasFullDocument ? "full" : "overview"));
   }, [doc.id, hasFullDocument]);
+
+  useEffect(() => {
+    setSavedReaderProgress(loadReaderProgress(doc.id, readerMode));
+  }, [doc.id, readerMode, reading]);
 
   useEffect(() => {
     let cancelled = false;
@@ -618,8 +665,11 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   }, [doc.id]);
 
   const readerSections = readerMode === "full" && fullDocumentSections ? fullDocumentSections : doc.sections;
+  const validSavedProgress = savedReaderProgress && readerSections.some((section) => section.id === savedReaderProgress.sectionId)
+    ? savedReaderProgress
+    : null;
   const completedInReader = readerSections.filter((section) => completed.has(section.id)).length;
-  const progress = readerSections.length > 0 ? Math.round((completedInReader / readerSections.length) * 100) : 0;
+  const progress = validSavedProgress?.percent ?? (readerSections.length > 0 ? Math.round((completedInReader / readerSections.length) * 100) : 0);
   const readerModeLabel = readerMode === "full" ? "Full document" : "Overview";
   const descriptionText = lang === "es" ? translatedDescription ?? doc.description : doc.description;
 
@@ -636,6 +686,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
         hasPrev={sectionIndex > 0} hasNext={sectionIndex < readerSections.length - 1}
         onJump={(id) => setReading(id)}
         modeLabel={readerModeLabel}
+        readerMode={readerMode}
       />
     );
   }
@@ -705,9 +756,11 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
             })}
           </div>
         )}
-        <button onClick={() => setReading(readerSections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
+        <button onClick={() => setReading(validSavedProgress?.sectionId ?? readerSections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
           style={{ background: th.readGradient }}>
-          {lang === "es" ? (readerMode === "full" ? "Leer Documento Completo" : "Leer Resumen") : (readerMode === "full" ? "Read Full Document" : "Read Overview")}
+          {validSavedProgress
+            ? (lang === "es" ? "Continuar Leyendo" : "Continue Reading")
+            : lang === "es" ? (readerMode === "full" ? "Leer Documento Completo" : "Leer Resumen") : (readerMode === "full" ? "Read Full Document" : "Read Overview")}
         </button>
         <button onClick={() => setShowBookmarkModal(true)} className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
           style={{ border: `1px solid ${th.btnBorder}`, color: th.textSecondary }}>
@@ -748,7 +801,9 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
         <div className="px-4 mb-5">
           <div className="flex justify-between text-xs mb-1.5" style={{ color: th.textFaint }}>
             <span>
-              {lang === "es"
+              {validSavedProgress
+                ? `${lang === "es" ? "Página" : "Page"} ${validSavedProgress.page} ${lang === "es" ? "de" : "of"} ${validSavedProgress.total}`
+                : lang === "es"
                 ? `${completedInReader} de ${readerSections.length} secciones ${readerMode === "full" ? "del documento" : "del resumen"} leídas`
                 : `${completedInReader} of ${readerSections.length} ${readerMode === "full" ? "document" : "overview"} sections read`}
             </span>
@@ -1062,9 +1117,10 @@ function LearnPageInner() {
           <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
             {[...LEARN_DOCUMENTS.filter(doc => (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100)].sort((a, b) => getDocLastRead(b.id) - getDocLastRead(a.id)).map(doc => {
               const pct = progressMap[doc.id] ?? 0;
+              const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
               return (
-                <div key={doc.id} className="flex-shrink-0 w-28 text-left">
-                  <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
+                <div key={doc.id} className="flex-shrink-0 w-32 text-left">
+                  <div className="relative w-32 h-44 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
                     <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
                     <DocCover doc={doc} />
                   </div>
@@ -1074,7 +1130,14 @@ function LearnPageInner() {
                     <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: th.progressBar }} />
                     </div>
-                    <p className="text-[9px] mt-0.5" style={{ color: th.textSecondary }}>{pct}%</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p className="text-[9px]" style={{ color: th.textSecondary }}>
+                        {savedProgress
+                          ? `${lang === "es" ? "Página" : "Page"} ${savedProgress.page} ${lang === "es" ? "de" : "of"} ${savedProgress.total}`
+                          : lang === "es" ? "En progreso" : "In progress"}
+                      </p>
+                      <p className="text-[9px] font-bold" style={{ color: th.accent }}>{pct}%</p>
+                    </div>
                   </button>
                 </div>
               );
@@ -1172,6 +1235,7 @@ function LearnPageInner() {
             const pct = progressMap[doc.id] ?? 0;
             const isDone = pct === 100;
             const saved = savedDocs.has(doc.id);
+            const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
             return (
               <div key={doc.id} className="flex items-center gap-3 p-3 rounded-2xl transition-all active:scale-[0.99]"
                 style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}` }}>
@@ -1184,11 +1248,18 @@ function LearnPageInner() {
                   {isDone ? (
                     <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>{lang === "es" ? "Completado" : "Completed"}</p>
                   ) : pct > 0 ? (
-                    <div className="mt-2.5 flex items-center gap-2">
-                      <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: th.progressBar }} />
+                    <div className="mt-2.5">
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
+                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: th.progressBar }} />
+                        </div>
+                        <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
                       </div>
-                      <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
+                      {savedProgress && (
+                        <p className="text-[10px] mt-1" style={{ color: th.textSecondary }}>
+                          {lang === "es" ? "Página" : "Page"} {savedProgress.page} {lang === "es" ? "de" : "of"} {savedProgress.total}
+                        </p>
+                      )}
                     </div>
                   ) : (
                     <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>{lang === "es" ? "Empezar a leer →" : "Start reading →"}</p>

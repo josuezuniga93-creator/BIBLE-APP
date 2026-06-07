@@ -55,8 +55,22 @@ const CATEGORIES = [
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type ProgressEntry = { book: BookCatalogEntry; chapter: number; total: number; lastRead: number };
+type ProgressEntry = {
+  book: BookCatalogEntry;
+  chapter: number;
+  total: number;
+  page?: number;
+  pages?: number;
+  percent?: number;
+  lastRead: number;
+};
 type LibTab = "books" | "reading" | "completed";
+
+function entryPercent(entry: ProgressEntry): number {
+  if (typeof entry.percent === "number") return Math.max(0, Math.min(100, entry.percent));
+  if (!entry.total) return 0;
+  return Math.round((entry.chapter / entry.total) * 100);
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -156,9 +170,9 @@ export default function LibraryPage() {
       const raw = localStorage.getItem(`axiom-progress-${book.slug}`);
       if (!raw) continue;
       try {
-        const { chapter, total, lastRead } = JSON.parse(raw);
+        const { chapter, total, page, pages, percent, lastRead } = JSON.parse(raw);
         if (chapter && total) {
-          entries.push({ book, chapter, total, lastRead: lastRead ?? 0 });
+          entries.push({ book, chapter, total, page, pages, percent, lastRead: lastRead ?? 0 });
           if (chapter >= total) done.add(book.slug);
         }
       } catch {}
@@ -258,9 +272,12 @@ export default function LibraryPage() {
             <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "lib_continue_reading")}</p>
           </div>
           <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
-            {[...inProgress.filter(e => !completedSlugs.has(e.book.slug))].sort((a, b) => b.lastRead - a.lastRead).map(({ book, chapter, total }) => (
-              <div key={book.slug} className="flex-shrink-0 w-28">
-                <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40">
+            {[...inProgress.filter(e => !completedSlugs.has(e.book.slug))].sort((a, b) => b.lastRead - a.lastRead).map((entry) => {
+              const { book, chapter, total, page, pages } = entry;
+              const pct = entryPercent(entry);
+              return (
+              <div key={book.slug} className="flex-shrink-0 w-32">
+                <div className="relative w-32 h-44 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40">
                   <BookCover book={book} />
                   <Link href={`/library/${book.slug}`} className="absolute inset-0 z-10 active:scale-95 transition-transform" />
                 </div>
@@ -268,12 +285,18 @@ export default function LibraryPage() {
                   <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{bookTitle(book, lang)}</p>
                   <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
-                    <div className="h-full rounded-full" style={{ width: `${Math.round((chapter / total) * 100)}%`, backgroundColor: th.accent }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: th.accent }} />
                   </div>
-                  <p className="text-[9px] mt-0.5" style={{ color: th.textSecondary }}>{t(lang, "lib_ch_of")} {chapter} {t(lang, "lib_of")} {total}</p>
+                  <div className="mt-1 flex items-center justify-between gap-2">
+                    <p className="text-[9px]" style={{ color: th.textSecondary }}>
+                      {page && pages ? `${lang === "es" ? "Página" : "Page"} ${page} ${t(lang, "lib_of")} ${pages}` : `${t(lang, "lib_ch_of")} ${chapter} ${t(lang, "lib_of")} ${total}`}
+                    </p>
+                    <p className="text-[9px] font-bold" style={{ color: th.accent }}>{pct}%</p>
+                  </div>
                 </Link>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -410,7 +433,7 @@ export default function LibraryPage() {
         <div className="space-y-3">
           {tabBooks.map((book) => {
             const prog = getProgress(book.slug);
-            const pct = prog ? Math.round((prog.chapter / prog.total) * 100) : 0;
+            const pct = prog ? entryPercent(prog) : 0;
             const isDone = completedSlugs.has(book.slug);
             return (
               <Link
@@ -452,6 +475,11 @@ export default function LibraryPage() {
                           {pct}%
                         </span>
                       </div>
+                      <p className="text-[10px] mt-1" style={{ color: th.textSecondary }}>
+                        {prog.page && prog.pages
+                          ? `${lang === "es" ? "Página" : "Page"} ${prog.page} ${t(lang, "lib_of")} ${prog.pages} · ${t(lang, "lib_ch_of")} ${prog.chapter} ${t(lang, "lib_of")} ${prog.total}`
+                          : `${t(lang, "lib_ch_of")} ${prog.chapter} ${t(lang, "lib_of")} ${prog.total}`}
+                      </p>
                     </>
                   ) : (
                     <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>

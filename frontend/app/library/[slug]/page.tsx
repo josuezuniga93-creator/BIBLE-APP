@@ -7,17 +7,15 @@ import Image from "next/image";
 import { fetchBookDetail, fetchBookChapter } from "../../lib/api";
 import type { BookDetail, BookChapter } from "../../lib/types";
 import { getBookCoverImage } from "../../lib/bookCoverImages";
-import { useHighlights } from "../../lib/useHighlights";
 import { useLanguage } from "../../lib/useLanguage";
 import { translateToSpanish } from "../../lib/googleTranslate";
 import { applyHighlightsToHtml, type Highlight } from "../../lib/highlights";
-import { HighlightToolbar } from "../../components/HighlightToolbar";
-import { RemoveHighlightBubble } from "../../components/RemoveHighlightBubble";
 import { useTheme } from "../../lib/useTheme";
 import { BookmarkModal } from "../../components/BookmarkModal";
 import { isAnySaved } from "../../lib/collections";
 import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
+import { BracketHighlightReader } from "../../components/BracketHighlightReader";
 
 // ─── Inline markdown → HTML ───────────────────────────────────────────────────
 function renderInline(text: string): string {
@@ -172,6 +170,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     addLibText:              isLight ? "#6b5226"                                : "rgba(255,255,255,0.7)",
     sliderProgress:          isLight ? "#9b7228"                                : isGoldNavy ? "#c9a961"                           : "#a855f7",
     sliderTrack:             isLight ? "rgba(155,114,40,0.15)"                  : "rgba(255,255,255,0.1)",
+    progressTrack:           isLight ? "rgba(155,114,40,0.15)"                  : isGoldNavy ? "rgba(201,169,97,0.14)"             : "rgba(255,255,255,0.1)",
+    progressBar:             isLight ? "linear-gradient(90deg,#c4973a,#9b7228)": isGoldNavy ? "linear-gradient(90deg,#c9a961,#d4b878)" : "linear-gradient(90deg,#ec4899,#a855f7)",
     sliderCss:               isLight
       ? `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#c4973a,#9b7228);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#c4973a,#9b7228);cursor:pointer;border:2px solid rgba(255,255,255,0.3)}`
       : isGoldNavy
@@ -204,10 +204,6 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   const [showBookmarkModal, setShowBookmarkModal] = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
 
-  // Highlights
-  const hlContext = `book-${slug}-${currentChapter}`;
-  const { highlights, selection, addHighlight, removeHighlight, dismissSelection } = useHighlights(hlContext);
-  const [pendingRemove, setPendingRemove] = useState<{ id: string; x: number; y: number } | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
 
   // ── In-chapter pagination ─────────────────────────────────────────────────
@@ -227,6 +223,11 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     storageKey: pageStorageKey,
     rawText: true,   // Gutenberg / hard-wrapped plain text — normalize soft wraps
   });
+
+  const pagePercent = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+  const bookPercent = book?.chapter_count
+    ? Math.max(0, Math.min(100, Math.round((((currentChapter - 1) + (totalPages ? currentPage / totalPages : 1)) / book.chapter_count) * 100)))
+    : 0;
 
   // Scroll to top when page turns
   useEffect(() => {
@@ -293,8 +294,15 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // Auto-save progress
   useEffect(() => {
     if (!book) return;
-    localStorage.setItem(PROGRESS_KEY(slug), JSON.stringify({ chapter: currentChapter, total: book.chapter_count, lastRead: Date.now() }));
-  }, [slug, book, currentChapter]);
+    localStorage.setItem(PROGRESS_KEY(slug), JSON.stringify({
+      chapter: currentChapter,
+      total: book.chapter_count,
+      page: currentPage,
+      pages: totalPages,
+      percent: bookPercent,
+      lastRead: Date.now(),
+    }));
+  }, [slug, book, currentChapter, currentPage, totalPages, bookPercent]);
 
   function refreshBookmarked() {
     setBookmarked(isAnySaved(`book::${slug}`));
@@ -360,7 +368,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           <p className="text-xl md:text-2xl font-bold leading-snug" style={{ color: th.textPrimary }}
             dangerouslySetInnerHTML={{ __html: chapter ? renderInline(bookSectionTitle(slug, chapter.chapter_title, lang)) : "" }} />
         </div>
-        <div className="flex-1 overflow-y-auto px-8 py-6">
+        <div ref={contentRef} className="flex-1 overflow-y-auto px-8 py-6">
           {chapterLoading ? (
             <div className="flex justify-center py-16">
               <div className="w-6 h-6 rounded-full border-2 animate-spin"
@@ -368,7 +376,15 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             </div>
           ) : (
             <div className="max-w-2xl mx-auto w-full">
-              {renderChapterContent(chapter?.content, "text-xl md:text-2xl", highlights, (id, x, y) => setPendingRemove({ id, x, y }), true, th.textContent, th.headingColor)}
+              <BracketHighlightReader
+                context={`book-${slug}-${currentChapter}`}
+                text={chapter?.content ?? ""}
+                title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
+                reference={`${bookTitle(book, lang)} ${currentChapter}`}
+                textColor={th.textContent}
+                fontSizeClass="text-xl md:text-2xl"
+                scrollRef={contentRef}
+              />
             </div>
           )}
         </div>
@@ -529,12 +545,15 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                 style={{ animation: "axiomPageIn 0.18s ease-out" }}
               >
                 <style>{`@keyframes axiomPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-                {renderChapterContent(
-                  // In Spanish mode show full translated chapter (scrollable); else use pagination
-                  lang === "es" && translatedChapter
-                    ? translatedChapter
-                    : pages[currentPage - 1] ?? "",
-                  FONT_SIZES[fontSize], highlights, (id, x, y) => setPendingRemove({ id, x, y }), false, th.textContent, th.headingColor)}
+                <BracketHighlightReader
+                  context={`book-${slug}-${currentChapter}`}
+                  text={lang === "es" && translatedChapter ? translatedChapter : pages[currentPage - 1] ?? ""}
+                  title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
+                  reference={`${bookTitle(book, lang)} ${currentChapter}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
+                  textColor={th.textContent}
+                  fontSizeClass={FONT_SIZES[fontSize]}
+                  scrollRef={contentRef}
+                />
               </div>
             )}
             <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
@@ -545,44 +564,51 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
         {/* Bottom bar — page-then-chapter nav */}
         <div
-          className="flex-shrink-0 flex items-center justify-between px-5 py-3"
+          className="flex-shrink-0 px-5 py-3"
           style={{ backgroundColor: th.pageBg, borderTop: `1px solid ${th.border}` }}
         >
-          {/* ← Prev: prev page first, then prev chapter */}
-          <button
-            disabled={isFirstPage && !chapter?.has_prev}
-            onClick={() => { if (!goPrevPage()) goPrev(); }}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
-            style={{
-              backgroundColor: (!isFirstPage || chapter?.has_prev) ? th.prevBtnBg : "transparent",
-              color: (!isFirstPage || chapter?.has_prev) ? th.addLibText : th.textVeryMuted,
-              border: `1px solid ${th.prevBtnBorder}`,
-              cursor: (!isFirstPage || chapter?.has_prev) ? "pointer" : "not-allowed",
-            }}
-          >
-            {lang === "es" ? "← Ant." : "← Prev"}
-          </button>
+          <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.textMuted }}>
+            <span>{lang === "es" ? "Página" : "Page"} {currentPage} {lang === "es" ? "de" : "of"} {totalPages}</span>
+            <span>{bookPercent}% {lang === "es" ? "completo" : "complete"}</span>
+          </div>
+          <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ backgroundColor: th.progressTrack }}>
+            <div className="h-full rounded-full transition-all" style={{ width: `${bookPercent}%`, background: th.progressBar }} />
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            {/* ← Prev: prev page first, then prev chapter */}
+            <button
+              disabled={isFirstPage && !chapter?.has_prev}
+              onClick={() => { if (!goPrevPage()) goPrev(); }}
+              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
+              style={{
+                backgroundColor: (!isFirstPage || chapter?.has_prev) ? th.prevBtnBg : "transparent",
+                color: (!isFirstPage || chapter?.has_prev) ? th.addLibText : th.textVeryMuted,
+                border: `1px solid ${th.prevBtnBorder}`,
+                cursor: (!isFirstPage || chapter?.has_prev) ? "pointer" : "not-allowed",
+              }}
+            >
+              {lang === "es" ? "← Ant." : "← Prev"}
+            </button>
 
-          {/* Center page indicator */}
-          {totalPages > 1 && (
-            <span className="text-xs font-bold" style={{ color: th.textVeryMuted }}>
-              {currentPage} / {totalPages}
-            </span>
-          )}
+            <div className="min-w-[62px] text-center">
+              <p className="text-[10px] font-black" style={{ color: th.accent }}>{pagePercent}%</p>
+              <p className="text-[9px]" style={{ color: th.textVeryMuted }}>{lang === "es" ? "página" : "page"}</p>
+            </div>
 
-          {/* Next →: next page first, then next chapter */}
-          <button
-            disabled={isLastPage && !chapter?.has_next}
-            onClick={() => { if (!goNextPage()) goNext(); }}
-            className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
-            style={{
-              background: (!isLastPage || chapter?.has_next) ? th.nextBtnGradient : "transparent",
-              color: (!isLastPage || chapter?.has_next) ? "white" : th.textVeryMuted,
-              cursor: (!isLastPage || chapter?.has_next) ? "pointer" : "not-allowed",
-            }}
-          >
-            {lang === "es" ? "Sig. →" : "Next →"}
-          </button>
+            {/* Next →: next page first, then next chapter */}
+            <button
+              disabled={isLastPage && !chapter?.has_next}
+              onClick={() => { if (!goNextPage()) goNext(); }}
+              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
+              style={{
+                background: (!isLastPage || chapter?.has_next) ? th.nextBtnGradient : "transparent",
+                color: (!isLastPage || chapter?.has_next) ? "white" : th.textVeryMuted,
+                cursor: (!isLastPage || chapter?.has_next) ? "pointer" : "not-allowed",
+              }}
+            >
+              {lang === "es" ? "Sig. →" : "Next →"}
+            </button>
+          </div>
         </div>
 
         {/* TOC Drawer */}
@@ -658,25 +684,6 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           </div>
         )}
 
-        {/* Highlight toolbar */}
-        {selection && (
-          <HighlightToolbar
-            x={selection.x}
-            y={selection.y}
-            onHighlight={addHighlight}
-            onDismiss={dismissSelection}
-          />
-        )}
-
-        {/* Remove-highlight bubble */}
-        {pendingRemove && (
-          <RemoveHighlightBubble
-            x={pendingRemove.x}
-            y={pendingRemove.y}
-            onConfirm={() => { removeHighlight(pendingRemove.id); setPendingRemove(null); }}
-            onDismiss={() => setPendingRemove(null)}
-          />
-        )}
       </div>
     );
   }
@@ -903,26 +910,6 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             </button>
           </div>
         </div>
-      )}
-
-      {/* Highlight toolbar */}
-      {selection && (
-        <HighlightToolbar
-          x={selection.x}
-          y={selection.y}
-          onHighlight={addHighlight}
-          onDismiss={dismissSelection}
-        />
-      )}
-
-      {/* Remove-highlight bubble */}
-      {pendingRemove && (
-        <RemoveHighlightBubble
-          x={pendingRemove.x}
-          y={pendingRemove.y}
-          onConfirm={() => { removeHighlight(pendingRemove.id); setPendingRemove(null); }}
-          onDismiss={() => setPendingRemove(null)}
-        />
       )}
 
       {showBookmarkModal && book && (

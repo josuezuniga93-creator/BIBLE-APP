@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import type { TranslationKey } from "../lib/i18n";
 
@@ -207,9 +208,22 @@ function TabIcon({ href, active }: { href: string; active: boolean }) {
 export function BottomNav() {
   const pathname = usePathname();
   const { t } = useLanguage();
+  const [hiddenForReader, setHiddenForReader] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      setHiddenForReader(document.documentElement.getAttribute("data-app-reader-open") === "true");
+    };
+    update();
+    const observer = new MutationObserver(update);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-app-reader-open"] });
+    return () => observer.disconnect();
+  }, []);
 
   const youActive = MORE_LINKS.some((l) => pathname.startsWith(l.href)) ||
     pathname === "/more";
+
+  if (hiddenForReader) return null;
 
   return (
     <nav
