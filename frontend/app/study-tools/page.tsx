@@ -265,6 +265,7 @@ export default function StudyToolsPage() {
   const [reader, setReader] = useState<CommentarySearchResult | null>(null);
   const [readerPage, setReaderPage] = useState(0);
   const [selection, setSelection] = useState<BracketSelection | null>(null);
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [highlights, setHighlights] = useState<HenryHighlight[]>([]);
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
   const [commentaryResult, setCommentaryResult] = useState<CommentarySearchResult | null>(null);
@@ -623,39 +624,63 @@ export default function StudyToolsPage() {
               paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
               background: "rgba(12,14,22,0.98)",
               borderTop: "1px solid rgba(255,255,255,0.08)",
-              transform: (selection && selectedText) ? "translateY(0)" : "translateY(110%)",
+              transform: ((selection && selectedText) || pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
               transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
-              pointerEvents: (selection && selectedText) ? "auto" : "none",
+              pointerEvents: ((selection && selectedText) || pendingRemoveId) ? "auto" : "none",
             }}
             onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="max-w-lg mx-auto flex items-center gap-3">
-              <div className="flex items-center gap-4 flex-1 justify-center">
-                {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
+              {pendingRemoveId ? (
+                <>
+                  <p className="flex-1 text-sm font-black text-white/70">
+                    {lang === "es" ? "Eliminar resaltado?" : "Remove this highlight?"}
+                  </p>
                   <button
-                    key={color}
-                    onClick={() => addHighlightForSelection(color)}
-                    className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
-                    style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
-                    aria-label={HIGHLIGHT_COLORS[color].label}
-                  />
-                ))}
-              </div>
-              <div className="w-px h-7 flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }} />
-              <button
-                onClick={copySelection}
-                className="h-10 px-4 rounded-2xl text-sm font-black text-white/70 active:scale-95 flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.08)" }}
-              >
-                {lang === "es" ? "Copiar" : "Copy"}
-              </button>
-              <button
-                onClick={clearSelection}
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
-                style={{ background: "rgba(255,255,255,0.08)" }}
-              >
-                {"x"}
-              </button>
+                    onClick={() => { removeHighlight(pendingRemoveId); setPendingRemoveId(null); }}
+                    className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
+                    style={{ background: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,1)" }}
+                  >
+                    {lang === "es" ? "Eliminar" : "Remove"}
+                  </button>
+                  <button
+                    onClick={() => setPendingRemoveId(null)}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  >
+                    {"x"}
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4 flex-1 justify-center">
+                    {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
+                      <button
+                        key={color}
+                        onClick={() => addHighlightForSelection(color)}
+                        className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
+                        style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
+                        aria-label={HIGHLIGHT_COLORS[color].label}
+                      />
+                    ))}
+                  </div>
+                  <div className="w-px h-7 flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }} />
+                  <button
+                    onClick={copySelection}
+                    className="h-10 px-4 rounded-2xl text-sm font-black text-white/70 active:scale-95 flex-shrink-0"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  >
+                    {lang === "es" ? "Copiar" : "Copy"}
+                  </button>
+                  <button
+                    onClick={clearSelection}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  >
+                    {"x"}
+                  </button>
+                </>
+              )}
             </div>
           </div>
           <div className="h-full max-w-lg mx-auto flex flex-col">
@@ -846,7 +871,7 @@ export default function StudyToolsPage() {
                         onPointerDown={() => startWordPress(token.index, token.highlight)}
                         onPointerUp={finishWordPress}
                         onPointerCancel={finishWordPress}
-                        onClick={() => token.highlight ? removeHighlight(token.highlight.id) : undefined}
+                        onClick={() => token.highlight ? setPendingRemoveId(token.highlight.id) : undefined}
                         title={token.highlight ? (lang === "es" ? "Toca para eliminar" : "Tap to remove") : undefined}
                       >
                         {token.text}
