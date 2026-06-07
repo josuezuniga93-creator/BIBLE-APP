@@ -615,60 +615,49 @@ export default function StudyToolsPage() {
     <div className="min-h-screen bg-[#0b101d] text-white">
       {reader && (
         <div className="fixed inset-0 z-50 bg-[#0b101d] text-white">
-          {selection && selectedText && (
-            <div
-              className="fixed left-0 right-0 z-[70] px-4"
-              style={{ bottom: "calc(118px + max(env(safe-area-inset-bottom), 14px))" }}
-              onPointerDown={(event) => event.stopPropagation()}
-            >
-              <div
-                className="max-w-lg mx-auto rounded-[28px] px-5 pt-4 pb-5"
-                style={{
-                  background: "rgba(16,18,26,0.98)",
-                  border: "1px solid rgba(255,255,255,0.10)",
-                  boxShadow: "0 -4px 40px rgba(0,0,0,0.70)",
-                }}
-              >
-                <p className="text-[11px] font-black text-center mb-4 truncate" style={{ color: "#c9a961" }}>
-                  {reader?.bookName} {reader?.chapter}{reader?.requestedVerse ? `:${reader.requestedVerse}` : ""}
-                </p>
-                <div className="flex items-center justify-center gap-4 mb-4">
-                  {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => addHighlightForSelection(color)}
-                      className="w-12 h-12 rounded-full active:scale-90 transition-transform"
-                      style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 4px 12px ${HIGHLIGHT_COLORS[color].dot}55` }}
-                      aria-label={HIGHLIGHT_COLORS[color].label}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center gap-2">
+          <div
+            className="fixed left-0 right-0 z-[70] px-5"
+            style={{
+              bottom: 0,
+              paddingTop: 14,
+              paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
+              background: "rgba(12,14,22,0.98)",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              transform: (selection && selectedText) ? "translateY(0)" : "translateY(110%)",
+              transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
+              pointerEvents: (selection && selectedText) ? "auto" : "none",
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
+            <div className="max-w-lg mx-auto flex items-center gap-3">
+              <div className="flex items-center gap-4 flex-1 justify-center">
+                {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
                   <button
-                    onClick={copySelection}
-                    className="flex-1 h-11 rounded-2xl flex items-center justify-center text-sm font-black text-white/80 active:scale-95"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
-                  >
-                    {lang === "es" ? "Copiar" : "Copy"}
-                  </button>
-                  <button
-                    onClick={() => setShowHighlightPocket(true)}
-                    className="flex-1 h-11 rounded-2xl flex items-center justify-center text-sm font-black active:scale-95"
-                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.22)" }}
-                  >
-                    {lang === "es" ? "Bolsa" : "Pocket"}
-                  </button>
-                  <button
-                    onClick={clearSelection}
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/40 text-lg font-black active:scale-95 flex-shrink-0"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}
-                  >
-                    {"×"}
-                  </button>
-                </div>
+                    key={color}
+                    onClick={() => addHighlightForSelection(color)}
+                    className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
+                    style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
+                    aria-label={HIGHLIGHT_COLORS[color].label}
+                  />
+                ))}
               </div>
+              <div className="w-px h-7 flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }} />
+              <button
+                onClick={copySelection}
+                className="h-10 px-4 rounded-2xl text-sm font-black text-white/70 active:scale-95 flex-shrink-0"
+                style={{ background: "rgba(255,255,255,0.08)" }}
+              >
+                {lang === "es" ? "Copiar" : "Copy"}
+              </button>
+              <button
+                onClick={clearSelection}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
+                style={{ background: "rgba(255,255,255,0.08)" }}
+              >
+                {"x"}
+              </button>
             </div>
-          )}
+          </div>
           <div className="h-full max-w-lg mx-auto flex flex-col">
             <div
               className="flex items-center justify-between gap-3 px-5 pb-2 flex-shrink-0"
