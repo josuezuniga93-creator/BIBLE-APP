@@ -8,6 +8,7 @@
 //   ryc-last-position    last reading position
 //   tulip-church-analyses church analysis results
 //   ryc-bookmarks        bookmarks
+//   tulip_badges_earned_v1 earned badges
 //
 // Keys NOT synced (device-local preferences):
 //   ryc-theme, ryc-android-mode, ryc-device-mode, ryc-scripture-font, etc.
@@ -24,6 +25,7 @@ const SYNC_PREFIXES = [
   "ryc-bookmarks",
   "tulip-church-analyses",
   "ryc-last-position",
+  "tulip_badges_earned_v1",
 ];
 
 function isSyncKey(key: string): boolean {
