@@ -53,10 +53,10 @@ type Props = {
 };
 
 const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string; bg: string; dot: string }> = {
-  gold:  { label: "Highlight", labelEs: "Resaltar", bg: "rgba(201,169,97,0.30)", dot: "#c9a961" },
-  blue:  { label: "Blue",      labelEs: "Azul",      bg: "rgba(82,156,255,0.26)", dot: "#60a5fa" },
-  rose:  { label: "Rose",      labelEs: "Rosa",      bg: "rgba(244,114,182,0.26)", dot: "#f472b6" },
-  green: { label: "Green",     labelEs: "Verde",     bg: "rgba(74,222,128,0.24)", dot: "#4ade80" },
+  gold:  { label: "Highlight", labelEs: "Resaltar", bg: "rgba(201,169,97,0.58)", dot: "#c9a961" },
+  blue:  { label: "Blue",      labelEs: "Azul",      bg: "rgba(82,156,255,0.58)", dot: "#60a5fa" },
+  rose:  { label: "Rose",      labelEs: "Rosa",      bg: "rgba(244,114,182,0.56)", dot: "#f472b6" },
+  green: { label: "Green",     labelEs: "Verde",     bg: "rgba(74,222,128,0.52)", dot: "#4ade80" },
 };
 
 const ACTIVE_SELECTION_BG = "rgba(54,97,208,0.58)";
@@ -185,13 +185,25 @@ export function BracketHighlightReader({
   const [selectionGeometry, setSelectionGeometry] = useState<SelectionGeometry>({ rects: [] });
   const [highlightRects, setHighlightRects] = useState<HighlightRect[]>([]);
   const [showPocket, setShowPocket] = useState(false);
+  const [highlightSearchQuery, setHighlightSearchQuery] = useState("");
+  const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const longPressTimer = useRef<number | null>(null);
   const activeHandle = useRef<"start" | "end" | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (typeof document === "undefined") return;
+    document.documentElement.setAttribute("data-app-reader-open", "true");
+    return () => {
+      document.documentElement.removeAttribute("data-app-reader-open");
+    };
+  }, []);
+
+  useEffect(() => {
     setHighlights(loadHighlights(context));
     setSelection(null);
+    setPendingRemoveId(null);
+    setHighlightSearchQuery("");
   }, [context]);
 
   const parts = useMemo(() => splitTextByHighlights(text, highlights), [text, highlights]);
@@ -204,6 +216,31 @@ export function BracketHighlightReader({
       .map((token) => token.text)
       .join(" "));
   }, [tokens, selection]);
+  const visibleHighlights = useMemo(() => {
+    const sorted = [...highlights].sort((a, b) => b.createdAt - a.createdAt);
+    const needle = normalizeText(highlightSearchQuery).toLowerCase();
+    if (!needle) return sorted;
+
+    return sorted.filter((highlight) =>
+      normalizeText([highlight.title, highlight.reference, highlight.text].join(" "))
+        .toLowerCase()
+        .includes(needle)
+    );
+  }, [highlights, highlightSearchQuery]);
+  const highlightsBySection = useMemo(() => {
+    const sections = new Map<string, ReaderHighlight[]>();
+    visibleHighlights.forEach((highlight) => {
+      const sectionTitle = highlight.title || highlight.reference;
+      const current = sections.get(sectionTitle) ?? [];
+      current.push(highlight);
+      sections.set(sectionTitle, current);
+    });
+
+    return Array.from(sections.entries()).map(([sectionTitle, items]) => ({
+      sectionTitle,
+      items,
+    }));
+  }, [visibleHighlights]);
 
   const persistHighlights = useCallback((next: ReaderHighlight[]) => {
     const sorted = [...next].sort((a, b) => b.createdAt - a.createdAt);
@@ -251,10 +288,12 @@ export function BracketHighlightReader({
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
+    setPendingRemoveId(null);
   }
 
   function clearSelection() {
     setSelection(null);
+    setPendingRemoveId(null);
     activeHandle.current = null;
     clearLongPressTimer();
   }
@@ -347,9 +386,9 @@ export function BracketHighlightReader({
         return {
           id: `${idPrefix}-${idx}`,
           left: line.left - layerRect.left - 4,
-          top: line.top - layerRect.top + lineHeight * 0.08,
+          top: line.top - layerRect.top - 2,
           width: line.right - line.left + 8,
-          height: lineHeight * 0.86,
+          height: lineHeight + 4,
           color,
         };
       });
@@ -365,8 +404,8 @@ export function BracketHighlightReader({
     const last = selectionRects[selectionRects.length - 1];
     setSelectionGeometry({
       rects: selectionRects,
-      startHandle: first ? { left: first.left - 15, top: first.top - 3 } : undefined,
-      endHandle: last ? { left: last.left + last.width - 3, top: last.top + last.height - 13 } : undefined,
+      startHandle: first ? { left: first.left + 3, top: first.top + first.height - 1 } : undefined,
+      endHandle: last ? { left: last.left + last.width - 3, top: last.top + last.height - 1 } : undefined,
     });
 
     const grouped = new Map<string, { highlight: ReaderHighlight; indexes: number[] }>();
@@ -395,54 +434,94 @@ export function BracketHighlightReader({
 
   return (
     <>
-      {selection && selectedText && (
-        <div className="fixed left-0 right-0 z-[260] px-4" style={{ bottom: "calc(76px + max(env(safe-area-inset-bottom), 10px))" }}>
-          <div
-            className="max-w-lg mx-auto rounded-[24px] px-4 py-3"
-            style={{
-              background: "rgba(20,22,30,0.98)",
-              border: "1px solid rgba(201,169,97,0.24)",
-              boxShadow: "0 18px 52px rgba(0,0,0,0.55)",
-            }}
-          >
-            <div className="flex items-center gap-3 overflow-x-auto scrollbar-none">
-              {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((color) => (
-                <button
-                  key={color}
-                  onClick={() => addHighlightForSelection(color)}
-                  className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[56px]"
-                  style={{ color: color === "gold" ? "rgba(255,255,255,0.82)" : HIGHLIGHT_COLORS[color].dot }}
-                >
-                  <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: HIGHLIGHT_COLORS[color].dot, color: color === "gold" ? "#10131d" : "white" }}>
-                    {color === "gold" ? "●" : ""}
-                  </span>
-                  <span className="text-[10px] font-black">{lang === "es" ? HIGHLIGHT_COLORS[color].labelEs : HIGHLIGHT_COLORS[color].label}</span>
-                </button>
-              ))}
-              <button onClick={copySelection} className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[58px] text-white/72">
-                <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>⧉</span>
-                <span className="text-[11px] font-black">{lang === "es" ? "Copiar" : "Copy"}</span>
+      <div
+        className="fixed left-0 right-0 z-[260] px-5"
+        style={{
+          bottom: 0,
+          paddingTop: 14,
+          paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
+          background: "rgba(12,14,22,0.98)",
+          borderTop: "1px solid rgba(255,255,255,0.08)",
+          transform: ((selection && selectedText) || pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
+          transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
+          pointerEvents: ((selection && selectedText) || pendingRemoveId) ? "auto" : "none",
+          boxShadow: "0 -18px 48px rgba(0,0,0,0.48)",
+        }}
+        onPointerDown={(event) => event.stopPropagation()}
+      >
+        <div className="max-w-lg mx-auto">
+          {pendingRemoveId ? (
+            <div className="flex items-center gap-3">
+              <p className="flex-1 text-sm font-black text-white/72">
+                {lang === "es" ? "Eliminar este resaltado?" : "Remove this highlight?"}
+              </p>
+              <button
+                onClick={() => removeHighlight(pendingRemoveId)}
+                className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95"
+                style={{ background: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,1)" }}
+              >
+                {lang === "es" ? "Eliminar" : "Remove"}
               </button>
-              <button onClick={() => setShowPocket(true)} className="flex-shrink-0 flex flex-col items-center gap-1 min-w-[58px] text-white/72">
-                <span className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.08)" }}>◇</span>
-                <span className="text-[11px] font-black">{lang === "es" ? "Bolsa" : "Pocket"}</span>
+              <button
+                onClick={() => setPendingRemoveId(null)}
+                className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95"
+                style={{ background: "rgba(255,255,255,0.08)" }}
+              >
+                {"x"}
               </button>
-              <button onClick={clearSelection} className="flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center text-white/40" style={{ background: "rgba(255,255,255,0.07)" }}>✕</button>
             </div>
-            <p className="mt-3 line-clamp-2 text-xs leading-5 text-white/45">“{selectedText}”</p>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-4 flex-1 justify-center">
+                  {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => addHighlightForSelection(color)}
+                      className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
+                      style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
+                      aria-label={lang === "es" ? HIGHLIGHT_COLORS[color].labelEs : HIGHLIGHT_COLORS[color].label}
+                    />
+                  ))}
+                </div>
+                <div className="w-px h-7 flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }} />
+                <button
+                  onClick={copySelection}
+                  className="h-10 px-4 rounded-2xl text-sm font-black text-white/70 active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                >
+                  {lang === "es" ? "Copiar" : "Copy"}
+                </button>
+                <button
+                  onClick={() => setShowPocket(true)}
+                  className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.18)" }}
+                >
+                  {lang === "es" ? "Bolsa" : "Pocket"}
+                </button>
+                <button
+                  onClick={clearSelection}
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
+                >
+                  {"x"}
+                </button>
+              </div>
+              <p className="mt-3 line-clamp-2 text-xs leading-5 text-white/45">“{selectedText}”</p>
+            </>
+          )}
         </div>
-      )}
+      </div>
 
-      {highlights.length > 0 && (
-        <button
-          onClick={() => setShowPocket(true)}
-          className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
-          style={{ background: "rgba(201,169,97,0.14)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.18)" }}
-        >
-          {highlights.length} {lang === "es" ? "resaltados guardados" : "saved highlights"}
-        </button>
-      )}
+      <button
+        onClick={() => setShowPocket(true)}
+        className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
+        style={{ background: "rgba(201,169,97,0.14)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.18)" }}
+      >
+        {highlights.length > 0
+          ? `${highlights.length} ${lang === "es" ? "resaltados guardados" : "saved highlights"}`
+          : (lang === "es" ? "Mis resaltados" : "My highlights")}
+      </button>
 
       <div
         ref={textLayerRef}
@@ -471,16 +550,16 @@ export function BracketHighlightReader({
             />
           ))}
         </div>
-        {selectionGeometry.startHandle && (
+          {selectionGeometry.startHandle && (
           <button
             type="button"
             aria-label={lang === "es" ? "Mover inicio de selección" : "Move selection start"}
             onPointerDown={(event) => beginHandleDrag("start", event)}
-            className="absolute z-20 active:scale-95"
-            style={{ left: selectionGeometry.startHandle.left, top: selectionGeometry.startHandle.top, width: 24, height: 42, touchAction: "none" }}
+            className="absolute z-20 active:opacity-70"
+            style={{ left: selectionGeometry.startHandle.left - 18, top: selectionGeometry.startHandle.top - 3, width: 36, height: 46, touchAction: "none", background: "none", border: "none", padding: 0 }}
           >
-            <span style={{ position: "absolute", left: 8, top: 0, width: 10, height: 31, borderRadius: 999, background: "linear-gradient(180deg,#fff,#f4f4f4)", boxShadow: "0 5px 14px rgba(0,0,0,0.46)" }} />
-            <span style={{ position: "absolute", left: 5, top: 23, width: 13, height: 13, borderRadius: "4px 10px 10px 10px", background: "#fff", transform: "rotate(45deg)", boxShadow: "0 5px 14px rgba(0,0,0,0.34)" }} />
+            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 34, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e5e5e5 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.55)" }} />
+            <span style={{ position: "absolute", left: 13, top: 24, width: 0, height: 0, borderTop: "13px solid #ededed", borderRight: "13px solid transparent", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.45))" }} />
           </button>
         )}
         {selectionGeometry.endHandle && (
@@ -488,11 +567,11 @@ export function BracketHighlightReader({
             type="button"
             aria-label={lang === "es" ? "Mover final de selección" : "Move selection end"}
             onPointerDown={(event) => beginHandleDrag("end", event)}
-            className="absolute z-20 active:scale-95"
-            style={{ left: selectionGeometry.endHandle.left, top: selectionGeometry.endHandle.top, width: 24, height: 42, touchAction: "none" }}
+            className="absolute z-20 active:opacity-70"
+            style={{ left: selectionGeometry.endHandle.left - 18, top: selectionGeometry.endHandle.top - 3, width: 36, height: 46, touchAction: "none", background: "none", border: "none", padding: 0 }}
           >
-            <span style={{ position: "absolute", left: 6, top: 11, width: 10, height: 31, borderRadius: 999, background: "linear-gradient(180deg,#fff,#f4f4f4)", boxShadow: "0 5px 14px rgba(0,0,0,0.46)" }} />
-            <span style={{ position: "absolute", left: 5, top: 2, width: 13, height: 13, borderRadius: "10px 10px 4px 10px", background: "#fff", transform: "rotate(45deg)", boxShadow: "0 5px 14px rgba(0,0,0,0.34)" }} />
+            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 34, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e5e5e5 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.55)" }} />
+            <span style={{ position: "absolute", right: 13, top: 24, width: 0, height: 0, borderTop: "13px solid #ededed", borderLeft: "13px solid transparent", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.45))" }} />
           </button>
         )}
         {tokens.map((token, idx) => {
@@ -507,8 +586,8 @@ export function BracketHighlightReader({
               onPointerDown={() => startWordPress(token.index, token.highlight)}
               onPointerUp={finishWordPress}
               onPointerCancel={finishWordPress}
-              onClick={() => token.highlight ? removeHighlight(token.highlight.id) : undefined}
-              title={token.highlight ? (lang === "es" ? "Toca para eliminar" : "Tap to remove") : undefined}
+              onClick={() => token.highlight ? setPendingRemoveId(token.highlight.id) : undefined}
+              title={token.highlight ? (lang === "es" ? "Toca para opciones" : "Tap for options") : undefined}
             >
               {token.text}
             </span>
@@ -517,33 +596,134 @@ export function BracketHighlightReader({
       </div>
 
       {showPocket && (
-        <div className="fixed inset-0 z-[280] bg-black/72 backdrop-blur-sm px-5 py-8 overflow-y-auto" onClick={() => setShowPocket(false)}>
-          <div className="max-w-lg mx-auto" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
+        <div className="fixed inset-0 z-[280] text-white" style={{ background: "#070b14" }}>
+          <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
+            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>{reference}</p>
-                <h2 className="text-2xl font-black text-white">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
+                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                  {lang === "es" ? "En tu bolsillo" : "In your pocket"}
+                </p>
+                <h2 className="text-[30px] leading-none font-black mt-1">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
               </div>
-              <button onClick={() => setShowPocket(false)} className="w-11 h-11 rounded-full text-white/60" style={{ background: "rgba(255,255,255,0.08)" }}>✕</button>
+              <button onClick={() => { setShowPocket(false); setPendingRemoveId(null); }} className="w-11 h-11 rounded-full flex items-center justify-center text-white/60" style={{ background: "rgba(255,255,255,0.08)" }}>✕</button>
             </div>
-            {highlights.length === 0 ? (
-              <div className="rounded-[24px] p-5 text-center" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                <p className="font-black text-white/70">{lang === "es" ? "Aún no hay resaltados" : "No highlights yet"}</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {highlights.map((highlight) => (
-                  <article key={highlight.id} className="rounded-[24px] p-4" style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                    <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="px-5 pt-4 flex-shrink-0">
+              <label className="flex items-center gap-3 rounded-[22px] px-4 py-3" style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white/35 flex-shrink-0">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                  <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <input
+                  value={highlightSearchQuery}
+                  onChange={(event) => setHighlightSearchQuery(event.target.value)}
+                  placeholder={lang === "es" ? "Buscar seccion o texto..." : "Search section or text..."}
+                  className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/35"
+                />
+                {highlightSearchQuery && (
+                  <button onClick={() => setHighlightSearchQuery("")} className="text-white/35 text-sm font-black" aria-label={lang === "es" ? "Limpiar busqueda" : "Clear search"}>
+                    ✕
+                  </button>
+                )}
+              </label>
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-5 space-y-7 pb-10">
+              {highlights.length === 0 ? (
+                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="font-black text-white/70">{lang === "es" ? "Aun no hay resaltados" : "No highlights yet"}</p>
+                  <p className="text-sm text-white/38 mt-2">
+                    {lang === "es" ? "Selecciona texto en el lector para guardarlo." : "Select text in the reader to save it."}
+                  </p>
+                </div>
+              ) : visibleHighlights.length === 0 ? (
+                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="font-black text-white/70">{lang === "es" ? "Sin resultados" : "No results"}</p>
+                  <p className="text-sm text-white/38 mt-2">
+                    {lang === "es" ? "Prueba buscar otra seccion o frase." : "Try another section or phrase."}
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <section>
+                    <div className="flex items-end justify-between gap-3 mb-3">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>{highlight.reference}</p>
-                        <h3 className="text-sm font-black mt-1 text-white/80">{highlight.title}</h3>
+                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                          {lang === "es" ? "Reciente" : "Recent"}
+                        </p>
+                        <h3 className="text-xl font-black">{lang === "es" ? "Mis resaltados recientes" : "My Most Recent Highlights"}</h3>
                       </div>
-                      <button onClick={() => removeHighlight(highlight.id)} className="text-white/35 text-sm font-black">✕</button>
+                      <p className="text-xs font-bold text-white/35">{visibleHighlights.length}</p>
                     </div>
-                    <p className="text-sm leading-6 text-white/66">“{highlight.text}”</p>
-                  </article>
-                ))}
+                    <div className="flex gap-3 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
+                      {visibleHighlights.slice(0, 8).map((highlight) => (
+                        <article
+                          key={`recent-${highlight.id}`}
+                          className="min-w-[82%] snap-start rounded-[26px] p-4"
+                          style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.10), rgba(255,255,255,0.045))", border: "1px solid rgba(201,169,97,0.16)" }}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>{highlight.reference}</p>
+                              <h4 className="text-sm font-black mt-1 text-white/85">{highlight.title}</h4>
+                            </div>
+                            <button onClick={() => setPendingRemoveId(highlight.id)} className="text-white/30 text-sm font-black" aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}>
+                              ✕
+                            </button>
+                          </div>
+                          <p className="mt-3 text-sm leading-6 text-white/64 line-clamp-5">“{highlight.text}”</p>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <div className="mb-3">
+                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                        {lang === "es" ? "Organizado" : "Organized"}
+                      </p>
+                      <h3 className="text-xl font-black">{lang === "es" ? "Por seccion" : "By Section"}</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {highlightsBySection.map((section) => (
+                        <section key={section.sectionTitle} className="rounded-[28px] p-4" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <h4 className="text-lg font-black">{section.sectionTitle}</h4>
+                            <span className="px-3 py-1 rounded-full text-xs font-black" style={{ background: "rgba(201,169,97,0.13)", color: "#d7bd78" }}>
+                              {section.items.length}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {section.items.map((highlight) => (
+                              <article key={`section-${highlight.id}`} className="rounded-[22px] p-4" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.07)" }}>
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>{highlight.reference}</p>
+                                  <button onClick={() => setPendingRemoveId(highlight.id)} className="text-white/30 text-sm font-black" aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}>
+                                    ✕
+                                  </button>
+                                </div>
+                                <p className="text-sm leading-6 text-white/62">“{highlight.text}”</p>
+                              </article>
+                            ))}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  </section>
+                </>
+              )}
+            </div>
+            {pendingRemoveId && (
+              <div className="fixed left-0 right-0 bottom-0 z-[290] px-5" style={{ paddingBottom: "max(env(safe-area-inset-bottom), 14px)", paddingTop: 14, background: "rgba(12,14,22,0.98)", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="max-w-lg mx-auto flex items-center gap-3">
+                  <p className="flex-1 text-sm font-black text-white/72">
+                    {lang === "es" ? "Eliminar este resaltado?" : "Remove this highlight?"}
+                  </p>
+                  <button onClick={() => removeHighlight(pendingRemoveId)} className="h-10 px-4 rounded-2xl text-sm font-black" style={{ background: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,1)" }}>
+                    {lang === "es" ? "Eliminar" : "Remove"}
+                  </button>
+                  <button onClick={() => setPendingRemoveId(null)} className="w-10 h-10 rounded-2xl text-white/40 text-xl font-black" style={{ background: "rgba(255,255,255,0.08)" }}>
+                    {"x"}
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -70,7 +70,7 @@ export default function RootLayout({
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','gold-navy','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'gold-navy');if(localStorage.getItem('ryc-device-mode')!=='android'){document.documentElement.setAttribute('data-iphone-mode','true');}}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');var valid=['premium-neon','gold-navy','midnight','ivory','lavender','sage','rose','slate','neon','light-elegant','light-pink'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'gold-navy');if(localStorage.getItem('ryc-android-mode')==='true'){document.documentElement.setAttribute('data-android-mode','true');}else{document.documentElement.removeAttribute('data-android-mode');}}catch(e){}})();`,
           }}
         />
       </head>

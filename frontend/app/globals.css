@@ -25,11 +25,14 @@
 
 /* ── Mobile safe-area support (notch, Dynamic Island, Android gesture bar) ── */
 
-/* iPhone Mode — adds top safe-area padding on mobile so Dynamic Island / notch
-   doesn't block content. Toggle stored in localStorage as 'ryc-iphone-mode'. */
+/* iPhone notch / Dynamic Island padding is ON by default for all mobile.
+   Android mode explicitly removes it via data-android-mode="true". */
 @media (max-width: 767px) {
-  [data-iphone-mode="true"] .layout-children {
-    padding-top: max(env(safe-area-inset-top), 44px) !important;
+  .layout-children {
+    padding-top: max(env(safe-area-inset-top), 44px);
+  }
+  [data-android-mode="true"] .layout-children {
+    padding-top: 0 !important;
   }
 }
 

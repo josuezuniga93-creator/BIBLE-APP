@@ -410,97 +410,37 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     return (
       <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
-        {/* Top bar */}
+        {/* Study Tools style top bar */}
         <div
-          className="flex-shrink-0 flex items-center justify-between px-4 h-12"
+          className="flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
           style={{ backgroundColor: th.pageBg, borderBottom: `1px solid ${th.border}` }}
         >
-          <button
-            onClick={() => setShowDetail(true)}
-            className="flex items-center gap-1 text-sm font-medium"
-            style={{ color: th.accent }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            {lang === "es" ? "Volver" : "Back"}
-          </button>
-          <span className="text-xs font-medium truncate max-w-[60%] text-center" style={{ color: th.textMuted }}>
-            {bookTitle(book, lang)}
-          </span>
-          <div className="w-12" />
-        </div>
-
-        {/* Progress bar + toolbar — flex-shrink-0 */}
-        <div
-          className="flex-shrink-0"
-          style={{ backgroundColor: th.bottomBarBg, borderBottom: `1px solid ${th.border}` }}
-        >
-          <div className="px-5 pt-3 pb-2">
-            <style>{th.sliderCss}</style>
-            <input
-              type="range"
-              min={1}
-              max={book.chapter_count}
-              value={currentChapter}
-              onChange={(e) => setCurrentChapter(Number(e.target.value))}
-              className="reader-slider w-full"
-              style={{
-                background: `linear-gradient(to right, ${th.sliderProgress} ${progressPct}%, ${th.sliderTrack} ${progressPct}%)`,
-              }}
-            />
-            <p className="text-center mt-2 text-[11px]" style={{ color: th.textVeryMuted }}>
-              {currentChapter} / {book.chapter_count}
+          <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
+            <h1
+              className="text-lg leading-tight font-black line-clamp-2"
+              style={{ color: th.textPrimary }}
+            >
+              {bookTitle(book, lang)}
+            </h1>
+            <p className="mt-1 text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
+              {lang === "es" ? "Libro gratis" : "Free Book"}
             </p>
           </div>
-          <div className="flex items-center justify-around px-4 pb-1 pt-1" style={{ borderTop: `1px solid ${th.borderLight}` }}>
-            <button
-              onClick={() => setShowSettings((v) => !v)}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors"
-              style={{ color: showSettings ? th.iconActive : th.iconInactive }}
-            >
-              <span className="text-xs font-bold" style={{ fontFamily: "serif", lineHeight: 1 }}>Aa</span>
-              <span className="text-[9px] font-bold">Display</span>
-            </button>
-            <button
-              onClick={() => setShowToc((v) => !v)}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors"
-              style={{ color: showToc ? th.iconActive : th.iconInactive }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-              <span className="text-[9px] font-bold">{lang === "es" ? "Índice" : "Contents"}</span>
-            </button>
-            <button
-              onClick={() => {
-                const order: FontSize[] = ["sm", "md", "lg", "xl"];
-                setFontSize((prev) => order[(order.indexOf(prev) + 1) % order.length]);
-              }}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors"
-              style={{ color: th.iconInactive }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M4 20L10 4l6 16M6 15h8M16 20l2-4 2 4M17.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-              <span className="text-[9px] font-bold">{lang === "es" ? "Texto" : "Text Size"}</span>
-            </button>
-            <button
-              onClick={() => setShowSettings((v) => !v)}
-              className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl transition-colors"
-              style={{ color: th.iconInactive }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/>
-              </svg>
-              <span className="text-[9px] font-bold">{lang === "es" ? "Más" : "More"}</span>
-            </button>
-          </div>
+          <button
+            onClick={() => setShowDetail(true)}
+            className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
+            style={{ color: th.textMuted, background: "rgba(255,255,255,0.07)", border: `1px solid ${th.borderLight}` }}
+            aria-label={lang === "es" ? "Volver" : "Back"}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
         </div>
 
         {/* Scrollable content */}
         <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
-          <main className="px-5 pt-8 pb-8 max-w-2xl mx-auto">
+          <main className="px-7 pt-5 pb-8 max-w-lg mx-auto">
             <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
               {lang === "es" ? "Capítulo" : "Chapter"} {currentChapter}
               {totalPages > 1 && (

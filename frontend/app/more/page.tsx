@@ -2,9 +2,12 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
+import { getCloudUser, pullFromCloud, pushToCloud, signOut } from "../lib/cloudSync";
+import type { User } from "@supabase/supabase-js";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
 
@@ -140,6 +143,18 @@ function StudyToolsAppIcon() {
   );
 }
 
+function RebuttalAppIcon() {
+  return (
+    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+      <path d="M12 2v3M10.5 3.5h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+      <path d="M4 9h16v12H4z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+      <path d="M9 21v-5h6v5" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+      <path d="M6 9V7l6-4 6 4v2" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
+      <circle cx="12" cy="14" r="1.4" fill="currentColor"/>
+    </svg>
+  );
+}
+
 // ─── App grid config ──────────────────────────────────────────────────────────
 
 const APP_TILE_DEFS = [
@@ -154,11 +169,12 @@ const APP_TILE_DEFS = [
   { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed" },
   { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a" },
   { href: "/give",              Icon: GiveAppIcon,         labelKey: "more_tile_give"        as const, color: "#b45309" },
+  { href: "/church-analysis",  Icon: RebuttalAppIcon,     labelKey: "more_tile_rebuttal"    as const, color: "#6b1d1d" },
 ];
 
 const TILE_GROUP_DEFS = [
   { titleKey: "more_group_rhythms" as const, dekKey: "more_group_rhythms_dek" as const, columns: 2, indices: [0, 3] },
-  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 6, 4] },
+  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 6, 4, 11] },
   { titleKey: "more_group_connect" as const, dekKey: "more_group_connect_dek" as const, columns: 2, indices: [7, 8, 9, 10] },
 ];
 
@@ -167,34 +183,61 @@ const TILE_GROUP_DEFS = [
 export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
   const themeKeys = Object.keys(THEMES) as Theme[];
 
-  // ── iPhone Mode state (safe-area padding is ON by default) ──────────────────
-  const [iphoneMode, setIphoneMode] = useState(true);
+  // ── Cloud account state ────────────────────────────────────────────────────
+  const [cloudUser, setCloudUser] = useState<User | null>(null);
+  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "done" | "error">("idle");
 
   useEffect(() => {
-    try {
-      const androidMode = localStorage.getItem("ryc-device-mode") === "android";
-      setIphoneMode(!androidMode);
-      if (!androidMode) {
-        document.documentElement.setAttribute("data-iphone-mode", "true");
-      } else {
-        document.documentElement.removeAttribute("data-iphone-mode");
+    getCloudUser().then((user) => {
+      setCloudUser(user);
+      if (user) {
+        // Pull latest data from cloud on page open
+        setSyncStatus("syncing");
+        pullFromCloud(user)
+          .then(() => setSyncStatus("done"))
+          .catch(() => setSyncStatus("error"));
       }
-    } catch { /**/ }
+    });
   }, []);
 
-  function handleIphoneMode(enabled: boolean) {
-    setIphoneMode(enabled);
+  async function handleSync() {
+    if (!cloudUser) return;
+    setSyncStatus("syncing");
     try {
-      localStorage.setItem("ryc-device-mode", enabled ? "iphone" : "android");
-      localStorage.setItem("ryc-android-mode", enabled ? "false" : "true");
+      await pushToCloud(cloudUser);
+      await pullFromCloud(cloudUser);
+      setSyncStatus("done");
+    } catch {
+      setSyncStatus("error");
+    }
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    setCloudUser(null);
+    setSyncStatus("idle");
+    router.refresh();
+  }
+
+  // ── Android Mode state — read from localStorage synchronously to avoid flash ──
+  const [androidMode, setAndroidMode] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("ryc-android-mode") === "true";
+    }
+    return false;
+  });
+
+  function handleAndroidMode(enabled: boolean) {
+    setAndroidMode(enabled);
+    try {
+      localStorage.setItem("ryc-android-mode", enabled ? "true" : "false");
       if (enabled) {
-        // iPhone mode ON → restore notch / Dynamic Island padding
-        document.documentElement.setAttribute("data-iphone-mode", "true");
+        document.documentElement.setAttribute("data-android-mode", "true");
       } else {
-        // Android mode ON → remove iPhone notch padding
-        document.documentElement.removeAttribute("data-iphone-mode");
+        document.documentElement.removeAttribute("data-android-mode");
       }
     } catch { /**/ }
   }
@@ -360,6 +403,82 @@ export default function MorePage() {
           </div>
         </section>
 
+        {/* ── Account / Cloud Sync ──────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Account</p>
+          {cloudUser ? (
+            <div className="rounded-2xl bg-white/[0.04] overflow-hidden">
+              {/* Logged-in header */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05]">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
+                >
+                  {(cloudUser.email?.[0] ?? "?").toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{cloudUser.email}</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    {syncStatus === "syncing" && "Syncing…"}
+                    {syncStatus === "done" && "Synced"}
+                    {syncStatus === "error" && "Sync error — try again"}
+                    {syncStatus === "idle" && "Cloud sync enabled"}
+                  </p>
+                </div>
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    background: syncStatus === "done" ? "#4ade80"
+                      : syncStatus === "syncing" ? "#facc15"
+                      : syncStatus === "error" ? "#f87171"
+                      : "rgba(255,255,255,0.2)",
+                  }}
+                />
+              </div>
+              {/* Sync now */}
+              <button
+                onClick={handleSync}
+                disabled={syncStatus === "syncing"}
+                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
+                style={{ opacity: syncStatus === "syncing" ? 0.5 : 1 }}
+              >
+                <p className="text-sm font-semibold text-white">
+                  {syncStatus === "syncing" ? "Syncing…" : "Sync Now"}
+                </p>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <path d="M20 11A8.1 8.1 0 004.5 9M4 5v4h4M4 13a8.1 8.1 0 0015.5 2m.5 4v-4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {/* Sign out */}
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-between w-full px-4 py-3.5 transition-colors active:bg-white/[0.04]"
+              >
+                <p className="text-sm font-semibold" style={{ color: "#f87171" }}>Sign Out</p>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#f87171" }}>
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div className="rounded-2xl bg-white/[0.04] px-4 py-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">Sign In to Sync</p>
+                <p className="text-xs text-white/40 mt-0.5 max-w-[200px] leading-relaxed">
+                  Save highlights, notes, and bookmarks across all your devices.
+                </p>
+              </div>
+              <a
+                href="/auth/login"
+                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
+              >
+                Sign In
+              </a>
+            </div>
+          )}
+        </section>
+
         {/* ── Language ──────────────────────────────────────────────────────── */}
         <section>
           <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_language_section")}</p>
@@ -418,14 +537,14 @@ export default function MorePage() {
               <p className="text-xs text-white/40 mt-0.5 max-w-[220px] leading-relaxed">{t(lang, "more_iphone_mode_desc")}</p>
             </div>
             <button
-              onClick={() => handleIphoneMode(!iphoneMode)}
+              onClick={() => handleAndroidMode(!androidMode)}
               className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ml-3 ${
-                iphoneMode ? "bg-white/25" : "bg-white/[0.08]"
+                androidMode ? "bg-white/25" : "bg-white/[0.08]"
               }`}
             >
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
-                  iphoneMode ? "translate-x-6" : "translate-x-0"
+                  androidMode ? "translate-x-6" : "translate-x-0"
                 }`}
               />
             </button>

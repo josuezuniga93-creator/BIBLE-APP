@@ -104,6 +104,19 @@ function paginateText(text: string, limit = COMMENTARY_PAGE_LIMIT): string[] {
   return pages;
 }
 
+function findPageForSavedHighlight(text: string, highlightText: string, limit: number) {
+  const pages = paginateText(formatCommentaryText(text), limit);
+  const target = normalizeText(highlightText).toLowerCase();
+  if (!target) return 0;
+
+  const targetStart = target.slice(0, Math.min(80, target.length));
+  const exactPage = pages.findIndex((page) => normalizeText(page).toLowerCase().includes(target));
+  if (exactPage >= 0) return exactPage;
+
+  const partialPage = pages.findIndex((page) => normalizeText(page).toLowerCase().includes(targetStart));
+  return partialPage >= 0 ? partialPage : 0;
+}
+
 function loadHenryHighlights(): HenryHighlight[] {
   if (typeof window === "undefined") return [];
   try {
@@ -266,8 +279,14 @@ export default function StudyToolsPage() {
   const [readerPage, setReaderPage] = useState(0);
   const [selection, setSelection] = useState<BracketSelection | null>(null);
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [confirmPocketRemoveId, setConfirmPocketRemoveId] = useState<string | null>(null);
+  const [showReaderControls, setShowReaderControls] = useState(false);
+  const [readerFontSize, setReaderFontSize] = useState(15);
+  const isLargeFont = readerFontSize > 15;
+  const controlsTimerRef = useRef<number>(0);
   const [highlights, setHighlights] = useState<HenryHighlight[]>([]);
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
+  const [highlightSearchQuery, setHighlightSearchQuery] = useState("");
   const [commentaryResult, setCommentaryResult] = useState<CommentarySearchResult | null>(null);
   const [bookResult, setBookResult] = useState<BookSearchResult | null>(null);
   const [commentaryLoading, setCommentaryLoading] = useState(false);
@@ -277,12 +296,16 @@ export default function StudyToolsPage() {
   const didStartSelectionPress = useRef(false);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
+  const articleRef = useRef<HTMLDivElement | null>(null);
+  const [pageCharLimit, setPageCharLimit] = useState(COMMENTARY_PAGE_LIMIT);
   const [selectionGeometry, setSelectionGeometry] = useState<SelectionGeometry>({ rects: [] });
   const [highlightRects, setHighlightRects] = useState<HighlightRect[]>([]);
   const [continueReading, setContinueReading] = useState<ContinueReadingItem[]>([]);
   const dictionaryEntries = useMemo(() => searchDictionary(query), [query]);
   const hasReferenceQuery = query.trim().length > 0;
-  const readerPages = useMemo(() => paginateText(formatCommentaryText(reader?.text ?? "")), [reader]);
+  const readerPages = useMemo(() => {
+    return paginateText(formatCommentaryText(reader?.text ?? ""), pageCharLimit);
+  }, [reader, pageCharLimit]);
   const currentReaderPage = Math.min(readerPage, Math.max(0, readerPages.length - 1));
   const currentReference = reader
     ? `${reader.bookName} ${reader.chapter}${reader.requestedVerse ? `:${reader.requestedVerse}` : ""}`
@@ -308,6 +331,50 @@ export default function StudyToolsPage() {
       .map((token) => token.text)
       .join(" "));
   }, [commentaryTokens, selection]);
+  const recentHighlights = useMemo(
+    () => {
+      const needle = normalizeText(highlightSearchQuery).toLowerCase();
+      const sorted = [...highlights].sort((a, b) => b.createdAt - a.createdAt);
+      if (!needle) return sorted;
+
+      return sorted.filter((highlight) => normalizeText([
+        highlight.bookName,
+        `chapter ${highlight.chapter}`,
+        `capitulo ${highlight.chapter}`,
+        highlight.reference,
+        highlight.sectionTitle,
+        highlight.text,
+      ].join(" ")).toLowerCase().includes(needle));
+    },
+    [highlights, highlightSearchQuery]
+  );
+  const highlightsByBookChapter = useMemo(() => {
+    const books = new Map<number, {
+      bookName: string;
+      chapters: Map<number, HenryHighlight[]>;
+    }>();
+
+    recentHighlights.forEach((highlight) => {
+      const bookGroup = books.get(highlight.book) ?? {
+        bookName: highlight.bookName,
+        chapters: new Map<number, HenryHighlight[]>(),
+      };
+      const chapterHighlights = bookGroup.chapters.get(highlight.chapter) ?? [];
+      chapterHighlights.push(highlight);
+      bookGroup.chapters.set(highlight.chapter, chapterHighlights);
+      books.set(highlight.book, bookGroup);
+    });
+
+    return Array.from(books.entries())
+      .sort(([bookA], [bookB]) => bookA - bookB)
+      .map(([book, group]) => ({
+        book,
+        bookName: group.bookName,
+        chapters: Array.from(group.chapters.entries())
+          .sort(([chapterA], [chapterB]) => chapterA - chapterB)
+          .map(([chapter, items]) => ({ chapter, items })),
+      }));
+  }, [recentHighlights]);
 
   useEffect(() => {
     setHighlights(loadHenryHighlights());
@@ -351,6 +418,62 @@ export default function StudyToolsPage() {
     setCommentaryLoading(false);
     if (result) openReader(result);
   }
+
+  const recalcPageLimit = useCallback(() => {
+    if (readerFontSize > 16) {
+      // Large font: each page becomes a long scrollable section
+      setPageCharLimit(2500);
+      return;
+    }
+    const article = articleRef.current;
+    if (!article) return;
+    let height = article.clientHeight;
+    // px-7 padding is on the parent scroll container, not the article —
+    // article.clientWidth already excludes it, so don't subtract again.
+    const width = article.clientWidth;
+    // Fallback: if layout hasn't settled yet, estimate from window height
+    if (height < 60) {
+      height = window.innerHeight - 65 - 118 - 10;
+    }
+    if (height < 60 || width < 50) return;
+    const lineHeightPx = readerFontSize * 1.58;
+    // Proportional serif fonts are narrower than 0.52×; 0.42 fills screen correctly
+    const charWidthPx = readerFontSize * 0.42;
+    const charsPerLine = Math.floor(width / charWidthPx);
+    const linesPerPage = Math.floor(height / lineHeightPx);
+    const limit = Math.floor(charsPerLine * linesPerPage * 0.92);
+    setPageCharLimit(Math.max(500, limit));
+  }, [readerFontSize]);
+
+  useEffect(() => {
+    if (!reader) return;
+    let rafId: number;
+    let timerId: number;
+    // RAF ensures browser has painted and layout is measurable before first pass;
+    // second timeout catches edge cases where layout settles later (e.g. safe-area)
+    rafId = requestAnimationFrame(() => {
+      recalcPageLimit();
+      timerId = window.setTimeout(recalcPageLimit, 350);
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+      clearTimeout(timerId);
+    };
+  }, [reader, recalcPageLimit]);
+
+  useEffect(() => {
+    window.addEventListener("resize", recalcPageLimit);
+    return () => window.removeEventListener("resize", recalcPageLimit);
+  }, [recalcPageLimit]);
+
+  // ResizeObserver: catches safe-area / orientation changes missed by window resize
+  useEffect(() => {
+    const article = articleRef.current;
+    if (!article || !reader) return;
+    const observer = new ResizeObserver(() => recalcPageLimit());
+    observer.observe(article);
+    return () => observer.disconnect();
+  }, [reader, recalcPageLimit]);
 
   const persistHighlights = useCallback((next: HenryHighlight[]) => {
     const sorted = [...next].sort((a, b) => b.createdAt - a.createdAt);
@@ -479,7 +602,7 @@ export default function StudyToolsPage() {
     const result = await findCompleteCommentaryByReference(ref);
     setCommentaryLoading(false);
     if (result) {
-      openReader(result);
+      openReader(result, findPageForSavedHighlight(result.text, highlight.text, pageCharLimit));
     } else {
       // fallback: open with the saved text
       openReader({
@@ -541,8 +664,8 @@ export default function StudyToolsPage() {
     const last = selectionRects[selectionRects.length - 1];
     setSelectionGeometry({
       rects: selectionRects,
-      startHandle: first ? { left: first.left - 15, top: first.top - 3 } : undefined,
-      endHandle: last ? { left: last.left + last.width - 3, top: last.top + last.height - 13 } : undefined,
+      startHandle: first ? { left: first.left + 3, top: first.top + first.height - 1 } : undefined,
+      endHandle: last ? { left: last.left + last.width - 3, top: last.top + last.height - 1 } : undefined,
     });
 
     const grouped = new Map<string, { highlight: HenryHighlight; indexes: number[] }>();
@@ -624,7 +747,71 @@ export default function StudyToolsPage() {
   return (
     <div className="min-h-screen bg-[#0b101d] text-white">
       {reader && (
-        <div className="fixed inset-0 z-50 bg-[#0b101d] text-white">
+        <div className="fixed inset-0 z-50 bg-[#0b101d] text-white select-none">
+          {/* Reader controls panel — slides up on single tap */}
+          <div
+            className="fixed left-0 right-0 z-[69] px-5"
+            style={{
+              bottom: 0,
+              paddingTop: 16,
+              paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
+              background: "rgba(12,14,22,0.98)",
+              borderTop: "1px solid rgba(255,255,255,0.08)",
+              transform: (showReaderControls && !selection && !pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
+              transition: "transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
+              pointerEvents: (showReaderControls && !selection && !pendingRemoveId) ? "auto" : "none",
+            }}
+            onPointerDown={(e) => e.stopPropagation()}
+          >
+            <div className="max-w-lg mx-auto">
+              <p className="text-[9px] uppercase tracking-[0.22em] font-black text-center mb-3" style={{ color: "rgba(201,169,97,0.6)" }}>
+                {lang === "es" ? "Opciones de lectura" : "Reading Options"}
+              </p>
+              <div className="flex items-center gap-3">
+                {/* Font size */}
+                <div className="flex items-center gap-2 flex-1 justify-center rounded-2xl px-4 py-2" style={{ background: "rgba(255,255,255,0.06)" }}>
+                  <button
+                    onClick={() => {
+                      const next = Math.max(13, readerFontSize - 1);
+                      setReaderFontSize(next);
+                      setReaderPage(0);
+                    }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white/60 active:scale-90"
+                    style={{ background: "rgba(255,255,255,0.07)" }}
+                  >
+                    A-
+                  </button>
+                  <span className="text-sm font-black text-white/50 w-8 text-center">{readerFontSize}</span>
+                  <button
+                    onClick={() => {
+                      const next = Math.min(24, readerFontSize + 1);
+                      setReaderFontSize(next);
+                      setReaderPage(0);
+                    }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white/60 active:scale-90"
+                    style={{ background: "rgba(255,255,255,0.07)" }}
+                  >
+                    A+
+                  </button>
+                </div>
+                <div className="w-px h-8 flex-shrink-0" style={{ background: "rgba(255,255,255,0.10)" }} />
+                <button
+                  onClick={() => { setShowHighlightPocket(true); setShowReaderControls(false); }}
+                  className="h-11 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.20)" }}
+                >
+                  {lang === "es" ? "Bolsa" : "Pocket"}
+                </button>
+                <button
+                  onClick={() => setShowReaderControls(false)}
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/35 text-lg font-black active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(255,255,255,0.07)" }}
+                >
+                  {"x"}
+                </button>
+              </div>
+            </div>
+          </div>
           <div
             className="fixed left-0 right-0 z-[70] px-5"
             style={{
@@ -698,10 +885,7 @@ export default function StudyToolsPage() {
               style={{ borderBottom: "1px solid rgba(201,169,97,0.10)", paddingTop: "max(env(safe-area-inset-top), 10px)" }}
             >
               <div className="min-w-0">
-                <p className="text-[9px] uppercase tracking-[0.22em] font-black truncate" style={{ color: "#c9a961" }}>
-                  {reader.source}
-                </p>
-                <h2 className="text-lg font-black mt-0.5 truncate">
+                <h2 className="text-lg leading-tight font-black line-clamp-2">
                   {reader.bookName} {reader.chapter}{reader.requestedVerse ? `:${reader.requestedVerse}` : ""} · {reader.title ?? (lang === "es" ? "Comentario" : "Commentary")}
                 </h2>
               </div>
@@ -720,7 +904,7 @@ export default function StudyToolsPage() {
             <div
               ref={readerScrollRef}
               onScroll={refreshHighlightGeometry}
-              className="overflow-hidden flex-1 px-7 pt-2 pb-[118px] flex flex-col"
+              className={`flex-1 px-7 pt-2 flex flex-col ${isLargeFont ? 'overflow-y-auto' : 'overflow-hidden'}`}
             >
               <div className="mb-2">
                 {reader.requestedVerse && (
@@ -728,27 +912,32 @@ export default function StudyToolsPage() {
                     {lang === "es" ? "Matthew Henry explica esta seccion" : "Matthew Henry section"}: {reader.verses?.length ? `v.${reader.verses[0]}-${reader.verses[reader.verses.length - 1]}` : `v.${reader.matchedVerse}`}
                   </p>
                 )}
-                {currentHighlights.length > 0 && (
-                  <button
-                    onClick={() => setShowHighlightPocket(true)}
-                    className="mt-2 inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-black"
-                    style={{ background: "rgba(201,169,97,0.14)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.18)" }}
-                  >
-                    {currentHighlights.length} {lang === "es" ? "resaltados guardados" : "saved highlights"}
-                  </button>
-                )}
               </div>
 
               <article
-                className="flex-1 min-h-0 overflow-hidden"
+                ref={articleRef}
+                className={isLargeFont ? 'shrink-0' : 'flex-1 min-h-0 overflow-hidden'}
               >
                 <div
                   ref={textLayerRef}
-                  className="relative h-full overflow-hidden pt-1 text-[16px] leading-[1.52] text-white/82 font-serif select-none whitespace-pre-line"
-                  style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: "none" }}
+                  className={`relative pt-1 text-white/82 font-serif select-none whitespace-pre-line ${isLargeFont ? '' : 'h-full overflow-hidden'}`}
+                  style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: isLargeFont ? "pan-y" : "none", fontSize: readerFontSize, lineHeight: 1.58 }}
                   onClick={(event) => {
-                    if (!selection || didStartSelectionPress.current) {
+                    if (didStartSelectionPress.current) {
                       didStartSelectionPress.current = false;
+                      return;
+                    }
+                    if (!selection) {
+                      const target = event.target as HTMLElement;
+                      if (!target.closest("[data-commentary-word]")) {
+                        clearTimeout(controlsTimerRef.current);
+                        setShowReaderControls((prev) => {
+                          if (!prev) {
+                            controlsTimerRef.current = window.setTimeout(() => setShowReaderControls(false), 4000);
+                          }
+                          return !prev;
+                        });
+                      }
                       return;
                     }
                     const target = event.target as HTMLElement;
@@ -785,38 +974,42 @@ export default function StudyToolsPage() {
                       aria-label={lang === "es" ? "Mover inicio de seleccion" : "Move selection start"}
                       data-selection-handle
                       onPointerDown={(event) => beginHandleDrag("start", event)}
-                      className="absolute z-20 active:scale-95"
+                      className="absolute z-20 active:opacity-70"
                       style={{
-                        left: selectionGeometry.startHandle.left,
-                        top: selectionGeometry.startHandle.top,
-                        width: 24,
-                        height: 42,
+                        left: selectionGeometry.startHandle.left - 18,
+                        top: selectionGeometry.startHandle.top - 3,
+                        width: 36,
+                        height: 46,
                         touchAction: "none",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
                       }}
                     >
                       <span
+                        aria-hidden="true"
+                        className="absolute rounded-full"
                         style={{
-                          position: "absolute",
-                          left: 8,
-                          top: 0,
+                          left: 13,
+                          top: 2,
                           width: 10,
-                          height: 31,
-                          borderRadius: 999,
-                          background: "linear-gradient(180deg, #ffffff, #f4f4f4)",
-                          boxShadow: "0 5px 14px rgba(0,0,0,0.46)",
+                          height: 36,
+                          background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)",
+                          boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)",
                         }}
                       />
                       <span
+                        aria-hidden="true"
+                        className="absolute"
                         style={{
-                          position: "absolute",
                           left: 5,
-                          top: 23,
-                          width: 13,
-                          height: 13,
-                          borderRadius: "4px 10px 10px 10px",
-                          background: "#ffffff",
-                          transform: "rotate(45deg)",
-                          boxShadow: "0 5px 14px rgba(0,0,0,0.34)",
+                          top: 0,
+                          width: 0,
+                          height: 0,
+                          borderTop: "12px solid transparent",
+                          borderBottom: "12px solid transparent",
+                          borderRight: "14px solid #eeeeee",
+                          filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))",
                         }}
                       />
                     </button>
@@ -827,38 +1020,42 @@ export default function StudyToolsPage() {
                       aria-label={lang === "es" ? "Mover final de seleccion" : "Move selection end"}
                       data-selection-handle
                       onPointerDown={(event) => beginHandleDrag("end", event)}
-                      className="absolute z-20 active:scale-95"
+                      className="absolute z-20 active:opacity-70"
                       style={{
-                        left: selectionGeometry.endHandle.left,
-                        top: selectionGeometry.endHandle.top,
-                        width: 24,
-                        height: 42,
+                        left: selectionGeometry.endHandle.left - 18,
+                        top: selectionGeometry.endHandle.top - 3,
+                        width: 36,
+                        height: 46,
                         touchAction: "none",
+                        background: "none",
+                        border: "none",
+                        padding: 0,
                       }}
                     >
                       <span
+                        aria-hidden="true"
+                        className="absolute rounded-full"
                         style={{
-                          position: "absolute",
-                          left: 6,
-                          top: 11,
+                          left: 13,
+                          top: 2,
                           width: 10,
-                          height: 31,
-                          borderRadius: 999,
-                          background: "linear-gradient(180deg, #ffffff, #f4f4f4)",
-                          boxShadow: "0 5px 14px rgba(0,0,0,0.46)",
+                          height: 36,
+                          background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)",
+                          boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)",
                         }}
                       />
                       <span
+                        aria-hidden="true"
+                        className="absolute"
                         style={{
-                          position: "absolute",
-                          left: 5,
-                          top: 2,
-                          width: 13,
-                          height: 13,
-                          borderRadius: "10px 10px 4px 10px",
-                          background: "#ffffff",
-                          transform: "rotate(45deg)",
-                          boxShadow: "0 5px 14px rgba(0,0,0,0.34)",
+                          right: 5,
+                          top: 0,
+                          width: 0,
+                          height: 0,
+                          borderTop: "12px solid transparent",
+                          borderBottom: "12px solid transparent",
+                          borderLeft: "14px solid #eeeeee",
+                          filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))",
                         }}
                       />
                     </button>
@@ -897,33 +1094,35 @@ export default function StudyToolsPage() {
                 </div>
               </article>
 
-              {readerPages.length > 1 && (
+            </div>
+
+            {/* Page nav — flex sibling of scroll area so it's never overlapped by content */}
+            {readerPages.length > 1 && (
+              <div
+                className="flex-shrink-0 px-7 pt-2 space-y-2"
+                style={{ paddingBottom: "max(env(safe-area-inset-bottom), 14px)" }}
+              >
+                <div className="flex items-center justify-between px-1 text-xs font-bold text-white/62">
+                  <span>
+                    {lang === "es" ? "Pagina" : "Page"} {currentReaderPage + 1} {lang === "es" ? "de" : "of"} {readerPages.length}
+                  </span>
+                  <span>{readingPercent(currentReaderPage, readerPages.length)}%</span>
+                </div>
                 <div
-                  className="fixed left-0 right-0 z-[55] px-5 space-y-2"
-                  style={{ bottom: "max(env(safe-area-inset-bottom), 14px)" }}
+                  className="h-1.5 rounded-full overflow-hidden mb-2"
+                  style={{ background: "rgba(255,255,255,0.08)" }}
                 >
-                  <div className="max-w-lg mx-auto">
-                  <div className="flex items-center justify-between px-1 text-xs font-bold text-white/62">
-                    <span>
-                      {lang === "es" ? "Pagina" : "Page"} {currentReaderPage + 1} {lang === "es" ? "de" : "of"} {readerPages.length}
-                    </span>
-                    <span>{readingPercent(currentReaderPage, readerPages.length)}%</span>
-                  </div>
                   <div
-                    className="h-1.5 rounded-full overflow-hidden mb-2"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
-                  >
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${readingPercent(currentReaderPage, readerPages.length)}%`,
-                        background: "#c9a961",
-                      }}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 items-center gap-3">
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${readingPercent(currentReaderPage, readerPages.length)}%`,
+                      background: "#c9a961",
+                    }}
+                  />
+                </div>
+                <div className="grid grid-cols-2 items-center gap-3">
                   <button
-                    onClick={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); }}
+                    onClick={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
                     disabled={currentReaderPage === 0}
                     className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
                     style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)" }}
@@ -931,81 +1130,233 @@ export default function StudyToolsPage() {
                     ← {lang === "es" ? "Anterior" : "Prev"}
                   </button>
                   <button
-                    onClick={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); }}
+                    onClick={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
                     disabled={currentReaderPage >= readerPages.length - 1}
                     className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
                     style={{ background: "#c9a961", color: "#10131d" }}
                   >
                     {lang === "es" ? "Siguiente" : "Next"} →
                   </button>
-                  </div>
-                  </div>
                 </div>
-              )}
-
-              <div className="hidden">
-                <p className="text-xs leading-relaxed text-white/48">
-                  {lang === "es"
-                    ? "Texto de dominio publico de Matthew Henry. El lector permanece dentro de Herramientas de Estudio."
-                    : "Public-domain Matthew Henry text. This reader stays inside Study Tools."}
-                </p>
               </div>
-            </div>
+            )}
           </div>
         </div>
       )}
 
       {showHighlightPocket && (
-        <div className="fixed inset-0 z-[65] bg-black/65 backdrop-blur-md px-5 py-6 text-white">
-          <div className="max-w-lg mx-auto h-full rounded-[32px] overflow-hidden flex flex-col" style={{ background: "#0b101d", border: "1px solid rgba(201,169,97,0.20)" }}>
-            <div className="px-5 py-5 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)" }}>
+        <div className="fixed inset-0 z-[65] text-white" style={{ background: "#070b14" }}>
+          <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
+            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
               <div>
                 <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
-                  Matthew Henry
+                  {lang === "es" ? "Matthew Henry en tu bolsillo" : "Matthew Henry in your pocket"}
                 </p>
-                <h2 className="text-2xl font-black">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
+                <h2 className="text-[30px] leading-none font-black mt-1">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
               </div>
               <button
-                onClick={() => setShowHighlightPocket(false)}
+                onClick={() => { setShowHighlightPocket(false); setConfirmPocketRemoveId(null); }}
                 className="w-11 h-11 rounded-full flex items-center justify-center"
                 style={{ background: "rgba(255,255,255,0.07)" }}
               >
                 ✕
               </button>
             </div>
-            <div className="overflow-y-auto flex-1 p-5 space-y-3">
+            <div className="px-5 pt-4 flex-shrink-0">
+              <label
+                className="flex items-center gap-3 rounded-[22px] px-4 py-3"
+                style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white/35 flex-shrink-0">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
+                  <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <input
+                  value={highlightSearchQuery}
+                  onChange={(event) => setHighlightSearchQuery(event.target.value)}
+                  placeholder={lang === "es" ? "Buscar libro, capitulo o texto..." : "Search book, chapter, or text..."}
+                  className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/35"
+                />
+                {highlightSearchQuery && (
+                  <button
+                    onClick={() => setHighlightSearchQuery("")}
+                    className="text-white/35 text-sm font-black"
+                    aria-label={lang === "es" ? "Limpiar busqueda" : "Clear search"}
+                  >
+                    ✕
+                  </button>
+                )}
+              </label>
+            </div>
+            <div className="overflow-y-auto flex-1 px-5 py-5 space-y-7 pb-10">
               {highlights.length === 0 ? (
-                <div className="rounded-[24px] p-6 text-center" style={{ background: "rgba(255,255,255,0.04)" }}>
+                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="font-black text-white/70">{lang === "es" ? "Aun no hay resaltados" : "No highlights yet"}</p>
                   <p className="text-sm text-white/38 mt-2">
                     {lang === "es" ? "Selecciona texto en el lector para guardar una explicacion." : "Select text in the reader to save an explanation."}
                   </p>
                 </div>
-              ) : highlights.map((highlight) => (
-                <article key={highlight.id} className="rounded-[24px] p-4" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>
-                        {highlight.reference}
-                      </p>
-                      <h3 className="text-sm font-black mt-1 text-white/80">{highlight.sectionTitle}</h3>
-                    </div>
-                    <button onClick={() => removeHighlight(highlight.id)} className="text-white/30 text-sm font-black">✕</button>
-                  </div>
-                  <p className="mt-3 text-sm leading-6 text-white/64">
-                    "{highlight.text}"
+              ) : recentHighlights.length === 0 ? (
+                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="font-black text-white/70">{lang === "es" ? "Sin resultados" : "No results"}</p>
+                  <p className="text-sm text-white/38 mt-2">
+                    {lang === "es" ? "Prueba buscar otro libro, capitulo o frase." : "Try another book, chapter, or phrase."}
                   </p>
-                  <button
-                    onClick={() => openHighlightInReader(highlight)}
-                    className="mt-4 text-xs font-black px-3 py-2 rounded-full"
-                    style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
-                  >
-                    {lang === "es" ? "Abrir resaltado" : "Open highlight"}
-                  </button>
-                </article>
-              ))}
+                </div>
+              ) : (
+                <>
+                  <section>
+                    <div className="flex items-end justify-between gap-3 mb-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                          {lang === "es" ? "Reciente" : "Recent"}
+                        </p>
+                        <h3 className="text-xl font-black">{lang === "es" ? "Mis resaltados recientes" : "My Most Recent Highlights"}</h3>
+                      </div>
+                      <p className="text-xs font-bold text-white/35">{recentHighlights.length}</p>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
+                      {recentHighlights.slice(0, 8).map((highlight) => (
+                        <article
+                          key={`recent-${highlight.id}`}
+                          className="min-w-[82%] snap-start rounded-[26px] p-4"
+                          style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.10), rgba(255,255,255,0.045))", border: "1px solid rgba(201,169,97,0.16)" }}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>
+                                {highlight.reference}
+                              </p>
+                              <h4 className="text-sm font-black mt-1 text-white/85">{highlight.sectionTitle}</h4>
+                            </div>
+                            <button
+                              onClick={() => setConfirmPocketRemoveId(highlight.id)}
+                              className="text-white/30 text-sm font-black"
+                              aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                          <p className="mt-3 text-sm leading-6 text-white/64 line-clamp-5">
+                            "{highlight.text}"
+                          </p>
+                          <button
+                            onClick={() => openHighlightInReader(highlight)}
+                            className="mt-4 text-xs font-black px-3 py-2 rounded-full"
+                            style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
+                          >
+                            {lang === "es" ? "Abrir resaltado" : "Open highlight"}
+                          </button>
+                        </article>
+                      ))}
+                    </div>
+                  </section>
+
+                  <section>
+                    <div className="mb-3">
+                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                        {lang === "es" ? "Organizado" : "Organized"}
+                      </p>
+                      <h3 className="text-xl font-black">{lang === "es" ? "Por libro y capitulo" : "By Book & Chapter"}</h3>
+                    </div>
+                    <div className="space-y-4">
+                      {highlightsByBookChapter.map((bookGroup) => (
+                        <section key={bookGroup.book} className="rounded-[28px] p-4" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                          <div className="flex items-center justify-between gap-3 mb-3">
+                            <h4 className="text-lg font-black">{bookGroup.bookName}</h4>
+                            <span className="text-[10px] uppercase tracking-[0.16em] font-black px-3 py-1 rounded-full" style={{ color: "#c9a961", background: "rgba(201,169,97,0.10)" }}>
+                              {bookGroup.chapters.reduce((sum, chapter) => sum + chapter.items.length, 0)}
+                            </span>
+                          </div>
+                          <div className="space-y-3">
+                            {bookGroup.chapters.map((chapterGroup) => (
+                              <div key={`${bookGroup.book}-${chapterGroup.chapter}`} className="rounded-[22px] p-3" style={{ background: "rgba(255,255,255,0.035)" }}>
+                                <div className="flex items-center justify-between gap-3 mb-2">
+                                  <p className="text-sm font-black">
+                                    {lang === "es" ? "Capitulo" : "Chapter"} {chapterGroup.chapter}
+                                  </p>
+                                  <p className="text-xs font-bold text-white/35">
+                                    {chapterGroup.items.length} {chapterGroup.items.length === 1 ? (lang === "es" ? "resaltado" : "highlight") : (lang === "es" ? "resaltados" : "highlights")}
+                                  </p>
+                                </div>
+                                <div className="space-y-2">
+                                  {chapterGroup.items.map((highlight) => (
+                                    <article key={highlight.id} className="rounded-[18px] p-3" style={{ background: "rgba(6,10,18,0.70)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                      <div className="flex items-start justify-between gap-3">
+                                        <div>
+                                          <p className="text-[10px] uppercase tracking-[0.16em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>
+                                            {highlight.reference}
+                                          </p>
+                                          <h5 className="text-sm font-black mt-1 text-white/82">{highlight.sectionTitle}</h5>
+                                        </div>
+                                        <button
+                                          onClick={() => setConfirmPocketRemoveId(highlight.id)}
+                                          className="text-white/30 text-sm font-black"
+                                          aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}
+                                        >
+                                          ✕
+                                        </button>
+                                      </div>
+                                      <p className="mt-2 text-sm leading-6 text-white/62">
+                                        "{highlight.text}"
+                                      </p>
+                                      <button
+                                        onClick={() => openHighlightInReader(highlight)}
+                                        className="mt-3 text-xs font-black px-3 py-2 rounded-full"
+                                        style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
+                                      >
+                                        {lang === "es" ? "Abrir resaltado" : "Open highlight"}
+                                      </button>
+                                    </article>
+                                  ))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </section>
+                      ))}
+                    </div>
+                  </section>
+                </>
+              )}
             </div>
           </div>
+          {confirmPocketRemoveId && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
+              <div className="w-full max-w-sm rounded-[28px] p-5 text-center" style={{ background: "#111827", border: "1px solid rgba(201,169,97,0.22)" }}>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: "#c9a961" }}>
+                  {lang === "es" ? "Confirmar" : "Confirm"}
+                </p>
+                <h3 className="text-xl font-black mt-2">
+                  {lang === "es" ? "Eliminar resaltado?" : "Delete this highlight?"}
+                </h3>
+                <p className="text-sm leading-6 text-white/55 mt-2">
+                  {lang === "es"
+                    ? "Esto quitara este resaltado de tu bolsillo."
+                    : "This will remove this highlight from your pocket."}
+                </p>
+                <div className="grid grid-cols-2 gap-3 mt-5">
+                  <button
+                    onClick={() => setConfirmPocketRemoveId(null)}
+                    className="h-11 rounded-2xl text-sm font-black active:scale-95"
+                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.72)" }}
+                  >
+                    {lang === "es" ? "Cancelar" : "Cancel"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      removeHighlight(confirmPocketRemoveId);
+                      setConfirmPocketRemoveId(null);
+                    }}
+                    className="h-11 rounded-2xl text-sm font-black active:scale-95"
+                    style={{ background: "rgba(239,68,68,0.18)", color: "#fca5a5" }}
+                  >
+                    {lang === "es" ? "Eliminar" : "Delete"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

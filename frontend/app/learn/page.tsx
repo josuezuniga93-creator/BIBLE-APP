@@ -247,6 +247,8 @@ function SectionReader({
     navNextGradient: d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
     dividerColor:   isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.06)",
     footerText:     isLight ? "rgba(155,114,40,0.5)"                  : "rgba(255,255,255,0.15)",
+    progressTrack:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.08)",
+    progressBar:    d("linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
     bottomBarBg:    isLight ? "rgba(245,241,235,0.97)"                : "rgba(14,14,24,0.97)",
     bottomBarBorder:isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
     bottomBarDivider:isLight? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.05)",
@@ -340,35 +342,29 @@ function SectionReader({
   return (
     <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
-      {/* Top bar */}
+      {/* Study Tools style top bar */}
       <div
-        className="flex-shrink-0 flex items-center justify-between px-4 h-12"
+        className="flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
         style={{ backgroundColor: th.topBarBg, backdropFilter: "blur(12px)", borderBottom: `1px solid ${th.topBarBorder}` }}
       >
-        <button onClick={onClose} className="flex items-center gap-1 min-w-[40px]" style={{ color: th.textMuted }}>
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
+          <h1 className="text-lg leading-tight font-black line-clamp-2" style={{ color: th.textPrimary }}>
+            {documentTitle(doc, lang)} · {documentSectionTitle(doc.id, section.title, lang)}
+          </h1>
+          <p className="mt-1 text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
+            {lang === "es" ? "Documento historico" : "Historical Document"}
+          </p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
+          style={{ color: th.textMuted, background: "rgba(255,255,255,0.07)", border: `1px solid ${th.topBarBorder}` }}
+          aria-label={lang === "es" ? "Volver" : "Back"}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </button>
-        <p className="text-sm font-bold truncate px-2 max-w-[55vw]" style={{ color: th.textSecondary }}>
-          {documentTitle(doc, lang)}
-        </p>
-        <div className="flex items-center gap-1 min-w-[80px] justify-end">
-          <button onClick={() => setShowToc((v) => !v)} className="w-9 h-9 flex items-center justify-center rounded-lg"
-            style={{ color: showToc ? th.accent : th.textFaint }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-          </button>
-          <button onClick={() => setShowBookmark(true)} className="w-9 h-9 flex items-center justify-center rounded-lg"
-            style={{ color: bookmarked ? "#c4973a" : th.textFaint }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"}>
-              <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-            </svg>
-          </button>
-          <button onClick={() => setShowSettings((v) => !v)} className="w-9 h-9 flex items-center justify-center rounded-lg"
-            style={{ color: th.textFaint }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-          </button>
-        </div>
       </div>
 
       {/* TOC Drawer */}
@@ -419,7 +415,7 @@ function SectionReader({
 
       {/* Reading content */}
       <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
-        <main className="max-w-2xl mx-auto px-5 pt-8 pb-8">
+        <main className="max-w-lg mx-auto px-7 pt-5 pb-8">
           <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
             {lang === "es" ? (modeLabel === "Full document" ? "Documento completo" : "Resumen") : modeLabel} · {documentSectionTitle(doc.id, section.label, lang)}
             {totalPages > 1 && (
@@ -464,87 +460,51 @@ function SectionReader({
               scrollRef={contentRef}
             />
           </div>
-
-          {/* Nav buttons — pages first, then sections */}
-          <div className="flex items-center justify-between gap-4 mt-14 pt-8" style={{ borderTop: `1px solid ${th.dividerColor}` }}>
-            {/* Prev page → prev section */}
-            <button
-              disabled={isFirstPage && !hasPrev}
-              onClick={() => { if (!goPrevPage()) onPrev(); }}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{
-                backgroundColor: (!isFirstPage || hasPrev) ? th.navBtnBg : "transparent",
-                color: (!isFirstPage || hasPrev) ? th.navBtnColor : th.textMuted,
-                border: `1px solid ${th.navBtnBorder}`,
-                cursor: (!isFirstPage || hasPrev) ? "pointer" : "not-allowed",
-              }}
-            >
-              {lang === "es" ? "← Ant." : "← Prev"}
-            </button>
-
-            {/* Center page indicator */}
-            {totalPages > 1 && (
-              <span className="text-xs font-bold" style={{ color: th.textFaint }}>
-                {currentPage} / {totalPages}
-              </span>
-            )}
-
-            {/* Next page → next section → finish */}
-            {isLastPage ? (
-              hasNext ? (
-                <button onClick={onNext} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-                  style={{ background: th.navNextGradient, color: "white" }}>
-                  {lang === "es" ? "Siguiente →" : "Next →"}
-                </button>
-              ) : (
-                <button onClick={onClose} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-                  style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}>
-                  Finish ✓
-                </button>
-              )
-            ) : (
-              <button onClick={() => goNextPage()} className="flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-                style={{ background: th.navNextGradient, color: "white" }}>
-                {lang === "es" ? "Siguiente →" : "Next →"}
-              </button>
-            )}
-          </div>
-          <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-            {lang === "es"
-              ? "Todos los documentos son de dominio público • Gratis para leer, compartir y distribuir"
-              : "All documents are public domain • Free to read, share, and distribute"}
-          </p>
         </main>
       </div>
 
-      {/* Fixed bottom bar */}
-      <div className="flex-shrink-0"
-        style={{ backgroundColor: th.bottomBarBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
-        <div className="px-5 pt-3 pb-2">
-          <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.bottomIconColor }}>
-            <span>{sectionPageLabel} {sectionIndex + 1} {sectionOfLabel} {sections.length}</span>
-            <span>{progressPct}% {lang === "es" ? "completo" : "complete"}</span>
-          </div>
-          <style>{sliderCss}</style>
-          <input type="range" min={0} max={Math.max(1, sections.length - 1)} value={sectionIndex}
-            onChange={(e) => { const idx = Number(e.target.value); if (sections[idx]) onJump(sections[idx].id); }}
-            className="hist-slider w-full"
-            style={{ background: `${th.sliderTrack}${progressPct}%,${th.sliderTrackBg} ${progressPct}%)` }}
-          />
+      {/* Study Tools style bottom progress + navigation */}
+      <div className="flex-shrink-0 px-5 py-3" style={{ backgroundColor: th.pageBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
+        <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.textSecondary }}>
+          <span>
+            {lang === "es" ? "Pagina" : "Page"} {currentPage} {lang === "es" ? "de" : "of"} {totalPages}
+          </span>
+          <span>{progressPct}%</span>
         </div>
-        <div className="flex items-center justify-around px-4 pb-1 pt-1" style={{ borderTop: `1px solid ${th.bottomBarDivider}` }}>
-          {[
-            { label: lang === "es" ? "Vista" : "Display", icon: <span style={{ fontFamily:"serif", fontWeight:"bold", fontSize:"13px" }}>Aa</span>, action: () => setShowSettings((v)=>!v) },
-            { label: lang === "es" ? "Índice" : "Contents", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>, action: () => setShowToc((v)=>!v) },
-            { label: lang === "es" ? "Texto" : "Text Size", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 20L10 4l6 16M6 15h8M16 20l2-4 2 4M17.5 17h3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, action: () => setFontSize(prev => { const o:FontSize[]=["sm","md","lg","xl"]; return o[(o.indexOf(prev)+1)%o.length]; }) },
-            { label: lang === "es" ? "Más" : "More", icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>, action: () => setShowSettings((v)=>!v) },
-          ].map(({ label, icon, action }) => (
-            <button key={label} onClick={action} className="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl"
-              style={{ color: th.bottomIconColor }}>
-              {icon}
-              <span style={{ fontSize: "9px", fontWeight: "bold" }}>{label}</span>
+        <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ backgroundColor: th.progressTrack }}>
+          <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: th.progressBar }} />
+        </div>
+        <div className="flex items-center justify-between gap-3">
+          <button
+            disabled={isFirstPage && !hasPrev}
+            onClick={() => { if (!goPrevPage()) onPrev(); }}
+            className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
+            style={{
+              backgroundColor: (!isFirstPage || hasPrev) ? th.navBtnBg : "transparent",
+              color: (!isFirstPage || hasPrev) ? th.navBtnColor : th.textMuted,
+              border: `1px solid ${th.navBtnBorder}`,
+              cursor: (!isFirstPage || hasPrev) ? "pointer" : "not-allowed",
+            }}
+          >
+            {lang === "es" ? "← Ant." : "← Prev"}
+          </button>
+          {isLastPage && !hasNext ? (
+            <button
+              onClick={onClose}
+              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+              style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}
+            >
+              {lang === "es" ? "Terminar" : "Finish"} ✓
             </button>
-          ))}
+          ) : (
+            <button
+              onClick={() => { if (!goNextPage()) onNext(); }}
+              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
+              style={{ background: th.navNextGradient, color: "white" }}
+            >
+              {lang === "es" ? "Siguiente" : "Next"} →
+            </button>
+          )}
         </div>
       </div>
 
