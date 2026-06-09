@@ -1,12 +1,14 @@
 "use client";
 
 // app/auth/login/page.tsx
-// Login page — Google OAuth + email/password sign-in and sign-up.
+// Login / sign-up gate — YouVersion-style "Access the Full Experience" entry screen.
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { Suspense } from "react";
+
+const AC = "#c9a961";
 
 function GoogleIcon() {
   return (
@@ -24,7 +26,9 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  // "gate" = full-experience landing; "email" = email form expanded
+  const [view, setView] = useState<"gate" | "email">("gate");
+  const [emailMode, setEmailMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -34,6 +38,7 @@ function LoginContent() {
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
       setMessage({ type: "error", text: "Sign-in failed. Please try again." });
+      setView("email");
     }
   }, [searchParams]);
 
@@ -50,7 +55,6 @@ function LoginContent() {
       setMessage({ type: "error", text: error.message });
       setGoogleLoading(false);
     }
-    // On success the page redirects — no need to setLoading(false)
   }
 
   async function handleEmailAuth(e: React.FormEvent) {
@@ -59,7 +63,7 @@ function LoginContent() {
     setLoading(true);
     setMessage(null);
 
-    if (mode === "signup") {
+    if (emailMode === "signup") {
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -84,33 +88,121 @@ function LoginContent() {
     setLoading(false);
   }
 
+  // ── Gate screen ────────────────────────────────────────────────────────────
+  if (view === "gate") {
+    return (
+      <div
+        className="min-h-screen flex flex-col"
+        style={{ background: "#08090f", paddingTop: "env(safe-area-inset-top)" }}
+      >
+        {/* Top bar — back button */}
+        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+          <button
+            onClick={() => router.back()}
+            className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+            style={{ background: "rgba(255,255,255,0.06)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+              <path d="M19 12H5M12 5l-7 7 7 7"/>
+            </svg>
+          </button>
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,169,97,0.5)" }}>
+            Tulip Bible
+          </p>
+          <div className="w-9" /> {/* spacer */}
+        </div>
+
+        {/* Center content */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+
+          {/* Icon */}
+          <div
+            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
+            style={{ background: "rgba(201,169,97,0.12)", border: "1px solid rgba(201,169,97,0.22)" }}
+          >
+            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="8" r="4" stroke={AC} strokeWidth="1.8"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={AC} strokeWidth="1.8" strokeLinecap="round"/>
+            </svg>
+          </div>
+
+          <h1 className="text-[28px] font-bold text-white leading-tight mb-3">
+            Access the Full Experience
+          </h1>
+          <p className="text-[15px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 300 }}>
+            Sync your highlights, notes, and reading history across all your devices. Free forever — no ads.
+          </p>
+        </div>
+
+        {/* Bottom buttons */}
+        <div className="px-6 pb-12 flex flex-col gap-3" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom, 3rem))" }}>
+          {/* Google — primary */}
+          <button
+            onClick={handleGoogleSignIn}
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-all active:scale-95"
+            style={{
+              background: `linear-gradient(135deg, ${AC}, #a8873a)`,
+              color: "#0f0f0f",
+              opacity: googleLoading ? 0.7 : 1,
+            }}
+          >
+            <GoogleIcon />
+            {googleLoading ? "Redirecting…" : "Continue with Google"}
+          </button>
+
+          {/* Email — secondary */}
+          <button
+            onClick={() => setView("email")}
+            className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
+            style={{
+              background: "rgba(255,255,255,0.07)",
+              border: "1px solid rgba(255,255,255,0.10)",
+              color: "rgba(255,255,255,0.85)",
+            }}
+          >
+            Sign In with Email
+          </button>
+
+          {message && (
+            <p className="text-center text-xs" style={{ color: "#f87171" }}>
+              {message.text}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Email form screen ──────────────────────────────────────────────────────
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center px-6"
-      style={{ background: "#0f0f0f" }}
+      className="min-h-screen flex flex-col"
+      style={{ background: "#08090f", paddingTop: "env(safe-area-inset-top)" }}
     >
-      {/* Logo / branding */}
-      <div className="mb-8 text-center">
-        <p className="text-[11px] font-bold tracking-[0.25em] uppercase mb-1" style={{ color: "rgba(201,169,97,0.6)" }}>
-          Tulip Bible App
-        </p>
-        <h1 className="text-2xl font-bold text-white">
-          {mode === "signup" ? "Create Account" : "Sign In"}
-        </h1>
-        <p className="text-sm mt-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>
-          {mode === "signup"
-            ? "Sync your highlights and notes across devices"
-            : "Access your saved highlights and notes"}
-        </p>
+      {/* Top bar */}
+      <div className="flex items-center gap-3 px-5 pt-4 pb-2">
+        <button
+          onClick={() => { setView("gate"); setMessage(null); }}
+          className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{ background: "rgba(255,255,255,0.06)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+            <path d="M19 12H5M12 5l-7 7 7 7"/>
+          </svg>
+        </button>
+        <h2 className="text-[16px] font-bold text-white">
+          {emailMode === "signup" ? "Create Account" : "Sign In"}
+        </h2>
       </div>
 
-      <div className="w-full max-w-sm">
-
-        {/* Google */}
+      {/* Form */}
+      <div className="flex-1 px-6 pt-6">
+        {/* Google option at top */}
         <button
           onClick={handleGoogleSignIn}
           disabled={googleLoading || loading}
-          className="w-full flex items-center justify-center gap-3 rounded-2xl py-3.5 mb-4 font-semibold text-sm transition-all active:scale-95"
+          className="w-full flex items-center justify-center gap-3 rounded-2xl py-3.5 mb-5 font-semibold text-sm transition-all active:scale-95"
           style={{
             background: "rgba(255,255,255,0.07)",
             border: "1px solid rgba(255,255,255,0.12)",
@@ -122,14 +214,12 @@ function LoginContent() {
           {googleLoading ? "Redirecting…" : "Continue with Google"}
         </button>
 
-        {/* Divider */}
-        <div className="flex items-center gap-3 mb-4">
+        <div className="flex items-center gap-3 mb-5">
           <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
           <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>or</span>
           <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
         </div>
 
-        {/* Email/Password form */}
         <form onSubmit={handleEmailAuth} className="space-y-3">
           <input
             type="email"
@@ -137,7 +227,8 @@ function LoginContent() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none"
+            autoFocus
+            className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none"
             style={{
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.10)",
@@ -151,7 +242,7 @@ function LoginContent() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full rounded-xl px-4 py-3 text-sm text-white placeholder-white/30 outline-none"
+            className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none"
             style={{
               background: "rgba(255,255,255,0.06)",
               border: "1px solid rgba(255,255,255,0.10)",
@@ -160,10 +251,7 @@ function LoginContent() {
           />
 
           {message && (
-            <p
-              className="text-xs px-1 py-0.5"
-              style={{ color: message.type === "error" ? "#f87171" : "#86efac" }}
-            >
+            <p className="text-xs px-1" style={{ color: message.type === "error" ? "#f87171" : "#86efac" }}>
               {message.text}
             </p>
           )}
@@ -171,39 +259,27 @@ function LoginContent() {
           <button
             type="submit"
             disabled={loading || googleLoading}
-            className="w-full rounded-xl py-3.5 font-bold text-sm transition-all active:scale-95"
+            className="w-full rounded-xl py-4 font-bold text-sm transition-all active:scale-95"
             style={{
-              background: "linear-gradient(135deg, #c9a961, #a8873a)",
+              background: `linear-gradient(135deg, ${AC}, #a8873a)`,
               color: "#0f0f0f",
               opacity: loading ? 0.6 : 1,
             }}
           >
             {loading
-              ? mode === "signup" ? "Creating account…" : "Signing in…"
-              : mode === "signup" ? "Create Account" : "Sign In"}
+              ? emailMode === "signup" ? "Creating account…" : "Signing in…"
+              : emailMode === "signup" ? "Create Account" : "Sign In"}
           </button>
         </form>
 
-        {/* Toggle signin/signup */}
         <p className="text-center text-sm mt-5" style={{ color: "rgba(255,255,255,0.4)" }}>
-          {mode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
+          {emailMode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
-            onClick={() => { setMode(mode === "signin" ? "signup" : "signin"); setMessage(null); }}
+            onClick={() => { setEmailMode(emailMode === "signin" ? "signup" : "signin"); setMessage(null); }}
             className="font-semibold underline"
-            style={{ color: "#c9a961" }}
+            style={{ color: AC }}
           >
-            {mode === "signin" ? "Sign up" : "Sign in"}
-          </button>
-        </p>
-
-        {/* Back link */}
-        <p className="text-center mt-4">
-          <button
-            onClick={() => router.back()}
-            className="text-xs"
-            style={{ color: "rgba(255,255,255,0.25)" }}
-          >
-            ← Back to app
+            {emailMode === "signin" ? "Sign up" : "Sign in"}
           </button>
         </p>
       </div>

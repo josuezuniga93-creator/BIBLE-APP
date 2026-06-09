@@ -230,6 +230,21 @@ export default function MorePage() {
     return false;
   });
 
+  // Re-apply android mode after cloud sync — it may have just been pulled from cloud
+  useEffect(() => {
+    if (syncStatus === "done") {
+      try {
+        const mode = localStorage.getItem("ryc-android-mode") === "true";
+        setAndroidMode(mode);
+        if (mode) {
+          document.documentElement.setAttribute("data-android-mode", "true");
+        } else {
+          document.documentElement.removeAttribute("data-android-mode");
+        }
+      } catch { /**/ }
+    }
+  }, [syncStatus]);
+
   function handleAndroidMode(enabled: boolean) {
     setAndroidMode(enabled);
     try {

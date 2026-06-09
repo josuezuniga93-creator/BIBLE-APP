@@ -11,7 +11,7 @@
 //   tulip_badges_earned_v1 earned badges
 //
 // Keys NOT synced (device-local preferences):
-//   ryc-theme, ryc-android-mode, ryc-device-mode, ryc-scripture-font, etc.
+//   ryc-theme, ryc-device-mode, ryc-scripture-font, etc.
 
 import { createClient } from "./supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -26,6 +26,7 @@ const SYNC_PREFIXES = [
   "tulip-church-analyses",
   "ryc-last-position",
   "tulip_badges_earned_v1",
+  "ryc-android-mode",
 ];
 
 function isSyncKey(key: string): boolean {

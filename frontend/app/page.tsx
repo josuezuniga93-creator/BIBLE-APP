@@ -17,6 +17,7 @@ import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
 import { OnboardingPopup } from "./components/OnboardingPopup";
 import { getCloudUser } from "./lib/cloudSync";
+import type { User } from "@supabase/supabase-js";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
 
@@ -1077,9 +1078,9 @@ export default function Home() {
   const hvPool = lang === "es" ? HISTORY_VERSES_ES : HISTORY_VERSES;
   const todayHV = hvPool[today.getDate() % hvPool.length];
 
-  const [cloudUser,        setCloudUser]        = useState<boolean | null>(null); // null=loading, false=no user, true=logged in
+  const [cloudUser, setCloudUser] = useState<User | null | undefined>(undefined); // undefined=loading
   useEffect(() => {
-    getCloudUser().then((u) => setCloudUser(!!u));
+    getCloudUser().then((u) => setCloudUser(u ?? null));
   }, []);
 
   const [streakData,       setStreakData]       = useState<StreakData | null>(null);
@@ -1513,10 +1514,50 @@ export default function Home() {
       {/* ── Page content ──────────────────────────────────────────────────── */}
       <main className={`home-main relative max-w-lg mx-auto px-5 pb-28 ${isGoldNavy ? "pt-20" : "pt-10"}`}>
 
-        {/* Hero — date label */}
-        <p className="text-[11px] font-bold tracking-[0.22em] uppercase mb-3" style={{ color: AC }}>
-          {dayUpper}{streak > 0 ? ` · ${lang === "es" ? "DÍA" : "DAY"} ${streak}` : ""}
-        </p>
+        {/* Hero — date label + profile avatar */}
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: AC }}>
+            {dayUpper}{streak > 0 ? ` · ${lang === "es" ? "DÍA" : "DAY"} ${streak}` : ""}
+          </p>
+          {/* Subtle profile / sign-in button — top-right */}
+          {cloudUser !== undefined && (
+            <Link
+              href={cloudUser ? "/profile" : "/auth/login"}
+              className="flex-shrink-0 transition-all active:scale-90"
+              aria-label={cloudUser ? "View profile" : "Sign in"}
+            >
+              {cloudUser ? (
+                cloudUser.user_metadata?.avatar_url ? (
+                  /* eslint-disable-next-line @next/next/no-img-element */
+                  <img
+                    src={cloudUser.user_metadata.avatar_url as string}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full object-cover"
+                    style={{ border: `1.5px solid rgba(201,169,97,0.5)` }}
+                  />
+                ) : (
+                  <div
+                    className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold"
+                    style={{ background: "rgba(201,169,97,0.18)", border: `1.5px solid rgba(201,169,97,0.4)`, color: AC }}
+                  >
+                    {((cloudUser.user_metadata?.name as string | undefined) || cloudUser.email || "?")
+                      .split(" ").filter(Boolean).map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?"}
+                  </div>
+                )
+              ) : (
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" strokeLinecap="round"/>
+                  </svg>
+                </div>
+              )}
+            </Link>
+          )}
+        </div>
 
         {/* h1/h2 serif headline */}
         <h1
@@ -1870,7 +1911,7 @@ export default function Home() {
         <BadgeShelf />
 
         {/* ── Sign-In Encouragement Banner (shown only when logged out) ─────── */}
-        {cloudUser === false && (
+        {cloudUser === null && (
           <section className="px-4 pb-4 mt-2">
             <div
               className="rounded-3xl px-5 py-6 flex flex-col gap-4"
