@@ -224,6 +224,7 @@ export function BottomNav() {
     pathname === "/more";
 
   if (hiddenForReader) return null;
+  if (pathname.startsWith("/auth")) return null;
 
   return (
     <nav

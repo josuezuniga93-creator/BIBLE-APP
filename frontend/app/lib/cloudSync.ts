@@ -11,7 +11,7 @@
 //   tulip_badges_earned_v1 earned badges
 //
 // Keys NOT synced (device-local preferences):
-//   ryc-theme, ryc-device-mode, ryc-scripture-font, etc.
+//   ryc-theme, ryc-device-mode, ryc-scripture-font, tulip_notif_enabled, etc.
 
 import { createClient } from "./supabase/client";
 import type { User } from "@supabase/supabase-js";
@@ -19,13 +19,26 @@ import type { User } from "@supabase/supabase-js";
 // ─── Keys to sync ─────────────────────────────────────────────────────────────
 
 const SYNC_PREFIXES = [
+  // Reading data
   "ryc-vcolor-",
   "ryc-chapter-note-",
   "axiom-hl-bible-",
   "ryc-bookmarks",
-  "tulip-church-analyses",
   "ryc-last-position",
+  "ryc-translation",
+  // Church & study
+  "tulip-church-analyses",
+  // Family worship
+  "axiom-fw-prayers",
+  "axiom-fw-date",
+  // Progress & badges
   "tulip_badges_earned_v1",
+  "tulip_scripture_shares_v1",
+  "tulip_bible_tracker_v1",
+  // Account & preferences
+  "tulip_user_name",
+  "ryc-lang",
+  "tulip_onboarded",
   "ryc-android-mode",
 ];
 

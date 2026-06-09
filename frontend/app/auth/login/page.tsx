@@ -92,11 +92,16 @@ function LoginContent() {
   if (view === "gate") {
     return (
       <div
-        className="min-h-screen flex flex-col"
-        style={{ background: "#08090f", paddingTop: "env(safe-area-inset-top)" }}
+        className="flex flex-col overflow-hidden"
+        style={{
+          background: "#08090f",
+          height: "100dvh",
+          paddingTop: "env(safe-area-inset-top)",
+          paddingBottom: "env(safe-area-inset-bottom)",
+        }}
       >
         {/* Top bar — back button */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2">
+        <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
           <button
             onClick={() => router.back()}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
@@ -109,15 +114,13 @@ function LoginContent() {
           <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,169,97,0.5)" }}>
             Tulip Bible
           </p>
-          <div className="w-9" /> {/* spacer */}
+          <div className="w-9" />
         </div>
 
         {/* Center content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
-
-          {/* Icon */}
+        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center min-h-0">
           <div
-            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-8"
+            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
             style={{ background: "rgba(201,169,97,0.12)", border: "1px solid rgba(201,169,97,0.22)" }}
           >
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -125,18 +128,16 @@ function LoginContent() {
               <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={AC} strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
           </div>
-
-          <h1 className="text-[28px] font-bold text-white leading-tight mb-3">
+          <h1 className="text-[26px] font-bold text-white leading-tight mb-3">
             Access the Full Experience
           </h1>
-          <p className="text-[15px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 300 }}>
+          <p className="text-[14px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 280 }}>
             Sync your highlights, notes, and reading history across all your devices. Free forever — no ads.
           </p>
         </div>
 
-        {/* Bottom buttons */}
-        <div className="px-6 pb-12 flex flex-col gap-3" style={{ paddingBottom: "max(3rem, env(safe-area-inset-bottom, 3rem))" }}>
-          {/* Google — primary */}
+        {/* Bottom buttons — anchored to bottom */}
+        <div className="px-6 pb-6 flex flex-col gap-3 flex-shrink-0">
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading}
@@ -151,7 +152,6 @@ function LoginContent() {
             {googleLoading ? "Redirecting…" : "Continue with Google"}
           </button>
 
-          {/* Email — secondary */}
           <button
             onClick={() => setView("email")}
             className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
@@ -177,8 +177,13 @@ function LoginContent() {
   // ── Email form screen ──────────────────────────────────────────────────────
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: "#08090f", paddingTop: "env(safe-area-inset-top)" }}
+      className="flex flex-col overflow-hidden"
+      style={{
+        background: "#08090f",
+        height: "100dvh",
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+      }}
     >
       {/* Top bar */}
       <div className="flex items-center gap-3 px-5 pt-4 pb-2">
@@ -197,7 +202,7 @@ function LoginContent() {
       </div>
 
       {/* Form */}
-      <div className="flex-1 px-6 pt-6">
+      <div className="flex-1 px-6 pt-6 overflow-y-auto">
         {/* Google option at top */}
         <button
           onClick={handleGoogleSignIn}

@@ -203,18 +203,6 @@ export default function MorePage() {
     });
   }, []);
 
-  async function handleSync() {
-    if (!cloudUser) return;
-    setSyncStatus("syncing");
-    try {
-      await pushToCloud(cloudUser);
-      await pullFromCloud(cloudUser);
-      setSyncStatus("done");
-    } catch {
-      setSyncStatus("error");
-    }
-  }
-
   async function handleSignOut() {
     await signOut();
     setCloudUser(null);
@@ -298,6 +286,95 @@ export default function MorePage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white">
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
+
+        {/* ── Account / Cloud Sync ──────────────────────────────────────────── */}
+        <section>
+          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Account</p>
+          {cloudUser ? (
+            <div className="rounded-2xl bg-white/[0.04] overflow-hidden">
+              {/* Logged-in header */}
+              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05]">
+                <div
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
+                >
+                  {(cloudUser.user_metadata?.avatar_url
+                    ? <img src={cloudUser.user_metadata.avatar_url} className="w-9 h-9 rounded-full object-cover" />
+                    : (cloudUser.email?.[0] ?? "?").toUpperCase()
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-white truncate">{cloudUser.user_metadata?.name ?? cloudUser.email}</p>
+                  <p className="text-xs text-white/40 mt-0.5">
+                    {syncStatus === "syncing" && "Syncing…"}
+                    {syncStatus === "done" && "All data synced"}
+                    {syncStatus === "error" && "Sync error — try again"}
+                    {syncStatus === "idle" && "Cloud sync enabled"}
+                  </p>
+                </div>
+                <div
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{
+                    background: syncStatus === "done" ? "#4ade80"
+                      : syncStatus === "syncing" ? "#facc15"
+                      : syncStatus === "error" ? "#f87171"
+                      : "rgba(255,255,255,0.2)",
+                  }}
+                />
+              </div>
+              {/* View Profile */}
+              <Link
+                href="/profile"
+                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
+              >
+                <p className="text-sm font-semibold text-white">View Profile</p>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
+              {/* Sign out */}
+              <button
+                onClick={handleSignOut}
+                className="flex items-center justify-between w-full px-4 py-3.5 transition-colors active:bg-white/[0.04]"
+              >
+                <p className="text-sm font-semibold" style={{ color: "#f87171" }}>Sign Out</p>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#f87171" }}>
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+            </div>
+          ) : (
+            <div
+              className="rounded-2xl overflow-hidden"
+              style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: "1px solid rgba(201,169,97,0.20)" }}
+            >
+              <div className="flex items-center gap-4 px-4 py-5">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.14)", border: "1px solid rgba(201,169,97,0.22)" }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                    <circle cx="12" cy="8" r="4" stroke="#c9a961" strokeWidth="1.8"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-white">Sync Across Devices</p>
+                  <p className="text-[11px] text-white/40 mt-0.5 leading-relaxed">
+                    Highlights, bookmarks, notes, plans — everywhere.
+                  </p>
+                </div>
+                <a
+                  href="/auth/login"
+                  className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
+                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.25)" }}
+                >
+                  Sign In
+                </a>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* ── Videos card (compact & premium) ─────────────────────────────── */}
         <section>
@@ -416,92 +493,6 @@ export default function MorePage() {
               );
             })}
           </div>
-        </section>
-
-        {/* ── Account / Cloud Sync ──────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Account</p>
-          {cloudUser ? (
-            <div className="rounded-2xl bg-white/[0.04] overflow-hidden">
-              {/* Logged-in header */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05]">
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
-                >
-                  {(cloudUser.email?.[0] ?? "?").toUpperCase()}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{cloudUser.email}</p>
-                  <p className="text-xs text-white/40 mt-0.5">
-                    {syncStatus === "syncing" && "Syncing…"}
-                    {syncStatus === "done" && "Synced"}
-                    {syncStatus === "error" && "Sync error — try again"}
-                    {syncStatus === "idle" && "Cloud sync enabled"}
-                  </p>
-                </div>
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
-                  style={{
-                    background: syncStatus === "done" ? "#4ade80"
-                      : syncStatus === "syncing" ? "#facc15"
-                      : syncStatus === "error" ? "#f87171"
-                      : "rgba(255,255,255,0.2)",
-                  }}
-                />
-              </div>
-              {/* Sync now */}
-              <button
-                onClick={handleSync}
-                disabled={syncStatus === "syncing"}
-                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
-                style={{ opacity: syncStatus === "syncing" ? 0.5 : 1 }}
-              >
-                <p className="text-sm font-semibold text-white">
-                  {syncStatus === "syncing" ? "Syncing…" : "Sync Now"}
-                </p>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  <path d="M20 11A8.1 8.1 0 004.5 9M4 5v4h4M4 13a8.1 8.1 0 0015.5 2m.5 4v-4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-              {/* View Profile */}
-              <Link
-                href="/profile"
-                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
-              >
-                <p className="text-sm font-semibold text-white">View Profile</p>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </Link>
-              {/* Sign out */}
-              <button
-                onClick={handleSignOut}
-                className="flex items-center justify-between w-full px-4 py-3.5 transition-colors active:bg-white/[0.04]"
-              >
-                <p className="text-sm font-semibold" style={{ color: "#f87171" }}>Sign Out</p>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#f87171" }}>
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-          ) : (
-            <div className="rounded-2xl bg-white/[0.04] px-4 py-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-white">Sign In to Sync</p>
-                <p className="text-xs text-white/40 mt-0.5 max-w-[200px] leading-relaxed">
-                  Save highlights, notes, and bookmarks across all your devices.
-                </p>
-              </div>
-              <a
-                href="/auth/login"
-                className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-                style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
-              >
-                Sign In
-              </a>
-            </div>
-          )}
         </section>
 
         {/* ── Language ──────────────────────────────────────────────────────── */}
