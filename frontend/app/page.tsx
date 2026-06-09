@@ -16,6 +16,7 @@ import QuoteOfWeek from "./components/QuoteOfWeek";
 import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
 import { OnboardingPopup } from "./components/OnboardingPopup";
+import { getCloudUser } from "./lib/cloudSync";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
 
@@ -1076,6 +1077,11 @@ export default function Home() {
   const hvPool = lang === "es" ? HISTORY_VERSES_ES : HISTORY_VERSES;
   const todayHV = hvPool[today.getDate() % hvPool.length];
 
+  const [cloudUser,        setCloudUser]        = useState<boolean | null>(null); // null=loading, false=no user, true=logged in
+  useEffect(() => {
+    getCloudUser().then((u) => setCloudUser(!!u));
+  }, []);
+
   const [streakData,       setStreakData]       = useState<StreakData | null>(null);
   const [videoOpen,        setVideoOpen]        = useState(false);
   const [historyOpen,      setHistoryOpen]      = useState(false);
@@ -1862,6 +1868,47 @@ export default function Home() {
         </section>
 
         <BadgeShelf />
+
+        {/* ── Sign-In Encouragement Banner (shown only when logged out) ─────── */}
+        {cloudUser === false && (
+          <section className="px-4 pb-4 mt-2">
+            <div
+              className="rounded-3xl px-5 py-6 flex flex-col gap-4"
+              style={{ background: "rgba(201,169,97,0.10)", border: "1px solid rgba(201,169,97,0.25)", backdropFilter: "blur(8px)" }}
+            >
+              <div className="flex items-start gap-4">
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,0.18)" }}
+                >
+                  ☁️
+                </div>
+                <div className="flex-1">
+                  <p className="text-white font-bold text-base leading-snug">Save your study across every device</p>
+                  <p className="text-white/50 text-sm mt-1 leading-relaxed">
+                    Sign in to keep your highlights, notes, and bookmarks in sync — on your phone, tablet, and computer.
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Link
+                  href="/auth/login"
+                  className="flex-1 text-center rounded-2xl py-3 text-sm font-bold"
+                  style={{ background: AC, color: "#1a0e2e" }}
+                >
+                  Sign In Free
+                </Link>
+                <Link
+                  href="/profile"
+                  className="px-4 rounded-2xl py-3 text-sm font-semibold"
+                  style={{ background: "rgba(201,169,97,0.15)", color: AC }}
+                >
+                  Learn more
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
       </main>
     </div>

@@ -449,6 +449,16 @@ export default function MorePage() {
                   <path d="M20 11A8.1 8.1 0 004.5 9M4 5v4h4M4 13a8.1 8.1 0 0015.5 2m.5 4v-4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </button>
+              {/* View Profile */}
+              <Link
+                href="/profile"
+                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
+              >
+                <p className="text-sm font-semibold text-white">View Profile</p>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
+                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </Link>
               {/* Sign out */}
               <button
                 onClick={handleSignOut}
