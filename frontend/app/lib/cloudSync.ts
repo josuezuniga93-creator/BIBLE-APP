@@ -103,9 +103,17 @@ export async function pullFromCloud(user: User): Promise<void> {
   }
 
   // Merge: cloud wins for keys that exist in cloud; keep local-only keys
+  // Exception: device-preference keys where local value is the source of truth.
+  // If local already has a value for these keys, don't overwrite with cloud
+  // (the toggle handler calls syncKey() immediately, so cloud stays in sync).
+  const LOCAL_WINS_KEYS = new Set(["ryc-android-mode"]);
+
   try {
     for (const row of data) {
       if (row.storage_key && row.value !== null) {
+        if (LOCAL_WINS_KEYS.has(row.storage_key) && localStorage.getItem(row.storage_key) !== null) {
+          continue; // local value wins — cloud stays in sync via syncKey() on toggle
+        }
         localStorage.setItem(row.storage_key, row.value);
       }
     }
