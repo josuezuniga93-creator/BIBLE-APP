@@ -160,6 +160,27 @@ export async function getCloudUser(): Promise<User | null> {
   return user;
 }
 
+// ─── Apply android mode from cloud on fresh install (no local value) ─────────
+
+export async function applyAndroidModeFromCloud(user: User): Promise<void> {
+  if (typeof window === "undefined") return;
+  // Only run if localStorage has no value yet — don't override a local preference
+  if (localStorage.getItem("ryc-android-mode") !== null) return;
+
+  const supabase = createClient();
+  const { data } = await supabase
+    .from("user_sync_data")
+    .select("value")
+    .eq("user_id", user.id)
+    .eq("storage_key", "ryc-android-mode")
+    .maybeSingle();
+
+  if (data?.value === "true") {
+    localStorage.setItem("ryc-android-mode", "true");
+    document.documentElement.setAttribute("data-android-mode", "true");
+  }
+}
+
 // ─── Sign out ─────────────────────────────────────────────────────────────────
 
 export async function signOut(): Promise<void> {
