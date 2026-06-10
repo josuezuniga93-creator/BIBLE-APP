@@ -2,7 +2,19 @@ export interface VerseQuoteOptions {
   verseText: string;
   reference: string; // e.g. "John 3:16"
   logoSrc?: string;  // path to logo, e.g. "/tulip-logo.png"
+  backgroundSrc?: string; // path to background image, e.g. "/bg/bg1.png"
+  blurBackground?: boolean; // apply gaussian blur to the background image
 }
+
+// All available background options (null = default dark)
+export const BG_OPTIONS: Array<{ id: string; src: string | null; label: string }> = [
+  { id: "dark",  src: null,        label: "Dark"  },
+  { id: "bg1",   src: "/bg/bg1.png", label: "1"   },
+  { id: "bg2",   src: "/bg/bg2.png", label: "2"   },
+  { id: "bg3",   src: "/bg/bg3.png", label: "3"   },
+  { id: "bg4",   src: "/bg/bg4.png", label: "4"   },
+  { id: "bg5",   src: "/bg/bg5.png", label: "5"   },
+];
 
 export async function exportVerseAsQuoteImage(opts: VerseQuoteOptions): Promise<void> {
   const SIZE = 1080;
@@ -16,9 +28,39 @@ export async function exportVerseAsQuoteImage(opts: VerseQuoteOptions): Promise<
   const GOLD_DIM = "rgba(201,169,97,0.25)";
   const BG       = "#08090f";
 
-  // 1. Background
-  ctx.fillStyle = BG;
-  ctx.fillRect(0, 0, SIZE, SIZE);
+  // 1. Background — image or solid dark
+  if (opts.backgroundSrc) {
+    try {
+      const bgImg = new Image();
+      bgImg.crossOrigin = "anonymous";
+      bgImg.src = opts.backgroundSrc;
+      await new Promise<void>((res) => {
+        bgImg.onload = () => res();
+        bgImg.onerror = () => res();
+      });
+      if (bgImg.complete && bgImg.naturalWidth > 0) {
+        // Cover-fit with optional blur
+        const scale = Math.max(SIZE / bgImg.naturalWidth, SIZE / bgImg.naturalHeight);
+        const sw = bgImg.naturalWidth * scale;
+        const sh = bgImg.naturalHeight * scale;
+        if (opts.blurBackground) ctx.filter = "blur(18px)";
+        ctx.drawImage(bgImg, (SIZE - sw) / 2, (SIZE - sh) / 2, sw, sh);
+        ctx.filter = "none";
+        // Dark overlay so text stays legible
+        ctx.fillStyle = opts.blurBackground ? "rgba(6,8,14,0.45)" : "rgba(6,8,14,0.58)";
+        ctx.fillRect(0, 0, SIZE, SIZE);
+      } else {
+        ctx.fillStyle = BG;
+        ctx.fillRect(0, 0, SIZE, SIZE);
+      }
+    } catch {
+      ctx.fillStyle = BG;
+      ctx.fillRect(0, 0, SIZE, SIZE);
+    }
+  } else {
+    ctx.fillStyle = BG;
+    ctx.fillRect(0, 0, SIZE, SIZE);
+  }
 
   // 2. Subtle corner decorations (gold lines)
   ctx.strokeStyle = GOLD_DIM;
