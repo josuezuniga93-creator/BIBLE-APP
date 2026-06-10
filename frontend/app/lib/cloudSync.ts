@@ -39,7 +39,7 @@ const SYNC_PREFIXES = [
   "tulip_user_name",
   "ryc-lang",
   "tulip_onboarded",
-  "ryc-android-mode",
+  // ryc-android-mode intentionally excluded — stored locally only for instant apply
 ];
 
 function isSyncKey(key: string): boolean {
@@ -106,7 +106,7 @@ export async function pullFromCloud(user: User): Promise<void> {
   // Exception: device-preference keys where local value is the source of truth.
   // If local already has a value for these keys, don't overwrite with cloud
   // (the toggle handler calls syncKey() immediately, so cloud stays in sync).
-  const LOCAL_WINS_KEYS = new Set(["ryc-android-mode", "ryc-last-position"]);
+  const LOCAL_WINS_KEYS = new Set(["ryc-last-position"]);
 
   try {
     for (const row of data) {
@@ -166,27 +166,6 @@ export async function getCloudUser(): Promise<User | null> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
   return user;
-}
-
-// ─── Apply android mode from cloud on fresh install (no local value) ─────────
-
-export async function applyAndroidModeFromCloud(user: User): Promise<void> {
-  if (typeof window === "undefined") return;
-  // Only run if localStorage has no value yet — don't override a local preference
-  if (localStorage.getItem("ryc-android-mode") !== null) return;
-
-  const supabase = createClient();
-  const { data } = await supabase
-    .from("user_sync_data")
-    .select("value")
-    .eq("user_id", user.id)
-    .eq("storage_key", "ryc-android-mode")
-    .maybeSingle();
-
-  if (data?.value === "true") {
-    localStorage.setItem("ryc-android-mode", "true");
-    document.documentElement.setAttribute("data-android-mode", "true");
-  }
 }
 
 // ─── Sign out ─────────────────────────────────────────────────────────────────

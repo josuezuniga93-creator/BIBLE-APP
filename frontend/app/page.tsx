@@ -16,7 +16,7 @@ import QuoteOfWeek from "./components/QuoteOfWeek";
 import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
 import { OnboardingPopup } from "./components/OnboardingPopup";
-import { getCloudUser, applyAndroidModeFromCloud } from "./lib/cloudSync";
+import { getCloudUser } from "./lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
 
 // ─── Church History Verses ────────────────────────────────────────────────────
@@ -1082,8 +1082,6 @@ export default function Home() {
   useEffect(() => {
     getCloudUser().then((u) => {
       setCloudUser(u ?? null);
-      // On fresh install (no local value), restore android mode from cloud immediately
-      if (u) applyAndroidModeFromCloud(u).catch(() => {/* silent */});
     });
   }, []);
 

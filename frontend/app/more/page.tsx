@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
-import { getCloudUser, pullFromCloud, pushToCloud, syncKey } from "../lib/cloudSync";
+import { getCloudUser, pullFromCloud, pushToCloud } from "../lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
@@ -212,21 +212,6 @@ export default function MorePage() {
     return false;
   });
 
-  // Re-apply android mode after cloud sync — it may have just been pulled from cloud
-  useEffect(() => {
-    if (syncStatus === "done") {
-      try {
-        const mode = localStorage.getItem("ryc-android-mode") === "true";
-        setAndroidMode(mode);
-        if (mode) {
-          document.documentElement.setAttribute("data-android-mode", "true");
-        } else {
-          document.documentElement.removeAttribute("data-android-mode");
-        }
-      } catch { /**/ }
-    }
-  }, [syncStatus]);
-
   function handleAndroidMode(enabled: boolean) {
     setAndroidMode(enabled);
     const val = enabled ? "true" : "false";
@@ -238,8 +223,6 @@ export default function MorePage() {
         document.documentElement.removeAttribute("data-android-mode");
       }
     } catch { /**/ }
-    // Push to cloud immediately so other devices / fresh installs get it
-    syncKey("ryc-android-mode", val).catch(() => {/* silent */});
   }
 
   // ── Notification state ──────────────────────────────────────────────────────
