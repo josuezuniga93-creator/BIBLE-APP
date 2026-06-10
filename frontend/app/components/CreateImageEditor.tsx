@@ -7,14 +7,37 @@ import { BG_OPTIONS, renderVerseToCanvas, type VerseQuoteOptions } from "../lib/
 
 type EditorTab = "font" | "typography" | "aspect" | "color" | "background";
 
+// Google Fonts URL — all creative fonts loaded in one request
+const GOOGLE_FONTS_URL =
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=EB+Garamond:ital@0;1&family=Lora:ital@0;1&family=Cinzel:wght@400;700&family=Dancing+Script:wght@600&family=Great+Vibes&family=Sacramento&family=Caveat:wght@600&family=Pacifico&family=Bebas+Neue&family=Montserrat:ital,wght@0,400;1,400&family=Raleway:ital,wght@0,400;1,400&family=Josefin+Sans:ital@0;1&family=Oswald:wght@400;600&family=Space+Mono:ital@0;1&family=Nunito:ital@0;1&family=Libre+Baskerville:ital@0;1&display=swap";
+
 const EDITOR_FONTS = [
-  { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif" },
-  { key: "baskerville", label: "Baskerville", family: "Baskerville, 'Baskerville Old Face', serif" },
-  { key: "garamond",    label: "Garamond",    family: "Garamond, 'EB Garamond', Georgia, serif" },
-  { key: "charter",     label: "Charter",     family: "Charter, 'Bitstream Charter', Georgia, serif" },
-  { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', Palatino, serif" },
-  { key: "modern",      label: "Modern",      family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" },
-  { key: "typewriter",  label: "Typewriter",  family: "'Courier New', Courier, monospace" },
+  // ── Elegant Serif ──────────────────────────────────────────────
+  { key: "playfair",     label: "Playfair",        family: "'Playfair Display', Georgia, serif",         tag: "Elegant"    },
+  { key: "cormorant",    label: "Cormorant",        family: "'Cormorant Garamond', Georgia, serif",       tag: "Elegant"    },
+  { key: "lora",         label: "Lora",             family: "'Lora', Georgia, serif",                     tag: "Elegant"    },
+  { key: "ebgaramond",   label: "EB Garamond",      family: "'EB Garamond', Georgia, serif",              tag: "Classic"    },
+  { key: "baskerville",  label: "Baskerville",      family: "'Libre Baskerville', Baskerville, serif",    tag: "Classic"    },
+  { key: "palatino",     label: "Palatino",         family: "'Palatino Linotype', Palatino, serif",       tag: "Classic"    },
+  // ── Inscriptional / Display ─────────────────────────────────────
+  { key: "cinzel",       label: "Cinzel",           family: "'Cinzel', Georgia, serif",                   tag: "Inscribed"  },
+  { key: "oswald",       label: "Oswald",           family: "'Oswald', sans-serif",                       tag: "Bold"       },
+  { key: "bebas",        label: "Bebas Neue",       family: "'Bebas Neue', Impact, sans-serif",           tag: "Bold"       },
+  // ── Script / Handwriting ────────────────────────────────────────
+  { key: "dancing",      label: "Dancing Script",   family: "'Dancing Script', cursive",                  tag: "Script"     },
+  { key: "greatvibes",   label: "Great Vibes",      family: "'Great Vibes', cursive",                     tag: "Script"     },
+  { key: "sacramento",   label: "Sacramento",       family: "'Sacramento', cursive",                      tag: "Script"     },
+  { key: "caveat",       label: "Caveat",           family: "'Caveat', cursive",                          tag: "Handwritten"},
+  { key: "pacifico",     label: "Pacifico",         family: "'Pacifico', cursive",                        tag: "Casual"     },
+  // ── Modern Sans ─────────────────────────────────────────────────
+  { key: "montserrat",   label: "Montserrat",       family: "'Montserrat', sans-serif",                   tag: "Modern"     },
+  { key: "raleway",      label: "Raleway",          family: "'Raleway', sans-serif",                      tag: "Modern"     },
+  { key: "josefin",      label: "Josefin Sans",     family: "'Josefin Sans', sans-serif",                 tag: "Modern"     },
+  { key: "nunito",       label: "Nunito",           family: "'Nunito', sans-serif",                       tag: "Soft"       },
+  { key: "system",       label: "System",           family: "-apple-system, BlinkMacSystemFont, sans-serif", tag: "Minimal" },
+  // ── Mono ────────────────────────────────────────────────────────
+  { key: "spacemono",    label: "Space Mono",       family: "'Space Mono', monospace",                    tag: "Code"       },
+  { key: "typewriter",   label: "Typewriter",       family: "'Courier New', Courier, monospace",          tag: "Code"       },
 ];
 
 const TEXT_COLORS = [
@@ -60,6 +83,18 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
 
   const fontFamily = EDITOR_FONTS.find(f => f.key === fontKey)?.family ?? EDITOR_FONTS[0].family;
 
+  // ── Inject Google Fonts once on mount ────────────────────────────────────────
+  useEffect(() => {
+    const id = "tulip-editor-gfonts";
+    if (!document.getElementById(id)) {
+      const link = document.createElement("link");
+      link.id   = id;
+      link.rel  = "stylesheet";
+      link.href = GOOGLE_FONTS_URL;
+      document.head.appendChild(link);
+    }
+  }, []);
+
   const handleGalleryPick = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -103,7 +138,9 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
     canvas.style.width  = `${W * scale}px`;
     canvas.style.height = `${H * scale}px`;
 
-    renderVerseToCanvas(canvas, buildOpts()).catch(() => {});
+    document.fonts.ready.then(() => {
+      renderVerseToCanvas(canvas, buildOpts()).catch(() => {});
+    });
   }, [buildOpts, aspectRatio]);
 
   // ── Export ────────────────────────────────────────────────────────────────────
@@ -196,14 +233,19 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
                 onClick={() => setFontKey(f.key)}
                 className="w-full flex items-center justify-between px-5 transition-colors"
                 style={{
-                  height: 52,
+                  height: 56,
                   background: fontKey === f.key ? "rgba(201,169,97,0.08)" : "transparent",
                   borderBottom: i < EDITOR_FONTS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                 }}
               >
-                <span style={{ fontFamily: f.family, fontSize: 16, color: fontKey === f.key ? "#c9a961" : "rgba(255,255,255,0.72)" }}>
-                  {f.label}
-                </span>
+                <div className="flex flex-col items-start gap-0.5">
+                  <span style={{ fontFamily: f.family, fontSize: 17, color: fontKey === f.key ? "#c9a961" : "rgba(255,255,255,0.82)", lineHeight: 1.2 }}>
+                    {f.label}
+                  </span>
+                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)" }}>
+                    {f.tag}
+                  </span>
+                </div>
                 {fontKey === f.key && (
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="2.5" strokeLinecap="round">
                     <polyline points="20 6 9 17 4 12"/>
