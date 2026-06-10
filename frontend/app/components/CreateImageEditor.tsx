@@ -67,7 +67,7 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [customBgUrl, setCustomBgUrl] = useState<string | null>(null);
 
-  const [tab,          setTab]          = useState<EditorTab>("font");
+  const [tab,          setTab]          = useState<EditorTab>("background");
   const [fontKey,      setFontKey]      = useState("georgia");
   const [textAlign,    setTextAlign]    = useState<"left" | "center" | "right">("center");
   const [lineHeight,   setLineHeight]   = useState(1.55);
