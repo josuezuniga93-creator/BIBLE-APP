@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, THEMES, type Theme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
-import { getCloudUser, pullFromCloud, pushToCloud, syncKey, signOut } from "../lib/cloudSync";
+import { getCloudUser, pullFromCloud, pushToCloud, syncKey } from "../lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
@@ -203,12 +203,6 @@ export default function MorePage() {
     });
   }, []);
 
-  async function handleSignOut() {
-    await signOut();
-    setCloudUser(null);
-    setSyncStatus("idle");
-    router.refresh();
-  }
 
   // ── Android Mode state — read from localStorage synchronously to avoid flash ──
   const [androidMode, setAndroidMode] = useState<boolean>(() => {
@@ -323,16 +317,6 @@ export default function MorePage() {
                   }}
                 />
               </Link>
-              {/* Sign out */}
-              <button
-                onClick={handleSignOut}
-                className="flex items-center justify-between w-full px-4 py-3.5 transition-colors active:bg-white/[0.04]"
-              >
-                <p className="text-sm font-semibold" style={{ color: "#f87171" }}>Sign Out</p>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "#f87171" }}>
-                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
             </div>
           ) : (
             <div
