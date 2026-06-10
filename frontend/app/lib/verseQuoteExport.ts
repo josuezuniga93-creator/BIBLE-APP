@@ -147,25 +147,30 @@ export async function exportVerseAsQuoteImage(opts: VerseQuoteOptions): Promise<
   ctx.fillText("tulipbibleapp.com", SIZE - 50, SIZE - 48);
 
   // 11. Export — share sheet on mobile, download on desktop
-  canvas.toBlob(async (blob) => {
-    if (!blob) return;
-    const safeName = opts.reference.replace(/[^a-zA-Z0-9]/g, "-");
-    const file = new File([blob], `${safeName}-tulip.jpg`, { type: "image/jpeg" });
-    if (
-      typeof navigator !== "undefined" &&
-      navigator.canShare &&
-      navigator.canShare({ files: [file] })
-    ) {
-      await navigator.share({ files: [file], title: opts.reference });
-    } else {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = file.name;
-      a.click();
-      URL.revokeObjectURL(url);
-    }
-  }, "image/jpeg", 0.93);
+  await new Promise<void>((resolve) => {
+    canvas.toBlob(async (blob) => {
+      if (!blob) { resolve(); return; }
+      const safeName = opts.reference.replace(/[^a-zA-Z0-9]/g, "-");
+      const file = new File([blob], `${safeName}-tulip.jpg`, { type: "image/jpeg" });
+      try {
+        if (
+          typeof navigator !== "undefined" &&
+          navigator.canShare &&
+          navigator.canShare({ files: [file] })
+        ) {
+          await navigator.share({ files: [file], title: opts.reference });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = file.name;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      } catch { /* user cancelled share sheet — not an error */ }
+      resolve();
+    }, "image/jpeg", 0.93);
+  });
 }
 
 function getVerseFont(charCount: number): number {
