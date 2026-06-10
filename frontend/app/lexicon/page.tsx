@@ -924,6 +924,7 @@ function LexiconInner() {
   useEffect(() => {
     const bookParam    = searchParams.get("book");
     const chapterParam = searchParams.get("chapter");
+    const selectParam  = searchParams.get("select"); // comma-separated verse numbers
 
     setBooksLoading(true);
     setBooksError(false);
@@ -941,6 +942,11 @@ function LexiconInner() {
           if (target) {
             setSelectedBook(target);
             setSelectedChapter(chapterParam ? Math.max(1, Number(chapterParam)) : 1);
+            // If specific verses requested, queue them for selection once chapter loads
+            if (selectParam) {
+              const nums = selectParam.split(",").map(Number).filter((n) => !isNaN(n) && n > 0);
+              if (nums.length > 0) setPendingVerseJump(nums[0]);
+            }
             return;
           }
         }

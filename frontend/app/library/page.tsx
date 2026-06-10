@@ -66,6 +66,18 @@ type ProgressEntry = {
 };
 type LibTab = "books" | "reading" | "completed";
 
+type StudyContinueItem = {
+  id: string;
+  source: string;
+  bookName: string;
+  chapter: number;
+  requestedVerse?: number;
+  title?: string;
+  readerPage?: number;
+  pageCount?: number;
+  updatedAt: number;
+};
+
 function entryPercent(entry: ProgressEntry): number {
   if (typeof entry.percent === "number") return Math.max(0, Math.min(100, entry.percent));
   if (!entry.total) return 0;
@@ -150,6 +162,7 @@ export default function LibraryPage() {
   const [suggestName, setSuggestName] = useState("");
   const [suggestText, setSuggestText] = useState("");
   const [suggestSent, setSuggestSent] = useState(false);
+  const [studyContinue, setStudyContinue] = useState<StudyContinueItem[]>([]);
 
   // Refresh saved state whenever modal closes
   function refreshSaved() {
@@ -179,6 +192,14 @@ export default function LibraryPage() {
     }
     setInProgress(entries);
     setCompletedSlugs(done);
+  }, []);
+
+  // Load Study Tools continue-reading from localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("tulip-study-tools-continue-reading");
+      if (raw) setStudyContinue(JSON.parse(raw).slice(0, 3));
+    } catch {}
   }, []);
 
   // Filtered books
@@ -366,6 +387,117 @@ export default function LibraryPage() {
           </div>
         </div>
       )}
+
+      {/* ── Study Tools Section ──────────────────────────────────────────────── */}
+      <div className="mb-6">
+        <div className="px-4">
+          {/* Hero card — exact Study Tools gradient & layout */}
+          <section
+            className="relative overflow-hidden rounded-[28px] p-6 mb-4 border"
+            style={{
+              background: "linear-gradient(135deg, rgba(201,169,97,0.20), rgba(22,30,46,0.96) 48%, rgba(10,15,27,0.98))",
+              borderColor: "rgba(201,169,97,0.20)",
+              boxShadow: "0 22px 60px rgba(0,0,0,0.25)",
+            }}
+          >
+            <div
+              className="absolute -right-8 -top-8 w-40 h-40 rounded-full pointer-events-none"
+              style={{ background: "radial-gradient(circle, rgba(201,169,97,0.22), transparent 68%)" }}
+            />
+            <div className="relative z-10 max-w-[75%]">
+              <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: "#d7bd78" }}>
+                {lang === "es" ? "Comentario y Diccionario" : "Commentary & Dictionary"}
+              </p>
+              <h2 className="mt-3 text-[26px] leading-tight font-black tracking-tight text-white">
+                {lang === "es" ? "Estudia el texto con claridad." : "Study the text with clarity."}
+              </h2>
+              <p className="mt-3 text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.62)" }}>
+                {lang === "es"
+                  ? "Matthew Henry, diccionario bíblico y más."
+                  : "Matthew Henry commentary, biblical dictionary, and more."}
+              </p>
+              <Link
+                href="/study-tools"
+                className="mt-5 inline-flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-black active:scale-95 transition-transform"
+                style={{ background: "#c9a961", color: "#10131d" }}
+              >
+                {lang === "es" ? "Abrir herramientas" : "Open Study Tools"} →
+              </Link>
+            </div>
+            <div
+              className="absolute right-5 bottom-5 w-14 h-14 rounded-[18px] flex items-center justify-center"
+              style={{ background: "rgba(201,169,97,0.16)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.20)" }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M5 4.5h6.5A3.5 3.5 0 0115 8v12a3.5 3.5 0 00-3.5-3.5H5V4.5z" stroke="currentColor" strokeWidth="1.7" />
+                <path d="M19 4.5h-4A3.5 3.5 0 0011.5 8v12a3.5 3.5 0 013.5-3.5h4V4.5z" stroke="currentColor" strokeWidth="1.7" />
+              </svg>
+            </div>
+          </section>
+
+          {/* Continue Studying — recent items from Study Tools localStorage */}
+          {studyContinue.length > 0 && (
+            <div className="space-y-2">
+              <div className="flex items-end justify-between gap-2 px-1 mb-2">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                    {lang === "es" ? "Reciente" : "Recent"}
+                  </p>
+                  <p className="text-base font-black text-white mt-0.5">
+                    {lang === "es" ? "Continuar estudiando" : "Continue Studying"}
+                  </p>
+                </div>
+                <Link href="/study-tools" className="text-xs font-bold active:opacity-70" style={{ color: "#c9a961" }}>
+                  {lang === "es" ? "Ver todo →" : "See all →"}
+                </Link>
+              </div>
+              {studyContinue.map((item) => (
+                <Link
+                  key={item.id}
+                  href="/study-tools"
+                  className="flex items-center gap-3 rounded-[20px] border p-3.5 active:scale-[0.99] transition-transform"
+                  style={{ background: "rgba(201,169,97,0.06)", borderColor: "rgba(201,169,97,0.14)" }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 4.5h6.5A3.5 3.5 0 0115 8v12a3.5 3.5 0 00-3.5-3.5H5V4.5z" stroke="currentColor" strokeWidth="1.7" />
+                      <path d="M19 4.5h-4A3.5 3.5 0 0011.5 8v12a3.5 3.5 0 013.5-3.5h4V4.5z" stroke="currentColor" strokeWidth="1.7" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: "#c9a961" }}>{item.source}</p>
+                    <p className="text-sm font-black text-white truncate mt-0.5">
+                      {item.title ?? `${item.bookName} ${item.chapter}`}
+                    </p>
+                    {item.pageCount && (
+                      <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                        <div
+                          className="h-full rounded-full"
+                          style={{
+                            width: `${Math.min(100, Math.round(((item.readerPage ?? 0) + 1) / item.pageCount * 100))}%`,
+                            background: "#c9a961",
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
+                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* ── My Library ───────────────────────────────────────────────────────── */}
       <div id="my-library" className="px-4 pb-10">

@@ -106,7 +106,7 @@ export async function pullFromCloud(user: User): Promise<void> {
   // Exception: device-preference keys where local value is the source of truth.
   // If local already has a value for these keys, don't overwrite with cloud
   // (the toggle handler calls syncKey() immediately, so cloud stays in sync).
-  const LOCAL_WINS_KEYS = new Set(["ryc-android-mode"]);
+  const LOCAL_WINS_KEYS = new Set(["ryc-android-mode", "ryc-last-position"]);
 
   try {
     for (const row of data) {

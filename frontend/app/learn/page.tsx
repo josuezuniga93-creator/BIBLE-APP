@@ -975,25 +975,36 @@ function LearnPageInner() {
         </h1>
       </div>
 
-      {/* Hero banner */}
-      <div className="mx-4 mb-6 rounded-2xl overflow-hidden relative" style={{ background: th.heroBg, minHeight: "130px" }}>
-        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-20 pointer-events-none select-none">
-          <GeneratedCategoryMark id="document" size={76} />
+      {/* Hero card — Study Tools style */}
+      <section
+        className="relative overflow-hidden rounded-[28px] p-6 mx-4 mb-5 border"
+        style={{
+          background: th.heroBg,
+          borderColor: th.catActiveBorder,
+          boxShadow: "0 16px 48px rgba(0,0,0,0.18)",
+        }}
+      >
+        <div
+          className="absolute -right-8 -top-8 w-40 h-40 rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, ${th.catActiveBg}, transparent 68%)` }}
+        />
+        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none">
+          <GeneratedCategoryMark id="document" size={80} />
         </div>
-        {!isLight && !isPink && (
-          <div className="absolute right-4 top-4 w-20 h-20 rounded-full opacity-15 pointer-events-none"
-            style={{ background: "radial-gradient(circle,#c084fc 0%,transparent 70%)" }} />
-        )}
-        <div className="relative px-5 py-5">
-          <h2 className="text-xl font-black leading-tight mb-1">
+        <div className="relative z-10 max-w-[72%]">
+          <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: th.accent }}>
+            {lang === "es" ? "Documentos Históricos" : "Historical Documents"}
+          </p>
+          <h2 className="mt-3 text-[26px] leading-tight font-black tracking-tight" style={{ color: th.textPrimary }}>
             <span style={{ color: th.heroAccentText }}>{t(lang, "learn_hero_line1")}</span>
-            <br /><span style={{ color: th.textPrimary }}>{t(lang, "learn_hero_line2")}</span>
+            <br />
+            {t(lang, "learn_hero_line2")}
           </h2>
-          <p className="text-xs mb-4" style={{ color: th.heroSubtext }}>
+          <p className="mt-3 text-sm leading-relaxed" style={{ color: th.heroSubtext }}>
             {t(lang, "learn_hero_sub")}
           </p>
         </div>
-      </div>
+      </section>
 
       {/* Timeline Highlights */}
       <div className="mb-6">
@@ -1109,15 +1120,21 @@ function LearnPageInner() {
       {/* Featured Documents */}
       <div className="mb-6">
         <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>Featured Documents</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>View all</button>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
+              {lang === "es" ? "Destacados" : "Featured"}
+            </p>
+            <p className="text-base font-black mt-0.5" style={{ color: th.textPrimary }}>
+              {lang === "es" ? "Documentos Destacados" : "Featured Documents"}
+            </p>
+          </div>
         </div>
         <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
           {filteredDocs.slice(0, 8).map((doc) => {
             const saved = savedDocs.has(doc.id);
             return (
               <div key={doc.id} className="flex-shrink-0 w-28 text-left">
-                <div className="relative w-28 h-40 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
+                <div className="relative w-28 h-40 rounded-[18px] overflow-hidden mb-2 shadow-lg shadow-black/50" style={{ border: `1px solid ${th.cardBorder}` }}>
                   <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
                   <DocCover doc={doc} />
                   {/* Floating bookmark */}
@@ -1148,7 +1165,14 @@ function LearnPageInner() {
       {/* My Documents */}
       <div id="my-documents" className="px-4 pb-10">
         <div className="flex items-center justify-between mb-4">
-          <p className="text-base font-bold" style={{ color: th.textPrimary }}>My Documents</p>
+          <div>
+            <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
+              {lang === "es" ? "Tu colección" : "Your Collection"}
+            </p>
+            <p className="text-base font-black mt-0.5" style={{ color: th.textPrimary }}>
+              {lang === "es" ? "Mis Documentos" : "My Documents"}
+            </p>
+          </div>
           <div className="flex items-center gap-3">
             <button style={{ color: th.iconMuted }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/><path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
@@ -1189,57 +1213,85 @@ function LearnPageInner() {
           </div>
         )}
 
-        {/* Document rows */}
+        {/* Document rows — Study Tools Continue Reading card style */}
         <div className="space-y-3">
           {listDocs.map((doc) => {
             const pct = progressMap[doc.id] ?? 0;
             const isDone = pct === 100;
             const saved = savedDocs.has(doc.id);
             const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
+            const catLabel = lang === "es"
+              ? (({ confession:"Confesión", catechism:"Catecismo", creed:"Credo", council:"Concilio", debate:"Debate", history:"Historia", theses:"Tesis", solas:"Solas" } as Record<string,string>)[doc.category] ?? doc.category)
+              : doc.category.charAt(0).toUpperCase() + doc.category.slice(1);
             return (
-              <div key={doc.id} className="flex items-center gap-3 p-3 rounded-2xl transition-all active:scale-[0.99]"
-                style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}` }}>
-                <button onClick={() => setSelected(doc.id)} className="flex-shrink-0 w-14 h-[72px] rounded-xl overflow-hidden shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
-                  <DocCover doc={doc} size="small" />
-                </button>
-                <button onClick={() => setSelected(doc.id)} className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-bold truncate" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
-                  <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>{doc.origin} · {doc.year}</p>
-                  {isDone ? (
-                    <p className="text-xs font-bold mt-1.5" style={{ color: "#34d399" }}>{lang === "es" ? "Completado" : "Completed"}</p>
-                  ) : pct > 0 ? (
-                    <div className="mt-2.5">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
-                          <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: th.progressBar }} />
-                        </div>
-                        <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
-                      </div>
-                      {savedProgress && (
-                        <p className="text-[10px] mt-1" style={{ color: th.textSecondary }}>
-                          {lang === "es" ? "Página" : "Page"} {savedProgress.page} {lang === "es" ? "de" : "of"} {savedProgress.total}
+              <div
+                key={doc.id}
+                className="rounded-[24px] border overflow-hidden"
+                style={{ background: th.cardBg, borderColor: th.cardBorder }}
+              >
+                <div
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setSelected(doc.id)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelected(doc.id); }}
+                  className="block w-full text-left p-4 active:scale-[0.99] transition-transform"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: th.accent }}>{catLabel}</p>
+                      <h3 className="text-[17px] font-black mt-1 truncate leading-tight" style={{ color: th.textPrimary }}>
+                        {documentTitle(doc, lang)}
+                      </h3>
+                      <p className="text-xs mt-1" style={{ color: th.textSecondary }}>{doc.origin} · {doc.year}</p>
+                      {isDone ? (
+                        <p className="text-xs font-bold mt-2" style={{ color: "#34d399" }}>{lang === "es" ? "✓ Completado" : "✓ Completed"}</p>
+                      ) : pct > 0 ? (
+                        <>
+                          <div className="mt-2.5 flex items-center gap-2">
+                            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
+                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: th.progressBar }} />
+                            </div>
+                            <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
+                          </div>
+                          {savedProgress && (
+                            <p className="text-[10px] mt-1" style={{ color: th.textSecondary }}>
+                              {lang === "es" ? "Página" : "Page"} {savedProgress.page} {lang === "es" ? "de" : "of"} {savedProgress.total}
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <p style={{ color: th.startReading, fontSize: "11px", marginTop: "6px", fontWeight: "700" }}>
+                          {lang === "es" ? "Empezar a leer →" : "Start reading →"}
                         </p>
                       )}
                     </div>
-                  ) : (
-                    <p style={{ color: th.startReading, fontSize: "11px", marginTop: "5px", fontWeight: "600" }}>{lang === "es" ? "Empezar a leer →" : "Start reading →"}</p>
-                  )}
-                </button>
-                {isDone ? (
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center" style={{ border: "2px solid #34d399" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {isDone ? (
+                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ border: "2px solid #34d399" }}>
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setBookmarkTarget(doc); }}
+                            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
+                            style={{ color: saved ? "#c4973a" : th.textVeryFaint, background: "rgba(255,255,255,0.04)" }}
+                          >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
+                              <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+                            </svg>
+                          </button>
+                          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: th.catActiveBg, color: th.accent }}>
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                            </svg>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
-                ) : (
-                  <button
-                    className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-                    style={{ color: saved ? "#c4973a" : th.textVeryFaint }}
-                    onClick={() => setBookmarkTarget(doc)}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                )}
+                </div>
               </div>
             );
           })}

@@ -34,6 +34,10 @@ interface ActivityItem {
   sub?: string;        // verse ref, church name, etc.
   color?: string;      // highlight dot color
   updated_at: string;
+  // Navigation target for highlights/notes
+  navBook?: string;    // book name for lexicon URL
+  navChapter?: number;
+  navVerses?: number[];
 }
 
 // ─── Parse all activity from sync rows ───────────────────────────────────────
@@ -53,6 +57,7 @@ function buildActivity(rows: SyncRow[]): ActivityItem[] {
         if (verses.length === 0) continue;
         // One item per chapter (group verses)
         const colors = [...new Set(verses.map(([, c]) => c))];
+        const verseNums = verses.map(([v]) => parseInt(v)).filter((n) => !isNaN(n));
         const verseList = verses.map(([v]) => v).join(", ");
         items.push({
           type: "highlight",
@@ -60,6 +65,9 @@ function buildActivity(rows: SyncRow[]): ActivityItem[] {
           sub: `Verses: ${verseList}`,
           color: COLOR_DOT[colors[0]] ?? AC,
           updated_at: row.updated_at,
+          navBook: bookName,
+          navChapter: chapter,
+          navVerses: verseNums,
         });
       } catch { /* skip */ }
     }
@@ -184,10 +192,29 @@ const TYPE_ICON: Record<ActivityType, string> = {
 };
 
 function ActivityCard({ item }: { item: ActivityItem }) {
+  const router = useRouter();
+
+  function handleCardClick() {
+    if (item.navBook && item.navChapter) {
+      const params = new URLSearchParams({ book: item.navBook, chapter: String(item.navChapter) });
+      if (item.navVerses && item.navVerses.length > 0) {
+        params.set("select", item.navVerses.join(","));
+      }
+      router.push(`/lexicon?${params.toString()}`);
+    }
+  }
+
+  const isNavigable = !!(item.navBook && item.navChapter);
+
   return (
     <div
-      className="rounded-2xl p-4 mb-3"
-      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+      className="rounded-2xl p-4 mb-3 transition-colors"
+      style={{
+        background: "rgba(255,255,255,0.04)",
+        border: "1px solid rgba(255,255,255,0.06)",
+        cursor: isNavigable ? "pointer" : "default",
+      }}
+      onClick={isNavigable ? handleCardClick : undefined}
     >
       <div className="flex items-start gap-3">
         <div
@@ -213,6 +240,9 @@ function ActivityCard({ item }: { item: ActivityItem }) {
             >
               <p className="text-xs text-white/50 leading-relaxed line-clamp-2">{item.sub}</p>
             </div>
+          )}
+          {isNavigable && (
+            <p className="text-[10px] mt-2" style={{ color: AC }}>Tap to read →</p>
           )}
         </div>
       </div>
@@ -262,7 +292,34 @@ export default function ProfilePage() {
         .from("user_sync_data")
         .select("storage_key, value, updated_at")
         .eq("user_id", u.id);
-      setRows((data as SyncRow[]) ?? []);
+
+      // Merge localStorage on top of cloud data so fresh highlights appear instantly
+      // without waiting for the next cloud push.
+      const cloudMap = new Map<string, SyncRow>(
+        ((data as SyncRow[]) ?? []).map((r) => [r.storage_key, r])
+      );
+      const now = new Date().toISOString();
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (!key) continue;
+          if (
+            key.startsWith("ryc-vcolor-") ||
+            key.startsWith("ryc-chapter-note-") ||
+            key === "ryc-bookmarks" ||
+            key === "tulip-church-analyses" ||
+            key === "tulip_badges_earned_v1"
+          ) {
+            const val = localStorage.getItem(key);
+            if (val !== null) {
+              // Local wins (more recent than cloud snapshot)
+              cloudMap.set(key, { storage_key: key, value: val, updated_at: now });
+            }
+          }
+        }
+      } catch { /* localStorage not available */ }
+
+      setRows(Array.from(cloudMap.values()));
       setLoading(false);
     }
     load();
