@@ -85,32 +85,12 @@ export async function renderVerseToCanvas(
     ctx.fillStyle = BG_DARK; ctx.fillRect(0, 0, WIDTH, HEIGHT);
   }
 
-  // ── 2. Corner decorations ────────────────────────────────────────────────────
-  ctx.strokeStyle = GOLD_DIM;
-  ctx.lineWidth = 2;
-  ctx.beginPath(); ctx.moveTo(60, 60);                     ctx.lineTo(160, 60);                     ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(60, 60);                     ctx.lineTo(60, 160);                     ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(WIDTH - 60, HEIGHT - 60);    ctx.lineTo(WIDTH - 160, HEIGHT - 60);    ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(WIDTH - 60, HEIGHT - 60);    ctx.lineTo(WIDTH - 60, HEIGHT - 160);    ctx.stroke();
-
-  // ── 3. Top gold rule ─────────────────────────────────────────────────────────
-  ctx.strokeStyle = "rgba(201,169,97,0.4)";
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(80, 140); ctx.lineTo(WIDTH - 80, 140); ctx.stroke();
-
-  // ── 4. App label ─────────────────────────────────────────────────────────────
-  ctx.fillStyle  = "rgba(201,169,97,0.6)";
-  ctx.font       = "500 22px sans-serif";
-  ctx.textAlign  = "center";
-  (ctx as any).letterSpacing = "4px";
-  ctx.fillText("TULIP BIBLE APP", WIDTH / 2, 115);
-
-  // ── 5. Opening quote mark ─────────────────────────────────────────────────────
+  // ── 2. Opening quote mark ────────────────────────────────────────────────────
   ctx.fillStyle  = GOLD_DIM;
   ctx.font       = `bold 120px ${fontFamily}`;
-  ctx.textAlign  = "left";
-  (ctx as any).letterSpacing = "0px";
-  ctx.fillText("“", 72, 290);
+  ctx.textAlign  = “left”;
+  (ctx as any).letterSpacing = “0px”;
+  ctx.fillText(“””, 72, 220);
 
   // ── 6. Verse text ─────────────────────────────────────────────────────────────
   const autoSize   = getVerseFont(opts.verseText.length);
@@ -126,7 +106,7 @@ export async function renderVerseToCanvas(
   const textX  = align === "left" ? 100 : align === "right" ? WIDTH - 100 : WIDTH / 2;
   const lines  = wrapText(ctx, opts.verseText, WIDTH - 200);
   const totalH = lines.length * lineHeight;
-  let y = HEIGHT / 2 - totalH / 2 + 20;
+  let y = HEIGHT / 2 - totalH / 2;
   for (const line of lines) {
     ctx.fillText(line, textX, y);
     y += lineHeight;
@@ -135,23 +115,31 @@ export async function renderVerseToCanvas(
   ctx.globalAlpha = 1;
   (ctx as any).letterSpacing = "0px";
 
-  // ── 7. Reference gold rule ────────────────────────────────────────────────────
-  const refY = Math.max(y + 40, HEIGHT * 0.72);
-  ctx.strokeStyle = "rgba(201,169,97,0.5)";
+  // ── 7. Reference ────────────────────────────────────────────────────────────
+  const refY = Math.max(y + 50, HEIGHT * 0.73);
+
+  // Short divider line
+  ctx.strokeStyle = `rgba(255,255,255,0.25)`;
   ctx.lineWidth   = 1;
   ctx.beginPath();
-  ctx.moveTo(WIDTH / 2 - 60, refY - 20);
-  ctx.lineTo(WIDTH / 2 + 60, refY - 20);
+  ctx.moveTo(WIDTH / 2 - 48, refY - 18);
+  ctx.lineTo(WIDTH / 2 + 48, refY - 18);
   ctx.stroke();
 
-  // ── 8. Reference text ────────────────────────────────────────────────────────
-  ctx.fillStyle  = GOLD;
-  ctx.font       = "bold 38px sans-serif";
-  ctx.textAlign  = "center";
+  // Reference in same color as verse text (white by default)
+  ctx.fillStyle   = textColor;
+  ctx.globalAlpha = textOpacity;
+  ctx.font        = `600 36px ${fontFamily}`;
+  ctx.textAlign   = "center";
+  (ctx as any).letterSpacing = "2px";
+  ctx.fillText(opts.reference, WIDTH / 2, refY + 8);
+  ctx.globalAlpha = 1;
   (ctx as any).letterSpacing = "0px";
-  ctx.fillText(opts.reference, WIDTH / 2, refY + 10);
 
-  // ── 9. Logo ──────────────────────────────────────────────────────────────────
+  // ── 8. Branding — centered, premium ─────────────────────────────────────────
+  const brandY = HEIGHT - 60;
+
+  // Logo centered above text
   if (opts.logoSrc) {
     try {
       const logo = new Image();
@@ -159,19 +147,21 @@ export async function renderVerseToCanvas(
       logo.src = opts.logoSrc;
       await new Promise<void>((res) => { logo.onload = () => res(); logo.onerror = () => res(); });
       if (logo.complete && logo.naturalWidth > 0) {
-        const lSize = 64;
-        ctx.globalAlpha = 0.6;
-        ctx.drawImage(logo, WIDTH - lSize - 40, HEIGHT - lSize - 40, lSize, lSize);
+        const lSize = 28;
+        ctx.globalAlpha = 0.45;
+        ctx.drawImage(logo, WIDTH / 2 - lSize / 2, brandY - lSize - 10, lSize, lSize);
         ctx.globalAlpha = 1;
       }
     } catch { /* logo failed */ }
   }
 
-  // ── 10. Branding ─────────────────────────────────────────────────────────────
-  ctx.fillStyle  = "rgba(201,169,97,0.35)";
-  ctx.font       = "400 20px sans-serif";
-  ctx.textAlign  = "right";
-  ctx.fillText("tulipbibleapp.com", WIDTH - 50, HEIGHT - 48);
+  // Domain centered
+  ctx.fillStyle  = "rgba(255,255,255,0.28)";
+  ctx.font       = "400 18px sans-serif";
+  ctx.textAlign  = "center";
+  (ctx as any).letterSpacing = "3px";
+  ctx.fillText("TULIPBIBLEAPP.COM", WIDTH / 2, brandY);
+  (ctx as any).letterSpacing = "0px";
 }
 
 // ─── Export wrapper ───────────────────────────────────────────────────────────
