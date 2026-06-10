@@ -38,6 +38,7 @@ interface ActivityItem {
   navBook?: string;    // book name for lexicon URL
   navChapter?: number;
   navVerses?: number[];
+  badgeImage?: string; // /badges/xxx.png for badge items
 }
 
 // ─── Parse all activity from sync rows ───────────────────────────────────────
@@ -134,6 +135,7 @@ function buildActivity(rows: SyncRow[]): ActivityItem[] {
             label: `You earned "${def.name}"`,
             sub: def.reason,
             updated_at: b.earnedAt,
+            badgeImage: def.image,
           });
         }
       } catch { /* skip */ }
@@ -217,12 +219,22 @@ function ActivityCard({ item }: { item: ActivityItem }) {
       onClick={isNavigable ? handleCardClick : undefined}
     >
       <div className="flex items-start gap-3">
-        <div
-          className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
-          style={{ background: AC_BG, color: AC }}
-        >
-          {TYPE_ICON[item.type]}
-        </div>
+        {item.type === "badge" && item.badgeImage ? (
+          <div className="w-10 h-10 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <img
+              src={item.badgeImage}
+              alt={item.label}
+              className="w-10 h-10 object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.35)]"
+            />
+          </div>
+        ) : (
+          <div
+            className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
+            style={{ background: AC_BG, color: AC }}
+          >
+            {TYPE_ICON[item.type]}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
             <p className="text-sm font-semibold text-white leading-snug">{item.label}</p>
