@@ -295,8 +295,11 @@ export default function MorePage() {
           <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Account</p>
           {cloudUser ? (
             <div className="rounded-2xl bg-white/[0.04] overflow-hidden">
-              {/* Logged-in header */}
-              <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05]">
+              {/* Logged-in header — tap to view profile */}
+              <Link
+                href="/profile"
+                className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
+              >
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
                   style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
@@ -308,12 +311,7 @@ export default function MorePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{cloudUser.user_metadata?.name ?? cloudUser.email}</p>
-                  <p className="text-xs text-white/40 mt-0.5">
-                    {syncStatus === "syncing" && "Syncing…"}
-                    {syncStatus === "done" && "All data synced"}
-                    {syncStatus === "error" && "Sync error — try again"}
-                    {syncStatus === "idle" && "Cloud sync enabled"}
-                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "#c9a961" }}>View my profile →</p>
                 </div>
                 <div
                   className="w-2 h-2 rounded-full flex-shrink-0"
@@ -324,16 +322,6 @@ export default function MorePage() {
                       : "rgba(255,255,255,0.2)",
                   }}
                 />
-              </div>
-              {/* View Profile */}
-              <Link
-                href="/profile"
-                className="flex items-center justify-between w-full px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
-              >
-                <p className="text-sm font-semibold text-white">View Profile</p>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: "rgba(255,255,255,0.3)" }}>
-                  <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
               </Link>
               {/* Sign out */}
               <button
