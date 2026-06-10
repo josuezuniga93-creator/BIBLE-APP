@@ -544,20 +544,18 @@ function VerseSelectionTray({
               <span>{isExporting ? "…" : (lang === "es" ? "Crear Imagen" : "Create Image")}</span>
             </button>
 
-            {/* Background picker sheet */}
+            {/* Background picker modal */}
             {showBgPicker && (
               <div
-                className="fixed inset-0 z-[9999] flex flex-col justify-end"
+                className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
                 style={{ background: "rgba(0,0,0,0.72)" }}
                 onClick={() => setShowBgPicker(false)}
               >
                 <div
-                  className="relative rounded-t-[28px] p-5 pb-8"
+                  className="relative rounded-[28px] p-5 pb-6 w-full max-w-sm"
                   style={{ background: "#0e1118", border: "1px solid rgba(255,255,255,0.08)" }}
                   onClick={(e) => e.stopPropagation()}
                 >
-                  {/* Handle */}
-                  <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/20" />
                   <p className="text-[11px] uppercase tracking-[0.22em] font-black mb-1" style={{ color: "#c9a961" }}>
                     {lang === "es" ? "Fondo" : "Background"}
                   </p>

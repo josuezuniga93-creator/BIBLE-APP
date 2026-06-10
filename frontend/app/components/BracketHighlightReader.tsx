@@ -2,6 +2,7 @@
 
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
+import { exportVerseAsQuoteImage, BG_OPTIONS } from "../lib/verseQuoteExport";
 
 type HighlightColor = "gold" | "blue" | "rose" | "green";
 
@@ -187,6 +188,10 @@ export function BracketHighlightReader({
   const [showPocket, setShowPocket] = useState(false);
   const [highlightSearchQuery, setHighlightSearchQuery] = useState("");
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
+  const [showBgPicker, setShowBgPicker] = useState(false);
+  const [bgChoice, setBgChoice] = useState<string | null>(null);
+  const [blurBg, setBlurBg] = useState(false);
+  const [isExportingImg, setIsExportingImg] = useState(false);
   const longPressTimer = useRef<number | null>(null);
   const activeHandle = useRef<"start" | "end" | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
@@ -500,6 +505,13 @@ export function BracketHighlightReader({
                   {lang === "es" ? "Bolsa" : "Pocket"}
                 </button>
                 <button
+                  onClick={() => setShowBgPicker(true)}
+                  className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
+                  style={{ background: "rgba(201,169,97,1)", color: "#08090f" }}
+                >
+                  {lang === "es" ? "Imagen" : "Image"}
+                </button>
+                <button
                   onClick={clearSelection}
                   className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
                   style={{ background: "rgba(255,255,255,0.08)" }}
@@ -726,6 +738,107 @@ export function BracketHighlightReader({
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── Background image picker sheet ───────────────────────────────── */}
+      {showBgPicker && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
+          style={{ background: "rgba(0,0,0,0.72)" }}
+          onClick={() => setShowBgPicker(false)}
+        >
+          <div
+            className="relative rounded-[28px] p-5 pb-6 w-full max-w-sm"
+            style={{ background: "#0e1118", border: "1px solid rgba(255,255,255,0.08)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p className="text-[11px] uppercase tracking-[0.22em] font-black mb-1" style={{ color: "#c9a961" }}>
+              {lang === "es" ? "Fondo" : "Background"}
+            </p>
+            <h3 className="text-lg font-black text-white mb-4">
+              {lang === "es" ? "Elige un fondo" : "Choose a background"}
+            </h3>
+
+            {/* Thumbnails */}
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {BG_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setBgChoice(opt.src)}
+                  className="flex-shrink-0 relative rounded-2xl overflow-hidden transition-all active:scale-95"
+                  style={{
+                    width: 80, height: 80,
+                    border: bgChoice === opt.src
+                      ? "2.5px solid #c9a961"
+                      : "2px solid rgba(255,255,255,0.12)",
+                  }}
+                >
+                  {opt.src ? (
+                    <img src={opt.src} alt={opt.label} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center" style={{ background: "#08090f" }}>
+                      <span className="text-[10px] font-black uppercase tracking-wider text-white/40">{opt.label}</span>
+                    </div>
+                  )}
+                  {bgChoice === opt.src && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "#c9a961" }}>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </div>
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Blur toggle */}
+            {bgChoice && (
+              <button
+                type="button"
+                onClick={() => setBlurBg((b) => !b)}
+                className="mt-4 flex items-center justify-between w-full rounded-2xl px-4 py-3 transition-all active:scale-[0.98]"
+                style={{
+                  background: blurBg ? "rgba(201,169,97,0.12)" : "rgba(255,255,255,0.05)",
+                  border: `1px solid ${blurBg ? "rgba(201,169,97,0.4)" : "rgba(255,255,255,0.1)"}`,
+                }}
+              >
+                <span className="text-[13px] font-semibold" style={{ color: blurBg ? "#c9a961" : "rgba(255,255,255,0.6)" }}>
+                  {lang === "es" ? "Difuminar fondo" : "Blur background"}
+                </span>
+                <div className="relative w-10 h-5 rounded-full transition-colors" style={{ background: blurBg ? "#c9a961" : "rgba(255,255,255,0.15)" }}>
+                  <div className="absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all" style={{ left: blurBg ? "calc(100% - 1.125rem)" : "0.125rem" }} />
+                </div>
+              </button>
+            )}
+
+            {/* Export */}
+            <button
+              type="button"
+              disabled={isExportingImg}
+              onClick={async () => {
+                setShowBgPicker(false);
+                setIsExportingImg(true);
+                try {
+                  await exportVerseAsQuoteImage({
+                    verseText: selectedText,
+                    reference: reference || title,
+                    logoSrc: "/tulip-logo.png",
+                    backgroundSrc: bgChoice ?? undefined,
+                    blurBackground: blurBg,
+                  });
+                } finally {
+                  setIsExportingImg(false);
+                  setBlurBg(false);
+                }
+              }}
+              className="mt-5 w-full rounded-2xl py-3.5 text-[13px] font-black transition-all active:scale-[0.98] disabled:opacity-45"
+              style={{ background: "#c9a961", color: "#08090f" }}
+            >
+              {isExportingImg ? "…" : (lang === "es" ? "Exportar Imagen" : "Export Image")}
+            </button>
           </div>
         </div>
       )}
