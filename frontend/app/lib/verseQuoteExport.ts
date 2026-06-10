@@ -88,9 +88,9 @@ export async function renderVerseToCanvas(
   // ── 2. Opening quote mark ────────────────────────────────────────────────────
   ctx.fillStyle  = GOLD_DIM;
   ctx.font       = `bold 120px ${fontFamily}`;
-  ctx.textAlign  = “left”;
-  (ctx as any).letterSpacing = “0px”;
-  ctx.fillText(“””, 72, 220);
+  ctx.textAlign  = "left";
+  (ctx as any).letterSpacing = "0px";
+  ctx.fillText("“", 72, 220);
 
   // ── 6. Verse text ─────────────────────────────────────────────────────────────
   const autoSize   = getVerseFont(opts.verseText.length);
