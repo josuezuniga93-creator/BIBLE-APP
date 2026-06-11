@@ -1,5 +1,103 @@
+// ── 14-day rotating greeting system ─────────────────────────────────────────
+// Each day has morning / midday / evening entries.
+// Day is determined by: Math.floor(daysSinceEpoch / 1) % 14  (resets every 14 days)
+
+interface DayGreeting {
+  morning: { line1: string; line2: string };
+  midday:  { line1: string; line2: string };
+  evening: { line1: string; line2: string };
+}
+
+const DAY_GREETINGS: DayGreeting[] = [
+  // Day 1
+  {
+    morning: { line1: "Good morning, {name}.",        line2: "God's mercies are new with the sunrise." },
+    midday:  { line1: "It's lunchtime, {name}.",      line2: "Feed your soul as well as your body today." },
+    evening: { line1: "The day is winding down, {name}.", line2: "The Lord remains faithful through every hour." },
+  },
+  // Day 2
+  {
+    morning: { line1: "A new day has arrived, {name}.",   line2: "The Word of God is a lamp for your path." },
+    midday:  { line1: "Take a moment to pause, {name}.",  line2: "Christ's words are bread for the hungry soul." },
+    evening: { line1: "Rest well tonight, {name}.",       line2: "The Lord reigns while the world sleeps." },
+  },
+  // Day 3
+  {
+    morning: { line1: "Welcome to a new morning, {name}.", line2: "Every day is another gift from God's hand." },
+    midday:  { line1: "The day moves quickly, {name}.",    line2: "Remember what matters most is eternal." },
+    evening: { line1: "Night has come, {name}.",           line2: "God's promises remain unchanged." },
+  },
+  // Day 4
+  {
+    morning: { line1: "Good morning, {name}.",         line2: "Seek first the kingdom of God today." },
+    midday:  { line1: "As you eat lunch, {name}.",     line2: "Remember that man does not live by bread alone." },
+    evening: { line1: "The sun has set, {name}.",      line2: "Christ remains the Light of the world." },
+  },
+  // Day 5
+  {
+    morning: { line1: "Rise with gratitude, {name}.",     line2: "The Lord has sustained you another day." },
+    midday:  { line1: "Take a breath this afternoon, {name}.", line2: "God's providence is never hurried." },
+    evening: { line1: "The work of today is finished, {name}.", line2: "Entrust tomorrow to the Lord." },
+  },
+  // Day 6
+  {
+    morning: { line1: "A fresh morning begins, {name}.",       line2: "God's truth stands firm forever." },
+    midday:  { line1: "Pause between today's tasks, {name}.",  line2: "The Lord is worthy of your attention." },
+    evening: { line1: "Another day is complete, {name}.",      line2: "Reflect on the goodness of God." },
+  },
+  // Day 7
+  {
+    morning: { line1: "Good morning, {name}.",          line2: "The heavens still declare the glory of God." },
+    midday:  { line1: "Lunch is here, {name}.",         line2: "Nourish your heart with Scripture today." },
+    evening: { line1: "Rest from today's labor, {name}.", line2: "The Lord's purposes continue through the night." },
+  },
+  // Day 8
+  {
+    morning: { line1: "The day begins again, {name}.",     line2: "Walk in wisdom and humility." },
+    midday:  { line1: "The afternoon is upon you, {name}.", line2: "Fix your thoughts on things above." },
+    evening: { line1: "The evening sky reminds us, {name}.", line2: "God's faithfulness reaches every generation." },
+  },
+  // Day 9
+  {
+    morning: { line1: "Good morning, {name}.",           line2: "The Lord's compassions never fail." },
+    midday:  { line1: "Pause for a moment today, {name}.", line2: "A few minutes in God's Word are never wasted." },
+    evening: { line1: "As night approaches, {name}.",    line2: "Remember the Lord is sovereign over all things." },
+  },
+  // Day 10
+  {
+    morning: { line1: "Another sunrise has arrived, {name}.", line2: "God remains worthy of worship." },
+    midday:  { line1: "The middle of the day has come, {name}.", line2: "Let your thoughts return to Christ." },
+    evening: { line1: "The day is ending, {name}.",      line2: "Give thanks for every undeserved mercy." },
+  },
+  // Day 11
+  {
+    morning: { line1: "Welcome this new day, {name}.",    line2: "The fear of the Lord is the beginning of wisdom." },
+    midday:  { line1: "Lunch hour has arrived, {name}.",  line2: "Take time to nourish both body and soul." },
+    evening: { line1: "The night is drawing near, {name}.", line2: "God's Word remains a steady guide." },
+  },
+  // Day 12
+  {
+    morning: { line1: "Good morning, {name}.",            line2: "Let God's truth shape your day." },
+    midday:  { line1: "The afternoon is here, {name}.",   line2: "Remember that Christ's kingdom cannot be shaken." },
+    evening: { line1: "The day is nearly done, {name}.",  line2: "The Lord's faithfulness endures forever." },
+  },
+  // Day 13
+  {
+    morning: { line1: "Rise and begin the day, {name}.",  line2: "Seek wisdom from the Scriptures." },
+    midday:  { line1: "Take a brief pause, {name}.",      line2: "God's promises are worth remembering." },
+    evening: { line1: "Evening has arrived, {name}.",     line2: "The Lord remains worthy of your trust." },
+  },
+  // Day 14
+  {
+    morning: { line1: "A new morning greets you, {name}.", line2: "Give thanks to God for His many blessings." },
+    midday:  { line1: "The day is halfway spent, {name}.", line2: "Let your heart be refreshed by God's truth." },
+    evening: { line1: "Rest well tonight, {name}.",        line2: "Tomorrow's concerns belong to the Lord." },
+  },
+];
+
+// Legacy export — kept so nothing that imports GREETINGS breaks at build time
 export interface Greeting {
-  line1: string; // uses {name} as placeholder
+  line1: string;
   line2: string;
   line1Es?: string;
   line2Es?: string;
@@ -167,21 +265,23 @@ function hashCode(str: string): number {
   return Math.abs(h);
 }
 
-export function getDailyGreeting(name: string, hour: number, lang: string): { line1: string; line2: string } {
-  const today = new Date();
-  const dateKey = `${today.getFullYear()}-${today.getMonth()}-${today.getDate()}`;
-  const seed = hashCode(dateKey + name);
+export function getDailyGreeting(name: string, hour: number, _lang: string): { line1: string; line2: string } {
+  // Which 14-day cycle day are we on? (0-indexed, then +1)
+  const today    = new Date();
+  const epoch    = new Date(2024, 0, 1); // fixed anchor date
+  const daysSince = Math.floor((today.getTime() - epoch.getTime()) / (1000 * 60 * 60 * 24));
+  const dayIndex  = daysSince % 14; // 0–13
 
-  // Filter by time slot
-  const slot =
-    hour >= 5 && hour < 12 ? "morning" :
-    hour >= 12 && hour < 17 ? "afternoon" :
-    hour >= 17 && hour < 21 ? "evening" : "night";
+  const dayEntry = DAY_GREETINGS[dayIndex];
 
-  const pool = GREETINGS.filter(g => g.slot === slot || g.slot === "any");
-  const item = pool[seed % pool.length];
+  // Time slot: morning 5–11, midday 11–17, evening 17+
+  const slot: keyof DayGreeting =
+    hour >= 5 && hour < 11  ? "morning" :
+    hour >= 11 && hour < 17 ? "midday"  : "evening";
 
-  const l1 = (lang === "es" && item.line1Es ? item.line1Es : item.line1).replace("{name}", name);
-  const l2 = lang === "es" && item.line2Es ? item.line2Es : item.line2;
-  return { line1: l1, line2: l2 };
+  const entry = dayEntry[slot];
+  return {
+    line1: entry.line1.replace("{name}", name),
+    line2: entry.line2,
+  };
 }

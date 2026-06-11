@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, ChangeEvent } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { BG_OPTIONS, renderVerseToCanvas, type VerseQuoteOptions } from "../lib/verseQuoteExport";
 
 // ─── Types & constants ────────────────────────────────────────────────────────
@@ -64,8 +64,6 @@ interface CreateImageEditorProps {
 export default function CreateImageEditor({ verseText, reference, lang, onClose }: CreateImageEditorProps) {
   const previewRef   = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [customBgUrl, setCustomBgUrl] = useState<string | null>(null);
 
   const [tab,          setTab]          = useState<EditorTab>("background");
   const [fontKey,      setFontKey]      = useState("georgia");
@@ -76,7 +74,7 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
   const [aspectRatio,  setAspectRatio]  = useState<"1:1" | "3:4">("1:1");
   const [textColor,    setTextColor]    = useState("#ffffff");
   const [textOpacity,  setTextOpacity]  = useState(1);
-  const [bgSrc,        setBgSrc]        = useState<string | null>(null);
+  const [bgSrc,        setBgSrc]        = useState<string | null>("/bg/bg1.png");
   const [bgBrightness, setBgBrightness] = useState(50);
   const [bgBlur,       setBgBlur]       = useState(0);
   const [isExporting,  setIsExporting]  = useState(false);
@@ -94,18 +92,6 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
       document.head.appendChild(link);
     }
   }, []);
-
-  const handleGalleryPick = (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    // Revoke previous custom URL
-    if (customBgUrl) URL.revokeObjectURL(customBgUrl);
-    const url = URL.createObjectURL(file);
-    setCustomBgUrl(url);
-    setBgSrc(url);
-    // Reset input so same file can be re-picked
-    e.target.value = "";
-  };
 
   const buildOpts = useCallback((): VerseQuoteOptions => ({
     verseText, reference,
@@ -381,39 +367,9 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
         {/* BACKGROUND */}
         {tab === "background" && (
           <div className="px-5 py-4" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              style={{ display: "none" }}
-              onChange={handleGalleryPick}
-            />
-
             {/* Image row */}
             <div className="flex gap-2.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-              {/* Gallery picker button — always first */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="flex-shrink-0 rounded-xl overflow-hidden transition-all active:scale-95 flex items-center justify-center"
-                style={{
-                  width: 52, height: 52,
-                  background: customBgUrl && bgSrc === customBgUrl ? "rgba(201,169,97,0.1)" : "rgba(255,255,255,0.06)",
-                  border: customBgUrl && bgSrc === customBgUrl ? "2.5px solid #c9a961" : "2px solid rgba(255,255,255,0.12)",
-                }}
-              >
-                {customBgUrl ? (
-                  <img src={customBgUrl} alt="Custom" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : (
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="3"/>
-                    <circle cx="8.5" cy="8.5" r="1.5"/>
-                    <polyline points="21 15 16 10 5 21"/>
-                  </svg>
-                )}
-              </button>
-
-              {BG_OPTIONS.map((opt) => (
+              {BG_OPTIONS.filter(opt => opt.src !== null).map((opt) => (
                 <button key={opt.id} onClick={() => setBgSrc(opt.src)}
                   className="flex-shrink-0 rounded-xl overflow-hidden transition-all active:scale-95 relative"
                   style={{

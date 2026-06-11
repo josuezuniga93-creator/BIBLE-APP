@@ -204,27 +204,6 @@ export default function MorePage() {
   }, []);
 
 
-  // ── Android Mode state — read from localStorage synchronously to avoid flash ──
-  const [androidMode, setAndroidMode] = useState<boolean>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("ryc-android-mode") === "true";
-    }
-    return false;
-  });
-
-  function handleAndroidMode(enabled: boolean) {
-    setAndroidMode(enabled);
-    const val = enabled ? "true" : "false";
-    try {
-      localStorage.setItem("ryc-android-mode", val);
-      if (enabled) {
-        document.documentElement.setAttribute("data-android-mode", "true");
-      } else {
-        document.documentElement.removeAttribute("data-android-mode");
-      }
-    } catch { /**/ }
-  }
-
   // ── Notification state ──────────────────────────────────────────────────────
   const [notifEnabled, setNotifEnabled] = useState(false);
   const [notifStatus, setNotifStatus] = useState<"default"|"granted"|"denied">("default");
@@ -496,29 +475,6 @@ export default function MorePage() {
               <span
                 className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
                   notifEnabled ? "translate-x-6" : "translate-x-0"
-                }`}
-              />
-            </button>
-          </div>
-        </section>
-
-        {/* ── Display (iPhone Mode) ─────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_display")}</p>
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
-            <div>
-              <p className="text-sm font-semibold text-white">{t(lang, "more_iphone_mode")}</p>
-              <p className="text-xs text-white/40 mt-0.5 max-w-[220px] leading-relaxed">{t(lang, "more_iphone_mode_desc")}</p>
-            </div>
-            <button
-              onClick={() => handleAndroidMode(!androidMode)}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ml-3 ${
-                androidMode ? "bg-white/25" : "bg-white/[0.08]"
-              }`}
-            >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
-                  androidMode ? "translate-x-6" : "translate-x-0"
                 }`}
               />
             </button>

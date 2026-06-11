@@ -12,193 +12,13 @@ import { localizeReference } from "./lib/spanishContent";
 
 import { getRotatingArticle, daysUntilNextRotation } from "./lib/graceGemsArticles";
 import { getDailyGreeting } from "./lib/greetings";
+import { getTodaysEntry } from "./lib/churchHistory";
 import QuoteOfWeek from "./components/QuoteOfWeek";
 import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
 import { OnboardingPopup } from "./components/OnboardingPopup";
 import { getCloudUser } from "./lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
-
-// ─── Church History Verses ────────────────────────────────────────────────────
-
-interface HistoryVerse {
-  reference: string;
-  book: string;
-  chapter: number;
-  text: string;
-  event: string;
-  year: string;
-  history: string;
-  glow: string;
-}
-
-const HISTORY_VERSES: HistoryVerse[] = [
-  {
-    reference: "John 1:1",
-    book: "John", chapter: 1,
-    text: "In the beginning was the Word, and the Word was with God, and the Word was God.",
-    event: "Council of Nicaea",
-    year: "325 AD",
-    glow: "rgba(56,189,248,0.18)",
-    history:
-      "When Arius taught that Christ was a created being — 'there was a time when he was not' — the church convened at Nicaea under Emperor Constantine. John 1:1 was the anchor text: if the Word was God from the beginning, he could not have had a beginning. Bishop Athanasius argued from this verse that a less-than-God Christ saves no one. The council affirmed the Son is homoousios — of the same substance as the Father — a position Athanasius would defend alone against emperors and bishops for decades, giving rise to the phrase Athanasius contra mundum: Athanasius against the world.",
-  },
-  {
-    reference: "Romans 1:17",
-    book: "Romans", chapter: 1,
-    text: "For in it the righteousness of God is revealed from faith for faith, as it is written, 'The righteous shall live by faith.'",
-    event: "Luther's Tower Experience",
-    year: "c. 1515",
-    glow: "rgba(201,169,97,0.18)",
-    history:
-      "Martin Luther was a tormented Augustinian monk who hated the phrase 'righteousness of God' — he read it as God's punishing justice against sinners. While studying Romans in his tower cell in Wittenberg, he was struck: the righteousness Paul describes is not demanded from us but given to us, received through faith. 'I felt myself to be reborn and to have gone through open doors into paradise,' he wrote. This single verse ignited the Protestant Reformation. Two years later, Luther nailed his 95 Theses to the Wittenberg church door, and the medieval church was never the same.",
-  },
-  {
-    reference: "Galatians 2:16",
-    book: "Galatians", chapter: 2,
-    text: "A person is not justified by works of the law but through faith in Jesus Christ.",
-    event: "The Reformation Debate",
-    year: "1517–1545",
-    glow: "rgba(249,115,22,0.18)",
-    history:
-      "This verse was the sword of the Reformation. When Rome insisted that justification required both faith and meritorious works — and condemned the Reformers at the Council of Trent (1545–1563) — Luther, Calvin, and Melanchthon all returned to Galatians. Calvin called justification 'the hinge on which all true religion turns.' The Reformers insisted: to add works to faith as the ground of justification is to preach a different gospel. The Council of Trent formally anathematized the Reformation position, a condemnation that formally stands to this day in Roman Catholic canon law.",
-  },
-  {
-    reference: "John 6:37",
-    book: "John", chapter: 6,
-    text: "All that the Father gives me will come to me, and whoever comes to me I will never cast out.",
-    event: "The Synod of Dort",
-    year: "1618–1619",
-    glow: "rgba(139,92,246,0.18)",
-    history:
-      "After Jacobus Arminius and his followers challenged Calvinist teaching on predestination, the Dutch Reformed church convened an international council at Dordrecht with delegates from England, Germany, Switzerland, and the Netherlands. Five points were at stake: total depravity, unconditional election, limited atonement, irresistible grace, and perseverance of the saints — the TULIP doctrines. John 6:37–40 was central: 'All that the Father gives me will come' — election is the Father's act. 'I will never cast out' — preservation is Christ's promise. The Canons of Dort remain one of the most carefully argued theological documents in Christian history.",
-  },
-  {
-    reference: "Acts 5:29",
-    book: "Acts", chapter: 5,
-    text: "We must obey God rather than men.",
-    event: "Diet of Worms",
-    year: "1521",
-    glow: "rgba(239,68,68,0.18)",
-    history:
-      "Standing before Emperor Charles V and the full assembly of the Holy Roman Empire, Martin Luther was ordered to recant his writings. His answer has echoed for five centuries: 'Unless I am convinced by the testimony of the Scriptures or by clear reason — for I do not trust either in the pope or in councils alone, since it is well known that they have often erred and contradicted themselves — I am bound by the Scriptures I have quoted, and my conscience is captive to the Word of God. I cannot and will not recant anything, since it is neither safe nor right to go against conscience. Here I stand. I cannot do otherwise. God help me. Amen.' He was declared an outlaw of the Empire the next day.",
-  },
-  {
-    reference: "2 Timothy 3:16",
-    book: "2 Timothy", chapter: 3,
-    text: "All Scripture is breathed out by God and profitable for doctrine, for reproof, for correction, for training in righteousness.",
-    event: "Sola Scriptura",
-    year: "Reformation Era",
-    glow: "rgba(16,185,129,0.18)",
-    history:
-      "The first of the Five Solas — Scripture alone — was not an invention of the Reformers but a recovery of the early church's conviction. When Rome argued that Scripture and Church Tradition carried equal authority, the Reformers cited 2 Timothy 3:16: God breathed out Scripture; councils and popes are fallible men. Sola Scriptura does not mean 'no creeds or confessions' — Luther, Calvin, and the Westminster Divines all wrote extensive confessional documents. It means Scripture is the supreme and final authority to which all tradition must submit. This principle was the formal cause of the Reformation.",
-  },
-  {
-    reference: "Romans 8:30",
-    book: "Romans", chapter: 8,
-    text: "And those whom he predestined he also called, and those whom he called he also justified, and those whom he justified he also glorified.",
-    event: "Augustine vs. Pelagius",
-    year: "410–430 AD",
-    glow: "rgba(99,102,241,0.18)",
-    history:
-      "Pelagius, a British monk in Rome, taught that human beings have the natural ability to choose good and earn salvation — sin is imitation, not inherited corruption. Augustine of Hippo saw this as the destruction of grace. His debate with Pelagius produced some of the most important theology in Christian history: original sin, the bondage of the will, prevenient and irresistible grace, and predestination. Romans 8:29–30 — the 'golden chain' of salvation — was Augustine's anchor. The Council of Carthage (418 AD) condemned Pelagianism. Augustine's framework became the backbone of both Catholic and Protestant soteriology, though the Reformers argued Rome itself had drifted back toward Pelagius.",
-  },
-  {
-    reference: "Hebrews 4:12",
-    book: "Hebrews", chapter: 4,
-    text: "For the word of God is living and active, sharper than any two-edged sword, piercing to the division of soul and of spirit, of joints and of marrow, and discerning the thoughts and intentions of the heart.",
-    event: "Tyndale & the English Bible",
-    year: "1526–1536",
-    glow: "rgba(20,184,166,0.18)",
-    history:
-      "William Tyndale believed ordinary English people deserved to read this living Word in their own language. When a church official told him 'we are better to be without God's law than the Pope's,' Tyndale replied: 'I defy the Pope, and all his laws; and if God spare my life, ere many years I will cause a boy that driveth the plough, to know more of the Scripture than thou dost.' He translated the New Testament from Greek and much of the Old Testament from Hebrew — the first printed English Bible from the original languages. He was strangled and burned at the stake in 1536. Eighty percent of the King James Bible (1611) is Tyndale's translation. His dying prayer: 'Lord, open the King of England's eyes.'",
-  },
-];
-
-// ─── Church History Verses — Spanish ─────────────────────────────────────────
-
-const HISTORY_VERSES_ES: HistoryVerse[] = [
-  {
-    reference: "Juan 1:1",
-    book: "John", chapter: 1,
-    text: "En el principio era el Verbo, y el Verbo era con Dios, y el Verbo era Dios.",
-    event: "Concilio de Nicea",
-    year: "325 d.C.",
-    glow: "rgba(56,189,248,0.18)",
-    history:
-      "Cuando Arrio enseñó que Cristo era un ser creado — 'hubo un tiempo en que no existía' — la iglesia se reunió en Nicea bajo el emperador Constantino. Juan 1:1 fue el texto central: si el Verbo era Dios desde el principio, no podía haber tenido un comienzo. El obispo Atanasio argumentó desde este versículo que un Cristo inferior a Dios no puede salvar a nadie. El concilio afirmó que el Hijo es homoousios — de la misma sustancia que el Padre — una posición que Atanasio defendería solo contra emperadores y obispos durante décadas, dando origen a la frase Athanasius contra mundum: Atanasio contra el mundo.",
-  },
-  {
-    reference: "Romanos 1:17",
-    book: "Romans", chapter: 1,
-    text: "Porque en el evangelio la justicia de Dios se revela por fe y para fe; como está escrito: 'Mas el justo por la fe vivirá.'",
-    event: "La Experiencia de la Torre de Lutero",
-    year: "c. 1515",
-    glow: "rgba(201,169,97,0.18)",
-    history:
-      "Martín Lutero era un monje agustino atormentado que odiaba la frase 'justicia de Dios' — la leía como la justicia punitiva de Dios contra los pecadores. Mientras estudiaba Romanos en su celda de la torre en Wittenberg, comprendió: la justicia que Pablo describe no nos es exigida, sino que nos es dada, recibida por fe. 'Me sentí renacer y entrar por puertas abiertas al paraíso', escribió. Este solo versículo encendió la Reforma Protestante. Dos años después, Lutero clavó sus 95 Tesis en la puerta de la iglesia de Wittenberg, y la iglesia medieval nunca volvió a ser la misma.",
-  },
-  {
-    reference: "Gálatas 2:16",
-    book: "Galatians", chapter: 2,
-    text: "El hombre no es justificado por las obras de la ley, sino por la fe de Jesucristo.",
-    event: "El Debate de la Reforma",
-    year: "1517–1545",
-    glow: "rgba(249,115,22,0.18)",
-    history:
-      "Este versículo fue la espada de la Reforma. Cuando Roma insistió en que la justificación requería tanto la fe como las obras meritorias — y condenó a los Reformadores en el Concilio de Trento (1545–1563) — Lutero, Calvino y Melanchthon volvieron todos a Gálatas. Calvino llamó a la justificación 'el eje sobre el cual gira toda la religión verdadera.' Los Reformadores insistieron: añadir obras a la fe como base de la justificación es predicar un evangelio diferente. El Concilio de Trento anatematizó formalmente la posición de la Reforma, una condena que permanece vigente hasta hoy en el derecho canónico católico romano.",
-  },
-  {
-    reference: "Juan 6:37",
-    book: "John", chapter: 6,
-    text: "Todo lo que el Padre me da, vendrá a mí; y al que a mí viene, no le echo fuera.",
-    event: "El Sínodo de Dort",
-    year: "1618–1619",
-    glow: "rgba(139,92,246,0.18)",
-    history:
-      "Después de que Jacobo Arminio y sus seguidores desafiaron la enseñanza calvinista sobre la predestinación, la iglesia reformada holandesa convocó un concilio internacional en Dordrecht con delegados de Inglaterra, Alemania, Suiza y los Países Bajos. Cinco puntos estaban en juego: depravación total, elección incondicional, expiación limitada, gracia irresistible y perseverancia de los santos — las doctrinas TULIP. Juan 6:37–40 era central: 'Todo lo que el Padre me da vendrá' — la elección es el acto del Padre. 'No le echo fuera' — la preservación es la promesa de Cristo. Los Cánones de Dort siguen siendo uno de los documentos teológicos más cuidadosamente razonados de la historia cristiana.",
-  },
-  {
-    reference: "Hechos 5:29",
-    book: "Acts", chapter: 5,
-    text: "Es necesario obedecer a Dios antes que a los hombres.",
-    event: "Dieta de Worms",
-    year: "1521",
-    glow: "rgba(239,68,68,0.18)",
-    history:
-      "De pie ante el emperador Carlos V y la asamblea plena del Sacro Imperio Romano, Martín Lutero fue ordenado a retractarse de sus escritos. Su respuesta ha resonado durante cinco siglos: 'A menos que sea convencido por el testimonio de las Escrituras o por razón clara — porque no confío ni en el papa ni en los concilios solos, ya que es bien sabido que han errado con frecuencia y se han contradicho — estoy ligado por las Escrituras que he citado, y mi conciencia es cautiva de la Palabra de Dios. No puedo ni quiero retractarme de nada, pues no es seguro ni correcto ir contra la conciencia. Aquí me mantengo. No puedo hacer otra cosa. Que Dios me ayude. Amén.' Al día siguiente fue declarado fuera de la ley del Imperio.",
-  },
-  {
-    reference: "2 Timoteo 3:16",
-    book: "2 Timothy", chapter: 3,
-    text: "Toda la Escritura es inspirada por Dios, y útil para enseñar, para redargüir, para corregir, para instruir en justicia.",
-    event: "Sola Scriptura",
-    year: "Era de la Reforma",
-    glow: "rgba(16,185,129,0.18)",
-    history:
-      "La primera de las Cinco Solas — solo la Escritura — no fue un invento de los Reformadores sino una recuperación de la convicción de la iglesia primitiva. Cuando Roma argumentó que la Escritura y la Tradición de la Iglesia tenían igual autoridad, los Reformadores citaron 2 Timoteo 3:16: Dios espiró la Escritura; los concilios y los papas son hombres falibles. Sola Scriptura no significa 'sin credos ni confesiones' — Lutero, Calvino y los Divinos de Westminster escribieron extensos documentos confesionales. Significa que la Escritura es la autoridad suprema y final a la que toda tradición debe someterse. Este principio fue la causa formal de la Reforma.",
-  },
-  {
-    reference: "Romanos 8:30",
-    book: "Romans", chapter: 8,
-    text: "Y a los que predestinó, a éstos también llamó; y a los que llamó, a éstos también justificó; y a los que justificó, a éstos también glorificó.",
-    event: "Agustín contra Pelagio",
-    year: "410–430 d.C.",
-    glow: "rgba(99,102,241,0.18)",
-    history:
-      "Pelagio, un monje británico en Roma, enseñó que los seres humanos tienen la capacidad natural de elegir el bien y ganarse la salvación — el pecado es imitación, no corrupción heredada. Agustín de Hipona vio en esto la destrucción de la gracia. Su debate con Pelagio produjo parte de la teología más importante de la historia cristiana: el pecado original, la esclavitud de la voluntad, la gracia preveniente e irresistible, y la predestinación. Romanos 8:29–30 — la 'cadena de oro' de la salvación — fue el ancla de Agustín. El Concilio de Cartago (418 d.C.) condenó el pelagianismo. El marco de Agustín se convirtió en la columna vertebral de la soteriología tanto católica como protestante.",
-  },
-  {
-    reference: "Hebreos 4:12",
-    book: "Hebrews", chapter: 4,
-    text: "Porque la palabra de Dios es viva y eficaz, y más cortante que toda espada de dos filos; y penetra hasta partir el alma y el espíritu, las coyunturas y los tuétanos, y discierne los pensamientos y las intenciones del corazón.",
-    event: "Tyndale y la Biblia en Inglés",
-    year: "1526–1536",
-    glow: "rgba(20,184,166,0.18)",
-    history:
-      "William Tyndale creía que el pueblo inglés ordinario merecía leer esta Palabra viva en su propio idioma. Cuando un oficial de la iglesia le dijo 'es mejor estar sin la ley de Dios que sin la del Papa', Tyndale respondió: 'Desafío al Papa y a todas sus leyes; y si Dios me da vida, antes de muchos años haré que un niño que ara la tierra sepa más de la Escritura que tú.' Tradujo el Nuevo Testamento del griego y gran parte del Antiguo Testamento del hebreo — la primera Biblia impresa en inglés a partir de los idiomas originales. Fue estrangulado y quemado en la hoguera en 1536. El ochenta por ciento de la Biblia del Rey Jacobo (1611) es traducción de Tyndale. Su oración final: 'Señor, abre los ojos del rey de Inglaterra.'",
-  },
-];
 
 // ─── Featured Meditation videos ───────────────────────────────────────────────
 const FEATURED_VIDEOS = {
@@ -1075,8 +895,7 @@ function VerseMemorizationWidget({
 export default function Home() {
   const today = new Date();
   const { lang } = useLanguage();
-  const hvPool = lang === "es" ? HISTORY_VERSES_ES : HISTORY_VERSES;
-  const todayHV = hvPool[today.getDate() % hvPool.length];
+  const todayHV = getTodaysEntry();
 
   const [cloudUser, setCloudUser] = useState<User | null | undefined>(undefined); // undefined=loading
   useEffect(() => {
@@ -1087,7 +906,6 @@ export default function Home() {
 
   const [streakData,       setStreakData]       = useState<StreakData | null>(null);
   const [videoOpen,        setVideoOpen]        = useState(false);
-  const [historyOpen,      setHistoryOpen]      = useState(false);
   const featuredVideo = FEATURED_VIDEOS[lang as "en" | "es"] ?? FEATURED_VIDEOS.en;
 
   // Articles
@@ -1288,9 +1106,9 @@ export default function Home() {
   const dayUpper  = today.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { weekday: "long" }).toUpperCase();
 
   // Two-line hero headline
-  const heroHeadline = todayHV.event === "Diet of Worms"
+  const heroHeadline = todayHV.title === "Diet of Worms"
     ? ["Here I stand.", "I cannot do otherwise."]
-    : todayHV.text.split(/[,.]/).map((s) => s.trim()).filter(Boolean).slice(0, 2);
+    : todayHV.verseText.split(/[,.]/).map((s) => s.trim()).filter(Boolean).slice(0, 2);
 
   return (
     <div
@@ -1299,51 +1117,6 @@ export default function Home() {
     >
       {/* ── First-launch onboarding ───────────────────────────────────────── */}
       <OnboardingPopup onComplete={(name, _lang) => { if (name) setUserName(name); }} />
-
-      {/* ── History verse modal ───────────────────────────────────────────── */}
-      {historyOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center px-5"
-          onClick={() => setHistoryOpen(false)}
-        >
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-          <div
-            className="relative w-full max-w-sm rounded-3xl border shadow-2xl overflow-hidden"
-            style={{ background: "#0a0a0f", border: `1px solid ${AC_BORDER_SM}` }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-5 pt-5 pb-4 border-b border-white/[0.06]">
-              <div className="flex items-start justify-between gap-3 mb-1">
-                <p className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: AC }}>
-                  {todayHV.event} · {todayHV.year}
-                </p>
-                <button
-                  onClick={() => setHistoryOpen(false)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-white/40 hover:text-white/70 transition-colors flex-shrink-0"
-                >✕</button>
-              </div>
-              <p className="text-lg font-bold text-white">{todayHV.reference}</p>
-              <p className="mt-3 text-sm italic text-white/70 leading-relaxed" style={{ fontFamily: SERIF }}>
-                &ldquo;{todayHV.text}&rdquo;
-              </p>
-            </div>
-            <div className="px-5 py-4 max-h-[45vh] overflow-y-auto">
-              <p className="text-[9px] font-black uppercase tracking-[0.20em] text-white/30 mb-2">{lang === "es" ? "Historia de la Iglesia" : "Church History"}</p>
-              <p className="text-[13px] text-white/65 leading-relaxed">{todayHV.history}</p>
-            </div>
-            <div className="px-5 pb-5">
-              <Link
-                href={`/lexicon?book=${encodeURIComponent(todayHV.book)}&chapter=${todayHV.chapter}`}
-                onClick={() => setHistoryOpen(false)}
-                className="block w-full text-center py-2.5 rounded-xl text-xs font-bold transition-all"
-                style={{ background: AC_BG, border: `1px solid ${AC_BORDER}`, color: AC }}
-              >
-                {lang === "es" ? "Leer" : "Read"} {localizeReference(todayHV.reference, lang)} →
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Featured Meditation video modal ──────────────────────────────── */}
       {videoOpen && (
@@ -1566,14 +1339,14 @@ export default function Home() {
           className="text-[40px] leading-[1.04] font-normal text-white tracking-tight"
           style={{ fontFamily: SERIF, ...(heroH1Color ? { color: heroH1Color } : {}) }}
         >
-          {heroHeadline[0] || todayHV.event}
+          {heroHeadline[0] || todayHV.title}
         </h1>
         {heroHeadline[1] && (
           <h2
             className="text-[40px] leading-[1.04] italic text-white/55 tracking-tight mb-5"
             style={{ fontFamily: SERIF, ...(heroH2Color ? { color: heroH2Color } : {}) }}
           >
-            {heroHeadline[1]}{todayHV.text.split(/[,.]/).filter(Boolean).length > 2 ? "…" : ""}
+            {heroHeadline[1]}{todayHV.verseText.split(/[,.]/).filter(Boolean).length > 2 ? "…" : ""}
           </h2>
         )}
 
@@ -1583,7 +1356,7 @@ export default function Home() {
             className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase"
             style={{ border: `1px solid ${AC_BORDER}`, background: AC_BG, color: AC }}
           >
-            {todayHV.event}
+            {todayHV.title}
           </span>
           <span
             className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase border border-white/10 bg-white/[0.04] text-white/55"
@@ -1598,25 +1371,25 @@ export default function Home() {
           className="text-[14px] text-white/72 italic leading-[1.55] mb-6"
           style={{ fontFamily: SERIF, ...(heroQuoteColor ? { color: heroQuoteColor } : {}) }}
         >
-          &ldquo;{todayHV.text}&rdquo;
+          &ldquo;{todayHV.verseText}&rdquo;
         </p>
 
         {/* Gold CTA card — Read the full story */}
-        <button
-          onClick={() => setHistoryOpen(true)}
+        <Link
+          href={`/church-history/${todayHV.id}`}
           className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl active:scale-[0.99] transition-all"
-          style={{ background: AC_CTA_GRAD, border: `1px solid ${AC_BORDER}` }}
+          style={{ background: AC_CTA_GRAD, border: `1px solid ${AC_BORDER}`, textDecoration: "none" }}
         >
           <div className="text-left">
             <p className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(201,169,97,0.85)" }}>
-              {todayHV.reference}
+              {todayHV.verseReference}
             </p>
             <p className="text-[14px] font-bold text-white mt-0.5" style={heroCtaText ? { color: heroCtaText } : {}}>{lang === "es" ? "Leer la historia completa" : "Read the full story"}</p>
           </div>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: AC }}>
             <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
-        </button>
+        </Link>
 
         {/* Personalized greeting */}
         {userName && (() => {
