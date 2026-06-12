@@ -319,98 +319,112 @@ export default function MorePage() {
             {lang === "es" ? "Destacado" : "Featured"}
           </p>
 
-          {/* Main card */}
-          <div
-            className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
-            style={{
-              background: "linear-gradient(135deg, #0d0f18 0%, #0a0c14 100%)",
-              border: "1px solid rgba(201,169,97,0.28)",
-              boxShadow: "0 8px 32px rgba(201,169,97,0.10)",
-            }}
-          >
-            {/* Top content row */}
-            <div className="flex items-start justify-between px-5 pt-5 pb-4 gap-3">
-              {/* Left: text */}
-              <div className="flex-1 min-w-0">
-                <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-1.5" style={{ color: "#c9a961" }}>
-                  {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
-                </p>
-                <p className="text-[26px] font-black text-white leading-none mb-1.5">
-                  {lang === "es" ? "Videos" : "Videos"}
-                </p>
-                <p className="text-[12px] font-semibold mb-1" style={{ color: "rgba(201,169,97,0.80)" }}>
-                  {lang === "es" ? "Enseñanza Bíblica • Testimonios" : "Biblical Teaching • Testimonies"}
-                </p>
-                <p className="text-[11px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.38)" }}>
-                  {lang === "es"
-                    ? "Videos cristianos confiables arraigados en la Escritura."
-                    : "Watch trusted Christian videos rooted in Scripture and historic Christianity."}
-                </p>
-                <Link
-                  href="/videos"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold active:scale-95 transition-transform"
-                  style={{
-                    background: "rgba(201,169,97,0.14)",
-                    color: "#c9a961",
-                    border: "1px solid rgba(201,169,97,0.35)",
-                  }}
-                >
-                  {lang === "es" ? "Explorar Videos" : "Explore Videos"}
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                </Link>
-              </div>
-
-              {/* Right: large gold icon */}
-              <div
-                className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl flex items-center justify-center"
-                style={{
-                  background: "linear-gradient(145deg, #e8c96a, #c9a961, #a8843c)",
-                  boxShadow: "0 12px 36px rgba(201,169,97,0.45), 0 4px 12px rgba(201,169,97,0.25)",
-                }}
-              >
-                <svg width="34" height="34" viewBox="0 0 24 24" fill="#0d0f18" style={{ marginLeft: 3 }}>
-                  <path d="M8 5v14l11-7z"/>
-                </svg>
-              </div>
-            </div>
-
-            {/* Bottom category chips */}
+          <Link href="/videos" className="block">
             <div
-              className="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-4"
-              style={{ borderTop: "1px solid rgba(201,169,97,0.10)", paddingTop: 12 }}
+              className="rounded-2xl overflow-hidden active:scale-[0.985] transition-transform"
+              style={{
+                background: "linear-gradient(140deg, #111420 0%, #0a0c14 60%, #0d0f1a 100%)",
+                border: "1px solid rgba(201,169,97,0.30)",
+                boxShadow: "0 8px 40px rgba(201,169,97,0.12), 0 2px 8px rgba(0,0,0,0.6)",
+              }}
             >
-              {(lang === "es"
-                ? [
-                    { icon: "▶", label: "Fundamentos de la Fe" },
-                    { icon: "✦", label: "Historias de Gracia" },
-                    { icon: "★", label: "Destacados" },
-                    { icon: "⚡", label: "Videos Cortos" },
-                    { icon: "?", label: "Preguntas y Respuestas" },
-                  ]
-                : [
-                    { icon: "▶", label: "Fundamentals of the Faith" },
-                    { icon: "✦", label: "Stories of Grace" },
-                    { icon: "★", label: "Featured Videos" },
-                    { icon: "⚡", label: "Short Videos" },
-                    { icon: "?", label: "Ask & Receive" },
-                  ]
-              ).map((chip) => (
-                <Link
-                  key={chip.label}
-                  href="/videos"
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap active:opacity-70 transition-opacity"
-                  style={{
-                    background: "rgba(255,255,255,0.05)",
-                    color: "rgba(255,255,255,0.55)",
-                    border: "1px solid rgba(255,255,255,0.08)",
-                  }}
-                >
-                  <span className="text-[9px]">{chip.icon}</span>
-                  {chip.label}
-                </Link>
-              ))}
+              {/* Top content row */}
+              <div className="flex items-center justify-between px-5 pt-5 pb-4 gap-4">
+                {/* Left: text */}
+                <div className="flex-1 min-w-0">
+                  {/* Eyebrow with small play icon */}
+                  <div className="flex items-center gap-1.5 mb-2">
+                    <div
+                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
+                      style={{ background: "rgba(201,169,97,0.20)" }}
+                    >
+                      <svg width="7" height="7" viewBox="0 0 10 10" fill="#c9a961">
+                        <path d="M2 1.5v7l6.5-3.5z"/>
+                      </svg>
+                    </div>
+                    <p className="text-[9px] font-black uppercase tracking-[0.20em]" style={{ color: "#c9a961" }}>
+                      {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
+                    </p>
+                  </div>
+
+                  <p className="text-[28px] font-black text-white leading-none mb-1.5">
+                    Videos
+                  </p>
+                  <p className="text-[11.5px] font-semibold mb-1.5" style={{ color: "rgba(201,169,97,0.85)" }}>
+                    {lang === "es" ? "Enseñanza Bíblica • Testimonios" : "Biblical Teaching • Testimonies"}
+                  </p>
+                  <p className="text-[11px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>
+                    {lang === "es"
+                      ? "Videos cristianos confiables arraigados en la Escritura."
+                      : "Watch trusted Christian videos rooted in Scripture and historic Christianity."}
+                  </p>
+                  <div
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold"
+                    style={{
+                      background: "rgba(201,169,97,0.13)",
+                      color: "#c9a961",
+                      border: "1px solid rgba(201,169,97,0.38)",
+                    }}
+                  >
+                    {lang === "es" ? "Explorar Videos" : "Explore Videos"}
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                  </div>
+                </div>
+
+                {/* Right: 3-D gold play icon */}
+                <div className="flex-shrink-0">
+                  <div
+                    className="w-[96px] h-[96px] rounded-[22px] flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(145deg, #f0d070 0%, #d4a843 40%, #b8872c 75%, #9a6e1e 100%)",
+                      boxShadow:
+                        "0 16px 48px rgba(201,169,97,0.50), 0 6px 16px rgba(201,169,97,0.30), inset 0 1px 0 rgba(255,255,220,0.35), inset 0 -2px 4px rgba(100,60,0,0.30)",
+                    }}
+                  >
+                    <svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(15,17,26,0.88)" style={{ marginLeft: 4 }}>
+                      <path d="M6 4.5v15l13-7.5z"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom category chips */}
+              <div
+                className="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-4"
+                style={{ borderTop: "1px solid rgba(201,169,97,0.10)", paddingTop: 12 }}
+              >
+                {(lang === "es"
+                  ? [
+                      { label: "Fundamentos de la Fe",    svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM9 8l7 4-7 4V8z"/></svg> },
+                      { label: "Historias de Gracia",     svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="7" r="4"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg> },
+                      { label: "Destacados",              svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
+                      { label: "Videos Cortos",           svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+                      { label: "Preguntas y Respuestas",  svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg> },
+                    ]
+                  : [
+                      { label: "Fundamentals of the Faith", svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM9 8l7 4-7 4V8z"/></svg> },
+                      { label: "Stories of Grace",          svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="7" r="4"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg> },
+                      { label: "Featured Videos",           svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
+                      { label: "Short Videos",              svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
+                      { label: "Ask & Receive",             svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg> },
+                    ]
+                ).map((chip) => (
+                  <span
+                    key={chip.label}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
+                    style={{
+                      background: "rgba(255,255,255,0.05)",
+                      color: "rgba(255,255,255,0.50)",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {chip.svg}
+                    {chip.label}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          </Link>
         </section>
 
         {/* ── App grid ──────────────────────────────────────────────────────── */}
