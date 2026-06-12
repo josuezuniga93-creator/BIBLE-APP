@@ -117,10 +117,10 @@ function LoginContent() {
           <div className="w-9" />
         </div>
 
-        {/* Center content */}
-        <div className="flex-1 flex flex-col items-center justify-center px-8 text-center min-h-0">
+        {/* All content centered together — no gap between text and buttons */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center min-h-0">
           <div
-            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
             style={{ background: "rgba(201,169,97,0.12)", border: "1px solid rgba(201,169,97,0.22)" }}
           >
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
@@ -131,44 +131,43 @@ function LoginContent() {
           <h1 className="text-[26px] font-bold text-white leading-tight mb-3">
             Access the Full Experience
           </h1>
-          <p className="text-[14px] leading-relaxed" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 280 }}>
+          <p className="text-[14px] leading-relaxed mb-7" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 280 }}>
             Sync your highlights, notes, and reading history across all your devices. Free forever — no ads.
           </p>
-        </div>
 
-        {/* Bottom buttons — anchored to bottom */}
-        <div className="px-6 pb-6 flex flex-col gap-3 flex-shrink-0">
-          <button
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading}
-            className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-all active:scale-95"
-            style={{
-              background: `linear-gradient(135deg, ${AC}, #a8873a)`,
-              color: "#0f0f0f",
-              opacity: googleLoading ? 0.7 : 1,
-            }}
-          >
-            <GoogleIcon />
-            {googleLoading ? "Redirecting…" : "Continue with Google"}
-          </button>
+          <div className="w-full flex flex-col gap-3">
+            <button
+              onClick={handleGoogleSignIn}
+              disabled={googleLoading}
+              className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-all active:scale-95"
+              style={{
+                background: `linear-gradient(135deg, ${AC}, #a8873a)`,
+                color: "#0f0f0f",
+                opacity: googleLoading ? 0.7 : 1,
+              }}
+            >
+              <GoogleIcon />
+              {googleLoading ? "Redirecting…" : "Continue with Google"}
+            </button>
 
-          <button
-            onClick={() => setView("email")}
-            className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
-            style={{
-              background: "rgba(255,255,255,0.07)",
-              border: "1px solid rgba(255,255,255,0.10)",
-              color: "rgba(255,255,255,0.85)",
-            }}
-          >
-            Sign In with Email
-          </button>
+            <button
+              onClick={() => setView("email")}
+              className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
+              style={{
+                background: "rgba(255,255,255,0.07)",
+                border: "1px solid rgba(255,255,255,0.10)",
+                color: "rgba(255,255,255,0.85)",
+              }}
+            >
+              Sign In with Email
+            </button>
 
-          {message && (
-            <p className="text-center text-xs" style={{ color: "#f87171" }}>
-              {message.text}
-            </p>
-          )}
+            {message && (
+              <p className="text-center text-xs" style={{ color: "#f87171" }}>
+                {message.text}
+              </p>
+            )}
+          </div>
         </div>
       </div>
     );

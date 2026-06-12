@@ -1,8 +1,11 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CHURCH_HISTORY } from "../../lib/churchHistory";
+import { useLanguage } from "../../lib/useLanguage";
+import { translateToSpanish } from "../../lib/googleTranslate";
 
 const SERIF   = "'Georgia', 'Palatino Linotype', serif";
 const AC      = "#c9a961";                               // gold accent
@@ -11,7 +14,34 @@ const SURFACE = "#1c1e36";                               // card surface
 
 export default function ChurchHistoryStory() {
   const { id } = useParams<{ id: string }>();
+  const { lang } = useLanguage();
   const entry  = CHURCH_HISTORY.find((e) => e.id === id);
+
+  const [esTitle,     setEsTitle]     = useState<string | null>(null);
+  const [esVerseText, setEsVerseText] = useState<string | null>(null);
+  const [esFullStory, setEsFullStory] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+  useEffect(() => {
+    if (lang !== "es" || !entry) {
+      setEsTitle(null); setEsVerseText(null); setEsFullStory(null);
+      return;
+    }
+    let cancelled = false;
+    setTranslating(true);
+    (async () => {
+      try {
+        const [tt, tv, tf] = await Promise.all([
+          translateToSpanish(entry.title,     `story_title_${entry.id}`),
+          translateToSpanish(entry.verseText, `story_verse_${entry.id}`),
+          translateToSpanish(entry.fullStory, `story_body_${entry.id}`),
+        ]);
+        if (!cancelled) { setEsTitle(tt); setEsVerseText(tv); setEsFullStory(tf); }
+      } catch { /* fall back to English */ }
+      finally { if (!cancelled) setTranslating(false); }
+    })();
+    return () => { cancelled = true; };
+  }, [lang, entry?.id]);
 
   /* ── Not found ─────────────────────────────────────────────────────────── */
   if (!entry) {
@@ -29,7 +59,7 @@ export default function ChurchHistoryStory() {
         }}
       >
         <p style={{ color: "#aaa", fontFamily: SERIF, fontSize: 18 }}>
-          Story not found.
+          {lang === "es" ? "Historia no encontrada." : "Story not found."}
         </p>
         <Link
           href="/"
@@ -40,13 +70,16 @@ export default function ChurchHistoryStory() {
             borderBottom: `1px solid ${AC}`,
           }}
         >
-          ← Back to Home
+          {lang === "es" ? "← Volver al inicio" : "← Back to Home"}
         </Link>
       </div>
     );
   }
 
-  const paragraphs = entry.fullStory.split("\n\n").filter(Boolean);
+  const displayTitle     = lang === "es" ? (esTitle     ?? entry.title)     : entry.title;
+  const displayVerseText = lang === "es" ? (esVerseText ?? entry.verseText) : entry.verseText;
+  const displayFullStory = lang === "es" ? (esFullStory ?? entry.fullStory) : entry.fullStory;
+  const paragraphs = displayFullStory.split("\n\n").filter(Boolean);
 
   return (
     <div
@@ -93,7 +126,7 @@ export default function ChurchHistoryStory() {
           >
             <polyline points="15 18 9 12 15 6" />
           </svg>
-          Home
+          {lang === "es" ? "Inicio" : "Home"}
         </Link>
       </div>
 
@@ -104,9 +137,9 @@ export default function ChurchHistoryStory() {
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
           <span
             style={{
-              background: "linear-gradient(135deg, #d946ef22, #7c3aed22)",
-              border: "1px solid rgba(201,100,220,0.30)",
-              color: "#e879f9",
+              background: "rgba(201,169,97,0.14)",
+              border: "1px solid rgba(201,169,97,0.38)",
+              color: "#c9a961",
               borderRadius: 20,
               padding: "3px 12px",
               fontSize: 11,
@@ -115,13 +148,15 @@ export default function ChurchHistoryStory() {
               textTransform: "uppercase",
             }}
           >
-            {entry.category === "missionary" ? "Missionary" : "Hymn"}
+            {entry.category === "missionary"
+              ? (lang === "es" ? "Misionero" : "Missionary")
+              : (lang === "es" ? "Himno" : "Hymn")}
           </span>
           <span
             style={{
-              background: "rgba(255,255,255,0.05)",
-              border: "1px solid rgba(255,255,255,0.10)",
-              color: "#a0a3b8",
+              background: "rgba(201,169,97,0.07)",
+              border: "1px solid rgba(201,169,97,0.20)",
+              color: "#a09070",
               borderRadius: 20,
               padding: "3px 12px",
               fontSize: 11,
@@ -139,12 +174,12 @@ export default function ChurchHistoryStory() {
             fontFamily: SERIF,
             fontSize: 26,
             fontWeight: 700,
-            color: "#f0ecff",
+            color: "#f5f0e8",
             lineHeight: 1.3,
             margin: "0 0 24px",
           }}
         >
-          {entry.title}
+          {displayTitle}
         </h1>
 
         {/* Verse blockquote */}
@@ -160,12 +195,12 @@ export default function ChurchHistoryStory() {
               fontFamily: SERIF,
               fontSize: 15,
               fontStyle: "italic",
-              color: "#cec9e0",
+              color: "#d4cdb8",
               lineHeight: 1.7,
               margin: "0 0 8px",
             }}
           >
-            "{entry.verseText}"
+            "{displayVerseText}"
           </p>
           <span
             style={{
@@ -186,13 +221,21 @@ export default function ChurchHistoryStory() {
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.12em",
-            color: "#555",
+            color: "rgba(201,169,97,0.45)",
             textTransform: "uppercase",
             marginBottom: 14,
           }}
         >
-          Church History
+          {lang === "es" ? "Historia de la Iglesia" : "Church History"}
         </p>
+
+        {/* Translating indicator */}
+        {lang === "es" && translating && (
+          <p style={{ fontSize: 11, color: "rgba(201,169,97,0.65)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+            <span className="animate-spin" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: "2px solid rgba(201,169,97,0.25)", borderTopColor: AC }} />
+            Traduciendo al español…
+          </p>
+        )}
 
         {/* Full story */}
         <div style={{ marginBottom: 32 }}>
@@ -202,48 +245,13 @@ export default function ChurchHistoryStory() {
               style={{
                 fontSize: 16,
                 lineHeight: 1.78,
-                color: "#b8b4cc",
+                color: "#c8c2b0",
                 marginBottom: i < paragraphs.length - 1 ? 18 : 0,
               }}
             >
               {para}
             </p>
           ))}
-        </div>
-
-        {/* Key Takeaway */}
-        <div
-          style={{
-            background: SURFACE,
-            border: "1px solid rgba(201,169,97,0.20)",
-            borderRadius: 12,
-            padding: "18px 20px",
-          }}
-        >
-          <p
-            style={{
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.12em",
-              color: AC,
-              textTransform: "uppercase",
-              marginBottom: 10,
-            }}
-          >
-            Key Takeaway
-          </p>
-          <p
-            style={{
-              fontFamily: SERIF,
-              fontSize: 15,
-              fontStyle: "italic",
-              color: "#cec9e0",
-              lineHeight: 1.65,
-              margin: 0,
-            }}
-          >
-            {entry.keyTakeaway}
-          </p>
         </div>
 
         {/* Bottom spacing */}

@@ -163,6 +163,8 @@ Never use a quote without this citation. Use exact sermon title and timestamp fr
 
 Tone: Charitable but precise. Scripture translation: ESV.`;
 
+const SPANISH_ADDENDUM = `\n\nLANGUAGE INSTRUCTION: Write this entire analysis in Spanish. Translate all prose, explanations, evidence quote context, summaries, assessments, and "Why This Matters" / "Recommendation Explanation" / "Verdict Summary" text into Spanish. HOWEVER, keep ALL structural markers exactly as written above in English — this includes: all # / ## / ### headings, label prefixes (Church Name:, Pastor(s):, Location:, Date Analyzed:, Sermons Reviewed:, Denominational Affiliation:), severity keywords (MINOR CONCERN / SIGNIFICANT CONCERN / SERIOUS CONCERN), verdict keywords (HISTORICALLY ORTHODOX / MOSTLY ORTHODOX / MIXED / USE DISCERNMENT / THEOLOGICALLY CONCERNING / OUTSIDE HISTORIC CHRISTIANITY), recommendation keywords (Recommended Church / Generally Sound — Exercise Discernment / Significant Concerns Present / Consider Finding Another Church / Avoid This Church), table column headers and result values (Orthodox / Mixed / Concerning / Divergent), and the badge word "Orthodox" in Positive Findings. These must stay verbatim in English for proper parsing. Translate only the descriptive prose between structural markers.`;
+
 interface SermonInput {
   url: string;
   title?: string;
@@ -186,14 +188,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  let body: { churchName: string; denomination?: string; sermons: SermonInput[] };
+  let body: { churchName: string; denomination?: string; sermons: SermonInput[]; language?: string };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { churchName, denomination, sermons } = body;
+  const { churchName, denomination, sermons, language } = body;
+  const systemPrompt = language === "es" ? HISTORIC_SYSTEM_PROMPT + SPANISH_ADDENDUM : HISTORIC_SYSTEM_PROMPT;
 
   if (!churchName || !sermons || sermons.length < 4) {
     return NextResponse.json(
@@ -232,7 +235,7 @@ Please provide a complete Historic Christianity analysis following the structure
       body: JSON.stringify({
         model: "claude-sonnet-4-5",
         max_tokens: 8192,
-        system: HISTORIC_SYSTEM_PROMPT,
+        system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
       }),
     });

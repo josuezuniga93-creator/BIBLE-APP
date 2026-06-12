@@ -275,13 +275,19 @@ function GgArticleReader({
 function VerseMemorizationWidget({
   lang,
   isLight,
+  isLightElegant,
+  cardTextColor,
   heroH1Color,
   sectionHdColor,
+  isPremiumNeon,
 }: {
   lang: string;
   isLight: boolean;
+  isLightElegant?: boolean;
+  cardTextColor?: string;
   heroH1Color?: string;
   sectionHdColor?: string;
+  isPremiumNeon?: boolean;
 }) {
   const [fullScreen, setFullScreen]   = useState(false);
   const [customMode, setCustomMode]   = useState(false);
@@ -327,7 +333,7 @@ function VerseMemorizationWidget({
   const verseRef  = lang === "es" ? activeVerse.refEs  : activeVerse.ref;
   const words = verseText.split(/\s+/);
 
-  const accentColor = "#c9a961";  // Gold Navy accent throughout
+  const accentColor = isPremiumNeon ? "#a78bfa" : "#c9a961";
   const isMastered = memState.mastered.includes(activeVerse.ref);
   const remaining = MEM_VERSES.filter((v) => !memState.mastered.includes(v.ref)).length;
 
@@ -799,8 +805,10 @@ function VerseMemorizationWidget({
         <div
           className="rounded-2xl p-4 cursor-pointer active:scale-[0.99] transition-all"
           style={{
-            background: "linear-gradient(135deg, rgba(201,169,97,0.13), rgba(26,29,39,0.85))",
-            border: "1px solid rgba(201,169,97,0.26)",
+            background: isLightElegant
+              ? "linear-gradient(135deg, rgba(201,169,97,0.08), #ede4d4)"
+              : "linear-gradient(135deg, rgba(201,169,97,0.13), rgba(26,29,39,0.85))",
+            border: isLightElegant ? "1px solid rgba(124,92,46,0.22)" : "1px solid rgba(201,169,97,0.26)",
           }}
           onClick={() => setFullScreen(true)}
         >
@@ -812,7 +820,7 @@ function VerseMemorizationWidget({
                   ? (lang === "es" ? "Memorizando" : "Memorizing")
                   : (lang === "es" ? "Versículo de Hoy" : "Today's Verse")} · {activeVerse.theme}
               </p>
-              <p className="text-[16px] font-bold text-white">{verseRef}</p>
+              <p className="text-[16px] font-bold" style={{ color: cardTextColor ?? "white" }}>{verseRef}</p>
             </div>
             {isMastered ? (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
@@ -830,7 +838,7 @@ function VerseMemorizationWidget({
           </div>
 
           {/* Verse preview — full text, no clipping */}
-          <p className="text-[12.5px] text-white/70 leading-relaxed italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+          <p className="text-[12.5px] leading-relaxed italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif", color: isLightElegant ? "rgba(28,20,9,0.65)" : "rgba(255,255,255,0.70)" }}>
             &ldquo;{verseText}&rdquo;
           </p>
 
@@ -845,7 +853,7 @@ function VerseMemorizationWidget({
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
                 {lang === "es" ? "Empezar a memorizar" : "Start memorizing"}
               </button>
-              <p className="text-[10px] text-white/35 text-center mt-2 leading-relaxed">
+              <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: isLightElegant ? "rgba(28,20,9,0.38)" : "rgba(255,255,255,0.35)" }}>
                 {lang === "es"
                   ? "Se mantiene fijo el tiempo que necesites. Mañana habrá otro versículo si no te comprometes."
                   : "It stays pinned as long as you need. A new verse appears daily until you commit to one."}
@@ -858,9 +866,9 @@ function VerseMemorizationWidget({
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-4 1-2 2 1 4-3-1-4 4-1-4-4-1 4-4-1-3 4 1 2-2 1-4z"/></svg>
                   {lang === "es" ? "Fijado hasta que avances" : "Pinned until you move on"}
                 </span>
-                <span className="text-[10px] font-bold text-white/35">{memState.mastered.length}/{MEM_VERSES.length}</span>
+                <span className="text-[10px] font-bold" style={{ color: isLightElegant ? "rgba(28,20,9,0.38)" : "rgba(255,255,255,0.35)" }}>{memState.mastered.length}/{MEM_VERSES.length}</span>
               </div>
-              <div className="h-1 rounded-full bg-white/10 overflow-hidden">
+              <div className="h-1 rounded-full overflow-hidden" style={{ background: isLightElegant ? "rgba(28,20,9,0.10)" : "rgba(255,255,255,0.10)" }}>
                 <div
                   className="h-full rounded-full transition-all duration-700"
                   style={{ width: `${(memState.mastered.length / MEM_VERSES.length) * 100}%`, background: accentColor }}
@@ -877,7 +885,7 @@ function VerseMemorizationWidget({
                 <button
                   onClick={(e) => { e.stopPropagation(); releaseVerse(); }}
                   className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
-                  style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  style={{ background: isLightElegant ? "rgba(28,20,9,0.06)" : "rgba(255,255,255,0.06)", color: isLightElegant ? "rgba(28,20,9,0.55)" : "rgba(255,255,255,0.6)", border: isLightElegant ? "1px solid rgba(28,20,9,0.14)" : "1px solid rgba(255,255,255,0.12)" }}
                 >
                   {lang === "es" ? "Pasar al siguiente" : "Move to next verse"}
                 </button>
@@ -896,6 +904,26 @@ export default function Home() {
   const today = new Date();
   const { lang } = useLanguage();
   const todayHV = getTodaysEntry();
+
+  // Spanish translations for verse text + title (lazy-loaded from Google Translate)
+  const [esVerseText, setEsVerseText] = useState<string | null>(null);
+  const [esTitle,     setEsTitle]     = useState<string | null>(null);
+  useEffect(() => {
+    if (lang !== "es") { setEsVerseText(null); setEsTitle(null); return; }
+    let cancelled = false;
+    (async () => {
+      try {
+        const [tv, tt] = await Promise.all([
+          translateToSpanish(todayHV.verseText, `hv_verse_${todayHV.id}`),
+          translateToSpanish(todayHV.title,     `hv_title_${todayHV.id}`),
+        ]);
+        if (!cancelled) { setEsVerseText(tv); setEsTitle(tt); }
+      } catch { /* fall back to English */ }
+    })();
+    return () => { cancelled = true; };
+  }, [lang, todayHV.id]);
+  const displayVerseText = lang === "es" ? (esVerseText ?? todayHV.verseText) : todayHV.verseText;
+  const displayTitle     = lang === "es" ? (esTitle     ?? todayHV.title)     : todayHV.title;
 
   const [cloudUser, setCloudUser] = useState<User | null | undefined>(undefined); // undefined=loading
   useEffect(() => {
@@ -1077,6 +1105,14 @@ export default function Home() {
   const sectionHdColor = isLightElegant ? "#1c1409"                  : isLightPink ? "#4a0020"                  : undefined;
   const seeAllColor    = isLightElegant ? "rgba(28,20,9,0.38)"       : isLightPink ? "rgba(74,0,32,0.35)"       : undefined;
 
+  // Neon theme: replace gold with violet throughout
+  const themeAC         = isPremiumNeon ? "#a78bfa"                                                              : AC;
+  const themeACBg       = isPremiumNeon ? "rgba(124,58,237,0.15)"                                                : AC_BG;
+  const themeACBorder   = isPremiumNeon ? "rgba(124,58,237,0.30)"                                                : AC_BORDER;
+  const themeACBorderSm = isPremiumNeon ? "rgba(124,58,237,0.22)"                                                : AC_BORDER_SM;
+  const themeACCtaGrad  = isPremiumNeon ? "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.05))"  : AC_CTA_GRAD;
+  const themeACSub85    = isPremiumNeon ? "rgba(167,139,250,0.85)"                                               : "rgba(201,169,97,0.85)";
+
   // Background gradient baked into root div — never a separate child element.
   // Gold-navy uses a flat colour here; the lamp image div handles the top glow.
   // For gradient themes we pin background-size to 100vw 100vh so the radial
@@ -1108,7 +1144,7 @@ export default function Home() {
   // Two-line hero headline
   const heroHeadline = todayHV.title === "Diet of Worms"
     ? ["Here I stand.", "I cannot do otherwise."]
-    : todayHV.verseText.split(/[,.]/).map((s) => s.trim()).filter(Boolean).slice(0, 2);
+    : displayVerseText.split(/[,.]/).map((s) => s.trim()).filter(Boolean).slice(0, 2);
 
   return (
     <div
@@ -1291,7 +1327,7 @@ export default function Home() {
 
         {/* Hero — date label + profile avatar */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: AC }}>
+          <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: themeAC }}>
             {dayUpper}{streak > 0 ? ` · ${lang === "es" ? "DÍA" : "DAY"} ${streak}` : ""}
           </p>
           {/* Subtle profile / sign-in button — top-right */}
@@ -1308,12 +1344,12 @@ export default function Home() {
                     src={cloudUser.user_metadata.avatar_url as string}
                     alt="Profile"
                     className="w-8 h-8 rounded-full object-cover"
-                    style={{ border: `1.5px solid rgba(201,169,97,0.5)` }}
+                    style={{ border: `1.5px solid ${themeACBorder}` }}
                   />
                 ) : (
                   <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold"
-                    style={{ background: "rgba(201,169,97,0.18)", border: `1.5px solid rgba(201,169,97,0.4)`, color: AC }}
+                    style={{ background: themeACBg, border: `1.5px solid ${themeACBorder}`, color: themeAC }}
                   >
                     {((cloudUser.user_metadata?.name as string | undefined) || cloudUser.email || "?")
                       .split(" ").filter(Boolean).map((n: string) => n[0]).join("").slice(0, 2).toUpperCase() || "?"}
@@ -1339,14 +1375,14 @@ export default function Home() {
           className="text-[40px] leading-[1.04] font-normal text-white tracking-tight"
           style={{ fontFamily: SERIF, ...(heroH1Color ? { color: heroH1Color } : {}) }}
         >
-          {heroHeadline[0] || todayHV.title}
+          {heroHeadline[0] || displayTitle}
         </h1>
         {heroHeadline[1] && (
           <h2
             className="text-[40px] leading-[1.04] italic text-white/55 tracking-tight mb-5"
             style={{ fontFamily: SERIF, ...(heroH2Color ? { color: heroH2Color } : {}) }}
           >
-            {heroHeadline[1]}{todayHV.verseText.split(/[,.]/).filter(Boolean).length > 2 ? "…" : ""}
+            {heroHeadline[1]}{displayVerseText.split(/[,.]/).filter(Boolean).length > 2 ? "…" : ""}
           </h2>
         )}
 
@@ -1354,9 +1390,9 @@ export default function Home() {
         <div className="flex flex-wrap items-center gap-2 mb-5">
           <span
             className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase"
-            style={{ border: `1px solid ${AC_BORDER}`, background: AC_BG, color: AC }}
+            style={{ border: `1px solid ${themeACBorder}`, background: themeACBg, color: themeAC }}
           >
-            {todayHV.title}
+            {displayTitle}
           </span>
           <span
             className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase border border-white/10 bg-white/[0.04] text-white/55"
@@ -1371,22 +1407,22 @@ export default function Home() {
           className="text-[14px] text-white/72 italic leading-[1.55] mb-6"
           style={{ fontFamily: SERIF, ...(heroQuoteColor ? { color: heroQuoteColor } : {}) }}
         >
-          &ldquo;{todayHV.verseText}&rdquo;
+          &ldquo;{displayVerseText}&rdquo;
         </p>
 
         {/* Gold CTA card — Read the full story */}
         <Link
           href={`/church-history/${todayHV.id}`}
           className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl active:scale-[0.99] transition-all"
-          style={{ background: AC_CTA_GRAD, border: `1px solid ${AC_BORDER}`, textDecoration: "none" }}
+          style={{ background: themeACCtaGrad, border: `1px solid ${themeACBorder}`, textDecoration: "none" }}
         >
           <div className="text-left">
-            <p className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: "rgba(201,169,97,0.85)" }}>
+            <p className="text-[9px] font-bold tracking-[0.2em] uppercase" style={{ color: themeACSub85 }}>
               {todayHV.verseReference}
             </p>
             <p className="text-[14px] font-bold text-white mt-0.5" style={heroCtaText ? { color: heroCtaText } : {}}>{lang === "es" ? "Leer la historia completa" : "Read the full story"}</p>
           </div>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: AC }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ color: themeAC }}>
             <path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </Link>
@@ -1396,10 +1432,10 @@ export default function Home() {
           const g = getDailyGreeting(userName, new Date().getHours(), lang);
           return (
             <div className="px-1 pt-4 pb-2">
-              <p className="text-[16px] font-semibold leading-snug" style={{ color: "rgba(255,255,255,0.88)", fontFamily: "Georgia, serif" }}>
+              <p className="text-[16px] font-semibold leading-snug" style={{ color: isLightElegant ? "#1c1409" : "rgba(255,255,255,0.88)", fontFamily: "Georgia, serif" }}>
                 {g.line1}
               </p>
-              <p className="text-[12px] mt-0.5 leading-snug" style={{ color: "rgba(201,169,97,0.65)" }}>
+              <p className="text-[12px] mt-0.5 leading-snug" style={{ color: themeACSub85 }}>
                 {g.line2}
               </p>
             </div>
@@ -1441,7 +1477,7 @@ export default function Home() {
               </div>
               {/* Labels */}
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>{lang === "es" ? "Meditación" : "Meditation"}</p>
+                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: themeAC }}>{lang === "es" ? "Meditación" : "Meditation"}</p>
                 <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{featuredVideo.title}</p>
                 <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Toca para ver" : "Tap to watch"}</p>
               </div>
@@ -1455,7 +1491,7 @@ export default function Home() {
                 <button
                   onClick={() => setGgReader({ title: articleTitle, author: art.author, authorYears: art.authorYears, url: art.url, content: art.content, image: art.image })}
                   className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
-                  style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.18) 0%, rgba(10,12,20,0.97) 60%)", border: "1px solid rgba(201,169,97,0.28)" }}
+                  style={{ background: articleCardBg, border: isLightElegant ? "1px solid rgba(124,92,46,0.22)" : isPremiumNeon ? `1px solid ${themeACBorderSm}` : "1px solid rgba(201,169,97,0.28)" }}
                 >
                   {/* Cover image (when provided) — hides itself if the file is missing */}
                   {art.image && (
@@ -1481,9 +1517,9 @@ export default function Home() {
                     </svg>
                   </div>
                   <div className="relative z-10">
-                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: "#c9a961" }}>{lang === "es" ? "Artículo" : "Article"}</p>
-                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3 text-white">{articleTitle}</p>
-                    <p className="text-[9px] mt-1.5" style={{ color: "rgba(201,169,97,0.70)" }}>{art.author}</p>
+                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: themeAC }}>{lang === "es" ? "Artículo" : "Article"}</p>
+                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3" style={{ color: cardTextColor ?? "white" }}>{articleTitle}</p>
+                    <p className="text-[9px] mt-1.5" style={{ color: themeACSub85 }}>{art.author}</p>
                   </div>
                 </button>
               );
@@ -1560,7 +1596,7 @@ export default function Home() {
         </section>
 
         {/* ── Verse Memorization Widget ────────────────────────────────────── */}
-        <VerseMemorizationWidget lang={lang} isLight={isLight} heroH1Color={heroH1Color} sectionHdColor={sectionHdColor} />
+        <VerseMemorizationWidget lang={lang} isLight={isLight} isLightElegant={isLightElegant} cardTextColor={cardTextColor} heroH1Color={heroH1Color} sectionHdColor={sectionHdColor} isPremiumNeon={isPremiumNeon} />
 
         {/* ── Video section promo ──────────────────────────────────────────── */}
         <section className="mt-9">
@@ -1569,7 +1605,7 @@ export default function Home() {
               <h3 className="text-[17px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>
                 {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
               </h3>
-              <Link href="/videos" className="text-[11px] font-bold transition-colors" style={{ color: "rgba(201,169,97,0.7)" }}>
+              <Link href="/videos" className="text-[11px] font-bold transition-colors" style={{ color: themeACSub85 }}>
                 {lang === "es" ? "Ver todo →" : "See all →"}
               </Link>
             </div>
@@ -1578,7 +1614,7 @@ export default function Home() {
           <Link href="/videos" className="block group">
             <div
               className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all relative"
-              style={{ background: "#0d0d18", border: "1px solid rgba(201,169,97,0.24)" }}
+              style={{ background: "#0d0d18", border: `1px solid ${themeACBorderSm}` }}
             >
               {/* Background image — 16:9 hero, figure stays on the right */}
               <div className="relative" style={{ aspectRatio: "16 / 9" }}>
@@ -1611,7 +1647,7 @@ export default function Home() {
                     {/* Play button */}
                     <div
                       className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
-                      style={{ background: "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
+                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="#08090f" style={{ marginLeft: 3 }}>
                         <path d="M8 5v14l11-7z" />
@@ -1619,7 +1655,7 @@ export default function Home() {
                     </div>
                     {/* Text block */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: AC }}>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: themeAC }}>
                         {lang === "es" ? "Aprende. Mira. Crece." : "Learn. Watch. Grow."}
                       </p>
                       <p className="text-[14px] font-bold text-white leading-snug">
@@ -1648,7 +1684,7 @@ export default function Home() {
         <section className="mt-9">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Tu racha" : "Your streak"}</h3>
-            <p className="text-[12px] font-bold" style={{ color: AC }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
+            <p className="text-[12px] font-bold" style={{ color: themeAC }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
           </div>
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3 py-4 flex justify-between" style={isLight ? { borderColor: "rgba(28,20,9,0.10)", background: "rgba(28,20,9,0.04)" } : {}}>
             {dayLabels.map((d, i) => {
@@ -1660,10 +1696,10 @@ export default function Home() {
                     className="w-7 h-7 rounded-full flex items-center justify-center text-[10px]"
                     style={
                       isDone
-                        ? { background: AC, color: "#1a0e2e" }
+                        ? { background: themeAC, color: isPremiumNeon ? "#0a0514" : "#1a0e2e" }
                         : isCurrent
-                          ? { background: "rgba(201,169,97,0.15)", border: `1px solid ${AC}` }
-                          : { background: "rgba(255,255,255,0.05)" }
+                          ? { background: themeACBg, border: `1px solid ${themeAC}` }
+                          : { background: isLight ? "rgba(28,20,9,0.08)" : "rgba(255,255,255,0.05)" }
                     }
                   >
                     {isDone && (
@@ -1671,7 +1707,7 @@ export default function Home() {
                         <path d="m5 13 4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
-                    {isCurrent && <div className="w-1.5 h-1.5 rounded-full" style={{ background: AC }} />}
+                    {isCurrent && <div className="w-1.5 h-1.5 rounded-full" style={{ background: themeAC }} />}
                   </div>
                   <span
                     className={"text-[10px] " + (isCurrent ? "text-white font-semibold" : "text-white/35")}
@@ -1690,18 +1726,18 @@ export default function Home() {
           <section className="px-4 pb-4 mt-2">
             <div
               className="rounded-3xl px-5 py-6 flex flex-col gap-4"
-              style={{ background: "rgba(201,169,97,0.10)", border: "1px solid rgba(201,169,97,0.25)", backdropFilter: "blur(8px)" }}
+              style={{ background: isPremiumNeon ? "rgba(124,58,237,0.10)" : "rgba(201,169,97,0.10)", border: `1px solid ${isPremiumNeon ? "rgba(124,58,237,0.25)" : "rgba(201,169,97,0.25)"}`, backdropFilter: "blur(8px)" }}
             >
               <div className="flex items-start gap-4">
                 <div
                   className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.18)" }}
+                  style={{ background: isPremiumNeon ? "rgba(124,58,237,0.18)" : "rgba(201,169,97,0.18)" }}
                 >
                   ☁️
                 </div>
                 <div className="flex-1">
-                  <p className="text-white font-bold text-base leading-snug">Save your study across every device</p>
-                  <p className="text-white/50 text-sm mt-1 leading-relaxed">
+                  <p className="font-bold text-base leading-snug" style={{ color: isLightElegant ? "#1c1409" : "white" }}>Save your study across every device</p>
+                  <p className="text-sm mt-1 leading-relaxed" style={{ color: isLightElegant ? "rgba(28,20,9,0.52)" : "rgba(255,255,255,0.50)" }}>
                     Sign in to keep your highlights, notes, and bookmarks in sync — on your phone, tablet, and computer.
                   </p>
                 </div>
@@ -1710,14 +1746,14 @@ export default function Home() {
                 <Link
                   href="/auth/login"
                   className="flex-1 text-center rounded-2xl py-3 text-sm font-bold"
-                  style={{ background: AC, color: "#1a0e2e" }}
+                  style={{ background: themeAC, color: isPremiumNeon ? "#0a0514" : "#1a0e2e" }}
                 >
                   Sign In Free
                 </Link>
                 <Link
                   href="/profile"
                   className="px-4 rounded-2xl py-3 text-sm font-semibold"
-                  style={{ background: "rgba(201,169,97,0.15)", color: AC }}
+                  style={{ background: themeACBg, color: themeAC }}
                 >
                   Learn more
                 </Link>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useTheme } from "../../lib/useTheme";
+import { useLanguage } from "../../lib/useLanguage";
 import type { ChurchAnalysis } from "../page";
 
 // ─── Verdict helpers ──────────────────────────────────────────────────────────
@@ -503,12 +504,15 @@ export default function AnalysisDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { theme } = useTheme();
+  const { lang } = useLanguage();
   const isLight = theme === "light-elegant" || theme === "light-pink";
 
   const [analysis, setAnalysis] = useState<ChurchAnalysis | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [toast, setToast] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [showEs, setShowEs] = useState(false);
+  const [loadingEs, setLoadingEs] = useState(false);
 
   const bg = isLight ? "#f5f0e8" : "#0f0f0f";
   const fg = isLight ? "#1c1409" : "#ffffff";
@@ -561,6 +565,51 @@ export default function AnalysisDetailPage() {
       showToast("Copied to clipboard");
     } catch {
       showToast("Could not copy — try long-pressing the text");
+    }
+  }
+
+  // ── Spanish toggle ───────────────────────────────────────────────────────────
+  async function handleToggleSpanish() {
+    if (!analysis) return;
+    if (showEs) { setShowEs(false); return; }
+    if (analysis.resultEs) { setShowEs(true); return; }
+
+    const sermonsWithTranscripts = analysis.sermons.filter(s => s.transcript);
+    if (sermonsWithTranscripts.length < 4) {
+      showToast(lang === "es" ? "No hay transcripciones guardadas" : "Transcripts not stored — re-analyze to get Spanish");
+      return;
+    }
+
+    setLoadingEs(true);
+    try {
+      const res = await fetch("/api/analyze-church", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          churchName: analysis.churchName,
+          denomination: analysis.denomination,
+          sermons: sermonsWithTranscripts,
+          language: "es",
+        }),
+      });
+      const data = await res.json() as { analysis?: string; verdict?: string; error?: string };
+      if (!res.ok || data.error || !data.analysis) {
+        showToast(data.error ?? "No se pudo traducir");
+        return;
+      }
+      const updated: ChurchAnalysis = { ...analysis, resultEs: data.analysis, verdictEs: data.verdict };
+      setAnalysis(updated);
+      try {
+        const raw = localStorage.getItem("tulip-church-analyses");
+        const list: ChurchAnalysis[] = raw ? JSON.parse(raw) : [];
+        const idx = list.findIndex(a => a.id === analysis.id);
+        if (idx !== -1) { list[idx] = updated; localStorage.setItem("tulip-church-analyses", JSON.stringify(list)); }
+      } catch { /**/ }
+      setShowEs(true);
+    } catch (e) {
+      showToast(e instanceof Error ? e.message : "Error");
+    } finally {
+      setLoadingEs(false);
     }
   }
 
@@ -699,6 +748,21 @@ export default function AnalysisDetailPage() {
             </div>
           </div>
 
+          {/* ── Language toggle ───────────────────────────────────────────────── */}
+          <button
+            onClick={handleToggleSpanish}
+            disabled={loadingEs}
+            className="no-print w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform mb-3"
+            style={{
+              background: showEs ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.04)",
+              color: showEs ? "#c9a961" : mutedFg,
+              border: `1px solid ${showEs ? "rgba(201,169,97,0.35)" : borderColor}`,
+              opacity: loadingEs ? 0.6 : 1,
+            }}
+          >
+            {loadingEs ? "Traduciendo al español…" : showEs ? "View in English" : "Ver en Español"}
+          </button>
+
           {/* ── Action buttons: Download + Share ─────────────────────────────── */}
           <div className="no-print flex gap-3 mb-5">
             {/* Download PDF */}
@@ -760,9 +824,12 @@ export default function AnalysisDetailPage() {
           {/* ── Analysis result ───────────────────────────────────────────────── */}
           <div className="rounded-2xl border px-4 py-4" style={{ borderColor, background: cardBg }}>
             <p className="no-print text-[10px] font-black uppercase tracking-[0.20em] mb-4" style={{ color: "rgba(201,169,97,0.75)" }}>
-              Full Analysis
+              {showEs ? "Análisis Completo" : "Full Analysis"}
             </p>
-            {renderAnalysis(analysis.result, fg, mutedFg, cardBg, borderColor)}
+            {renderAnalysis(
+              showEs && analysis.resultEs ? analysis.resultEs : analysis.result,
+              fg, mutedFg, cardBg, borderColor
+            )}
           </div>
 
           {/* ── Disclaimer ────────────────────────────────────────────────────── */}

@@ -25,14 +25,10 @@
 
 /* ── Mobile safe-area support (notch, Dynamic Island, Android gesture bar) ── */
 
-/* iPhone notch / Dynamic Island padding is ON by default for all mobile.
-   Android mode explicitly removes it via data-android-mode="true". */
+/* Universal safe-area padding — works on iOS, Android, and desktop. */
 @media (max-width: 767px) {
   .layout-children {
-    padding-top: max(env(safe-area-inset-top), 44px);
-  }
-  [data-android-mode="true"] .layout-children {
-    padding-top: 0 !important;
+    padding-top: env(safe-area-inset-top, 0px);
   }
 }
 

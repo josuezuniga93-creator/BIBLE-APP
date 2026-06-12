@@ -13,7 +13,7 @@ import type { User } from "@supabase/supabase-js";
 
 function PlansAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.8" />
       <path d="M7.5 12.5l3.5 3.5 6-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -22,7 +22,7 @@ function PlansAppIcon() {
 
 function LibraryAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
       <rect x="9" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
       <path d="M15 4l4 16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -32,7 +32,7 @@ function LibraryAppIcon() {
 
 function TrackerAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.7" />
       <path d="M7.5 12l3 3 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
@@ -41,7 +41,7 @@ function TrackerAppIcon() {
 
 function FamilyAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="1.7" />
       <circle cx="17" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.6" />
       <path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -52,7 +52,7 @@ function FamilyAppIcon() {
 
 function KidsAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
       <path d="M2 19h20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
       <path d="M9 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -64,7 +64,7 @@ function KidsAppIcon() {
 
 function VideosAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="2" y="5" width="15" height="14" rx="3" stroke="currentColor" strokeWidth="1.7" />
       <path d="M17 9l5-3v12l-5-3V9z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
@@ -73,7 +73,7 @@ function VideosAppIcon() {
 
 function GiveAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M12 21C12 21 3 15 3 9a5 5 0 0110 0 5 5 0 0110 0c0 6-9 12-9 12h-2z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
     </svg>
   );
@@ -81,7 +81,7 @@ function GiveAppIcon() {
 
 function FellowshipAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
       <circle cx="16" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
       <path d="M2 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
@@ -92,7 +92,7 @@ function FellowshipAppIcon() {
 
 function HistoricalAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.7"/>
       <path d="M4 5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" stroke="currentColor" strokeWidth="1.5"/>
       <line x1="10" y1="9"  x2="17" y2="9"  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -104,7 +104,7 @@ function HistoricalAppIcon() {
 
 function ChurchAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M12 2v4M10 4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
       <path d="M3 10h18v11H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
       <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
@@ -115,7 +115,7 @@ function ChurchAppIcon() {
 
 function NotesAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.7" />
       <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -126,7 +126,7 @@ function NotesAppIcon() {
 
 function CollectionsAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
       <path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
     </svg>
@@ -135,7 +135,7 @@ function CollectionsAppIcon() {
 
 function StudyToolsAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M4 5.5h6.5A3.5 3.5 0 0114 9v12a3.5 3.5 0 00-3.5-3.5H4V5.5z" stroke="currentColor" strokeWidth="1.7" />
       <path d="M20 5.5h-4A3.5 3.5 0 0012.5 9v12a3.5 3.5 0 013.5-3.5h4V5.5z" stroke="currentColor" strokeWidth="1.7" />
       <path d="M8 10h3M16 10h2M8 13h2.5M16 13h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
@@ -145,7 +145,7 @@ function StudyToolsAppIcon() {
 
 function RebuttalAppIcon() {
   return (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
       <path d="M12 2v3M10.5 3.5h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
       <path d="M4 9h16v12H4z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
       <path d="M9 21v-5h6v5" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
@@ -313,79 +313,125 @@ export default function MorePage() {
           )}
         </section>
 
-        {/* ── Videos card (compact & premium) ─────────────────────────────── */}
+        {/* ── Featured Videos banner ────────────────────────────────────────── */}
         <section>
           <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-2 px-1" style={{ color: "rgba(201,169,97,0.70)" }}>
             {lang === "es" ? "Destacado" : "Featured"}
           </p>
-          <Link href="/videos" className="block group">
-            <div
-              className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
-              style={{ background: "linear-gradient(120deg, rgba(201,169,97,0.11) 0%, rgba(14,17,28,0.97) 70%)", border: "1px solid rgba(201,169,97,0.24)" }}
-            >
-              <div className="flex items-center gap-4 px-4 py-4">
-                {/* Icon */}
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", boxShadow: "0 6px 18px rgba(201,169,97,0.28)" }}
+
+          {/* Main card */}
+          <div
+            className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all"
+            style={{
+              background: "linear-gradient(135deg, #0d0f18 0%, #0a0c14 100%)",
+              border: "1px solid rgba(201,169,97,0.28)",
+              boxShadow: "0 8px 32px rgba(201,169,97,0.10)",
+            }}
+          >
+            {/* Top content row */}
+            <div className="flex items-start justify-between px-5 pt-5 pb-4 gap-3">
+              {/* Left: text */}
+              <div className="flex-1 min-w-0">
+                <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-1.5" style={{ color: "#c9a961" }}>
+                  {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
+                </p>
+                <p className="text-[26px] font-black text-white leading-none mb-1.5">
+                  {lang === "es" ? "Videos" : "Videos"}
+                </p>
+                <p className="text-[12px] font-semibold mb-1" style={{ color: "rgba(201,169,97,0.80)" }}>
+                  {lang === "es" ? "Enseñanza Bíblica • Testimonios" : "Biblical Teaching • Testimonies"}
+                </p>
+                <p className="text-[11px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.38)" }}>
+                  {lang === "es"
+                    ? "Videos cristianos confiables arraigados en la Escritura."
+                    : "Watch trusted Christian videos rooted in Scripture and historic Christianity."}
+                </p>
+                <Link
+                  href="/videos"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold active:scale-95 transition-transform"
+                  style={{
+                    background: "rgba(201,169,97,0.14)",
+                    color: "#c9a961",
+                    border: "1px solid rgba(201,169,97,0.35)",
+                  }}
                 >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#0e1018" style={{ marginLeft: 2 }}>
-                    <path d="M8 5v14l11-7z" />
-                  </svg>
-                </div>
-                {/* Text */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-0.5" style={{ color: "#c9a961" }}>
-                    {lang === "es" ? "Fundamentos de la Fe" : "Fundamentals of the Faith"}
-                  </p>
-                  <p className="text-[15px] font-bold text-white leading-tight">
-                    {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
-                  </p>
-                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.38)" }}>
-                    {lang === "es" ? "Dios · Cristo · Evangelio · Escritura" : "God · Christ · Gospel · Scripture"}
-                  </p>
-                </div>
-                {/* Arrow */}
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(201,169,97,0.55)" strokeWidth="2.2" strokeLinecap="round" className="flex-shrink-0">
-                  <path d="M9 18l6-6-6-6"/>
+                  {lang === "es" ? "Explorar Videos" : "Explore Videos"}
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                </Link>
+              </div>
+
+              {/* Right: large gold icon */}
+              <div
+                className="flex-shrink-0 w-[84px] h-[84px] rounded-2xl flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(145deg, #e8c96a, #c9a961, #a8843c)",
+                  boxShadow: "0 12px 36px rgba(201,169,97,0.45), 0 4px 12px rgba(201,169,97,0.25)",
+                }}
+              >
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="#0d0f18" style={{ marginLeft: 3 }}>
+                  <path d="M8 5v14l11-7z"/>
                 </svg>
               </div>
             </div>
-          </Link>
+
+            {/* Bottom category chips */}
+            <div
+              className="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-4"
+              style={{ borderTop: "1px solid rgba(201,169,97,0.10)", paddingTop: 12 }}
+            >
+              {(lang === "es"
+                ? [
+                    { icon: "▶", label: "Fundamentos de la Fe" },
+                    { icon: "✦", label: "Historias de Gracia" },
+                    { icon: "★", label: "Destacados" },
+                    { icon: "⚡", label: "Videos Cortos" },
+                    { icon: "?", label: "Preguntas y Respuestas" },
+                  ]
+                : [
+                    { icon: "▶", label: "Fundamentals of the Faith" },
+                    { icon: "✦", label: "Stories of Grace" },
+                    { icon: "★", label: "Featured Videos" },
+                    { icon: "⚡", label: "Short Videos" },
+                    { icon: "?", label: "Ask & Receive" },
+                  ]
+              ).map((chip) => (
+                <Link
+                  key={chip.label}
+                  href="/videos"
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold whitespace-nowrap active:opacity-70 transition-opacity"
+                  style={{
+                    background: "rgba(255,255,255,0.05)",
+                    color: "rgba(255,255,255,0.55)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                  }}
+                >
+                  <span className="text-[9px]">{chip.icon}</span>
+                  {chip.label}
+                </Link>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <div className="px-1 pt-1">
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase text-violet-400/70 mb-2">
-            {t(lang, "more_toolbox_label")}
-          </p>
-          <h1 className="text-2xl font-bold text-white">{t(lang, "more_heading")}</h1>
-          <p className="text-xs text-white/38 mt-1.5 leading-relaxed">
-            {t(lang, "more_toolbox_sub")}
-          </p>
-        </div>
-
         {/* ── App grid ──────────────────────────────────────────────────────── */}
-        <section className="space-y-5">
+        <section className="space-y-4">
           {TILE_GROUP_DEFS.map((group) => (
             <div key={group.titleKey}>
-              <div className="flex items-baseline justify-between mb-3 px-1">
-                <p className="text-[10px] font-black tracking-widest text-white/35 uppercase">
-                  {t(lang, group.titleKey)}
-                </p>
-                <p className="text-[10px] text-white/25">{t(lang, group.dekKey)}</p>
-              </div>
-              <div className={`grid gap-3 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+              <p className="text-[9px] font-black tracking-widest text-white/30 uppercase mb-2 px-1">
+                {t(lang, group.titleKey)}
+              </p>
+              <div className={`grid gap-2.5 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
                 {group.indices.map((idx) => {
                   const { href, Icon, labelKey, color } = APP_TILE_DEFS[idx];
                   return (
                     <Link
                       key={href}
                       href={href}
-                      className="pn-app-tile flex items-center flex-row justify-start gap-3 min-h-[76px] px-4 py-3 rounded-2xl active:scale-95 transition-transform"
+                      className="pn-app-tile flex items-center gap-2.5 px-3 py-2.5 rounded-xl active:scale-95 transition-transform"
                       style={{ backgroundColor: color }}
                     >
-                      <Icon />
-                      <span className="text-[11px] font-bold text-white text-center leading-tight">{t(lang, labelKey)}</span>
+                      <span className="flex-shrink-0 opacity-90"><Icon /></span>
+                      <span className="text-[12px] font-bold text-white leading-tight">{t(lang, labelKey)}</span>
                     </Link>
                   );
                 })}

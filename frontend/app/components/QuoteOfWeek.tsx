@@ -1,7 +1,7 @@
 "use client";
 import { getCurrentQuote } from "../data/quotes";
 import { useLanguage } from "../lib/useLanguage";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function QuoteOfWeek() {
   const quote = getCurrentQuote();
@@ -11,6 +11,20 @@ export default function QuoteOfWeek() {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [sharing, setSharing] = useState(false);
+  const [isLightElegant, setIsLightElegant] = useState(false);
+  const [isPremiumNeon,  setIsPremiumNeon]  = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const t = localStorage.getItem("ryc-theme") ?? "";
+      setIsLightElegant(t === "light-elegant");
+      setIsPremiumNeon(t === "premium-neon");
+    };
+    check();
+    window.addEventListener("ryc-theme-change", check as EventListener);
+    return () => window.removeEventListener("ryc-theme-change", check as EventListener);
+  }, []);
+  const qAC  = isPremiumNeon ? "#a78bfa" : "#c9a961";
+  const qACb = isPremiumNeon ? "rgba(167,139,250,0.70)" : "rgba(201,169,97,0.70)";
 
   function handleCopy() {
     const shareText = `"${text}" — ${quote.author} (${quote.born}–${quote.died})`;
@@ -191,11 +205,11 @@ export default function QuoteOfWeek() {
       <div className="flex items-center justify-between mb-3">
         <h3
           className="text-[15px] font-bold"
-          style={{ color: "var(--color-text, #fff)" }}
+          style={{ color: isLightElegant ? "#1c1409" : "var(--color-text, #fff)" }}
         >
           {lang === "es" ? "Cita de la Semana" : "Quote of the Week"}
         </h3>
-        <span className="text-[11px]" style={{ color: "rgba(201,169,97,0.7)" }}>
+        <span className="text-[11px]" style={{ color: qACb }}>
           {lang === "es" ? "Voces del pasado" : "Voices from the past"}
         </span>
       </div>
@@ -206,7 +220,8 @@ export default function QuoteOfWeek() {
         style={{
           minHeight: "370px",
           background: "#0b0d15",
-          border: "1px solid rgba(201,169,97,0.10)",
+          border: isLightElegant ? "2px solid rgba(124,92,46,0.20)" : "1px solid rgba(201,169,97,0.10)",
+          boxShadow: isLightElegant ? "0 8px 36px rgba(28,20,9,0.14)" : undefined,
         }}
       >
         {/* Portrait artwork — full card so the beard naturally reaches the quote */}
@@ -238,7 +253,7 @@ export default function QuoteOfWeek() {
             {lang === "es" ? `"${quote.textEs}"` : `"${quote.text}"`}
           </p>
           <div>
-            <p className="text-[14px] font-bold mb-0.5" style={{ color: "rgba(201,169,97,1)" }}>
+            <p className="text-[14px] font-bold mb-0.5" style={{ color: qAC }}>
               {quote.author}
             </p>
             <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.42)" }}>
@@ -254,13 +269,13 @@ export default function QuoteOfWeek() {
         <button
           onClick={handleLike}
           className="flex items-center gap-1.5 text-[12px] transition-all"
-          style={{ color: liked ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.4)" }}
+          style={{ color: liked ? qAC : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)" }}
         >
           <svg
             width="16"
             height="16"
             viewBox="0 0 24 24"
-            fill={liked ? "rgba(201,169,97,1)" : "none"}
+            fill={liked ? qAC : "none"}
             stroke="currentColor"
             strokeWidth="2"
           >
@@ -281,7 +296,7 @@ export default function QuoteOfWeek() {
             onClick={handleCopy}
             className="flex items-center gap-1.5 text-[12px] transition-all"
             style={{
-              color: copied ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.4)",
+              color: copied ? qAC : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)",
             }}
           >
             <svg
@@ -310,7 +325,7 @@ export default function QuoteOfWeek() {
             onClick={handleShare}
             disabled={sharing}
             className="flex items-center gap-1.5 text-[12px]"
-            style={{ color: sharing ? "rgba(201,169,97,0.7)" : "rgba(255,255,255,0.4)" }}
+            style={{ color: sharing ? qACb : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)" }}
           >
             <svg
               width="14"

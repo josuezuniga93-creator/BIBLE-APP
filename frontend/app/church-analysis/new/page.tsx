@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "../../lib/useTheme";
+import { useLanguage } from "../../lib/useLanguage";
 import type { ChurchAnalysis, SermonRecord } from "../page";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -121,6 +122,7 @@ async function fetchTranscriptFromApp(url: string): Promise<{ transcript: string
 export default function NewAnalysisPage() {
   const router = useRouter();
   const { theme } = useTheme();
+  const { lang } = useLanguage();
   const isLight = theme === "light-elegant" || theme === "light-pink";
 
   const [churchName, setChurchName] = useState("");
@@ -265,6 +267,7 @@ export default function NewAnalysisPage() {
           churchName: churchName.trim(),
           denomination: denomination.trim() || undefined,
           sermons: sermonsPayload,
+          language: lang === "es" ? "es" : undefined,
         }),
       });
       const data = await res.json() as { analysis?: string; verdict?: string; error?: string };

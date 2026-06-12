@@ -57,8 +57,10 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
       localStorage.setItem("ryc-android-mode", isIphone ? "false" : "true");
       if (isIphone) {
         document.documentElement.setAttribute("data-iphone-mode", "true");
+        document.documentElement.removeAttribute("data-android-mode");
       } else {
         document.documentElement.removeAttribute("data-iphone-mode");
+        document.documentElement.setAttribute("data-android-mode", "true");
       }
       localStorage.setItem("tulip_onboarded", "true");
     } catch { /**/ }

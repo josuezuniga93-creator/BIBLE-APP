@@ -46,6 +46,7 @@ const SCRIPTURE_FONTS: { key: ScriptureFont; label: string; family: string; desc
   { key: "typewriter",  label: "Typewriter",  family: "'Courier New', Courier, 'Lucida Console', monospace",          desc: "Vintage & faithful" },
 ];
 const SCRIPTURE_FONT_KEY = "ryc-scripture-font";
+const FONT_SIZE_KEY = "ryc-scripture-fontsize";
 
 const VERSE_COLOR_KEY  = (book: number, ch: number) => `ryc-vcolor-${book}-${ch}`;
 const CHAPTER_NOTE_KEY = (book: number, ch: number) => `ryc-chapter-note-${book}-${ch}`;
@@ -686,7 +687,9 @@ function LexiconInner() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang]);
 
-  const [fontSize, setFontSize]               = useState<FontSize>("lg");
+  const [fontSize, setFontSize]               = useState<FontSize>(() => {
+    try { const s = localStorage.getItem(FONT_SIZE_KEY) as FontSize; return FONT_SIZES.includes(s) ? s : "lg"; } catch { return "lg"; }
+  });
   const [scriptureFont, setScriptureFont]     = useState<ScriptureFont>(() => {
     try { const s = localStorage.getItem(SCRIPTURE_FONT_KEY) as ScriptureFont; return SCRIPTURE_FONTS.some(f => f.key === s) ? s : "georgia"; } catch { return "georgia"; }
   });
@@ -1252,12 +1255,12 @@ function LexiconInner() {
 
           {/* Font size */}
           <button
-            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); setFontSize(FONT_SIZES[Math.max(i - 1, 0)]); }}
+            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.max(i - 1, 0)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {} }}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors font-bold text-[11px]">
             A-
           </button>
           <button
-            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); setFontSize(FONT_SIZES[Math.min(i + 1, FONT_SIZES.length - 1)]); }}
+            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.min(i + 1, FONT_SIZES.length - 1)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {}; }}
             className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors font-bold text-sm">
             A+
           </button>

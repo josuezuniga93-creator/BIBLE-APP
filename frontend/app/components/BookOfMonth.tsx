@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import { useLanguage } from "../lib/useLanguage";
 
 const BOOKS = {
@@ -27,15 +28,33 @@ const BOOKS = {
 export default function BookOfMonth() {
   const { lang } = useLanguage();
   const book = lang === "es" ? BOOKS.es : BOOKS.en;
+  const [isLE, setIsLE] = useState(false);
+  const [isPN, setIsPN] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const t = localStorage.getItem("ryc-theme") ?? "";
+      setIsLE(t === "light-elegant");
+      setIsPN(t === "premium-neon");
+    };
+    check();
+    window.addEventListener("ryc-theme-change", check as EventListener);
+    return () => window.removeEventListener("ryc-theme-change", check as EventListener);
+  }, []);
+  const bAC    = isPN ? "#a78bfa"                : "rgba(201,169,97,1)";
+  const bACdim = isPN ? "rgba(167,139,250,0.70)" : "rgba(201,169,97,0.70)";
+  const bACbg  = isPN ? "rgba(124,58,237,0.12)"  : "rgba(201,169,97,0.12)";
+  const bACbd  = isPN ? "rgba(124,58,237,0.22)"  : "rgba(201,169,97,0.22)";
+  const bBtnBg = isPN ? "#7c3aed"                : "rgba(201,169,97,1)";
+  const bBtnTx = isPN ? "#ede8ff"                : "#08090f";
 
   return (
     <section className="mt-8 mb-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-bold" style={{ color: "var(--color-text, #fff)" }}>
+        <h3 className="text-[15px] font-bold" style={{ color: isLE ? "#1c1409" : "var(--color-text, #fff)" }}>
           {lang === "es" ? "Libro del Mes" : "Book of the Month"}
         </h3>
-        <span className="text-[11px]" style={{ color: "rgba(201,169,97,0.7)" }}>
+        <span className="text-[11px]" style={{ color: bACdim }}>
           {lang === "es" ? "Lectura recomendada" : "Recommended reading"}
         </span>
       </div>
@@ -44,9 +63,11 @@ export default function BookOfMonth() {
       <div
         className="rounded-2xl overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, rgba(201,169,97,0.08) 0%, rgba(10,11,18,0.98) 45%, rgba(8,9,15,1) 100%)",
-          border: "1px solid rgba(201,169,97,0.18)",
-          boxShadow: "0 4px 32px rgba(0,0,0,0.4)",
+          background: isLE
+            ? "linear-gradient(145deg, rgba(201,169,97,0.10) 0%, #ede4d4 40%, #e8dece 100%)"
+            : "linear-gradient(145deg, rgba(201,169,97,0.08) 0%, rgba(10,11,18,0.98) 45%, rgba(8,9,15,1) 100%)",
+          border: isLE ? "1px solid rgba(124,92,46,0.22)" : "1px solid rgba(201,169,97,0.18)",
+          boxShadow: isLE ? "0 4px 28px rgba(28,20,9,0.10)" : "0 4px 32px rgba(0,0,0,0.4)",
         }}
       >
         <div className="flex">
@@ -72,7 +93,9 @@ export default function BookOfMonth() {
               className="absolute inset-x-0 bottom-0"
               style={{
                 height: "42%",
-                background: "linear-gradient(to top, rgba(10,11,18,0.62), rgba(10,11,18,0.22) 45%, transparent 100%)",
+                background: isLE
+                  ? "linear-gradient(to top, rgba(232,222,200,0.55), rgba(232,222,200,0.18) 45%, transparent 100%)"
+                  : "linear-gradient(to top, rgba(10,11,18,0.62), rgba(10,11,18,0.22) 45%, transparent 100%)",
               }}
             />
           </div>
@@ -84,13 +107,13 @@ export default function BookOfMonth() {
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <span
                   className="text-[9px] font-bold uppercase tracking-widest"
-                  style={{ color: "rgba(201,169,97,0.68)" }}
+                  style={{ color: bACdim }}
                 >
                   {lang === "es" ? "• Junio 2026" : "• June 2026"}
                 </span>
                 <span
                   className="text-[8px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full"
-                  style={{ background: "rgba(201,169,97,0.12)", color: "rgba(201,169,97,0.85)", border: "1px solid rgba(201,169,97,0.22)" }}
+                  style={{ background: bACbg, color: bAC, border: `1px solid ${bACbd}` }}
                 >
                   {book.tag}
                 </span>
@@ -98,19 +121,19 @@ export default function BookOfMonth() {
 
               {/* Title */}
               <h4
-                className="font-bold text-white leading-snug mb-1"
-                style={{ fontSize: "17px", letterSpacing: "-0.1px" }}
+                className="font-bold leading-snug mb-1"
+                style={{ fontSize: "17px", letterSpacing: "-0.1px", color: isLE ? "#1c1409" : "white" }}
               >
                 {book.title}
               </h4>
 
               {/* Author */}
-              <p className="text-[12px] font-semibold mb-1" style={{ color: "rgba(201,169,97,0.92)" }}>
+              <p className="text-[12px] font-semibold mb-1" style={{ color: bAC }}>
                 {book.author}
               </p>
 
               {/* Subtitle */}
-              <p className="text-[11px] italic" style={{ color: "rgba(255,255,255,0.48)" }}>
+              <p className="text-[11px] italic" style={{ color: isLE ? "rgba(28,20,9,0.50)" : "rgba(255,255,255,0.48)" }}>
                 {book.subtitle}
               </p>
             </div>
@@ -121,13 +144,13 @@ export default function BookOfMonth() {
         <div
           className="mx-4 mt-1 rounded-xl px-3.5 py-3"
           style={{
-            background: "rgba(255,255,255,0.045)",
-            border: "1px solid rgba(255,255,255,0.07)",
+            background: isLE ? "rgba(28,20,9,0.04)" : "rgba(255,255,255,0.045)",
+            border: isLE ? "1px solid rgba(124,92,46,0.12)" : "1px solid rgba(255,255,255,0.07)",
           }}
         >
           <p
             className="text-[12px] leading-relaxed"
-            style={{ color: "rgba(255,255,255,0.76)" }}
+            style={{ color: isLE ? "rgba(28,20,9,0.72)" : "rgba(255,255,255,0.76)" }}
           >
             {book.description}
           </p>
@@ -138,24 +161,24 @@ export default function BookOfMonth() {
           <div
             className="rounded-xl px-3 py-2.5"
             style={{
-              background: "rgba(255,255,255,0.045)",
-              border: "1px solid rgba(201,169,97,0.16)",
+              background: isLE ? "rgba(28,20,9,0.04)" : "rgba(255,255,255,0.045)",
+              border: `1px solid ${bACbd}`,
               minWidth: "92px",
             }}
           >
             <p
               className="text-[8px] uppercase tracking-widest font-bold mb-0.5"
-              style={{ color: "rgba(201,169,97,0.66)" }}
+              style={{ color: bACdim }}
             >
               {lang === "es" ? "Precio" : "Price"}
             </p>
             <p
               className="text-[7px] uppercase tracking-wider font-bold mb-1"
-              style={{ color: "rgba(255,255,255,0.34)" }}
+              style={{ color: isLE ? "rgba(28,20,9,0.35)" : "rgba(255,255,255,0.34)" }}
             >
               Amazon
             </p>
-            <p className="text-[15px] font-bold leading-none" style={{ color: "rgba(255,255,255,0.92)" }}>
+            <p className="text-[15px] font-bold leading-none" style={{ color: isLE ? "#1c1409" : "rgba(255,255,255,0.92)" }}>
               {book.price}
             </p>
           </div>
@@ -165,8 +188,8 @@ export default function BookOfMonth() {
             rel="noopener noreferrer"
             className="flex flex-1 items-center justify-center gap-2 rounded-xl py-2.5 transition-opacity active:opacity-80"
             style={{
-              background: "rgba(201,169,97,1)",
-              color: "#08090f",
+              background: bBtnBg,
+              color: bBtnTx,
               fontSize: "12px",
               fontWeight: "700",
               letterSpacing: "0.4px",

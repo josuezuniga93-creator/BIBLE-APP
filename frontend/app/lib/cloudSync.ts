@@ -39,7 +39,7 @@ const SYNC_PREFIXES = [
   "tulip_user_name",
   "ryc-lang",
   "tulip_onboarded",
-  // ryc-android-mode intentionally excluded — stored locally only for instant apply
+  "ryc-android-mode",
 ];
 
 function isSyncKey(key: string): boolean {

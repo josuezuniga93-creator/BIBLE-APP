@@ -19,6 +19,8 @@ export interface ChurchAnalysis {
   sermons: SermonRecord[];
   result: string;
   verdict: string;
+  resultEs?: string;
+  verdictEs?: string;
   analyzedAt: string;
 }
 

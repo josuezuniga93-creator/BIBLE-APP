@@ -228,7 +228,7 @@ function PastGatheringCard({
                 placeholder="Family name…"
                 autoFocus
                 className="flex-1 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none"
-                style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, #7c3aed)" + "44" }}
+                style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, #7c3aed)" + "44" }}
               />
               <button
                 onClick={commitFamily}
@@ -617,7 +617,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     placeholder={lang === "es" ? "ej. Estudio Bíblico del martes" : "e.g. Tuesday Bible Study"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "var(--fg, rgba(255,255,255,0.06))", opacity: 1, color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: "rgba(255,255,255,0.06)", opacity: 1, color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     autoFocus
                   />
                 </div>
@@ -631,7 +631,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
                     placeholder={lang === "es" ? "ej. Casa de Juan / 123 Oak St" : "e.g. John's home / 123 Oak St"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                 </div>
 
@@ -644,7 +644,7 @@ export default function FellowshipPage() {
                       value={form.date}
                       onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                       className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                      style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                      style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     />
                   </div>
                   <div>
@@ -654,7 +654,7 @@ export default function FellowshipPage() {
                       value={form.time}
                       onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
                       className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                      style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                      style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     />
                   </div>
                 </div>
@@ -668,7 +668,7 @@ export default function FellowshipPage() {
                     placeholder={lang === "es" ? "Tema de estudio, qué traer, etc." : "Study topic, what to bring, etc."}
                     rows={3}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
-                    style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                 </div>
 
@@ -683,7 +683,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                     placeholder="+1 555 000 0000"
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                   <p className="text-[9px] mt-1" style={{ color: "var(--fg, rgba(255,255,255,0.25))" }}>
                     {lang === "es" ? "Aparecerá un botón de “Enviar Mensaje” en la tarjeta de esta reunión." : 'A "Send Message" button will appear on this gathering\'s card.'}
@@ -770,7 +770,7 @@ export default function FellowshipPage() {
                   placeholder="+1 555 000 0000"
                   autoFocus
                   className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                  style={{ background: "var(--fg, rgba(255,255,255,0.06))", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                  style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                 />
               </div>
 
