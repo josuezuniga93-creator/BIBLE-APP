@@ -388,41 +388,6 @@ export default function MorePage() {
                 </div>
               </div>
 
-              {/* Bottom category chips */}
-              <div
-                className="flex gap-2 overflow-x-auto scrollbar-none px-5 pb-4"
-                style={{ borderTop: "1px solid rgba(201,169,97,0.10)", paddingTop: 12 }}
-              >
-                {(lang === "es"
-                  ? [
-                      { label: "Fundamentos de la Fe",    svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM9 8l7 4-7 4V8z"/></svg> },
-                      { label: "Historias de Gracia",     svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="7" r="4"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg> },
-                      { label: "Destacados",              svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
-                      { label: "Videos Cortos",           svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
-                      { label: "Preguntas y Respuestas",  svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg> },
-                    ]
-                  : [
-                      { label: "Fundamentals of the Faith", svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM9 8l7 4-7 4V8z"/></svg> },
-                      { label: "Stories of Grace",          svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="7" r="4"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg> },
-                      { label: "Featured Videos",           svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> },
-                      { label: "Short Videos",              svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> },
-                      { label: "Ask & Receive",             svg: <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg> },
-                    ]
-                ).map((chip) => (
-                  <span
-                    key={chip.label}
-                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-semibold whitespace-nowrap"
-                    style={{
-                      background: "rgba(255,255,255,0.05)",
-                      color: "rgba(255,255,255,0.50)",
-                      border: "1px solid rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    {chip.svg}
-                    {chip.label}
-                  </span>
-                ))}
-              </div>
             </div>
           </Link>
         </section>
