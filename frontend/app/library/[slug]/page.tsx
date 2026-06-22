@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, use, useRef, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { usePagination } from "../../hooks/usePagination";
 import Link from "next/link";
 import Image from "next/image";
@@ -126,7 +127,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── Theme ──────────────────────────────────────────────────────────────────
   const { theme } = useTheme();
-  const isLight    = theme === "light-elegant";
+  const isLight    = theme === "white-noir";
   const isGoldNavy = theme === "gold-navy";
 
   const th = {
@@ -180,7 +181,56 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     footerText:              isLight ? "rgba(155,114,40,0.4)"                   : "rgba(255,255,255,0.15)",
   };
 
+  // White Noir overrides — premium black-and-white
+  if (isLight) {
+    th.pageBg                   = "#ffffff";
+    th.topBarBg                 = "rgba(255,255,255,0.96)";
+    th.bottomBarBg              = "rgba(255,255,255,0.96)";
+    th.textPrimary              = "#0a0a0a";
+    th.textContent              = "#0a0a0a";
+    th.textMuted                = "rgba(10,10,10,0.38)";
+    th.textVeryMuted            = "rgba(10,10,10,0.25)";
+    th.textFaint                = "rgba(10,10,10,0.25)";
+    th.headingColor             = "rgba(10,10,10,0.38)";
+    th.accent                   = "#0a0a0a";
+    th.accentLight              = "#333333";
+    th.border                   = "rgba(0,0,0,0.07)";
+    th.borderLight              = "rgba(0,0,0,0.05)";
+    th.borderMed                = "rgba(0,0,0,0.09)";
+    th.drawerBg                 = "#f5f5f5";
+    th.readNowGradient          = "linear-gradient(135deg,#333,#0a0a0a)";
+    th.nextBtnGradient          = "linear-gradient(135deg,#333,#0a0a0a)";
+    th.prevBtnBg                = "rgba(0,0,0,0.05)";
+    th.prevBtnBorder            = "rgba(0,0,0,0.10)";
+    th.tagBg                    = "rgba(0,0,0,0.05)";
+    th.tagBorder                = "rgba(0,0,0,0.12)";
+    th.tagColor                 = "#0a0a0a";
+    th.tocActiveBg              = "rgba(0,0,0,0.10)";
+    th.tocActiveText            = "#0a0a0a";
+    th.tocInactiveText          = "rgba(10,10,10,0.38)";
+    th.settingsBtnActiveBg      = "rgba(0,0,0,0.10)";
+    th.settingsBtnActiveBorder  = "rgba(0,0,0,0.25)";
+    th.settingsBtnActiveText    = "#0a0a0a";
+    th.settingsBtnInactiveBg    = "rgba(0,0,0,0.04)";
+    th.settingsBtnInactiveBorder= "rgba(0,0,0,0.09)";
+    th.settingsBtnInactiveText  = "rgba(10,10,10,0.38)";
+    th.presentBtnBg             = "rgba(0,0,0,0.05)";
+    th.presentBtnBorder         = "rgba(0,0,0,0.12)";
+    th.presentBtnText           = "#0a0a0a";
+    th.iconActive               = "#0a0a0a";
+    th.iconInactive             = "rgba(10,10,10,0.38)";
+    th.sliderProgress           = "#0a0a0a";
+    th.sliderTrack              = "rgba(0,0,0,0.08)";
+    th.progressTrack            = "rgba(0,0,0,0.08)";
+    th.progressBar              = "linear-gradient(90deg,#333,#0a0a0a)";
+    th.sliderCss                = `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#333,#0a0a0a);cursor:pointer;border:2px solid rgba(0,0,0,0.15)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#333,#0a0a0a);cursor:pointer;border:2px solid rgba(0,0,0,0.15)}`;
+    th.footerText               = "rgba(10,10,10,0.25)";
+  }
+
   const { lang } = useLanguage();
+  const searchParams = useSearchParams();
+  const urlChapter = searchParams ? parseInt(searchParams.get("chapter") ?? "0", 10) || null : null;
+  const urlHlid = searchParams ? (searchParams.get("hlid") ?? null) : null;
 
   const [book, setBook] = useState<BookDetail | null>(null);
   const [chapter, setChapter] = useState<BookChapter | null>(null);
@@ -215,6 +265,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     totalPages,
     goNextPage,
     goPrevPage,
+    goToPage,
     isFirstPage,
     isLastPage,
   } = usePagination({
@@ -236,19 +287,37 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     }
   }, [currentPage, showDetail]);
 
+  // Jump to the page containing the target highlight
+  useEffect(() => {
+    if (!urlHlid || !pages.length || showDetail) return;
+    const key = `tulip-reader-highlights:book-${slug}-${currentChapter}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const hls = JSON.parse(raw) as Array<{ id: string; text: string }>;
+      const target = hls.find((h) => h.id === urlHlid);
+      if (!target) return;
+      const snippet = target.text.slice(0, 30);
+      const pageIdx = pages.findIndex((p) => p.includes(snippet));
+      if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
+        goToPage(pageIdx + 1);
+      }
+    } catch { /* ignore */ }
+  }, [urlHlid, pages, currentChapter, slug, showDetail]); // eslint-disable-line react-hooks/exhaustive-deps
+
   // Load book metadata
   useEffect(() => {
     fetchBookDetail(slug)
       .then((b) => {
         setBook(b);
         const saved = localStorage.getItem(BOOKMARK_KEY(slug));
-        const start = saved ? parseInt(saved, 10) : 1;
+        const start = urlChapter ?? (saved ? parseInt(saved, 10) : 1);
         setCurrentChapter(start);
         if (start > 1) setShowDetail(false);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [slug]);
+  }, [slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-translate chapter when Spanish mode is on
   useEffect(() => {
@@ -384,6 +453,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                 textColor={th.textContent}
                 fontSizeClass="text-xl md:text-2xl"
                 scrollRef={contentRef}
+                targetHighlightId={urlHlid ?? undefined}
               />
             </div>
           )}
@@ -493,6 +563,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
                   textColor={th.textContent}
                   fontSizeClass={FONT_SIZES[fontSize]}
                   scrollRef={contentRef}
+                  targetHighlightId={urlHlid ?? undefined}
                 />
               </div>
             )}

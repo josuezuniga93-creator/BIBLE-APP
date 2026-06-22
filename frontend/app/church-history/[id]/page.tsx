@@ -5,17 +5,16 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { CHURCH_HISTORY } from "../../lib/churchHistory";
 import { useLanguage } from "../../lib/useLanguage";
+import { useTheme } from "../../lib/useTheme";
 import { translateToSpanish } from "../../lib/googleTranslate";
 
-const SERIF   = "'Georgia', 'Palatino Linotype', serif";
-const AC      = "#c9a961";                               // gold accent
-const BG      = "#0f1023";                               // dark navy-purple
-const SURFACE = "#1c1e36";                               // card surface
+const SERIF = "'Georgia', 'Palatino Linotype', serif";
 
 export default function ChurchHistoryStory() {
   const { id } = useParams<{ id: string }>();
   const { lang } = useLanguage();
-  const entry  = CHURCH_HISTORY.find((e) => e.id === id);
+  const { theme } = useTheme();
+  const entry = CHURCH_HISTORY.find((e) => e.id === id);
 
   const [esTitle,     setEsTitle]     = useState<string | null>(null);
   const [esVerseText, setEsVerseText] = useState<string | null>(null);
@@ -43,12 +42,32 @@ export default function ChurchHistoryStory() {
     return () => { cancelled = true; };
   }, [lang, entry?.id]);
 
+  const isLight = theme === "white-noir";
+
+  // Colors
+  const bg        = isLight ? "#ffffff"              : "#0f1023";
+  const surface   = isLight ? "#f3f4f6"              : "#1c1e36";
+  const accent    = isLight ? "#111111"              : "#c9a961";
+  const accentSub = isLight ? "rgba(10,10,10,0.42)"  : "#c9a961";
+  const headerBorder = isLight ? "rgba(0,0,0,0.08)"  : "rgba(255,255,255,0.07)";
+  const badgeBg   = isLight ? "rgba(0,0,0,0.05)"    : "rgba(201,169,97,0.14)";
+  const badgeBorder = isLight ? "rgba(0,0,0,0.12)"  : "rgba(201,169,97,0.38)";
+  const yearBg    = isLight ? "rgba(0,0,0,0.03)"    : "rgba(201,169,97,0.07)";
+  const yearBorder = isLight ? "rgba(0,0,0,0.08)"   : "rgba(201,169,97,0.20)";
+  const yearColor = isLight ? "rgba(10,10,10,0.45)"  : "#a09070";
+  const titleColor = isLight ? "#0a0a0a"             : "#f5f0e8";
+  const quoteBar  = isLight ? "#111111"              : "#c9a961";
+  const quoteText = isLight ? "rgba(10,10,10,0.68)"  : "#d4cdb8";
+  const refColor  = isLight ? "rgba(10,10,10,0.48)"  : "#c9a961";
+  const sectionLabel = isLight ? "rgba(10,10,10,0.36)" : "rgba(201,169,97,0.45)";
+  const bodyText  = isLight ? "rgba(10,10,10,0.74)"  : "#c8c2b0";
+
   /* ── Not found ─────────────────────────────────────────────────────────── */
   if (!entry) {
     return (
       <div
         style={{
-          background: BG,
+          background: bg,
           minHeight: "100dvh",
           display: "flex",
           flexDirection: "column",
@@ -58,16 +77,16 @@ export default function ChurchHistoryStory() {
           gap: 16,
         }}
       >
-        <p style={{ color: "#aaa", fontFamily: SERIF, fontSize: 18 }}>
+        <p style={{ color: bodyText, fontFamily: SERIF, fontSize: 18 }}>
           {lang === "es" ? "Historia no encontrada." : "Story not found."}
         </p>
         <Link
           href="/"
           style={{
-            color: AC,
+            color: accent,
             fontSize: 14,
             textDecoration: "none",
-            borderBottom: `1px solid ${AC}`,
+            borderBottom: `1px solid ${accent}`,
           }}
         >
           {lang === "es" ? "← Volver al inicio" : "← Back to Home"}
@@ -84,7 +103,7 @@ export default function ChurchHistoryStory() {
   return (
     <div
       style={{
-        background: BG,
+        background: bg,
         minHeight: "100dvh",
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: 40,
@@ -97,8 +116,8 @@ export default function ChurchHistoryStory() {
           display: "flex",
           alignItems: "center",
           padding: "14px 20px",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          background: SURFACE,
+          borderBottom: `1px solid ${headerBorder}`,
+          background: surface,
         }}
       >
         <Link
@@ -107,7 +126,7 @@ export default function ChurchHistoryStory() {
             display: "flex",
             alignItems: "center",
             gap: 6,
-            color: AC,
+            color: accent,
             textDecoration: "none",
             fontSize: 14,
             fontWeight: 500,
@@ -119,7 +138,7 @@ export default function ChurchHistoryStory() {
             height="16"
             viewBox="0 0 24 24"
             fill="none"
-            stroke={AC}
+            stroke={accent}
             strokeWidth="2.2"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -137,9 +156,9 @@ export default function ChurchHistoryStory() {
         <div style={{ display: "flex", gap: 8, marginBottom: 18 }}>
           <span
             style={{
-              background: "rgba(201,169,97,0.14)",
-              border: "1px solid rgba(201,169,97,0.38)",
-              color: "#c9a961",
+              background: badgeBg,
+              border: `1px solid ${badgeBorder}`,
+              color: accent,
               borderRadius: 20,
               padding: "3px 12px",
               fontSize: 11,
@@ -154,9 +173,9 @@ export default function ChurchHistoryStory() {
           </span>
           <span
             style={{
-              background: "rgba(201,169,97,0.07)",
-              border: "1px solid rgba(201,169,97,0.20)",
-              color: "#a09070",
+              background: yearBg,
+              border: `1px solid ${yearBorder}`,
+              color: yearColor,
               borderRadius: 20,
               padding: "3px 12px",
               fontSize: 11,
@@ -174,7 +193,7 @@ export default function ChurchHistoryStory() {
             fontFamily: SERIF,
             fontSize: 26,
             fontWeight: 700,
-            color: "#f5f0e8",
+            color: titleColor,
             lineHeight: 1.3,
             margin: "0 0 24px",
           }}
@@ -185,7 +204,7 @@ export default function ChurchHistoryStory() {
         {/* Verse blockquote */}
         <blockquote
           style={{
-            borderLeft: `3px solid ${AC}`,
+            borderLeft: `3px solid ${quoteBar}`,
             paddingLeft: 16,
             margin: "0 0 30px",
           }}
@@ -195,19 +214,19 @@ export default function ChurchHistoryStory() {
               fontFamily: SERIF,
               fontSize: 15,
               fontStyle: "italic",
-              color: "#d4cdb8",
+              color: quoteText,
               lineHeight: 1.7,
               margin: "0 0 8px",
             }}
           >
-            "{displayVerseText}"
+            &ldquo;{displayVerseText}&rdquo;
           </p>
           <span
             style={{
               fontSize: 12,
               fontWeight: 600,
               letterSpacing: "0.06em",
-              color: AC,
+              color: refColor,
               textTransform: "uppercase",
             }}
           >
@@ -221,7 +240,7 @@ export default function ChurchHistoryStory() {
             fontSize: 10,
             fontWeight: 700,
             letterSpacing: "0.12em",
-            color: "rgba(201,169,97,0.45)",
+            color: sectionLabel,
             textTransform: "uppercase",
             marginBottom: 14,
           }}
@@ -231,8 +250,8 @@ export default function ChurchHistoryStory() {
 
         {/* Translating indicator */}
         {lang === "es" && translating && (
-          <p style={{ fontSize: 11, color: "rgba(201,169,97,0.65)", marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-            <span className="animate-spin" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: "2px solid rgba(201,169,97,0.25)", borderTopColor: AC }} />
+          <p style={{ fontSize: 11, color: accentSub, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
+            <span className="animate-spin" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: `2px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(201,169,97,0.25)"}`, borderTopColor: accent }} />
             Traduciendo al español…
           </p>
         )}
@@ -245,7 +264,7 @@ export default function ChurchHistoryStory() {
               style={{
                 fontSize: 16,
                 lineHeight: 1.78,
-                color: "#c8c2b0",
+                color: bodyText,
                 marginBottom: i < paragraphs.length - 1 ? 18 : 0,
               }}
             >

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { useTheme } from "../../lib/useTheme";
 import { useLanguage } from "../../lib/useLanguage";
 import type { ChurchAnalysis } from "../page";
 
@@ -503,10 +502,7 @@ function buildShareText(analysis: ChurchAnalysis): string {
 export default function AnalysisDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
-  const { theme } = useTheme();
   const { lang } = useLanguage();
-  const isLight = theme === "light-elegant" || theme === "light-pink";
-
   const [analysis, setAnalysis] = useState<ChurchAnalysis | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [toast, setToast] = useState("");
@@ -514,11 +510,11 @@ export default function AnalysisDetailPage() {
   const [showEs, setShowEs] = useState(false);
   const [loadingEs, setLoadingEs] = useState(false);
 
-  const bg = isLight ? "#f5f0e8" : "#0f0f0f";
-  const fg = isLight ? "#1c1409" : "#ffffff";
-  const cardBg = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)";
-  const borderColor = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
-  const mutedFg = isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.38)";
+  const bg = "#0f0f0f";
+  const fg = "#ffffff";
+  const cardBg = "rgba(255,255,255,0.04)";
+  const borderColor = "rgba(255,255,255,0.08)";
+  const mutedFg = "rgba(255,255,255,0.38)";
 
   useEffect(() => {
     try {

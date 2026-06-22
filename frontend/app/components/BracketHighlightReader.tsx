@@ -51,6 +51,7 @@ type Props = {
   headingColor?: string;
   fontSizeClass?: string;
   scrollRef?: React.RefObject<HTMLElement | null>;
+  targetHighlightId?: string;
 };
 
 const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string; bg: string; dot: string }> = {
@@ -179,6 +180,7 @@ export function BracketHighlightReader({
   className = "",
   fontSizeClass = "text-[18px]",
   scrollRef,
+  targetHighlightId,
 }: Props) {
   const { lang } = useLanguage();
   const [selection, setSelection] = useState<BracketSelection | null>(null);
@@ -200,6 +202,20 @@ export function BracketHighlightReader({
       document.documentElement.removeAttribute("data-app-reader-open");
     };
   }, []);
+
+  // Scroll to target highlight when navigated from library
+  useEffect(() => {
+    if (!targetHighlightId) return;
+    const container = scrollRef?.current ?? textLayerRef.current;
+    if (!container) return;
+    const timer = setTimeout(() => {
+      const el = (scrollRef?.current ?? document).querySelector(`[data-hl-id="${targetHighlightId}"]`);
+      if (el) {
+        (el as HTMLElement).scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [targetHighlightId, highlights]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     setHighlights(loadHighlights(context));
@@ -591,6 +607,7 @@ export function BracketHighlightReader({
               key={`word-${token.index}`}
               data-reader-word
               data-index={token.index}
+              data-hl-id={token.highlight?.id}
               className="relative z-10"
               onPointerDown={() => startWordPress(token.index, token.highlight)}
               onPointerUp={finishWordPress}

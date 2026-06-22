@@ -210,6 +210,35 @@ export function BottomNav() {
   const { t } = useLanguage();
   const [hiddenForReader, setHiddenForReader] = useState(false);
 
+  // Read data-theme from DOM synchronously so first paint is correct (no flash).
+  // The early script in <head> sets data-theme before React runs, so this is reliable.
+  const [isWhiteNoir, setIsWhiteNoir] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return document.documentElement.getAttribute("data-theme") === "white-noir";
+  });
+
+  useEffect(() => {
+    // Sync on mount (in case SSR/hydration mismatch)
+    setIsWhiteNoir(document.documentElement.getAttribute("data-theme") === "white-noir");
+
+    // Listen for live theme changes dispatched by useTheme's setTheme()
+    const handleThemeChange = (e: Event) => {
+      setIsWhiteNoir((e as CustomEvent<string>).detail === "white-noir");
+    };
+    window.addEventListener("ryc-theme-change", handleThemeChange);
+
+    // Also observe data-theme attribute changes (covers edge cases)
+    const observer = new MutationObserver(() => {
+      setIsWhiteNoir(document.documentElement.getAttribute("data-theme") === "white-noir");
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+    return () => {
+      window.removeEventListener("ryc-theme-change", handleThemeChange);
+      observer.disconnect();
+    };
+  }, []);
+
   useEffect(() => {
     const update = () => {
       setHiddenForReader(document.documentElement.getAttribute("data-app-reader-open") === "true");
@@ -226,6 +255,18 @@ export function BottomNav() {
   if (hiddenForReader) return null;
   if (pathname.startsWith("/auth")) return null;
 
+  // White Noir: explicit inline styles so nav is always white regardless of
+  // CSS variable support (color-mix() may not work on older Android Chrome).
+  const navSurfaceStyle = isWhiteNoir ? {
+    background: "rgba(255,255,255,0.97)",
+    borderTop: "1px solid rgba(0,0,0,0.06)",
+    backdropFilter: "blur(14px)",
+    WebkitBackdropFilter: "blur(14px)",
+  } : undefined;
+
+  const fgActive   = isWhiteNoir ? "#0a0a0a"              : "var(--fg)";
+  const fgInactive = isWhiteNoir ? "rgba(10,10,10,0.38)"  : "var(--fg-lo)";
+
   return (
     <nav
       className="mobile-nav-floating md:hidden fixed bottom-0 left-0 right-0 z-50"
@@ -235,7 +276,11 @@ export function BottomNav() {
         paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
       }}
     >
-      <div className="mobile-nav-surface flex items-stretch h-[58px]">
+      <div
+        className="mobile-nav-surface flex items-stretch h-[58px]"
+        suppressHydrationWarning
+        style={navSurfaceStyle}
+      >
 
         {PRIMARY_TABS.map(({ href, labelKey }) => {
           const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
@@ -245,7 +290,7 @@ export function BottomNav() {
               href={href}
               data-active={active ? "true" : undefined}
               className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
-              style={{ color: active ? "var(--fg)" : "var(--fg-lo)" }}
+              style={{ color: active ? fgActive : fgInactive }}
             >
               <TabIcon href={href} active={active} />
               <span className="text-[10px] font-bold tracking-wide leading-none">
@@ -260,7 +305,7 @@ export function BottomNav() {
           href="/more"
           data-active={youActive ? "true" : undefined}
           className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
-          style={{ color: youActive ? "var(--fg)" : "var(--fg-lo)" }}
+          style={{ color: youActive ? fgActive : fgInactive }}
         >
           <YouIcon active={youActive} />
           <span className="text-[10px] font-bold tracking-wide leading-none">

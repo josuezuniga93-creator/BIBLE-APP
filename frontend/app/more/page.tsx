@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
-import { useTheme, THEMES, type Theme } from "../lib/useTheme";
+import { useTheme, type Theme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
 import { getCloudUser, pullFromCloud, pushToCloud } from "../lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
@@ -184,7 +184,6 @@ export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
   const router = useRouter();
-  const themeKeys = Object.keys(THEMES) as Theme[];
 
   // ── Cloud account state ────────────────────────────────────────────────────
   const [cloudUser, setCloudUser] = useState<User | null>(null);
@@ -242,19 +241,22 @@ export default function MorePage() {
     }
   }
 
+  const isLight = theme === "white-noir";
+
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0f0f0f", color: isLight ? "#0a0a0a" : "white" }}>
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
 
         {/* ── Account / Cloud Sync ──────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">Account</p>
+          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>Account</p>
           {cloudUser ? (
-            <div className="rounded-2xl bg-white/[0.04] overflow-hidden">
+            <div className="rounded-2xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
               {/* Logged-in header — tap to view profile */}
               <Link
                 href="/profile"
-                className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.05] transition-colors active:bg-white/[0.04]"
+                className="flex items-center gap-3 px-4 py-3.5 transition-colors"
+                style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)" }}
               >
                 <div
                   className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
@@ -266,7 +268,7 @@ export default function MorePage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-white truncate">{cloudUser.user_metadata?.name ?? cloudUser.email}</p>
+                  <p className="text-sm font-semibold truncate">{cloudUser.user_metadata?.name ?? cloudUser.email}</p>
                   <p className="text-xs mt-0.5" style={{ color: "#c9a961" }}>View my profile →</p>
                 </div>
                 <div
@@ -283,7 +285,7 @@ export default function MorePage() {
           ) : (
             <div
               className="rounded-2xl overflow-hidden"
-              style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: "1px solid rgba(201,169,97,0.20)" }}
+              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: "1px solid rgba(201,169,97,0.20)" }}
             >
               <div className="flex items-center gap-4 px-4 py-5">
                 <div
@@ -296,8 +298,8 @@ export default function MorePage() {
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-white">Sync Across Devices</p>
-                  <p className="text-[11px] text-white/40 mt-0.5 leading-relaxed">
+                  <p className="text-[13px] font-bold">Sync Across Devices</p>
+                  <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
                     Highlights, bookmarks, notes, plans — everywhere.
                   </p>
                 </div>
@@ -323,7 +325,7 @@ export default function MorePage() {
             <div
               className="rounded-2xl overflow-hidden active:scale-[0.985] transition-transform"
               style={{
-                background: "linear-gradient(140deg, #111420 0%, #0a0c14 60%, #0d0f1a 100%)",
+                background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(140deg, #111420 0%, #0a0c14 60%, #0d0f1a 100%)",
                 border: "1px solid rgba(201,169,97,0.30)",
                 boxShadow: "0 8px 40px rgba(201,169,97,0.12), 0 2px 8px rgba(0,0,0,0.6)",
               }}
@@ -347,13 +349,13 @@ export default function MorePage() {
                     </p>
                   </div>
 
-                  <p className="text-[28px] font-black text-white leading-none mb-1.5">
+                  <p className="text-[28px] font-black leading-none mb-1.5">
                     Videos
                   </p>
                   <p className="text-[11.5px] font-semibold mb-1.5" style={{ color: "rgba(201,169,97,0.85)" }}>
                     {lang === "es" ? "Enseñanza Bíblica • Testimonios" : "Biblical Teaching • Testimonies"}
                   </p>
-                  <p className="text-[11px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.35)" }}>
+                  <p className="text-[11px] leading-relaxed mb-4" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
                     {lang === "es"
                       ? "Videos cristianos confiables arraigados en la Escritura."
                       : "Watch trusted Christian videos rooted in Scripture and historic Christianity."}
@@ -396,7 +398,7 @@ export default function MorePage() {
         <section className="space-y-4">
           {TILE_GROUP_DEFS.map((group) => (
             <div key={group.titleKey}>
-              <p className="text-[9px] font-black tracking-widest text-white/30 uppercase mb-2 px-1">
+              <p className="text-[9px] font-black tracking-widest uppercase mb-2 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>
                 {t(lang, group.titleKey)}
               </p>
               <div className={`grid gap-2.5 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
@@ -419,70 +421,66 @@ export default function MorePage() {
           ))}
         </section>
 
-        {/* ── Theme picker ──────────────────────────────────────────────────── */}
+        {/* ── Appearance ────────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_appearance")}</p>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-            {themeKeys.map((t) => {
-              const meta = THEMES[t];
-              const active = theme === t;
-              return (
-                <button
-                  key={t}
-                  onClick={() => setTheme(t)}
-                  className={`flex-shrink-0 flex flex-col items-center gap-2 p-3 rounded-2xl border transition-all active:scale-95 ${
-                    active
-                      ? "border-white/30 bg-white/10"
-                      : "border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06]"
-                  }`}
-                  style={{ minWidth: "88px" }}
-                >
-                  <div
-                    className="w-11 h-11 rounded-xl border border-white/20 flex items-center justify-center text-xl relative overflow-hidden"
-                    style={{ background: meta.preview[0] }}
-                  >
-                    <span>{meta.emoji}</span>
-                    {active && (
-                      <div className="absolute bottom-0.5 right-0.5 w-3 h-3 rounded-full bg-white/90 flex items-center justify-center">
-                        <span className="text-black text-[8px] font-black">✓</span>
-                      </div>
-                    )}
-                  </div>
-                  <span className={`text-[10px] font-bold leading-tight text-center ${active ? "text-white" : "text-white/50"}`}>
-                    {meta.label}
-                  </span>
-                </button>
-              );
-            })}
+          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>Appearance</p>
+          <div className="rounded-2xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
+            {[
+              { key: "gold-navy", label: "Gold Navy", desc: "Dark navy with warm gold", swatch: ["#0e1018", "#c9a961"] },
+              { key: "white-noir", label: "White Noir", desc: "Clean white with black ink", swatch: ["#ffffff", "#0a0a0a"] },
+            ].map((t, i, arr) => (
+              <button
+                key={t.key}
+                onClick={() => setTheme(t.key as Theme)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-white/[0.04] transition-colors text-left"
+                style={{ borderBottom: i < arr.length - 1 ? (isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)") : "none" }}
+              >
+                <div className="flex gap-1 flex-shrink-0">
+                  {t.swatch.map((c, j) => (
+                    <div key={j} className="w-5 h-5 rounded-full border border-white/10" style={{ background: c }} />
+                  ))}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold">{t.label}</p>
+                  <p className="text-xs" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>{t.desc}</p>
+                </div>
+                {theme === t.key && (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#0a0a0a" : "#c9a961"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 6L9 17l-5-5" />
+                  </svg>
+                )}
+              </button>
+            ))}
           </div>
         </section>
 
         {/* ── Language ──────────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_language_section")}</p>
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
+          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>{t(lang, "more_language_section")}</p>
+          <div className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
             <div>
-              <p className="text-sm font-semibold text-white">{t(lang, "more_language_section")}</p>
-              <p className="text-xs text-white/40 mt-0.5">{lang === "en" ? "English" : "Español"}</p>
+              <p className="text-sm font-semibold">{t(lang, "more_language_section")}</p>
+              <p className="text-xs mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>{lang === "en" ? "English" : "Español"}</p>
             </div>
             <button
               onClick={() => setLang(lang === "en" ? "es" : "en")}
-              className="flex items-center h-8 rounded-full border border-white/[0.10] bg-white/[0.04] overflow-hidden"
+              className="flex items-center h-8 rounded-full overflow-hidden"
+              style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}
             >
-              <span className={`px-3 py-1 text-xs font-bold transition-all ${lang === "en" ? "text-white bg-white/10" : "text-white/35"}`}>EN</span>
-              <span className="w-px h-4 bg-white/[0.10]" />
-              <span className={`px-3 py-1 text-xs font-bold transition-all ${lang === "es" ? "text-white bg-white/10" : "text-white/35"}`}>ES</span>
+              <span className="px-3 py-1 text-xs font-bold transition-all" style={{ color: lang === "en" ? (isLight ? "#0a0a0a" : "white") : (isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"), background: lang === "en" ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)") : "transparent" }}>EN</span>
+              <span className="w-px h-4" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)" }} />
+              <span className="px-3 py-1 text-xs font-bold transition-all" style={{ color: lang === "es" ? (isLight ? "#0a0a0a" : "white") : (isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"), background: lang === "es" ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)") : "transparent" }}>ES</span>
             </button>
           </div>
         </section>
 
         {/* ── Notifications ─────────────────────────────────────────────────── */}
         <section>
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-3 px-1">{t(lang, "more_notifications")}</p>
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl bg-white/[0.04]">
+          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>{t(lang, "more_notifications")}</p>
+          <div className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
             <div>
-              <p className="text-sm font-semibold text-white">{t(lang, "more_daily_verse")}</p>
-              <p className="text-xs text-white/40 mt-0.5">
+              <p className="text-sm font-semibold">{t(lang, "more_daily_verse")}</p>
+              <p className="text-xs mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
                 {notifStatus === "denied"
                   ? t(lang, "more_notif_blocked")
                   : notifEnabled
@@ -524,14 +522,15 @@ export default function MorePage() {
                 }
               } catch { /* cancelled */ }
             }}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl border border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.06] active:scale-[0.98] transition-all"
+            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl active:scale-[0.98] transition-all"
+            style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)" }}
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
               <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               <polyline points="16 6 12 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            <span className="text-sm font-semibold text-white/70">{t(lang, "more_share")}</span>
+            <span className="text-sm font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>{t(lang, "more_share")}</span>
           </button>
         </section>
 

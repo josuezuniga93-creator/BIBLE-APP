@@ -44,6 +44,28 @@ body {
   color: var(--fg);
 }
 
+/* White Noir — high-contrast daylight theme. */
+html[data-theme="white-noir"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --bg: #ffffff;
+  --bg-2: #f3f4f6;
+  --bg-3: #e5e7eb;
+  --fg: #0a0a0a;
+  --fg-hi: rgba(10,10,10,0.94);
+  --fg-mid: rgba(10,10,10,0.66);
+  --fg-lo: rgba(10,10,10,0.46);
+  --fg-dim: rgba(10,10,10,0.28);
+  --border: rgba(10,10,10,0.11);
+  --accent: #050505;
+  --accent-soft: #eef0f2;
+  --accent-text: #111111;
+  --nav-bg: rgba(255,255,255,0.97);
+  --nav-border: rgba(17,17,17,0.10);
+  --input-bg: #f3f4f6;
+}
+
 /* Bible translation picker */
 .translation-picker-scrim {
   background: rgba(0, 0, 0, 0.66);
@@ -2212,6 +2234,517 @@ html[data-theme="light-pink"] a:focus-visible {
   box-shadow: none !important;
   outline: 2px solid rgba(190,24,93,0.48);
   outline-offset: 2px;
+}
+
+/* ── White Noir compatibility layer ────────────────────────────────────────
+   Older screens still contain dark Tailwind utility colors. Translate those
+   utilities to the current theme tokens so every phone screen remains legible.
+────────────────────────────────────────────────────────────────────────── */
+/* Explicit white background — no CSS variable fallback, catches flash on Android PWA */
+html[data-theme="white-noir"] { background: #ffffff !important; }
+html[data-theme="white-noir"] body,
+html[data-theme="white-noir"] main,
+html[data-theme="white-noir"] .layout-children {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: var(--fg);
+}
+
+html[data-theme="white-noir"] [class*="bg-[#0"],
+html[data-theme="white-noir"] [class*="bg-[#1"] {
+  background-color: var(--bg) !important;
+}
+html[data-theme="white-noir"] [class*="bg-white/"] {
+  background-color: var(--bg-2) !important;
+}
+html[data-theme="white-noir"] [class*="bg-black/"] {
+  background-color: var(--bg-3) !important;
+}
+html[data-theme="white-noir"] [class*="border-white/"] {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="white-noir"] .text-white { color: var(--fg) !important; }
+html[data-theme="white-noir"] [class*="text-white/9"],
+html[data-theme="white-noir"] [class*="text-white/8"] { color: var(--fg-hi) !important; }
+html[data-theme="white-noir"] [class*="text-white/7"],
+html[data-theme="white-noir"] [class*="text-white/6"] { color: var(--fg-mid) !important; }
+html[data-theme="white-noir"] [class*="text-white/5"],
+html[data-theme="white-noir"] [class*="text-white/4"] { color: var(--fg-lo) !important; }
+html[data-theme="white-noir"] [class*="text-white/3"],
+html[data-theme="white-noir"] [class*="text-white/2"],
+html[data-theme="white-noir"] [class*="text-white/1"] { color: var(--fg-dim) !important; }
+
+html[data-theme="white-noir"] [class*="bg-violet-"],
+html[data-theme="white-noir"] [class*="bg-emerald-"],
+html[data-theme="white-noir"] [class*="bg-teal-"],
+html[data-theme="white-noir"] [class*="bg-indigo-"],
+html[data-theme="white-noir"] [class*="bg-blue-"],
+html[data-theme="white-noir"] [class*="bg-sky-"],
+html[data-theme="white-noir"] [class*="bg-amber-"],
+html[data-theme="white-noir"] [class*="bg-orange-"],
+html[data-theme="white-noir"] [class*="bg-pink-"],
+html[data-theme="white-noir"] [class*="bg-rose-"] {
+  background-color: var(--accent-soft) !important;
+}
+html[data-theme="white-noir"] [class*="text-violet-"],
+html[data-theme="white-noir"] [class*="text-emerald-"],
+html[data-theme="white-noir"] [class*="text-teal-"],
+html[data-theme="white-noir"] [class*="text-indigo-"],
+html[data-theme="white-noir"] [class*="text-blue-"],
+html[data-theme="white-noir"] [class*="text-sky-"],
+html[data-theme="white-noir"] [class*="text-amber-"],
+html[data-theme="white-noir"] [class*="text-orange-"],
+html[data-theme="white-noir"] [class*="text-pink-"],
+html[data-theme="white-noir"] [class*="text-rose-"] {
+  color: var(--accent-text) !important;
+}
+html[data-theme="white-noir"] [class*="border-violet-"],
+html[data-theme="white-noir"] [class*="border-emerald-"],
+html[data-theme="white-noir"] [class*="border-teal-"],
+html[data-theme="white-noir"] [class*="border-indigo-"],
+html[data-theme="white-noir"] [class*="border-blue-"],
+html[data-theme="white-noir"] [class*="border-sky-"],
+html[data-theme="white-noir"] [class*="border-amber-"],
+html[data-theme="white-noir"] [class*="border-orange-"],
+html[data-theme="white-noir"] [class*="border-pink-"],
+html[data-theme="white-noir"] [class*="border-rose-"] {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="white-noir"] textarea,
+html[data-theme="white-noir"] input,
+html[data-theme="white-noir"] select {
+  background-color: var(--input-bg) !important;
+  color: var(--fg) !important;
+  border-color: var(--border) !important;
+}
+html[data-theme="white-noir"] textarea::placeholder,
+html[data-theme="white-noir"] input::placeholder { color: var(--fg-lo) !important; }
+
+html[data-theme="white-noir"] .mobile-nav-surface,
+html[data-theme="white-noir"] nav.top-app-nav {
+  background: rgba(255,255,255,0.97) !important;
+  border-color: rgba(17,17,17,0.10) !important;
+  box-shadow: 0 8px 28px rgba(17,17,17,0.10) !important;
+}
+html[data-theme="white-noir"] nav a[data-active="true"] {
+  color: #111111 !important;
+}
+html[data-theme="white-noir"] nav a[data-active="true"] svg,
+html[data-theme="white-noir"] nav a[data-active="true"] span {
+  color: #111111 !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+html[data-theme="white-noir"] .translation-picker-scrim {
+  background: rgba(17,17,17,0.30);
+  backdrop-filter: blur(8px);
+}
+html[data-theme="white-noir"] .translation-picker-panel {
+  --tp-bg: #ffffff;
+  --tp-bg-end: #f4f4f1;
+  --tp-bg-soft: rgba(17,17,17,0.05);
+  --tp-bg-hover: rgba(17,17,17,0.08);
+  --tp-line: rgba(17,17,17,0.12);
+  --tp-fg: #111111;
+  --tp-muted: rgba(17,17,17,0.62);
+  --tp-dim: rgba(17,17,17,0.40);
+  --tp-accent: #111111;
+  --tp-accent-strong: #111111;
+  --tp-accent-bg: rgba(17,17,17,0.08);
+  --tp-shadow: 0 24px 70px rgba(17,17,17,0.20);
+}
+
+html[data-theme="white-noir"] .home-hero-atmosphere,
+html[data-theme="white-noir"] body::before,
+html[data-theme="white-noir"] body::after {
+  display: none !important;
+}
+html[data-theme="white-noir"] .home-hero-headline,
+html[data-theme="white-noir"] .home-story-action { color: #111111 !important; }
+html[data-theme="white-noir"] .home-hero-headline-muted { color: var(--fg-mid) !important; }
+html[data-theme="white-noir"] .home-accent,
+html[data-theme="white-noir"] .home-accent-muted { color: #111111 !important; }
+html[data-theme="white-noir"] .home-accent-chip,
+html[data-theme="white-noir"] .home-streak-card,
+html[data-theme="white-noir"] .home-badge-shelf,
+html[data-theme="white-noir"] .pn-app-tile {
+  background: #f3f4f6 !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 2px 12px rgba(10,10,10,0.05) !important;
+}
+
+html[data-theme="white-noir"] .home-accent-chip {
+  background: #e5e7eb !important;
+  border-color: rgba(10,10,10,0.16) !important;
+  color: #0a0a0a !important;
+  box-shadow: none !important;
+}
+html[data-theme="white-noir"] .home-feature-cta {
+  background: #e5e7eb !important;
+  border-color: rgba(10,10,10,0.16) !important;
+  color: #0a0a0a !important;
+  box-shadow: none !important;
+}
+html[data-theme="white-noir"] .home-feature-cta,
+html[data-theme="white-noir"] .home-feature-cta * {
+  color: #0a0a0a !important;
+}
+
+/* Fix background flash on load — CSS takes effect before React hydrates inline styles */
+html[data-theme="white-noir"] .home-page-root {
+  background: #ffffff !important;
+}
+
+/* Date label (SATURDAY · DAY 4) — lock to dark in White Noir, no flash */
+html[data-theme="white-noir"] .home-day-label {
+  color: #050505 !important;
+}
+
+/* VerseMemorizationWidget — override accentColor inline styles before React hydrates */
+html[data-theme="white-noir"] .mem-badge-chip {
+  background: #eef0f2 !important;
+  color: #111111 !important;
+  border-color: rgba(17,17,17,0.18) !important;
+}
+html[data-theme="white-noir"] .mem-start-btn {
+  background: #111111 !important;
+  color: #ffffff !important;
+}
+html[data-theme="white-noir"] .mem-pinned-label {
+  color: #111111 !important;
+}
+html[data-theme="white-noir"] .mem-progress-fill {
+  background: #111111 !important;
+}
+html[data-theme="white-noir"] .mem-practice-btn {
+  background: #eef0f2 !important;
+  color: #111111 !important;
+  border-color: rgba(17,17,17,0.18) !important;
+}
+
+/* Active nav tab pill — should be light gray in White Noir, not gold */
+html[data-theme="white-noir"] .mobile-nav-floating a.nav-tab[data-active="true"] {
+  background: #eef0f2 !important;
+}
+html[data-theme="white-noir"] .mobile-nav-floating a.nav-tab[data-active="true"]::after {
+  background: #111111 !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="white-noir"] .home-continue-card,
+html[data-theme="white-noir"] .home-continue-meditation,
+html[data-theme="white-noir"] .home-continue-article,
+html[data-theme="white-noir"] .home-continue-scripture {
+  background: #f3f4f6 !important;
+  border-color: var(--border) !important;
+  box-shadow: none !important;
+}
+
+/* Preserve readable labels on true dark action controls. */
+html[data-theme="white-noir"] .btn-primary,
+html[data-theme="white-noir"] button.bg-black,
+html[data-theme="white-noir"] a.bg-black {
+  background: #171717 !important;
+  color: #ffffff !important;
+}
+
+/* White Noir is intentionally monochrome. Convert legacy Gold Navy utilities
+   and inline styles that predate the shared theme tokens. */
+html[data-theme="white-noir"] [class*="text-[#c9a961"],
+html[data-theme="white-noir"] [class*="text-[#d4b878"],
+html[data-theme="white-noir"] [class*="text-[#d7bd78"],
+html[data-theme="white-noir"] [class*="text-amber-"],
+html[data-theme="white-noir"] [style*="color: rgb(201, 169, 97)"],
+html[data-theme="white-noir"] [style*="color: rgb(212, 184, 120)"],
+html[data-theme="white-noir"] [style*="color: rgb(215, 189, 120)"],
+html[data-theme="white-noir"] [style*="color: rgba(201, 169, 97"],
+html[data-theme="white-noir"] [style*="color: rgba(212, 184, 120"],
+html[data-theme="white-noir"] [style*="color: rgba(215, 189, 120"],
+html[data-theme="white-noir"] [style*="color: #c9a961"],
+html[data-theme="white-noir"] [style*="color: #d4b878"],
+html[data-theme="white-noir"] [style*="color: #d7bd78"] {
+  color: #262626 !important;
+}
+
+html[data-theme="white-noir"] [class*="bg-[#c9a961"],
+html[data-theme="white-noir"] [class*="bg-[#d9b970"],
+html[data-theme="white-noir"] [style*="background: rgb(201, 169, 97)"],
+html[data-theme="white-noir"] [style*="background-color: rgb(201, 169, 97)"],
+html[data-theme="white-noir"] [style*="background: #c9a961"],
+html[data-theme="white-noir"] [style*="background-color: #c9a961"],
+html[data-theme="white-noir"] [style*="linear-gradient"][style*="201, 169, 97"],
+html[data-theme="white-noir"] [style*="linear-gradient"][style*="#c9a961"] {
+  background: #050505 !important;
+  background-color: #050505 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html[data-theme="white-noir"] [style*="background: rgba(201, 169, 97"],
+html[data-theme="white-noir"] [style*="background-color: rgba(201, 169, 97"],
+html[data-theme="white-noir"] [style*="background: rgba(201,169,97"],
+html[data-theme="white-noir"] [style*="background-color: rgba(201,169,97"] {
+  background: #f3f4f6 !important;
+  background-color: #f3f4f6 !important;
+}
+
+html[data-theme="white-noir"] [style*="border-color: rgba(201, 169, 97"],
+html[data-theme="white-noir"] [style*="border-color: rgba(201,169,97"],
+html[data-theme="white-noir"] [style*="border: 1px solid rgba(201, 169, 97"],
+html[data-theme="white-noir"] [style*="border: 1px solid rgba(201,169,97"] {
+  border-color: var(--border) !important;
+}
+
+html[data-theme="white-noir"] [style*="border-left: 2px solid rgb(201, 169, 97)"],
+html[data-theme="white-noir"] [style*="border-left: 2px solid #c9a961"] {
+  border-left-color: #111111 !important;
+}
+
+html[data-theme="white-noir"] [style*="background: rgb(7,"],
+html[data-theme="white-noir"] [style*="background: rgb(8,"],
+html[data-theme="white-noir"] [style*="background: rgb(9,"],
+html[data-theme="white-noir"] [style*="background: #07"],
+html[data-theme="white-noir"] [style*="background: #08"],
+html[data-theme="white-noir"] [style*="background: #09"],
+html[data-theme="white-noir"] [style*="background: #0e"],
+html[data-theme="white-noir"] [style*="background-color: #0e"] {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+}
+
+html[data-theme="white-noir"] .axiom-hl-gold {
+  background-color: #d1d5db !important;
+  color: #111111 !important;
+}
+
+html[data-theme="white-noir"] [class*="shadow-[#c9a961"],
+html[data-theme="white-noir"] [style*="box-shadow"][style*="201, 169, 97"] {
+  box-shadow: none !important;
+}
+
+html[data-theme="white-noir"] .study-tools-hero {
+  background: #f3f4f6 !important;
+  border-color: var(--border) !important;
+  box-shadow: 0 2px 12px rgba(10,10,10,0.06) !important;
+}
+html[data-theme="white-noir"] .study-tools-hero-copy,
+html[data-theme="white-noir"] .study-tools-hero-copy * {
+  color: #0a0a0a !important;
+}
+html[data-theme="white-noir"] .study-tools-hero-icon {
+  background: #e5e7eb !important;
+  border-color: rgba(10,10,10,0.12) !important;
+  color: #111111 !important;
+}
+html[data-theme="white-noir"] .study-tools-tabs {
+  background: #f3f4f6 !important;
+  border-color: var(--border) !important;
+}
+
+html[data-theme="white-noir"] .quote-week-media-card .text-white {
+  color: #0a0a0a !important;
+}
+
+html[data-theme="white-noir"] .home-media-card .text-white,
+html[data-theme="white-noir"] .home-media-card [class*="text-white/"],
+html[data-theme="white-noir"] .home-video-media-card .text-white,
+html[data-theme="white-noir"] .home-video-media-card [class*="text-white/"] {
+  color: #ffffff !important;
+}
+html[data-theme="white-noir"] .home-media-card [style*="color: rgb(17, 17, 17)"],
+html[data-theme="white-noir"] .home-video-media-card [style*="color: rgb(17, 17, 17)"] {
+  color: #ffffff !important;
+}
+
+/* Only action elements become solid black. Legacy gold gradients on content
+   cards become light-gray surfaces instead of black panels. */
+html[data-theme="white-noir"] div[style*="linear-gradient"][style*="201, 169, 97"],
+html[data-theme="white-noir"] section[style*="linear-gradient"][style*="201, 169, 97"],
+html[data-theme="white-noir"] article[style*="linear-gradient"][style*="201, 169, 97"] {
+  background: #f3f4f6 !important;
+  background-color: #f3f4f6 !important;
+  color: #0a0a0a !important;
+}
+html[data-theme="white-noir"] button[style*="linear-gradient"][style*="201, 169, 97"],
+html[data-theme="white-noir"] a[style*="linear-gradient"][style*="201, 169, 97"] {
+  background: #050505 !important;
+  background-color: #050505 !important;
+  color: #ffffff !important;
+}
+html[data-theme="white-noir"] button[style*="linear-gradient"][style*="201, 169, 97"] *,
+html[data-theme="white-noir"] a[style*="linear-gradient"][style*="201, 169, 97"] * {
+  color: #ffffff !important;
+}
+
+html[data-theme="white-noir"] button[style*="background: rgb(5, 5, 5)"],
+html[data-theme="white-noir"] a[style*="background: rgb(5, 5, 5)"],
+html[data-theme="white-noir"] button[style*="background: #050505"],
+html[data-theme="white-noir"] a[style*="background: #050505"] {
+  color: #ffffff !important;
+}
+html[data-theme="white-noir"] button[style*="background: rgb(5, 5, 5)"] *,
+html[data-theme="white-noir"] a[style*="background: rgb(5, 5, 5)"] *,
+html[data-theme="white-noir"] button[style*="background: #050505"] *,
+html[data-theme="white-noir"] a[style*="background: #050505"] * {
+  color: #ffffff !important;
+}
+html[data-theme="white-noir"] .quote-week-media-card [style*="color: rgb(17, 17, 17)"],
+html[data-theme="white-noir"] .quote-week-media-card [style*="color: #111111"] {
+  color: #ffffff !important;
+}
+
+/* ── First-load hydration safety net ───────────────────────────────────────
+   These CSS classes are applied directly in JSX so the correct color shows
+   immediately from data-theme (set by the <head> script), regardless of
+   whether React state has finished hydrating with the right theme value.    */
+html[data-theme="white-noir"] .hero-h2-line {
+  color: rgba(10,10,10,0.56) !important;
+}
+html[data-theme="white-noir"] .card-type-label {
+  color: rgba(255,255,255,0.62) !important;
+}
+html[data-theme="white-noir"] .mem-card-surface {
+  background: #f3f4f6 !important;
+  border-color: rgba(0,0,0,0.07) !important;
+}
+html[data-theme="white-noir"] .home-open-link {
+  color: rgba(10,10,10,0.44) !important;
+}
+html[data-theme="white-noir"] .streak-current-ring {
+  background: #e5e7eb !important;
+  border-color: #111111 !important;
+}
+html[data-theme="white-noir"] .streak-current-dot {
+  background: #111111 !important;
+}
+html[data-theme="white-noir"] .card-author-label { color: rgba(255,255,255,0.72) !important; }
+html[data-theme="white-noir"] .mem-header-label { color: #111111 !important; }
+html[data-theme="white-noir"] .mem-verse-ref { color: #0a0a0a !important; }
+html[data-theme="white-noir"] .mem-verse-text { color: rgba(10,10,10,0.68) !important; }
+html[data-theme="white-noir"] .mem-hint-text { color: rgba(28,20,9,0.38) !important; }
+
+/* ── Fullscreen Bible Memorization — White Noir ─────────────────────────── */
+html[data-theme="white-noir"] .mem-fullscreen-overlay {
+  background: #f7f7f7 !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-header {
+  border-color: rgba(0,0,0,0.09) !important;
+}
+html[data-theme="white-noir"] .mem-back-btn {
+  color: rgba(10,10,10,0.55) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-title {
+  color: #111111 !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-label {
+  color: #111111 !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-ref {
+  color: #0a0a0a !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-verse-card {
+  background: #ebebeb !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-verse-text {
+  color: rgba(10,10,10,0.82) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-context-card {
+  background: rgba(0,0,0,0.04) !important;
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-context-label {
+  color: rgba(10,10,10,0.42) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-context-text {
+  color: rgba(10,10,10,0.62) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-mode-hint {
+  color: rgba(10,10,10,0.38) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-commit-btn {
+  background: #111111 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-desc {
+  color: rgba(10,10,10,0.38) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-test-btn {
+  background: rgba(10,10,10,0.07) !important;
+  color: #111111 !important;
+  border-color: rgba(10,10,10,0.14) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-master-btn {
+  background: rgba(10,10,10,0.07) !important;
+  color: #111111 !important;
+  border-color: rgba(10,10,10,0.14) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-reveal-btn {
+  background: rgba(10,10,10,0.05) !important;
+  color: rgba(10,10,10,0.50) !important;
+  border-color: rgba(10,10,10,0.09) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-back-to-learn {
+  background: rgba(10,10,10,0.07) !important;
+  color: #111111 !important;
+  border-color: rgba(10,10,10,0.14) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-release {
+  color: rgba(10,10,10,0.38) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-progress-label {
+  color: rgba(10,10,10,0.32) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-progress-track {
+  background: rgba(10,10,10,0.09) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-progress-fill {
+  background: #111111 !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-divider {
+  border-color: rgba(0,0,0,0.08) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-title {
+  color: rgba(10,10,10,0.30) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-item {
+  background: rgba(0,0,0,0.02) !important;
+  border-color: rgba(0,0,0,0.07) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-item-active {
+  background: rgba(0,0,0,0.07) !important;
+  border-color: rgba(0,0,0,0.18) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-ref {
+  color: #0a0a0a !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-picker-theme {
+  color: rgba(10,10,10,0.48) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-add-verse-btn {
+  background: rgba(0,0,0,0.03) !important;
+  border-color: rgba(0,0,0,0.09) !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-add-verse-btn svg {
+  stroke: #555555 !important;
+}
+html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-add-verse-text {
+  color: #555555 !important;
+}
+
+/* Badge artwork is the sole color exception in White Noir. */
+html[data-theme="white-noir"] .home-badge-shelf img,
+html[data-theme="white-noir"] .badge-gallery img {
+  filter: none !important;
+  opacity: 1;
+}
+html[data-theme="white-noir"] .home-badge-shelf button,
+html[data-theme="white-noir"] .badge-gallery button {
+  color: #111111;
 }
 
 /* Keep the full-story dialog readable on light page themes. */

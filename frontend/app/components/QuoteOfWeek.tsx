@@ -16,15 +16,15 @@ export default function QuoteOfWeek() {
   useEffect(() => {
     const check = () => {
       const t = localStorage.getItem("ryc-theme") ?? "";
-      setIsLightElegant(t === "light-elegant");
+      setIsLightElegant(t === "white-noir");
       setIsPremiumNeon(t === "premium-neon");
     };
     check();
     window.addEventListener("ryc-theme-change", check as EventListener);
     return () => window.removeEventListener("ryc-theme-change", check as EventListener);
   }, []);
-  const qAC  = isPremiumNeon ? "#a78bfa" : "#c9a961";
-  const qACb = isPremiumNeon ? "rgba(167,139,250,0.70)" : "rgba(201,169,97,0.70)";
+  const qAC  = isPremiumNeon ? "#a78bfa" : isLightElegant ? "#111111" : "#c9a961";
+  const qACb = isPremiumNeon ? "rgba(167,139,250,0.70)" : isLightElegant ? "rgba(17,17,17,0.70)" : "rgba(201,169,97,0.70)";
 
   function handleCopy() {
     const shareText = `"${text}" — ${quote.author} (${quote.born}–${quote.died})`;
@@ -205,7 +205,7 @@ export default function QuoteOfWeek() {
       <div className="flex items-center justify-between mb-3">
         <h3
           className="text-[15px] font-bold"
-          style={{ color: isLightElegant ? "#1c1409" : "var(--color-text, #fff)" }}
+          style={{ color: isLightElegant ? "#0a0a0a" : "var(--color-text, #fff)" }}
         >
           {lang === "es" ? "Cita de la Semana" : "Quote of the Week"}
         </h3>
@@ -216,12 +216,12 @@ export default function QuoteOfWeek() {
 
       {/* Quote card */}
       <div
-        className="relative rounded-2xl overflow-hidden w-full"
+        className="quote-week-media-card relative rounded-2xl overflow-hidden w-full"
         style={{
           minHeight: "370px",
-          background: "#0b0d15",
-          border: isLightElegant ? "2px solid rgba(124,92,46,0.20)" : "1px solid rgba(201,169,97,0.10)",
-          boxShadow: isLightElegant ? "0 8px 36px rgba(28,20,9,0.14)" : undefined,
+          background: isLightElegant ? "#f0f1f3" : "#0b0d15",
+          border: isLightElegant ? "1px solid rgba(10,10,10,0.14)" : "1px solid rgba(201,169,97,0.10)",
+          boxShadow: isLightElegant ? "0 4px 20px rgba(10,10,10,0.10)" : undefined,
         }}
       >
         {/* Portrait artwork — full card so the beard naturally reaches the quote */}
@@ -239,8 +239,9 @@ export default function QuoteOfWeek() {
         <div
           className="absolute inset-0"
           style={{
-            background:
-              "linear-gradient(to right, rgba(11,13,21,0) 34%, rgba(11,13,21,0.22) 45%, rgba(11,13,21,0.78) 58%, rgba(11,13,21,0.98) 74%, rgba(11,13,21,1) 100%)",
+            background: isLightElegant
+              ? "linear-gradient(to right, rgba(240,241,243,0) 34%, rgba(240,241,243,0.42) 45%, rgba(240,241,243,0.88) 58%, rgba(240,241,243,0.97) 74%, rgba(240,241,243,1) 100%)"
+              : "linear-gradient(to right, rgba(11,13,21,0) 34%, rgba(11,13,21,0.22) 45%, rgba(11,13,21,0.78) 58%, rgba(11,13,21,0.98) 74%, rgba(11,13,21,1) 100%)",
           }}
         />
 
@@ -249,14 +250,14 @@ export default function QuoteOfWeek() {
           className="absolute inset-y-0 flex flex-col justify-center"
           style={{ left: "52%", right: "5%", paddingTop: "20px", paddingBottom: "22px" }}
         >
-          <p className="text-[15px] italic font-semibold text-white leading-[1.22] mb-5 tracking-[-0.02em]">
+          <p className="text-[15px] italic font-semibold leading-[1.22] mb-5 tracking-[-0.02em]" style={{ color: isLightElegant ? "#0a0a0a" : "#ffffff" }}>
             {lang === "es" ? `"${quote.textEs}"` : `"${quote.text}"`}
           </p>
           <div>
             <p className="text-[14px] font-bold mb-0.5" style={{ color: qAC }}>
               {quote.author}
             </p>
-            <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.42)" }}>
+            <p className="text-[11px]" style={{ color: isLightElegant ? "rgba(10,10,10,0.50)" : "rgba(255,255,255,0.42)" }}>
               {quote.born}–{quote.died}
             </p>
           </div>
@@ -269,7 +270,7 @@ export default function QuoteOfWeek() {
         <button
           onClick={handleLike}
           className="flex items-center gap-1.5 text-[12px] transition-all"
-          style={{ color: liked ? qAC : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)" }}
+          style={{ color: liked ? qAC : isLightElegant ? "rgba(10,10,10,0.48)" : "rgba(255,255,255,0.4)" }}
         >
           <svg
             width="16"
@@ -296,7 +297,7 @@ export default function QuoteOfWeek() {
             onClick={handleCopy}
             className="flex items-center gap-1.5 text-[12px] transition-all"
             style={{
-              color: copied ? qAC : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)",
+              color: copied ? qAC : isLightElegant ? "rgba(10,10,10,0.48)" : "rgba(255,255,255,0.4)",
             }}
           >
             <svg
@@ -325,7 +326,7 @@ export default function QuoteOfWeek() {
             onClick={handleShare}
             disabled={sharing}
             className="flex items-center gap-1.5 text-[12px]"
-            style={{ color: sharing ? qACb : isLightElegant ? "rgba(28,20,9,0.45)" : "rgba(255,255,255,0.4)" }}
+            style={{ color: sharing ? qACb : isLightElegant ? "rgba(10,10,10,0.48)" : "rgba(255,255,255,0.4)" }}
           >
             <svg
               width="14"

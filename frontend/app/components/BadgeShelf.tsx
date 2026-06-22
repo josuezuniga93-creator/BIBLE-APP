@@ -87,7 +87,7 @@ export function BadgeShelf() {
   useEffect(() => {
     const check = () => {
       const t = localStorage.getItem("ryc-theme") ?? "";
-      setIsLE(t === "light-elegant");
+      setIsLE(t === "white-noir");
       setIsPN(t === "premium-neon");
     };
     check();
@@ -109,17 +109,17 @@ export function BadgeShelf() {
       <section
         className="home-badge-shelf mt-9 rounded-[1.7rem] p-5"
         style={{
-          background: isLE ? "rgba(201,169,97,0.06)" : "rgba(255,255,255,0.02)",
-          border: isLE ? "1px solid rgba(124,92,46,0.18)" : "1px solid rgba(255,255,255,0.07)",
-          boxShadow: isLE ? "0 8px 32px rgba(28,20,9,0.08)" : "0 18px 60px rgba(0,0,0,0.18)",
+          background: isLE ? "#f3f4f6" : "rgba(255,255,255,0.02)",
+          border: isLE ? "1px solid rgba(10,10,10,0.11)" : "1px solid rgba(255,255,255,0.07)",
+          boxShadow: isLE ? "0 2px 12px rgba(10,10,10,0.05)" : "0 18px 60px rgba(0,0,0,0.18)",
         }}
       >
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: isPN ? "rgba(167,139,250,0.80)" : "rgba(216,184,103,0.80)" }}>
+            <p className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: isLE ? "rgba(10,10,10,0.52)" : isPN ? "rgba(167,139,250,0.80)" : "rgba(216,184,103,0.80)" }}>
               {lang === "es" ? "Insignias" : "Badges"}
             </p>
-            <h3 className="mt-1 text-xl font-black" style={{ color: isLE ? "#1c1409" : "white" }}>
+            <h3 className="mt-1 text-xl font-black" style={{ color: isLE ? "#0a0a0a" : "white" }}>
               {lang === "es" ? "Metas Ganadas" : "Milestones Earned"}
             </h3>
           </div>
@@ -127,7 +127,7 @@ export function BadgeShelf() {
             type="button"
             onClick={() => setOpen(true)}
             className="rounded-full px-4 py-2 text-xs font-black active:scale-[0.98]"
-            style={{ border: `1px solid ${isPN ? "rgba(124,58,237,0.24)" : "rgba(216,184,103,0.24)"}`, color: isPN ? "#a78bfa" : "#d8b867" }}
+            style={{ border: `1px solid ${isLE ? "rgba(10,10,10,0.18)" : isPN ? "rgba(124,58,237,0.24)" : "rgba(216,184,103,0.24)"}`, color: isLE ? "#111111" : isPN ? "#a78bfa" : "#d8b867" }}
           >
             {lang === "es" ? "Ver todas" : "View all badges"}
           </button>
@@ -142,11 +142,11 @@ export function BadgeShelf() {
       </section>
 
       {open && (
-        <div className="fixed inset-0 z-[9998] bg-[#071326] text-white">
+        <div className={`badge-gallery fixed inset-0 z-[9998] ${isLE ? "bg-white text-black" : "bg-[#071326] text-white"}`}>
           <div className="mx-auto flex h-full max-w-3xl flex-col">
-            <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
+            <div className={`flex items-center justify-between px-5 py-5 ${isLE ? "border-b border-black/10" : "border-b border-white/10"}`}>
               <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: isPN ? "#a78bfa" : "#d8b867" }}>
+                <p className="text-[11px] font-black uppercase tracking-[0.22em]" style={{ color: isLE ? "#333333" : isPN ? "#a78bfa" : "#d8b867" }}>
                   {lang === "es" ? "Insignias Tulip" : "Tulip Badges"}
                 </p>
                 <h2 className="text-2xl font-black">{lang === "es" ? "Todas las Insignias" : "All Badges"}</h2>
@@ -154,7 +154,7 @@ export function BadgeShelf() {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="grid h-11 w-11 place-items-center rounded-full border border-white/10 bg-white/5 text-2xl text-white/70"
+                className={`grid h-11 w-11 place-items-center rounded-full border text-2xl ${isLE ? "border-black/10 bg-black/5 text-black/70" : "border-white/10 bg-white/5 text-white/70"}`}
               >
                 ×
               </button>
@@ -162,7 +162,7 @@ export function BadgeShelf() {
             <div className="flex-1 overflow-y-auto px-5 pb-28 pt-5">
               {grouped.map((category) => (
                 <section key={category.id} className="mb-8">
-                  <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: isPN ? "#a78bfa" : "#d8b867" }}>{categoryTitle(category, lang)}</h3>
+                  <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: isLE ? "#333333" : isPN ? "#a78bfa" : "#d8b867" }}>{categoryTitle(category, lang)}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {category.badges.map((badge) => (
                       <BadgeGalleryCard key={badge.id} badge={badge} earned={earnedIds.has(badge.id)} lang={lang} isPN={isPN} />

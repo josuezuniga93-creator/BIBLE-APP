@@ -636,7 +636,7 @@ export default function LexiconPage() {
 
 function LexiconInner() {
   const { theme } = useTheme();
-  const isLight = theme === "light-elegant";
+  const isLight = false;
   const { lang } = useLanguage();
   const searchParams = useSearchParams();
   const [books, setBooks]       = useState<BookMeta[]>([]);

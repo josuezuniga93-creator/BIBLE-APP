@@ -333,7 +333,7 @@ function VerseMemorizationWidget({
   const verseRef  = lang === "es" ? activeVerse.refEs  : activeVerse.ref;
   const words = verseText.split(/\s+/);
 
-  const accentColor = isPremiumNeon ? "#a78bfa" : "#c9a961";
+  const accentColor = isPremiumNeon ? "#a78bfa" : isLightElegant ? "#111111" : "#c9a961";
   const isMastered = memState.mastered.includes(activeVerse.ref);
   const remaining = MEM_VERSES.filter((v) => !memState.mastered.includes(v.ref)).length;
 
@@ -437,12 +437,12 @@ function VerseMemorizationWidget({
       {/* Header row */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <p className="text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: accentColor }}>
+          <p className="mem-fs-label text-[9px] font-black uppercase tracking-[0.22em]" style={{ color: accentColor }}>
             {isCommitted
               ? (lang === "es" ? "Memorizando" : "Memorizing")
               : (lang === "es" ? "Versículo de Hoy" : "Today's Verse")} · {activeVerse.theme}
           </p>
-          <p className="text-[18px] font-bold text-white mt-0.5">{verseRef}</p>
+          <p className="mem-fs-ref text-[18px] font-bold text-white mt-0.5">{verseRef}</p>
           {isCommitted && !isMastered && (
             <span
               className="inline-flex items-center gap-1 mt-1.5 text-[9px] font-bold px-2 py-0.5 rounded-full"
@@ -477,7 +477,7 @@ function VerseMemorizationWidget({
 
       {/* Verse display */}
       <div
-        className={`flex-1 rounded-2xl p-4 mb-4 ${inFull ? (memState.mode === "learn" ? "flex items-center justify-center" : "overflow-y-auto") : ""}`}
+        className={`mem-fs-verse-card flex-1 rounded-2xl p-4 mb-4 ${inFull ? (memState.mode === "learn" ? "flex items-center justify-center" : "overflow-y-auto") : ""}`}
         style={{
           background: `linear-gradient(135deg, ${accentColor}14, rgba(26,29,39,0.6))`,
           border: `1px solid ${accentColor}28`,
@@ -488,7 +488,7 @@ function VerseMemorizationWidget({
           // Learn mode — full verse visible, auto-sized in full screen so it never scrolls
           <p
             ref={inFull ? verseTextRef : undefined}
-            className={`text-white/85 ${inFull ? "text-center leading-[1.55]" : "text-[14px] leading-[1.75]"}`}
+            className={`mem-fs-verse-text text-white/85 ${inFull ? "text-center leading-[1.55]" : "text-[14px] leading-[1.75]"}`}
             style={{ fontFamily: "'Iowan Old Style','Georgia',serif", ...(inFull ? { fontSize: `${fitPx}px` } : {}) }}
           >
             &ldquo;{verseText}&rdquo;
@@ -529,13 +529,13 @@ function VerseMemorizationWidget({
       {/* Context summary — shown in learn mode */}
       {memState.mode === "learn" && (activeVerse as MemVerse & { context?: string }).context && (
         <div
-          className="mb-4 px-3 py-2.5 rounded-xl"
+          className="mem-fs-context-card mb-4 px-3 py-2.5 rounded-xl"
           style={{ background: "rgba(201,169,97,0.06)", border: "1px solid rgba(201,169,97,0.13)" }}
         >
-          <p className="text-[9px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: "rgba(201,169,97,0.60)" }}>
+          <p className="mem-fs-context-label text-[9px] font-black uppercase tracking-[0.18em] mb-1" style={{ color: "rgba(201,169,97,0.60)" }}>
             {lang === "es" ? "Contexto" : "Context"}
           </p>
-          <p className="text-[11.5px] leading-relaxed" style={{ color: "rgba(255,255,255,0.52)" }}>
+          <p className="mem-fs-context-text text-[11.5px] leading-relaxed" style={{ color: "rgba(255,255,255,0.52)" }}>
             {(activeVerse as MemVerse & { context?: string }).context}
           </p>
         </div>
@@ -543,7 +543,7 @@ function VerseMemorizationWidget({
 
       {/* Mode toggle hint */}
       {isCommitted && memState.mode === "test" && (
-        <p className="text-[10px] text-white/35 text-center mb-3">
+        <p className="mem-fs-mode-hint text-[10px] text-white/35 text-center mb-3">
           {lang === "es" ? "Toca cada palabra para revelarla u ocultarla" : "Tap any word to reveal or hide it"}
         </p>
       )}
@@ -554,7 +554,7 @@ function VerseMemorizationWidget({
         <>
           <button
             onClick={() => commitVerse(activeVerse.ref)}
-            className="w-full py-3 rounded-xl text-[14px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-2"
+            className="mem-fs-commit-btn w-full py-3 rounded-xl text-[14px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-2"
             style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", color: "#0e1018", boxShadow: "0 6px 20px rgba(201,169,97,0.30)" }}
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -562,7 +562,7 @@ function VerseMemorizationWidget({
             </svg>
             {lang === "es" ? "Memorizar este versículo" : "Memorize this verse"}
           </button>
-          <p className="text-[10.5px] text-white/35 text-center mt-2.5 leading-relaxed">
+          <p className="mem-fs-desc text-[10.5px] text-white/35 text-center mt-2.5 leading-relaxed">
             {lang === "es"
               ? "49 versículos sobre santificación y la mortificación del pecado. Rota diariamente."
               : "49 verses on sanctification & killing sin — rotates daily until you choose one."}
@@ -572,14 +572,14 @@ function VerseMemorizationWidget({
         <div className="flex gap-2">
           <button
             onClick={startTest}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            className="mem-fs-test-btn flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
             style={{ background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}40` }}
           >
             {lang === "es" ? "Ponerse a Prueba" : "Test Myself"}
           </button>
           <button
             onClick={isMastered ? unmarkMastered : markMastered}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            className="mem-fs-master-btn flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
             style={
               isMastered
                 ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.14)" }
@@ -595,21 +595,21 @@ function VerseMemorizationWidget({
         <div className="flex gap-2">
           <button
             onClick={revealAll}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            className="mem-fs-reveal-btn flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
             style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.10)" }}
           >
             {lang === "es" ? "Ver Todo" : "Reveal All"}
           </button>
           <button
             onClick={resetToLearn}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            className="mem-fs-back-to-learn flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
             style={{ background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}40` }}
           >
             {lang === "es" ? "← Volver" : "← Back"}
           </button>
           <button
             onClick={isMastered ? unmarkMastered : markMastered}
-            className="flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
+            className="mem-fs-master-btn flex-1 py-2.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
             style={
               isMastered
                 ? { background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.65)", border: "1px solid rgba(255,255,255,0.14)" }
@@ -627,7 +627,7 @@ function VerseMemorizationWidget({
       {isCommitted && (
         <button
           onClick={releaseVerse}
-          className="mt-3 mx-auto text-[10.5px] font-semibold text-white/40 hover:text-white/70 transition-colors"
+          className="mem-fs-release mt-3 mx-auto text-[10.5px] font-semibold text-white/40 hover:text-white/70 transition-colors"
         >
           {lang === "es" ? "↺ Elegir otro versículo" : "↺ Choose a different verse"}
         </button>
@@ -637,16 +637,16 @@ function VerseMemorizationWidget({
       {MEM_VERSES.length > 0 && (
         <div className="mt-4">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[9px] font-bold tracking-wider text-white/30 uppercase">
+            <span className="mem-fs-progress-label text-[9px] font-bold tracking-wider text-white/30 uppercase">
               {lang === "es" ? "Progreso" : "Progress"} — {memState.mastered.length}/{MEM_VERSES.length}
             </span>
-            <span className="text-[9px] font-bold" style={{ color: accentColor }}>
+            <span className="mem-fs-label text-[9px] font-bold" style={{ color: accentColor }}>
               {remaining > 0 ? `${remaining} ${lang === "es" ? "restantes" : "remaining"}` : (lang === "es" ? "¡Todos dominados!" : "All mastered!")}
             </span>
           </div>
-          <div className="w-full h-1 rounded-full bg-white/10 overflow-hidden">
+          <div className="mem-fs-progress-track w-full h-1 rounded-full bg-white/10 overflow-hidden">
             <div
-              className="h-full rounded-full transition-all duration-700"
+              className="mem-fs-progress-fill h-full rounded-full transition-all duration-700"
               style={{ width: `${(memState.mastered.length / MEM_VERSES.length) * 100}%`, background: accentColor }}
             />
           </div>
@@ -655,8 +655,8 @@ function VerseMemorizationWidget({
 
       {/* Verse picker */}
       {inFull && (
-        <div className="mt-5 border-t border-white/[0.07] pt-4">
-          <p className="text-[9px] font-bold tracking-[0.2em] uppercase text-white/30 mb-3">
+        <div className="mem-fs-picker-divider mt-5 border-t border-white/[0.07] pt-4">
+          <p className="mem-fs-picker-title text-[9px] font-bold tracking-[0.2em] uppercase text-white/30 mb-3">
             {lang === "es" ? "Atributos de Dios" : "Attributes of God"}
           </p>
           <div className="flex flex-col gap-1.5 max-h-[28vh] overflow-y-auto pr-1" style={{ scrollbarWidth: "none" }}>
@@ -667,15 +667,15 @@ function VerseMemorizationWidget({
                 <button
                   key={v.ref}
                   onClick={() => changeVerse(v.ref)}
-                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all"
+                  className={"mem-fs-picker-item flex items-center justify-between px-3 py-2.5 rounded-xl text-left transition-all" + (isCur ? " mem-fs-picker-item-active" : "")}
                   style={{
                     background: isCur ? `${accentColor}18` : "rgba(255,255,255,0.03)",
                     border: `1px solid ${isCur ? accentColor + "40" : "rgba(255,255,255,0.07)"}`,
                   }}
                 >
                   <div>
-                    <p className="text-[12px] font-bold text-white">{lang === "es" ? v.refEs : v.ref}</p>
-                    <p className="text-[10px] mt-0.5" style={{ color: accentColor + "bb" }}>{v.theme}</p>
+                    <p className="mem-fs-picker-ref text-[12px] font-bold text-white">{lang === "es" ? v.refEs : v.ref}</p>
+                    <p className="mem-fs-picker-theme text-[10px] mt-0.5" style={{ color: accentColor + "bb" }}>{v.theme}</p>
                   </div>
                   {isMast && (
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style={{ color: "#10b981", flexShrink: 0 }}>
@@ -688,11 +688,11 @@ function VerseMemorizationWidget({
             {/* Custom verse option */}
             <button
               onClick={() => setCustomMode(true)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all"
+              className="mem-fs-add-verse-btn flex items-center gap-2 px-3 py-2.5 rounded-xl text-left transition-all"
               style={{ background: "rgba(201,169,97,0.06)", border: "1px solid rgba(201,169,97,0.20)" }}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="2" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
-              <p className="text-[12px] font-bold" style={{ color: "#c9a961" }}>
+              <p className="mem-fs-add-verse-text text-[12px] font-bold" style={{ color: "#c9a961" }}>
                 {lang === "es" ? "Agregar mi propio versículo" : "Add my own verse"}
               </p>
             </button>
@@ -707,7 +707,7 @@ function VerseMemorizationWidget({
       {/* ── Full-screen overlay ──────────────────────────────────────────────── */}
       {fullScreen && (
         <div
-          className="fixed inset-0 z-[400] flex flex-col"
+          className="mem-fullscreen-overlay fixed inset-0 z-[400] flex flex-col"
           style={{
             background: "radial-gradient(circle at 50% 0%, #161a26 0%, #0e1018 55%)",
             paddingTop: "env(safe-area-inset-top)",
@@ -715,10 +715,10 @@ function VerseMemorizationWidget({
           }}
         >
           {/* Back arrow */}
-          <div className="flex items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)" }}>
+          <div className="mem-fullscreen-header flex items-center px-5 pt-4 pb-3 flex-shrink-0" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)" }}>
             <button
               onClick={() => setFullScreen(false)}
-              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+              className="mem-back-btn flex items-center gap-2 text-white/60 hover:text-white transition-colors"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -726,7 +726,7 @@ function VerseMemorizationWidget({
               <span className="text-[13px] font-semibold">{lang === "es" ? "Volver" : "Back"}</span>
             </button>
             <div className="flex-1" />
-            <p className="text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: accentColor }}>
+            <p className="mem-fullscreen-title text-[11px] font-bold tracking-[0.18em] uppercase" style={{ color: accentColor }}>
               {lang === "es" ? "Memorización" : "Memorization"}
             </p>
           </div>
@@ -795,32 +795,32 @@ function VerseMemorizationWidget({
           </h3>
           <button
             onClick={() => setFullScreen(true)}
-            className="text-[11px] font-bold transition-colors"
-            style={{ color: "rgba(201,169,97,0.7)" }}
+            className="home-open-link text-[11px] font-bold transition-colors"
+            style={{ color: isLightElegant ? "rgba(10,10,10,0.44)" : isPremiumNeon ? "rgba(167,139,250,0.70)" : "rgba(201,169,97,0.7)" }}
           >
             {lang === "es" ? "Abrir →" : "Open →"}
           </button>
         </div>
 
         <div
-          className="rounded-2xl p-4 cursor-pointer active:scale-[0.99] transition-all"
+          className="mem-card-surface rounded-2xl p-4 cursor-pointer active:scale-[0.99] transition-all"
           style={{
             background: isLightElegant
-              ? "linear-gradient(135deg, rgba(201,169,97,0.08), #ede4d4)"
+              ? "#f3f4f6"
               : "linear-gradient(135deg, rgba(201,169,97,0.13), rgba(26,29,39,0.85))",
-            border: isLightElegant ? "1px solid rgba(124,92,46,0.22)" : "1px solid rgba(201,169,97,0.26)",
+            border: isLightElegant ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(201,169,97,0.26)",
           }}
           onClick={() => setFullScreen(true)}
         >
           {/* Reference + theme */}
           <div className="flex items-start justify-between mb-3">
             <div>
-              <p className="text-[9px] font-black uppercase tracking-[0.22em] mb-0.5" style={{ color: accentColor }}>
+              <p className="mem-header-label text-[9px] font-black uppercase tracking-[0.22em] mb-0.5" style={{ color: accentColor }}>
                 {isCommitted
                   ? (lang === "es" ? "Memorizando" : "Memorizing")
                   : (lang === "es" ? "Versículo de Hoy" : "Today's Verse")} · {activeVerse.theme}
               </p>
-              <p className="text-[16px] font-bold" style={{ color: cardTextColor ?? "white" }}>{verseRef}</p>
+              <p className="mem-verse-ref text-[16px] font-bold" style={{ color: cardTextColor ?? "white" }}>{verseRef}</p>
             </div>
             {isMastered ? (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
@@ -828,7 +828,7 @@ function VerseMemorizationWidget({
                 ✓ {lang === "es" ? "Memorizado" : "Mastered"}
               </span>
             ) : (
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+              <span className="mem-badge-chip text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
                 style={{ background: `${accentColor}1f`, color: accentColor, border: `1px solid ${accentColor}3a` }}>
                 {isCommitted
                   ? (memState.mode === "learn" ? (lang === "es" ? "Aprender" : "Learn") : (lang === "es" ? "Prueba" : "Test"))
@@ -838,7 +838,7 @@ function VerseMemorizationWidget({
           </div>
 
           {/* Verse preview — full text, no clipping */}
-          <p className="text-[12.5px] leading-relaxed italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif", color: isLightElegant ? "rgba(28,20,9,0.65)" : "rgba(255,255,255,0.70)" }}>
+          <p className="mem-verse-text text-[12.5px] leading-relaxed italic mb-3" style={{ fontFamily: "'Iowan Old Style','Georgia',serif", color: isLightElegant ? "rgba(10,10,10,0.68)" : "rgba(255,255,255,0.70)" }}>
             &ldquo;{verseText}&rdquo;
           </p>
 
@@ -847,13 +847,13 @@ function VerseMemorizationWidget({
             <>
               <button
                 onClick={(e) => { e.stopPropagation(); commitVerse(activeVerse.ref); }}
-                className="w-full py-2.5 rounded-xl text-[12.5px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
-                style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", color: "#0e1018" }}
+                className="mem-start-btn w-full py-2.5 rounded-xl text-[12.5px] font-extrabold transition-all active:scale-[0.98] flex items-center justify-center gap-1.5"
+                style={{ background: isLightElegant ? "#111111" : "linear-gradient(135deg, #d9b970, #c9a961)", color: isLightElegant ? "#ffffff" : "#0e1018" }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5L20 7"/></svg>
                 {lang === "es" ? "Empezar a memorizar" : "Start memorizing"}
               </button>
-              <p className="text-[10px] text-center mt-2 leading-relaxed" style={{ color: isLightElegant ? "rgba(28,20,9,0.38)" : "rgba(255,255,255,0.35)" }}>
+              <p className="mem-hint-text text-[10px] text-center mt-2 leading-relaxed" style={{ color: isLightElegant ? "rgba(28,20,9,0.38)" : "rgba(255,255,255,0.35)" }}>
                 {lang === "es"
                   ? "Se mantiene fijo el tiempo que necesites. Mañana habrá otro versículo si no te comprometes."
                   : "It stays pinned as long as you need. A new verse appears daily until you commit to one."}
@@ -862,7 +862,7 @@ function VerseMemorizationWidget({
           ) : (
             <div className="flex flex-col gap-2.5">
               <div className="flex items-center justify-between">
-                <span className="inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: accentColor }}>
+                <span className="mem-pinned-label inline-flex items-center gap-1 text-[10px] font-bold" style={{ color: accentColor }}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 3l5 5-4 1-2 2 1 4-3-1-4 4-1-4-4-1 4-4-1-3 4 1 2-2 1-4z"/></svg>
                   {lang === "es" ? "Fijado hasta que avances" : "Pinned until you move on"}
                 </span>
@@ -870,14 +870,14 @@ function VerseMemorizationWidget({
               </div>
               <div className="h-1 rounded-full overflow-hidden" style={{ background: isLightElegant ? "rgba(28,20,9,0.10)" : "rgba(255,255,255,0.10)" }}>
                 <div
-                  className="h-full rounded-full transition-all duration-700"
+                  className="h-full rounded-full transition-all duration-700 mem-progress-fill"
                   style={{ width: `${(memState.mastered.length / MEM_VERSES.length) * 100}%`, background: accentColor }}
                 />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); setFullScreen(true); }}
-                  className="flex-1 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
+                  className="mem-practice-btn flex-1 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
                   style={{ background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}3a` }}
                 >
                   {lang === "es" ? "Practicar →" : "Practice →"}
@@ -951,14 +951,32 @@ export default function Home() {
   // Theme detection — drives background glow color
   const [theme, setTheme] = useState<string>(() => {
     if (typeof window === "undefined") return "premium-neon";
+    // data-theme is set by the <head> early script before React runs — read it first
+    // so the initial client render matches CSS immediately (no flash of wrong colors)
+    const fromDom = document.documentElement.getAttribute("data-theme");
+    if (fromDom === "gold-navy" || fromDom === "white-noir") return fromDom;
     return localStorage.getItem("ryc-theme") ?? "premium-neon";
   });
   useEffect(() => {
+    // Read authoritative theme: cookie first (unaffected by old ThemeProvider cache),
+    // then localStorage, then data-theme as last resort. This bypasses any stale
+    // data-theme value that an old cached ThemeProvider script may have overwritten.
+    const readAuthoritative = (): string => {
+      try {
+        const m = document.cookie.match(/(?:^|;\s*)ryc-theme=([^;]+)/);
+        if (m) { const c = decodeURIComponent(m[1]); if (c === "gold-navy" || c === "white-noir") return c; }
+        const ls = localStorage.getItem("ryc-theme");
+        if (ls === "gold-navy" || ls === "white-noir") return ls;
+      } catch { /**/ }
+      return document.documentElement.getAttribute("data-theme") ?? "premium-neon";
+    };
+    const authoritative = readAuthoritative();
+    setTheme(authoritative);
+    document.documentElement.setAttribute("data-theme", authoritative);
     const sync = (e?: Event) => {
       const detail = (e as CustomEvent)?.detail as string | undefined;
-      setTheme(detail ?? localStorage.getItem("ryc-theme") ?? "premium-neon");
+      setTheme(detail ?? document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "premium-neon");
     };
-    sync();
     window.addEventListener("ryc-theme-change", sync);
     return () => window.removeEventListener("ryc-theme-change", sync);
   }, []);
@@ -1041,10 +1059,10 @@ export default function Home() {
     return articles[base];
   })();
 
-  const isPremiumNeon   = theme === "premium-neon";
+  const isPremiumNeon   = false;
   const isGoldNavy      = theme === "gold-navy";
-  const isLightPink     = theme === "light-pink";
-  const isLightElegant  = theme === "light-elegant";
+  const isLightPink     = false;
+  const isLightElegant  = theme === "white-noir";
 
   // Continue card backgrounds — match the active theme
   const meditCardBg = isPremiumNeon
@@ -1054,7 +1072,7 @@ export default function Home() {
     : isLightPink
     ? "linear-gradient(135deg, #fce4f0, #f5c9e3)"
     : isLightElegant
-    ? "linear-gradient(135deg, #ede4d4, #f5efe5)"
+    ? "#f3f4f6"
     : "linear-gradient(135deg, #1a4a3a, #0a1f18)";
 
   const articleCardBg = isPremiumNeon
@@ -1064,7 +1082,7 @@ export default function Home() {
     : isLightPink
     ? "linear-gradient(135deg, #fdeaf5, #f8d5ec)"
     : isLightElegant
-    ? "linear-gradient(135deg, #e8dece, #f0e8da)"
+    ? "#f3f4f6"
     : "linear-gradient(135deg, #4a2a1a, #1f140a)";
 
   const bookCardBg = isPremiumNeon
@@ -1074,7 +1092,7 @@ export default function Home() {
     : isLightPink
     ? "linear-gradient(135deg, #e0f2fe, #bae6fd)"
     : isLightElegant
-    ? "linear-gradient(135deg, #e5ddd0, #ede5d8)"
+    ? "#f3f4f6"
     : "linear-gradient(135deg, #0a2a3a, #041218)";
 
   const historicalCardBg = isPremiumNeon
@@ -1084,34 +1102,34 @@ export default function Home() {
     : isLightPink
     ? "linear-gradient(135deg, #fef9ee, #fef3c7)"
     : isLightElegant
-    ? "linear-gradient(135deg, #f0e8d8, #f8f2e8)"
+    ? "#f3f4f6"
     : "linear-gradient(135deg, #2a1a05, #120b00)";
 
   // Card label/text colors per theme
-  const meditLabelColor   = isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : undefined;
-  const articleLabelColor = isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : undefined;
+  const meditLabelColor   = isLightPink ? "#9d174d" : isLightElegant ? "#333333" : isGoldNavy ? "#c9a961" : undefined;
+  const articleLabelColor = isLightPink ? "#9d174d" : isLightElegant ? "#333333" : isGoldNavy ? "#c9a961" : undefined;
   const goldNavyLabel     = isGoldNavy ? "#c9a961" : undefined;
-  const cardTextColor     = isLightPink ? "#4a0020" : isLightElegant ? "#1a1209" : undefined;
-  const cardSubTextColor  = isLightPink ? "rgba(74,0,32,0.45)" : isLightElegant ? "rgba(26,18,9,0.45)" : undefined;
-  const cardIconBg        = isLightPink ? "rgba(219,39,119,0.15)" : isLightElegant ? "rgba(124,92,46,0.15)" : isGoldNavy ? "rgba(201,169,97,0.20)" : "rgba(0,0,0,0.40)";
+  const cardTextColor     = isLightPink ? "#4a0020" : isLightElegant ? "#0a0a0a" : undefined;
+  const cardSubTextColor  = isLightPink ? "rgba(74,0,32,0.45)" : isLightElegant ? "rgba(10,10,10,0.48)" : undefined;
+  const cardIconBg        = isLightPink ? "rgba(219,39,119,0.15)" : isLightElegant ? "#e5e7eb" : isGoldNavy ? "rgba(201,169,97,0.20)" : "rgba(0,0,0,0.40)";
 
   // Hero text colors — light themes need dark text instead of white
   const isLight = isLightElegant || isLightPink;
-  const heroH1Color    = isLightElegant ? "#1c1409"                  : isLightPink ? "#4a0020"                  : undefined;
-  const heroH2Color    = isLightElegant ? "rgba(28,20,9,0.50)"       : isLightPink ? "rgba(74,0,32,0.45)"       : undefined;
-  const heroYearColor  = isLightElegant ? "rgba(28,20,9,0.45)"       : isLightPink ? "rgba(74,0,32,0.40)"       : undefined;
-  const heroQuoteColor = isLightElegant ? "rgba(28,20,9,0.62)"       : isLightPink ? "rgba(74,0,32,0.58)"       : undefined;
-  const heroCtaText    = isLightElegant ? "#1c1409"                  : isLightPink ? "#4a0020"                  : undefined;
-  const sectionHdColor = isLightElegant ? "#1c1409"                  : isLightPink ? "#4a0020"                  : undefined;
-  const seeAllColor    = isLightElegant ? "rgba(28,20,9,0.38)"       : isLightPink ? "rgba(74,0,32,0.35)"       : undefined;
+  const heroH1Color    = isLightElegant ? "#0a0a0a"                  : isLightPink ? "#4a0020"                  : undefined;
+  const heroH2Color    = isLightElegant ? "rgba(10,10,10,0.56)"       : isLightPink ? "rgba(74,0,32,0.45)"       : undefined;
+  const heroYearColor  = isLightElegant ? "rgba(10,10,10,0.48)"       : isLightPink ? "rgba(74,0,32,0.40)"       : undefined;
+  const heroQuoteColor = isLightElegant ? "rgba(10,10,10,0.68)"       : isLightPink ? "rgba(74,0,32,0.58)"       : undefined;
+  const heroCtaText    = isLightElegant ? "#0a0a0a"                  : isLightPink ? "#4a0020"                  : undefined;
+  const sectionHdColor = isLightElegant ? "#0a0a0a"                  : isLightPink ? "#4a0020"                  : undefined;
+  const seeAllColor    = isLightElegant ? "rgba(10,10,10,0.44)"       : isLightPink ? "rgba(74,0,32,0.35)"       : undefined;
 
   // Neon theme: replace gold with violet throughout
-  const themeAC         = isPremiumNeon ? "#a78bfa"                                                              : AC;
-  const themeACBg       = isPremiumNeon ? "rgba(124,58,237,0.15)"                                                : AC_BG;
-  const themeACBorder   = isPremiumNeon ? "rgba(124,58,237,0.30)"                                                : AC_BORDER;
-  const themeACBorderSm = isPremiumNeon ? "rgba(124,58,237,0.22)"                                                : AC_BORDER_SM;
-  const themeACCtaGrad  = isPremiumNeon ? "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.05))"  : AC_CTA_GRAD;
-  const themeACSub85    = isPremiumNeon ? "rgba(167,139,250,0.85)"                                               : "rgba(201,169,97,0.85)";
+  const themeAC         = isPremiumNeon ? "#a78bfa" : isLightElegant ? "#111111" : AC;
+  const themeACBg       = isPremiumNeon ? "rgba(124,58,237,0.15)" : isLightElegant ? "#e5e7eb" : AC_BG;
+  const themeACBorder   = isPremiumNeon ? "rgba(124,58,237,0.30)" : isLightElegant ? "rgba(10,10,10,0.16)" : AC_BORDER;
+  const themeACBorderSm = isPremiumNeon ? "rgba(124,58,237,0.22)" : isLightElegant ? "rgba(10,10,10,0.11)" : AC_BORDER_SM;
+  const themeACCtaGrad  = isPremiumNeon ? "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.05))" : isLightElegant ? "#e5e7eb" : AC_CTA_GRAD;
+  const themeACSub85    = isPremiumNeon ? "rgba(167,139,250,0.85)" : isLightElegant ? "rgba(10,10,10,0.70)" : "rgba(201,169,97,0.85)";
 
   // Background gradient baked into root div — never a separate child element.
   // Gold-navy uses a flat colour here; the lamp image div handles the top glow.
@@ -1124,7 +1142,7 @@ export default function Home() {
     : isLightPink
     ? `radial-gradient(60% 80% at 50% 0%, rgba(244,114,182,0.22) 0%, transparent 70%), #fff0f5`
     : isLightElegant
-    ? `radial-gradient(60% 80% at 50% 0%, rgba(155,114,40,0.10) 0%, transparent 70%), #f5f0e8`
+    ? `#ffffff`
     : `radial-gradient(60% 80% at 50% 0%, ${todayHV.glow} 0%, transparent 70%), radial-gradient(120% 80% at 50% 0%, rgba(59,42,107,0.35) 0%, rgba(17,10,38,0.0) 60%), #050507`;
 
   // Pin gradient layers to viewport size so they don't rescale as the page
@@ -1148,7 +1166,7 @@ export default function Home() {
 
   return (
     <div
-      className={`min-h-screen text-white relative ${isGoldNavy ? "" : "overflow-hidden"}`}
+      className={`min-h-screen text-white relative home-page-root ${isGoldNavy ? "" : "overflow-hidden"}`}
       style={rootBgStyle}
     >
       {/* ── First-launch onboarding ───────────────────────────────────────── */}
@@ -1327,7 +1345,7 @@ export default function Home() {
 
         {/* Hero — date label + profile avatar */}
         <div className="flex items-center justify-between mb-3">
-          <p className="text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: themeAC }}>
+          <p className="home-day-label text-[11px] font-bold tracking-[0.22em] uppercase" style={{ color: isLightElegant ? "#050505" : "#c9a961" }}>
             {dayUpper}{streak > 0 ? ` · ${lang === "es" ? "DÍA" : "DAY"} ${streak}` : ""}
           </p>
           {/* Subtle profile / sign-in button — top-right */}
@@ -1370,26 +1388,26 @@ export default function Home() {
           )}
         </div>
 
-        {/* h1/h2 serif headline */}
+        {/* h1 serif headline — first clause of the verse */}
         <h1
-          className="text-[40px] leading-[1.04] font-normal text-white tracking-tight"
+          className="text-[28px] leading-[1.22] font-normal text-white tracking-tight mb-1"
           style={{ fontFamily: SERIF, ...(heroH1Color ? { color: heroH1Color } : {}) }}
         >
           {heroHeadline[0] || displayTitle}
         </h1>
         {heroHeadline[1] && (
-          <h2
-            className="text-[40px] leading-[1.04] italic text-white/55 tracking-tight mb-5"
-            style={{ fontFamily: SERIF, ...(heroH2Color ? { color: heroH2Color } : {}) }}
+          <p
+            className="hero-h2-line text-[18px] leading-[1.35] italic mb-4"
+            style={{ fontFamily: SERIF, color: heroH2Color ?? "rgba(255,255,255,0.48)" }}
           >
             {heroHeadline[1]}{displayVerseText.split(/[,.]/).filter(Boolean).length > 2 ? "…" : ""}
-          </h2>
+          </p>
         )}
 
         {/* Pill badges — event + year */}
         <div className="flex flex-wrap items-center gap-2 mb-5">
           <span
-            className="px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase"
+            className="home-accent-chip px-3 py-1.5 rounded-full text-[10px] font-bold tracking-wider uppercase"
             style={{ border: `1px solid ${themeACBorder}`, background: themeACBg, color: themeAC }}
           >
             {displayTitle}
@@ -1402,18 +1420,10 @@ export default function Home() {
           </span>
         </div>
 
-        {/* Italic serif blockquote */}
-        <p
-          className="text-[14px] text-white/72 italic leading-[1.55] mb-6"
-          style={{ fontFamily: SERIF, ...(heroQuoteColor ? { color: heroQuoteColor } : {}) }}
-        >
-          &ldquo;{displayVerseText}&rdquo;
-        </p>
-
         {/* Gold CTA card — Read the full story */}
         <Link
           href={`/church-history/${todayHV.id}`}
-          className="w-full flex items-center justify-between px-4 py-3.5 rounded-2xl active:scale-[0.99] transition-all"
+          className="home-feature-cta w-full flex items-center justify-between px-4 py-3.5 rounded-2xl active:scale-[0.99] transition-all"
           style={{ background: themeACCtaGrad, border: `1px solid ${themeACBorder}`, textDecoration: "none" }}
         >
           <div className="text-left">
@@ -1432,10 +1442,10 @@ export default function Home() {
           const g = getDailyGreeting(userName, new Date().getHours(), lang);
           return (
             <div className="px-1 pt-4 pb-2">
-              <p className="text-[16px] font-semibold leading-snug" style={{ color: isLightElegant ? "#1c1409" : "rgba(255,255,255,0.88)", fontFamily: "Georgia, serif" }}>
+              <p className="text-[16px] font-semibold leading-snug" style={{ color: isLightElegant ? "#0a0a0a" : "rgba(255,255,255,0.88)", fontFamily: "Georgia, serif" }}>
                 {g.line1}
               </p>
-              <p className="text-[12px] mt-0.5 leading-snug" style={{ color: themeACSub85 }}>
+              <p className="text-[12px] mt-0.5 leading-snug" style={{ color: "var(--fg-mid)" }}>
                 {g.line2}
               </p>
             </div>
@@ -1452,7 +1462,7 @@ export default function Home() {
             {/* Featured meditation video */}
             <button
               onClick={() => setVideoOpen(true)}
-              className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
+              className="home-media-card flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
               style={!featuredVideo.thumb ? { background: meditCardBg } : {}}
             >
               {/* Thumbnail cover */}
@@ -1468,7 +1478,9 @@ export default function Home() {
               <div
                 className="absolute inset-0"
                 style={{ background: featuredVideo.thumb
-                  ? "linear-gradient(to top, rgba(0,0,0,0.88) 40%, rgba(0,0,0,0.18) 100%)"
+                  ? isLightElegant
+                    ? "linear-gradient(to top, rgba(0,0,0,0.26) 40%, rgba(0,0,0,0.02) 100%)"
+                    : "linear-gradient(to top, rgba(0,0,0,0.88) 40%, rgba(0,0,0,0.18) 100%)"
                   : "transparent" }}
               />
               {/* Play button */}
@@ -1477,7 +1489,7 @@ export default function Home() {
               </div>
               {/* Labels */}
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: themeAC }}>{lang === "es" ? "Meditación" : "Meditation"}</p>
+                <p className="card-type-label text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isLightElegant ? "rgba(255,255,255,0.62)" : themeAC }}>{lang === "es" ? "Meditación" : "Meditation"}</p>
                 <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{featuredVideo.title}</p>
                 <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Toca para ver" : "Tap to watch"}</p>
               </div>
@@ -1490,7 +1502,7 @@ export default function Home() {
               return (
                 <button
                   onClick={() => setGgReader({ title: articleTitle, author: art.author, authorYears: art.authorYears, url: art.url, content: art.content, image: art.image })}
-                  className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
+                  className="home-media-card flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
                   style={{ background: articleCardBg, border: isLightElegant ? "1px solid rgba(124,92,46,0.22)" : isPremiumNeon ? `1px solid ${themeACBorderSm}` : "1px solid rgba(201,169,97,0.28)" }}
                 >
                   {/* Cover image (when provided) — hides itself if the file is missing */}
@@ -1505,21 +1517,23 @@ export default function Home() {
                       />
                       <div
                         className="absolute inset-0"
-                        style={{ background: "linear-gradient(to top, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.08) 100%)" }}
+                        style={{ background: isLightElegant
+                          ? "linear-gradient(to top, rgba(0,0,0,0.29) 38%, rgba(0,0,0,0.02) 100%)"
+                          : "linear-gradient(to top, rgba(0,0,0,0.78) 38%, rgba(0,0,0,0.08) 100%)" }}
                       />
                     </>
                   )}
                   {/* Book icon */}
                   <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#111111" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
                       <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                     </svg>
                   </div>
                   <div className="relative z-10">
-                    <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: themeAC }}>{lang === "es" ? "Artículo" : "Article"}</p>
-                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3" style={{ color: cardTextColor ?? "white" }}>{articleTitle}</p>
-                    <p className="text-[9px] mt-1.5" style={{ color: themeACSub85 }}>{art.author}</p>
+                    <p className="card-type-label text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isLightElegant ? "rgba(255,255,255,0.62)" : themeAC }}>{lang === "es" ? "Artículo" : "Article"}</p>
+                    <p className="text-[11px] font-bold leading-snug mt-0.5 line-clamp-3" style={{ color: isLightElegant ? "#ffffff" : cardTextColor ?? "white" }}>{articleTitle}</p>
+                    <p className="card-author-label text-[9px] mt-1.5" style={{ color: isLightElegant ? "rgba(255,255,255,0.72)" : themeACSub85 }}>{art.author}</p>
                   </div>
                 </button>
               );
@@ -1528,7 +1542,7 @@ export default function Home() {
             {/* Free Books */}
             <Link
               href="/library"
-              className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
+              className="home-media-card flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
             >
               {/* Cover image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1541,17 +1555,19 @@ export default function Home() {
               {/* Overlay */}
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.10) 100%)" }}
+                style={{ background: isLightElegant
+                  ? "linear-gradient(to top, rgba(0,0,0,0.36) 40%, rgba(0,0,0,0.05) 100%)"
+                  : "linear-gradient(to top, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.10) 100%)" }}
               />
               {/* Content */}
               <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#111111" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                 </svg>
               </div>
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(96,165,250,0.90)" }}>{lang === "es" ? "Biblioteca" : "Library"}</p>
+                <p className="card-type-label text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isLightElegant ? "rgba(255,255,255,0.62)" : isGoldNavy ? "#c9a961" : "rgba(96,165,250,0.90)" }}>{lang === "es" ? "Biblioteca" : "Library"}</p>
                 <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Libros Gratis" : "Free Books"}</p>
                 <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Clásicos puritanos" : "Puritan classics"}</p>
               </div>
@@ -1560,7 +1576,7 @@ export default function Home() {
             {/* Historical Documents */}
             <Link
               href="/learn"
-              className="flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
+              className="home-media-card flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
             >
               {/* Cover image */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1573,11 +1589,13 @@ export default function Home() {
               {/* Overlay */}
               <div
                 className="absolute inset-0"
-                style={{ background: "linear-gradient(to top, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.10) 100%)" }}
+                style={{ background: isLightElegant
+                  ? "linear-gradient(to top, rgba(0,0,0,0.36) 40%, rgba(0,0,0,0.05) 100%)"
+                  : "linear-gradient(to top, rgba(0,0,0,0.72) 40%, rgba(0,0,0,0.10) 100%)" }}
               />
               {/* Content */}
               <div className="relative z-10 w-7 h-7 rounded-full flex items-center justify-center self-end" style={{ background: cardIconBg }}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#7c5c2e" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isLightPink ? "#9d174d" : isLightElegant ? "#111111" : isGoldNavy ? "#c9a961" : "white"} strokeWidth="2" strokeLinecap="round">
                   <path d="M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z"/>
                   <line x1="10" y1="9"  x2="17" y2="9"/>
                   <line x1="10" y1="13" x2="17" y2="13"/>
@@ -1585,7 +1603,7 @@ export default function Home() {
                 </svg>
               </div>
               <div className="relative z-10">
-                <p className="text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isGoldNavy ? "#c9a961" : "rgba(196,181,253,0.90)" }}>{lang === "es" ? "Historia" : "History"}</p>
+                <p className="card-type-label text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isLightElegant ? "rgba(255,255,255,0.62)" : isGoldNavy ? "#c9a961" : "rgba(196,181,253,0.90)" }}>{lang === "es" ? "Historia" : "History"}</p>
                 <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Documentos Históricos" : "Historical Documents"}</p>
                 <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Historia de la iglesia" : "Church history"}</p>
               </div>
@@ -1613,8 +1631,8 @@ export default function Home() {
 
           <Link href="/videos" className="block group">
             <div
-              className="rounded-2xl overflow-hidden active:scale-[0.99] transition-all relative"
-              style={{ background: "#0d0d18", border: `1px solid ${themeACBorderSm}` }}
+              className="home-video-media-card rounded-2xl overflow-hidden active:scale-[0.99] transition-all relative"
+              style={{ background: isLightElegant ? "#f3f4f6" : "#0d0d18", border: `1px solid ${themeACBorderSm}` }}
             >
               {/* Background image — 16:9 hero, figure stays on the right */}
               <div className="relative" style={{ aspectRatio: "16 / 9" }}>
@@ -1630,14 +1648,15 @@ export default function Home() {
                 <div
                   className="absolute inset-0"
                   style={{
-                    background:
-                      "linear-gradient(to right, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.65) 45%, rgba(8,9,15,0.15) 78%, transparent 100%)",
+                    background: isLightElegant
+                      ? "linear-gradient(to right, rgba(8,9,15,0.68) 0%, rgba(8,9,15,0.44) 45%, rgba(8,9,15,0.10) 78%, transparent 100%)"
+                      : "linear-gradient(to right, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.65) 45%, rgba(8,9,15,0.15) 78%, transparent 100%)",
                   }}
                 />
                 {/* Bottom blend into the topic pills row */}
                 <div
                   className="absolute inset-x-0 bottom-0 h-1/3"
-                  style={{ background: "linear-gradient(to bottom, transparent, rgba(13,13,24,0.95))" }}
+                  style={{ background: isLightElegant ? "linear-gradient(to bottom, transparent, rgba(13,13,24,0.58))" : "linear-gradient(to bottom, transparent, rgba(13,13,24,0.95))" }}
                 />
 
                 {/* Overlay — flex row: play button left, text stacked right */}
@@ -1647,7 +1666,7 @@ export default function Home() {
                     {/* Play button */}
                     <div
                       className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
-                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
+                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : isLightElegant ? "rgba(10,10,10,0.85)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="#08090f" style={{ marginLeft: 3 }}>
                         <path d="M8 5v14l11-7z" />
@@ -1684,7 +1703,7 @@ export default function Home() {
         <section className="mt-9">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Tu racha" : "Your streak"}</h3>
-            <p className="text-[12px] font-bold" style={{ color: themeAC }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
+            <p className="text-[12px] font-bold" style={{ color: "var(--accent-text)" }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
           </div>
           <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3 py-4 flex justify-between" style={isLight ? { borderColor: "rgba(28,20,9,0.10)", background: "rgba(28,20,9,0.04)" } : {}}>
             {dayLabels.map((d, i) => {
@@ -1693,7 +1712,7 @@ export default function Home() {
               return (
                 <div key={d} className="flex flex-col items-center gap-1.5">
                   <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center text-[10px]"
+                    className={"w-7 h-7 rounded-full flex items-center justify-center text-[10px]" + (isCurrent ? " streak-current-ring" : "")}
                     style={
                       isDone
                         ? { background: themeAC, color: isPremiumNeon ? "#0a0514" : "#1a0e2e" }
@@ -1707,7 +1726,7 @@ export default function Home() {
                         <path d="m5 13 4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
-                    {isCurrent && <div className="w-1.5 h-1.5 rounded-full" style={{ background: themeAC }} />}
+                    {isCurrent && <div className="streak-current-dot w-1.5 h-1.5 rounded-full" style={{ background: themeAC }} />}
                   </div>
                   <span
                     className={"text-[10px] " + (isCurrent ? "text-white font-semibold" : "text-white/35")}
@@ -1726,18 +1745,18 @@ export default function Home() {
           <section className="px-4 pb-4 mt-2">
             <div
               className="rounded-3xl px-5 py-6 flex flex-col gap-4"
-              style={{ background: isPremiumNeon ? "rgba(124,58,237,0.10)" : "rgba(201,169,97,0.10)", border: `1px solid ${isPremiumNeon ? "rgba(124,58,237,0.25)" : "rgba(201,169,97,0.25)"}`, backdropFilter: "blur(8px)" }}
+              style={{ background: isLightElegant ? "#f3f4f6" : isPremiumNeon ? "rgba(124,58,237,0.10)" : "rgba(201,169,97,0.10)", border: `1px solid ${isLightElegant ? "rgba(10,10,10,0.11)" : isPremiumNeon ? "rgba(124,58,237,0.25)" : "rgba(201,169,97,0.25)"}`, backdropFilter: "blur(8px)" }}
             >
               <div className="flex items-start gap-4">
                 <div
                   className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: isPremiumNeon ? "rgba(124,58,237,0.18)" : "rgba(201,169,97,0.18)" }}
+                  style={{ background: isLightElegant ? "rgba(10,10,10,0.07)" : isPremiumNeon ? "rgba(124,58,237,0.18)" : "rgba(201,169,97,0.18)" }}
                 >
                   ☁️
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-base leading-snug" style={{ color: isLightElegant ? "#1c1409" : "white" }}>Save your study across every device</p>
-                  <p className="text-sm mt-1 leading-relaxed" style={{ color: isLightElegant ? "rgba(28,20,9,0.52)" : "rgba(255,255,255,0.50)" }}>
+                  <p className="font-bold text-base leading-snug" style={{ color: isLightElegant ? "#0a0a0a" : "white" }}>Save your study across every device</p>
+                  <p className="text-sm mt-1 leading-relaxed" style={{ color: isLightElegant ? "rgba(10,10,10,0.54)" : "rgba(255,255,255,0.50)" }}>
                     Sign in to keep your highlights, notes, and bookmarks in sync — on your phone, tablet, and computer.
                   </p>
                 </div>
@@ -1746,14 +1765,14 @@ export default function Home() {
                 <Link
                   href="/auth/login"
                   className="flex-1 text-center rounded-2xl py-3 text-sm font-bold"
-                  style={{ background: themeAC, color: isPremiumNeon ? "#0a0514" : "#1a0e2e" }}
+                  style={{ background: isLightElegant ? "#111111" : themeAC, color: isLightElegant ? "#ffffff" : isPremiumNeon ? "#0a0514" : "#1a0e2e" }}
                 >
                   Sign In Free
                 </Link>
                 <Link
                   href="/profile"
                   className="px-4 rounded-2xl py-3 text-sm font-semibold"
-                  style={{ background: themeACBg, color: themeAC }}
+                  style={{ background: isLightElegant ? "rgba(10,10,10,0.07)" : themeACBg, color: isLightElegant ? "#111111" : themeAC }}
                 >
                   Learn more
                 </Link>

@@ -20,7 +20,7 @@ import { localizeReference } from "../lib/spanishContent";
 
 // ─── Theme ─────────────────────────────────────────────────────────────────────
 
-type AppTheme = "default" | "premium-neon" | "gold-navy" | "light-pink" | "light-elegant";
+type AppTheme = "default" | "premium-neon" | "gold-navy" | "light-pink" | "light-elegant" | "white-noir";
 
 interface ThemeTokens {
   rootBg: string;
@@ -65,6 +65,49 @@ interface ThemeTokens {
 }
 
 function buildTokens(theme: AppTheme): ThemeTokens {
+  if (theme === "white-noir") {
+    return {
+      rootBg: "#ffffff",
+      cardBg: "#f3f4f6",
+      cardBorder: "rgba(10,10,10,0.10)",
+      cardShadow: "0 2px 12px rgba(10,10,10,0.05)",
+      scriptureCardBg: "#ffffff",
+      glowShadow: "none",
+      accent: "#050505",
+      accentDim: "#eef0f2",
+      accentText: "#ffffff",
+      labelColor: "#333333",
+      textPrimary: "#0a0a0a",
+      textSecondary: "rgba(10,10,10,0.70)",
+      textMuted: "rgba(10,10,10,0.52)",
+      textFaint: "rgba(10,10,10,0.34)",
+      buttonBg: "#e5e7eb",
+      buttonBorder: "rgba(10,10,10,0.12)",
+      buttonText: "#0a0a0a",
+      ctaText: "#ffffff",
+      inputBg: "#f3f4f6",
+      inputText: "#0a0a0a",
+      toggleOffBg: "rgba(17,17,17,0.12)",
+      divider: "rgba(17,17,17,0.10)",
+      quoteBg: "#e5e7eb",
+      blockquoteBorder: "#111111",
+      toggleActive: "#050505",
+      toastBg: "#ffffff",
+      toastMuted: "rgba(17,17,17,0.60)",
+      toastShadow: "0 10px 30px rgba(17,17,17,0.14)",
+      dangerText: "#a51d1d",
+      dangerBg: "rgba(165,29,29,0.08)",
+      successText: "#245c35",
+      pillBg: "rgba(17,17,17,0.07)",
+      pillText: "#292929",
+      badgeSectionBorder: "rgba(17,17,17,0.10)",
+      badgeSectionBg: "#f3f4f6",
+      badgeCardBorder: "rgba(17,17,17,0.12)",
+      badgeCardBg: "#ffffff",
+      badgeLabelColor: "#292929",
+      badgeSectionLabel: "#555555",
+    };
+  }
   if (theme === "premium-neon") {
     return {
       rootBg: "#0e1018",
@@ -288,7 +331,7 @@ function readStoredAppTheme(): AppTheme {
   if (typeof window === "undefined") return "premium-neon";
   try {
     const v = localStorage.getItem("ryc-theme");
-    if (v === "premium-neon" || v === "gold-navy" || v === "light-pink" || v === "light-elegant") return v;
+    if (v === "white-noir" || v === "premium-neon" || v === "gold-navy" || v === "light-pink" || v === "light-elegant") return v;
   } catch { /* ignore */ }
   return "premium-neon";
 }

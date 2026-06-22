@@ -71,7 +71,7 @@ function ChurchAnalysisIcon({ size = 24 }: { size?: number }) {
 
 export default function ChurchAnalysisPage() {
   const { theme } = useTheme();
-  const isLight = theme === "light-elegant" || theme === "light-pink";
+  const isLight = false;
   const [analyses, setAnalyses] = useState<ChurchAnalysis[]>([]);
 
   useEffect(() => {

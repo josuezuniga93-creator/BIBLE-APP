@@ -5,7 +5,8 @@ import { usePagination } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
-import { applyHighlightsToHtml } from "../lib/highlights";
+import { applyHighlightsToHtml, type Highlight } from "../lib/highlights";
+import { LEARN_DOCUMENTS as _LEARN_DOCS_FOR_HL } from "../lib/learnData";
 import { useTheme } from "../lib/useTheme";
 import { BookmarkModal } from "../components/BookmarkModal";
 import { isAnySaved } from "../lib/collections";
@@ -149,7 +150,37 @@ const DOC_TYPES = [
 ];
 
 // ─── Tab keys ─────────────────────────────────────────────────────────────────
-type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism";
+type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism" | "highlights";
+
+// ─── Historical doc highlights aggregation ────────────────────────────────────
+interface DocHighlight extends Highlight {
+  docId: string;
+  docTitle: string;
+  sectionId: string;
+}
+
+function loadAllDocHighlights(): DocHighlight[] {
+  if (typeof window === "undefined") return [];
+  const result: DocHighlight[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key?.startsWith("tulip-reader-highlights:learn-")) continue;
+    const suffix = key.slice("tulip-reader-highlights:".length); // "learn-{docId}-{sectionId}"
+    const m = suffix.match(/^learn-(.+?)-([\w-]+)$/);
+    if (!m) continue;
+    const docId = m[1];
+    const sectionId = m[2];
+    const doc = _LEARN_DOCS_FOR_HL.find((d) => d.id === docId);
+    try {
+      const raw = localStorage.getItem(key);
+      const hls = raw ? (JSON.parse(raw) as Highlight[]) : [];
+      for (const hl of hls) {
+        result.push({ ...hl, docId, docTitle: doc?.title ?? docId, sectionId });
+      }
+    } catch { /* skip */ }
+  }
+  return result.sort((a, b) => b.createdAt - a.createdAt);
+}
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
 function renderContent(
@@ -214,49 +245,50 @@ function SectionReader({
   readerMode: ReaderMode;
 }) {
   const { theme } = useTheme();
-  const isLight = theme === "light-elegant";
+  const isWhiteNoir = theme === "white-noir";
+  const isLight = isWhiteNoir;
   const isGoldNavy = theme === "gold-navy";
   const d = <T,>(light: T, gold: T, dark: T): T => isLight ? light : isGoldNavy ? gold : dark;
 
   const th = {
-    pageBg:         isLight ? "#f5f1eb"                               : "#0e0e18",
-    textPrimary:    isLight ? "#1c1409"                               : "rgba(255,255,255,0.95)",
-    textSecondary:  isLight ? "#6b5226"                               : "rgba(255,255,255,0.85)",
-    textMuted:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.5)",
-    textFaint:      isLight ? "#b09878"                               : "rgba(255,255,255,0.4)",
-    textContent:    isLight ? "#2a1e08"                               : "rgba(255,255,255,0.78)",
-    accent:         d("#9b7228",  "#c9a961", "#a78bfa"),
-    accentLight:    d("#c4973a",  "#d4b878", "#c4b5fd"),
-    primary:        d("#9b7228",  "#c9a961", "#7c3aed"),
-    topBarBg:       isLight ? "rgba(245,241,235,0.95)"                : "rgba(14,14,24,0.95)",
-    topBarBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
-    drawerBg:       isLight ? "#f0ebe0"                               : "#141424",
-    drawerBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    drawerItemActive:    d("rgba(155,114,40,0.15)", "rgba(201,169,97,0.20)", "rgba(124,58,237,0.2)"),
-    drawerItemActiveColor: d("#9b7228", "#c9a961",  "#c4b5fd"),
-    drawerItemColor:isLight ? "#9b8560"                               : "rgba(255,255,255,0.4)",
-    settingsBg:     isLight ? "#f0ebe0"                               : "#141424",
-    settingsBorder: isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    settingsBtnActive:       d("rgba(155,114,40,0.2)",  "rgba(201,169,97,0.25)", "rgba(124,58,237,0.3)"),
-    settingsBtnActiveBorder: d("rgba(155,114,40,0.5)",  "rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
-    settingsBtnInactive: isLight ? "rgba(155,114,40,0.06)"            : "rgba(255,255,255,0.05)",
-    settingsBtnInactiveBorder: isLight ? "rgba(155,114,40,0.14)"      : "rgba(255,255,255,0.08)",
-    navBtnBg:       isLight ? "rgba(155,114,40,0.08)"                 : "rgba(255,255,255,0.07)",
-    navBtnBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    navBtnColor:    isLight ? "#6b5226"                               : "rgba(255,255,255,0.6)",
-    navNextGradient: d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
-    dividerColor:   isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.06)",
-    footerText:     isLight ? "rgba(155,114,40,0.5)"                  : "rgba(255,255,255,0.15)",
-    progressTrack:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.08)",
-    progressBar:    d("linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
-    bottomBarBg:    isLight ? "rgba(245,241,235,0.97)"                : "rgba(14,14,24,0.97)",
-    bottomBarBorder:isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
-    bottomBarDivider:isLight? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.05)",
-    sliderTrack:    d(`linear-gradient(to right,#9b7228 `, `linear-gradient(to right,#c9a961 `, `linear-gradient(to right,#a855f7 `),
-    sliderThumb:    d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    pageBg:         isLight ? "#ffffff"                               : "#0e0e18",
+    textPrimary:    isLight ? "#0a0a0a"                               : "rgba(255,255,255,0.95)",
+    textSecondary:  isLight ? "rgba(10,10,10,0.55)"                  : "rgba(255,255,255,0.85)",
+    textMuted:      isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.5)",
+    textFaint:      isLight ? "rgba(10,10,10,0.25)"                  : "rgba(255,255,255,0.4)",
+    textContent:    isLight ? "#0a0a0a"                               : "rgba(255,255,255,0.78)",
+    accent:         d("#0a0a0a",  "#c9a961", "#a78bfa"),
+    accentLight:    d("#333333",  "#d4b878", "#c4b5fd"),
+    primary:        d("#0a0a0a",  "#c9a961", "#7c3aed"),
+    topBarBg:       isLight ? "rgba(255,255,255,0.96)"               : "rgba(14,14,24,0.95)",
+    topBarBorder:   isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.07)",
+    drawerBg:       isLight ? "#f5f5f5"                               : "#141424",
+    drawerBorder:   isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.08)",
+    drawerItemActive:    d("rgba(0,0,0,0.10)", "rgba(201,169,97,0.20)", "rgba(124,58,237,0.2)"),
+    drawerItemActiveColor: d("#0a0a0a", "#c9a961",  "#c4b5fd"),
+    drawerItemColor:isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.4)",
+    settingsBg:     isLight ? "#f5f5f5"                               : "#141424",
+    settingsBorder: isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.08)",
+    settingsBtnActive:       d("rgba(0,0,0,0.10)", "rgba(201,169,97,0.25)", "rgba(124,58,237,0.3)"),
+    settingsBtnActiveBorder: d("rgba(0,0,0,0.25)", "rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
+    settingsBtnInactive: isLight ? "rgba(0,0,0,0.05)"                : "rgba(255,255,255,0.05)",
+    settingsBtnInactiveBorder: isLight ? "rgba(0,0,0,0.10)"          : "rgba(255,255,255,0.08)",
+    navBtnBg:       isLight ? "rgba(0,0,0,0.05)"                     : "rgba(255,255,255,0.07)",
+    navBtnBorder:   isLight ? "rgba(0,0,0,0.10)"                     : "rgba(255,255,255,0.08)",
+    navBtnColor:    isLight ? "rgba(10,10,10,0.55)"                  : "rgba(255,255,255,0.6)",
+    navNextGradient: d("linear-gradient(135deg,#333,#0a0a0a)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    dividerColor:   isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.06)",
+    footerText:     isLight ? "rgba(10,10,10,0.25)"                  : "rgba(255,255,255,0.15)",
+    progressTrack:  isLight ? "rgba(0,0,0,0.08)"                     : "rgba(255,255,255,0.08)",
+    progressBar:    d("linear-gradient(90deg,#333,#0a0a0a)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
+    bottomBarBg:    isLight ? "rgba(255,255,255,0.96)"               : "rgba(14,14,24,0.97)",
+    bottomBarBorder:isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.07)",
+    bottomBarDivider:isLight? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.05)",
+    sliderTrack:    d(`linear-gradient(to right,#0a0a0a `, `linear-gradient(to right,#c9a961 `, `linear-gradient(to right,#a855f7 `),
+    sliderThumb:    d("linear-gradient(135deg,#333,#0a0a0a)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
     sliderThumbShadow: isLight ? "" : isGoldNavy ? "" : "box-shadow:0 0 8px rgba(168,85,247,0.6);",
-    sliderTrackBg:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.1)",
-    bottomIconColor:isLight ? "#9b8560"                               : "rgba(255,255,255,0.4)",
+    sliderTrackBg:  isLight ? "rgba(0,0,0,0.08)"                     : "rgba(255,255,255,0.1)",
+    bottomIconColor:isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.4)",
   };
 
   const { lang } = useLanguage();
@@ -530,51 +562,52 @@ function SectionReader({
 function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose: () => void; allDocs: LearnDocument[] }) {
   const { theme } = useTheme();
   const { lang } = useLanguage();
-  const isLight = theme === "light-elegant";
+  const isWhiteNoir = theme === "white-noir";
+  const isLight = isWhiteNoir;
   const isGoldNavy = theme === "gold-navy";
   const d = <T,>(light: T, gold: T, dark: T): T => isLight ? light : isGoldNavy ? gold : dark;
   const fullDocumentSections = FULL_DOCUMENT_SECTIONS[doc.id] ?? null;
   const hasFullDocument = !!fullDocumentSections;
 
   const th = {
-    pageBg:         isLight ? "#f5f1eb"                               : "#0e0e18",
-    textPrimary:    isLight ? "#1c1409"                               : "rgba(255,255,255,0.95)",
-    textSecondary:  isLight ? "#6b5226"                               : "rgba(255,255,255,0.85)",
-    textMuted:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.45)",
-    textFaint:      isLight ? "#b09878"                               : "rgba(255,255,255,0.3)",
-    accent:         d("#9b7228",  "#c9a961", "#a78bfa"),
-    accentLight:    d("#c4973a",  "#d4b878", "#c4b5fd"),
-    primary:        d("#9b7228",  "#c9a961", "#7c3aed"),
-    topBarBg:       isLight ? "rgba(245,241,235,0.95)"                : "rgba(14,14,24,0.95)",
-    topBarBorder:   isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.07)",
-    tagBg:          d("rgba(155,114,40,0.12)",  "rgba(201,169,97,0.18)", "rgba(124,58,237,0.2)"),
-    tagBorder:      d("rgba(155,114,40,0.35)",  "rgba(201,169,97,0.40)", "rgba(124,58,237,0.35)"),
-    tagColor:       d("#9b7228",  "#c9a961", "#c4b5fd"),
-    btnBorder:      isLight ? "rgba(155,114,40,0.22)"                 : "rgba(255,255,255,0.12)",
-    modeBg:         isLight ? "rgba(155,114,40,0.07)"                 : "rgba(255,255,255,0.04)",
-    modeBorder:     isLight ? "rgba(155,114,40,0.18)"                 : "rgba(255,255,255,0.08)",
-    modeActiveBg:   d("rgba(155,114,40,0.18)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.24)"),
-    modeActiveText: d("#6b5226",  "#d4b878", "#ddd6fe"),
-    modeInactiveText:isLight ? "#9b8560"                              : "rgba(255,255,255,0.42)",
-    progressTrack:  isLight ? "rgba(155,114,40,0.15)"                 : "rgba(255,255,255,0.08)",
-    progressBar:    d("linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
-    readGradient:   d("linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
-    divider:        isLight ? "rgba(155,114,40,0.12)"                 : "rgba(255,255,255,0.06)",
-    sectionRowBg:   isLight ? "rgba(155,114,40,0.06)"                 : "rgba(255,255,255,0.03)",
-    sectionRowBorder:isLight ? "rgba(155,114,40,0.18)"                : "rgba(255,255,255,0.07)",
-    sectionDoneBg:  d("rgba(155,114,40,0.15)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.3)"),
-    sectionDoneBorder:d("rgba(155,114,40,0.45)","rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
-    sectionDoneNum: d("#9b7228",  "#c9a961", "#c4b5fd"),
-    sectionPendingBg:isLight ? "rgba(155,114,40,0.06)"                : "rgba(255,255,255,0.07)",
-    sectionPendingBorder:isLight?"rgba(155,114,40,0.18)"              : "rgba(255,255,255,0.1)",
-    sectionPendingNum:isLight ? "#9b8560"                             : "rgba(255,255,255,0.3)",
-    sectionDoneTitle:d("#9b7228", "#c9a961", "#c4b5fd"),
-    sectionTitle:   isLight ? "#2a1e08"                               : "rgba(255,255,255,0.8)",
-    sectionLabel:   isLight ? "#9b8560"                               : "rgba(255,255,255,0.3)",
-    sectionArrow:   isLight ? "rgba(155,114,40,0.5)"                  : "rgba(255,255,255,0.25)",
-    star:           d("#c4973a",  "#c9a961", "#c9a961"),
-    starText:       isLight ? "#6b5226"                               : "rgba(255,255,255,0.7)",
-    starFaint:      isLight ? "#9b8560"                               : "rgba(255,255,255,0.3)",
+    pageBg:         isLight ? "#ffffff"                               : "#0e0e18",
+    textPrimary:    isLight ? "#0a0a0a"                               : "rgba(255,255,255,0.95)",
+    textSecondary:  isLight ? "rgba(10,10,10,0.55)"                  : "rgba(255,255,255,0.85)",
+    textMuted:      isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.45)",
+    textFaint:      isLight ? "rgba(10,10,10,0.25)"                  : "rgba(255,255,255,0.3)",
+    accent:         d("#0a0a0a",  "#c9a961", "#a78bfa"),
+    accentLight:    d("#333333",  "#d4b878", "#c4b5fd"),
+    primary:        d("#0a0a0a",  "#c9a961", "#7c3aed"),
+    topBarBg:       isLight ? "rgba(255,255,255,0.96)"               : "rgba(14,14,24,0.95)",
+    topBarBorder:   isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.07)",
+    tagBg:          d("rgba(0,0,0,0.05)",  "rgba(201,169,97,0.18)", "rgba(124,58,237,0.2)"),
+    tagBorder:      d("rgba(0,0,0,0.12)",  "rgba(201,169,97,0.40)", "rgba(124,58,237,0.35)"),
+    tagColor:       d("#0a0a0a",  "#c9a961", "#c4b5fd"),
+    btnBorder:      isLight ? "rgba(0,0,0,0.09)"                     : "rgba(255,255,255,0.12)",
+    modeBg:         isLight ? "rgba(0,0,0,0.04)"                     : "rgba(255,255,255,0.04)",
+    modeBorder:     isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.08)",
+    modeActiveBg:   d("rgba(0,0,0,0.10)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.24)"),
+    modeActiveText: d("#0a0a0a",  "#d4b878", "#ddd6fe"),
+    modeInactiveText:isLight ? "rgba(10,10,10,0.38)"                 : "rgba(255,255,255,0.42)",
+    progressTrack:  isLight ? "rgba(0,0,0,0.08)"                     : "rgba(255,255,255,0.08)",
+    progressBar:    d("linear-gradient(90deg,#333,#0a0a0a)", "linear-gradient(90deg,#c9a961,#d4b878)", "linear-gradient(90deg,#ec4899,#a855f7)"),
+    readGradient:   d("linear-gradient(135deg,#333,#0a0a0a)", "linear-gradient(135deg,#c9a961,#d4b878)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    divider:        isLight ? "rgba(0,0,0,0.07)"                     : "rgba(255,255,255,0.06)",
+    sectionRowBg:   isLight ? "rgba(0,0,0,0.03)"                     : "rgba(255,255,255,0.03)",
+    sectionRowBorder:isLight ? "rgba(0,0,0,0.07)"                    : "rgba(255,255,255,0.07)",
+    sectionDoneBg:  d("rgba(0,0,0,0.10)",  "rgba(201,169,97,0.22)", "rgba(124,58,237,0.3)"),
+    sectionDoneBorder:d("rgba(0,0,0,0.25)","rgba(201,169,97,0.50)", "rgba(124,58,237,0.5)"),
+    sectionDoneNum: d("#0a0a0a",  "#c9a961", "#c4b5fd"),
+    sectionPendingBg:isLight ? "rgba(0,0,0,0.04)"                    : "rgba(255,255,255,0.07)",
+    sectionPendingBorder:isLight?"rgba(0,0,0,0.07)"                  : "rgba(255,255,255,0.1)",
+    sectionPendingNum:isLight ? "rgba(10,10,10,0.38)"                : "rgba(255,255,255,0.3)",
+    sectionDoneTitle:d("#0a0a0a", "#c9a961", "#c4b5fd"),
+    sectionTitle:   isLight ? "#0a0a0a"                               : "rgba(255,255,255,0.8)",
+    sectionLabel:   isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.3)",
+    sectionArrow:   isLight ? "rgba(0,0,0,0.25)"                     : "rgba(255,255,255,0.25)",
+    star:           d("#0a0a0a",  "#c9a961", "#c9a961"),
+    starText:       isLight ? "#0a0a0a"                               : "rgba(255,255,255,0.7)",
+    starFaint:      isLight ? "rgba(10,10,10,0.38)"                  : "rgba(255,255,255,0.3)",
   };
 
   const [completed, setCompleted] = useState<Set<string>>(new Set());
@@ -849,55 +882,56 @@ function LearnPageInner() {
   const { theme } = useTheme();
   const { lang } = useLanguage();
   const searchParams = useSearchParams();
-  const isLight = theme === "light-elegant";
-  const isPink = theme === "light-pink";
+  const isWhiteNoir = theme === "white-noir";
+  const isLight = isWhiteNoir;
+  const isPink = false;
   const isGoldNavy = theme === "gold-navy";
   const pick = (pink: string, light: string, dark: string) => isPink ? pink : isLight ? light : dark;
 
   const th = {
-    pageBg:            pick("#fff0f5", "#f5f1eb", "#0e0e18"),
-    textPrimary:       pick("#4a0020", "#1c1409", "rgba(255,255,255,0.95)"),
-    textSecondary:     pick("rgba(74,0,32,0.62)", "#6b5226", "rgba(255,255,255,0.38)"),
-    textMuted:         pick("rgba(74,0,32,0.52)", "#9b8560", "rgba(255,255,255,0.45)"),
-    textFaint:         pick("rgba(74,0,32,0.38)", "#b09878", "rgba(255,255,255,0.25)"),
-    textVeryFaint:     pick("rgba(74,0,32,0.28)", "#c4b090", "rgba(255,255,255,0.22)"),
-    accent:            pick("#db2777", "#9b7228", "#a78bfa"),
-    accentLight:       pick("#be185d", "#c4973a", "#c4b5fd"),
-    primary:           pick("#db2777", "#9b7228", "#7c3aed"),
+    pageBg:            pick("#fff0f5", "#ffffff", "#0e0e18"),
+    textPrimary:       pick("#4a0020", "#0a0a0a", "rgba(255,255,255,0.95)"),
+    textSecondary:     pick("rgba(74,0,32,0.62)", "rgba(10,10,10,0.55)", "rgba(255,255,255,0.38)"),
+    textMuted:         pick("rgba(74,0,32,0.52)", "rgba(10,10,10,0.38)", "rgba(255,255,255,0.45)"),
+    textFaint:         pick("rgba(74,0,32,0.38)", "rgba(10,10,10,0.25)", "rgba(255,255,255,0.25)"),
+    textVeryFaint:     pick("rgba(74,0,32,0.28)", "rgba(10,10,10,0.22)", "rgba(255,255,255,0.22)"),
+    accent:            pick("#db2777", "#0a0a0a", "#a78bfa"),
+    accentLight:       pick("#be185d", "#333333", "#c4b5fd"),
+    primary:           pick("#db2777", "#0a0a0a", "#7c3aed"),
     heroBg:            pick(
       "linear-gradient(135deg,#f8dce9 0%,#fff8fb 55%,#f7cedf 100%)",
-      "linear-gradient(135deg,rgba(196,151,58,0.28) 0%,rgba(237,228,205,0.96) 55%,rgba(215,196,148,0.22) 100%)",
+      "linear-gradient(135deg,#f7f7f7 0%,#ffffff 100%)",
       "linear-gradient(135deg,#1a0845 0%,#2d1b69 55%,#0f0a2a 100%)"
     ),
-    heroAccentText:    pick("#be185d", "#9b7228", "#c084fc"),
-    heroSubtext:       pick("rgba(74,0,32,0.62)", "rgba(107,82,38,0.85)", "rgba(255,255,255,0.4)"),
-    searchBg:          pick("rgba(252,231,243,0.7)", "rgba(155,114,40,0.08)", "rgba(255,255,255,0.06)"),
-    searchBorder:      pick("rgba(219,39,119,0.20)", "rgba(155,114,40,0.22)", "rgba(255,255,255,0.08)"),
-    catActiveBg:       pick("#f7d1e3", "rgba(155,114,40,0.15)", "rgba(124,58,237,0.25)"),
-    catActiveBorder:   pick("rgba(219,39,119,0.38)", "rgba(155,114,40,0.5)", "rgba(167,139,250,0.5)"),
-    catInactiveBg:     pick("rgba(252,231,243,0.72)", "rgba(155,114,40,0.04)", "rgba(255,255,255,0.04)"),
-    catInactiveBorder: pick("rgba(219,39,119,0.14)", "rgba(155,114,40,0.14)", "rgba(255,255,255,0.08)"),
-    cardBg:            pick("#fff8fb", "rgba(155,114,40,0.06)", "rgba(255,255,255,0.03)"),
-    cardBorder:        pick("rgba(219,39,119,0.16)", "rgba(155,114,40,0.20)", "rgba(255,255,255,0.07)"),
-    progressTrack:     pick("rgba(219,39,119,0.14)", "rgba(155,114,40,0.15)", "rgba(255,255,255,0.08)"),
-    progressBar:       pick("linear-gradient(90deg,#ec4899,#be185d)", "linear-gradient(90deg,#c4973a,#9b7228)", "linear-gradient(90deg,#ec4899,#a855f7)"),
-    tabStripBorder:    pick("rgba(219,39,119,0.16)", "rgba(155,114,40,0.18)", "rgba(255,255,255,0.07)"),
-    tabActiveBorder:   pick("#db2777", "#9b7228", "#7c3aed"),
-    tabInactiveColor:  pick("rgba(74,0,32,0.45)", "#9b8560", "rgba(255,255,255,0.3)"),
-    timelineLine:      pick("linear-gradient(90deg,transparent,rgba(219,39,119,0.28),transparent)", "linear-gradient(90deg,transparent,rgba(155,114,40,0.4),transparent)", "linear-gradient(90deg,transparent,rgba(167,139,250,0.4),transparent)"),
-    timelineDotEven:   pick("linear-gradient(135deg,#ec4899,#db2777)", "linear-gradient(135deg,#c4973a,#9b7228)", "linear-gradient(135deg,#ec4899,#a855f7)"),
-    timelineDotOdd:    pick("linear-gradient(135deg,#db2777,#be185d)", "linear-gradient(135deg,#9b7228,#6b4a10)", "linear-gradient(135deg,#a855f7,#7c3aed)"),
+    heroAccentText:    pick("#be185d", "#0a0a0a", "#c084fc"),
+    heroSubtext:       pick("rgba(74,0,32,0.62)", "rgba(10,10,10,0.55)", "rgba(255,255,255,0.4)"),
+    searchBg:          pick("rgba(252,231,243,0.7)", "rgba(0,0,0,0.04)", "rgba(255,255,255,0.06)"),
+    searchBorder:      pick("rgba(219,39,119,0.20)", "rgba(0,0,0,0.09)", "rgba(255,255,255,0.08)"),
+    catActiveBg:       pick("#f7d1e3", "rgba(0,0,0,0.10)", "rgba(124,58,237,0.25)"),
+    catActiveBorder:   pick("rgba(219,39,119,0.38)", "rgba(0,0,0,0.25)", "rgba(167,139,250,0.5)"),
+    catInactiveBg:     pick("rgba(252,231,243,0.72)", "rgba(0,0,0,0.04)", "rgba(255,255,255,0.04)"),
+    catInactiveBorder: pick("rgba(219,39,119,0.14)", "rgba(0,0,0,0.07)", "rgba(255,255,255,0.08)"),
+    cardBg:            pick("#fff8fb", "#ffffff", "rgba(255,255,255,0.03)"),
+    cardBorder:        pick("rgba(219,39,119,0.16)", "rgba(0,0,0,0.07)", "rgba(255,255,255,0.07)"),
+    progressTrack:     pick("rgba(219,39,119,0.14)", "rgba(0,0,0,0.08)", "rgba(255,255,255,0.08)"),
+    progressBar:       pick("linear-gradient(90deg,#ec4899,#be185d)", "linear-gradient(90deg,#333,#0a0a0a)", "linear-gradient(90deg,#ec4899,#a855f7)"),
+    tabStripBorder:    pick("rgba(219,39,119,0.16)", "rgba(0,0,0,0.07)", "rgba(255,255,255,0.07)"),
+    tabActiveBorder:   pick("#db2777", "#0a0a0a", "#7c3aed"),
+    tabInactiveColor:  pick("rgba(74,0,32,0.45)", "rgba(10,10,10,0.38)", "rgba(255,255,255,0.3)"),
+    timelineLine:      pick("linear-gradient(90deg,transparent,rgba(219,39,119,0.28),transparent)", "linear-gradient(90deg,transparent,rgba(0,0,0,0.15),transparent)", "linear-gradient(90deg,transparent,rgba(167,139,250,0.4),transparent)"),
+    timelineDotEven:   pick("linear-gradient(135deg,#ec4899,#db2777)", "linear-gradient(135deg,#333,#0a0a0a)", "linear-gradient(135deg,#ec4899,#a855f7)"),
+    timelineDotOdd:    pick("linear-gradient(135deg,#db2777,#be185d)", "linear-gradient(135deg,#0a0a0a,#333)", "linear-gradient(135deg,#a855f7,#7c3aed)"),
     timelineDotShadow: pick("none", "none", "0 0 8px rgba(168,85,247,0.5)"),
-    timelineYear:      pick("#be185d", "#9b7228", "#a78bfa"),
-    timelineLabel:     pick("rgba(74,0,32,0.52)", "#9b8560", "rgba(255,255,255,0.45)"),
-    startReading:      pick("#be185d", "#9b7228", "rgba(167,139,250,0.65)"),
-    star:              pick("#db2777", "#c4973a", "#c9a961"),
-    footerText:        pick("rgba(74,0,32,0.46)", "rgba(155,114,40,0.5)", "rgba(255,255,255,0.15)"),
-    iconMuted:         pick("rgba(74,0,32,0.48)", "#9b8560", "rgba(255,255,255,0.3)"),
+    timelineYear:      pick("#be185d", "#0a0a0a", "#a78bfa"),
+    timelineLabel:     pick("rgba(74,0,32,0.52)", "rgba(10,10,10,0.38)", "rgba(255,255,255,0.45)"),
+    startReading:      pick("#be185d", "#0a0a0a", "rgba(167,139,250,0.65)"),
+    star:              pick("#db2777", "#0a0a0a", "#c9a961"),
+    footerText:        pick("rgba(74,0,32,0.46)", "rgba(10,10,10,0.25)", "rgba(255,255,255,0.15)"),
+    iconMuted:         pick("rgba(74,0,32,0.48)", "rgba(10,10,10,0.38)", "rgba(255,255,255,0.3)"),
   };
 
   // Gold Navy overrides — replace purple/violet with antique gold
-  if (isGoldNavy) {
+  if (isGoldNavy && !isLight) {
     th.accent            = "#c9a961";
     th.accentLight       = "#d4b878";
     th.primary           = "#c9a961";
@@ -922,12 +956,26 @@ function LearnPageInner() {
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
   const [bookmarkTarget, setBookmarkTarget] = useState<LearnDocument | null>(null);
   const [savedDocs, setSavedDocs] = useState<Set<string>>(new Set());
+  const [docHighlights, setDocHighlights] = useState<DocHighlight[]>([]);
+  const [showHighlightPocket, setShowHighlightPocket] = useState(false);
+  const [hlSearch, setHlSearch] = useState("");
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
+  const [hlDocCollapsed, setHlDocCollapsed] = useState<Record<string, boolean>>({});
+  const [catExpanded, setCatExpanded] = useState<Record<string, boolean>>({});
+  const [carouselSlide, setCarouselSlide] = useState(0);
+  const [carouselPaused, setCarouselPaused] = useState(false);
+  const [carouselTouchX, setCarouselTouchX] = useState(0);
+  const carouselSwipedRef = useRef(false);
 
   function refreshSaved() {
     setSavedDocs(new Set(LEARN_DOCUMENTS.filter((d) => isAnySaved(`learn::${d.id}`)).map((d) => d.id)));
   }
 
   useEffect(() => { refreshSaved(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (showHighlightPocket) setDocHighlights(loadAllDocHighlights());
+  }, [showHighlightPocket]);
 
   // Deep-link: /learn?doc=ID opens that document directly
   useEffect(() => {
@@ -950,6 +998,18 @@ function LearnPageInner() {
     setProgressMap(map);
   };
 
+  // Carousel auto-advance every 4 seconds
+  const FEATURED_IDS = ["westminster-confession", "heidelberg", "nicene-creed"];
+  const featuredDocs = LEARN_DOCUMENTS
+    .filter((d) => FEATURED_IDS.includes(d.id))
+    .sort((a, b) => FEATURED_IDS.indexOf(a.id) - FEATURED_IDS.indexOf(b.id));
+
+  useEffect(() => {
+    if (featuredDocs.length <= 1 || carouselPaused) return;
+    const id = setInterval(() => setCarouselSlide((prev) => (prev + 1) % featuredDocs.length), 4000);
+    return () => clearInterval(id);
+  }, [featuredDocs.length, carouselPaused]);
+
   const selectedDoc = selected ? LEARN_DOCUMENTS.find((d) => d.id === selected) : null;
   if (selectedDoc) return <DocumentDetail doc={selectedDoc} onClose={handleClose} allDocs={LEARN_DOCUMENTS} />;
 
@@ -965,6 +1025,20 @@ function LearnPageInner() {
     activeTab === "all" || doc.category === activeTab
   );
 
+  const filteredDocHls = hlSearch.trim()
+    ? docHighlights.filter(hl => {
+        const q = hlSearch.toLowerCase();
+        return hl.docTitle.toLowerCase().includes(q) || hl.sectionId.toLowerCase().includes(q) || hl.text.toLowerCase().includes(q);
+      })
+    : docHighlights;
+
+  const hlByDoc: Record<string, { docTitle: string; docId: string; sections: Record<string, DocHighlight[]> }> = {};
+  for (const hl of filteredDocHls) {
+    if (!hlByDoc[hl.docId]) hlByDoc[hl.docId] = { docTitle: hl.docTitle, docId: hl.docId, sections: {} };
+    if (!hlByDoc[hl.docId].sections[hl.sectionId]) hlByDoc[hl.docId].sections[hl.sectionId] = [];
+    hlByDoc[hl.docId].sections[hl.sectionId].push(hl);
+  }
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
@@ -975,36 +1049,113 @@ function LearnPageInner() {
         </h1>
       </div>
 
-      {/* Hero card — Study Tools style */}
-      <section
-        className="relative overflow-hidden rounded-[28px] p-6 mx-4 mb-5 border"
+
+      {/* ── Hero Carousel ───────────────────────────────────────────────────────── */}
+      <div
+        className="mx-4 mb-6 rounded-[22px] overflow-hidden relative select-none"
         style={{
-          background: th.heroBg,
-          borderColor: th.catActiveBorder,
-          boxShadow: "0 16px 48px rgba(0,0,0,0.18)",
+          height: "214px",
+          boxShadow: isLight ? "0 18px 45px rgba(0,0,0,0.08)" : "0 18px 45px rgba(0,0,0,0.35)",
+          border: `1px solid ${th.cardBorder}`,
+        }}
+        onTouchStart={(e) => {
+          setCarouselTouchX(e.touches[0].clientX);
+          setCarouselPaused(true);
+          carouselSwipedRef.current = false;
+        }}
+        onTouchEnd={(e) => {
+          const dx = e.changedTouches[0].clientX - carouselTouchX;
+          if (Math.abs(dx) > 40) {
+            carouselSwipedRef.current = true;
+            setCarouselSlide((prev) =>
+              dx < 0
+                ? (prev + 1) % featuredDocs.length
+                : (prev - 1 + featuredDocs.length) % featuredDocs.length
+            );
+          }
         }}
       >
+        {/* Sliding track */}
         <div
-          className="absolute -right-8 -top-8 w-40 h-40 rounded-full pointer-events-none"
-          style={{ background: `radial-gradient(circle, ${th.catActiveBg}, transparent 68%)` }}
-        />
-        <div className="absolute right-5 top-1/2 -translate-y-1/2 opacity-10 pointer-events-none select-none">
-          <GeneratedCategoryMark id="document" size={80} />
+          className="flex h-full transition-transform duration-300 ease-in-out"
+          style={{
+            width: `${featuredDocs.length * 100}%`,
+            transform: `translateX(-${(carouselSlide * 100) / featuredDocs.length}%)`,
+          }}
+        >
+          {featuredDocs.map((doc) => (
+            <div
+              key={doc.id}
+              className="flex h-full flex-shrink-0 relative"
+              style={{ width: `${100 / featuredDocs.length}%`, background: th.heroBg }}
+            >
+              {/* Tap to open */}
+              <button
+                className="absolute inset-0 z-30"
+                onClick={() => { if (carouselSwipedRef.current) { carouselSwipedRef.current = false; return; } setSelected(doc.id); }}
+              />
+              {/* Radial glow */}
+              <div
+                className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none"
+                style={{ background: isLight ? "none" : "radial-gradient(circle at 65% 42%, rgba(201,169,97,0.18), transparent 42%)" }}
+              />
+              {/* Document cover */}
+              <div
+                className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/25 relative z-10"
+                style={{ width: "108px", height: "164px", alignSelf: "center", marginLeft: "16px" }}
+              >
+                <DocCover doc={doc} />
+              </div>
+              {/* Decorative SVG */}
+              <div className="absolute right-5 top-9 hidden min-[380px]:block opacity-70">
+                <svg width="92" height="112" viewBox="0 0 92 112" fill="none">
+                  <path d="M55 5C37 22 31 50 38 82" stroke={th.accent} strokeWidth="3" strokeLinecap="round"/>
+                  <path d="M55 5C70 37 65 68 38 82" stroke={th.accent} strokeWidth="2" strokeLinecap="round" opacity=".55"/>
+                  <path d="M33 81h22c9 0 16 7 16 16v4H17v-4c0-9 7-16 16-16Z" fill={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)"} opacity=".8"/>
+                  <path d="M27 102h34" stroke={isLight ? "#0a0a0a" : "#c9a961"} strokeWidth="2" strokeLinecap="round"/>
+                </svg>
+              </div>
+              {/* Info panel */}
+              <div className="flex-1 pt-7 pb-5 pr-4 pl-4 flex flex-col justify-between min-w-0 relative z-10">
+                <div>
+                  <div className="mb-2">
+                    <p
+                      className="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
+                      style={{ color: th.heroAccentText, background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", border: isLight ? "1px solid rgba(0,0,0,0.15)" : undefined }}
+                    >
+                      {lang === "es" ? "Documento Destacado" : "Featured Document"}
+                    </p>
+                  </div>
+                  <p className="text-[17px] font-black leading-[1.08] mb-1.5 line-clamp-3" style={{ color: th.textPrimary }}>
+                    {documentTitle(doc, lang)}
+                  </p>
+                  <p className="text-[11px] font-semibold mb-2 truncate" style={{ color: th.heroAccentText }}>
+                    {doc.year} · {doc.origin}
+                  </p>
+                  <p className="text-[10px] leading-[1.45] line-clamp-3 max-w-[190px]" style={{ color: th.heroSubtext }}>
+                    {(doc as any).description ?? "A foundational document of the Reformed tradition."}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
-        <div className="relative z-10 max-w-[72%]">
-          <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: th.accent }}>
-            {lang === "es" ? "Documentos Históricos" : "Historical Documents"}
-          </p>
-          <h2 className="mt-3 text-[26px] leading-tight font-black tracking-tight" style={{ color: th.textPrimary }}>
-            <span style={{ color: th.heroAccentText }}>{t(lang, "learn_hero_line1")}</span>
-            <br />
-            {t(lang, "learn_hero_line2")}
-          </h2>
-          <p className="mt-3 text-sm leading-relaxed" style={{ color: th.heroSubtext }}>
-            {t(lang, "learn_hero_sub")}
-          </p>
+        {/* Pagination dots */}
+        <div className="absolute bottom-3.5 left-0 right-0 flex items-center justify-center gap-1.5 pointer-events-none">
+          {featuredDocs.map((_, i) => (
+            <button
+              key={i}
+              className="rounded-full transition-all pointer-events-auto active:opacity-70"
+              style={{
+                width: i === carouselSlide ? "8px" : "6px",
+                height: "6px",
+                backgroundColor: i === carouselSlide ? th.accent : (isLight ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.25)"),
+              }}
+              onClick={() => setCarouselSlide(i)}
+            />
+          ))}
         </div>
-      </section>
+      </div>
 
       {/* Timeline Highlights */}
       <div className="mb-6">
@@ -1050,33 +1201,37 @@ function LearnPageInner() {
         </div>
       </div>
 
-      {/* Browse by Type */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_browse_type")}</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>{t(lang, "learn_view_all")}</button>
-        </div>
-        <div className="flex gap-2.5 px-4 overflow-x-auto pb-1 scrollbar-none">
-          {DOC_TYPES.map(({ key, label }) => {
-            const active = activeType === key;
-            const labelText =
-              key === "all" ? t(lang, "learn_type_all") :
-              key === "confession" ? t(lang, "learn_type_confessions") :
-              key === "creed" ? t(lang, "learn_type_creeds") :
-              key === "debate" ? t(lang, "learn_type_debates") :
-              key === "council" ? t(lang, "learn_type_councils") :
-              lang === "es" && key === "catechism" ? "Catecismos" :
-              label;
-            return (
-              <button key={key} onClick={() => { setActiveType(key); setActiveTab("all"); }}
-                className="flex-shrink-0 flex flex-col items-center gap-1.5 px-4 py-2.5 rounded-2xl transition-all active:scale-95"
-                style={{ border: active ? `1px solid ${th.catActiveBorder}` : `1px solid ${th.catInactiveBorder}`, backgroundColor: active ? th.catActiveBg : th.catInactiveBg, color: active ? th.accentLight : th.textMuted }}>
-                <GeneratedCategoryMark id={key} active={active} size={30} />
-                <span className="text-[10px] font-bold whitespace-nowrap">{labelText}</span>
-              </button>
-            );
-          })}
-        </div>
+      {/* My Highlights Banner */}
+      <div className="px-4 mb-6">
+        <button
+          onClick={() => setShowHighlightPocket(true)}
+          className="w-full flex items-center gap-3.5 p-4 rounded-2xl active:scale-[0.99] transition-transform"
+          style={{
+            background: "rgba(201,169,97,0.07)",
+            border: "1px solid rgba(201,169,97,0.22)",
+          }}
+        >
+          <div
+            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
+            style={{ background: "rgba(201,169,97,0.14)" }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-sm font-black" style={{ color: th.textPrimary }}>
+              {lang === "es" ? "Mis Resaltados" : "My Highlights"}
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>
+              {lang === "es" ? "Pasajes guardados de documentos históricos" : "Saved passages from Historical Documents"}
+            </p>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={th.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </button>
       </div>
 
       {/* Continue Reading */}
@@ -1090,8 +1245,8 @@ function LearnPageInner() {
               const pct = progressMap[doc.id] ?? 0;
               const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
               return (
-                <div key={doc.id} className="flex-shrink-0 w-32 text-left">
-                  <div className="relative w-32 h-44 rounded-xl overflow-hidden mb-2 shadow-lg shadow-black/40" style={{ border: `1px solid ${th.cardBorder}` }}>
+                <div key={doc.id} className="flex-shrink-0 w-[108px] text-left">
+                  <div className="relative w-[108px] rounded-[14px] overflow-hidden mb-1.5 shadow-md shadow-black/40" style={{ aspectRatio: "2/3", border: `1px solid ${th.cardBorder}` }}>
                     <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
                     <DocCover doc={doc} />
                   </div>
@@ -1117,190 +1272,333 @@ function LearnPageInner() {
         </div>
       )}
 
-      {/* Featured Documents */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
-              {lang === "es" ? "Destacados" : "Featured"}
-            </p>
-            <p className="text-base font-black mt-0.5" style={{ color: th.textPrimary }}>
-              {lang === "es" ? "Documentos Destacados" : "Featured Documents"}
-            </p>
-          </div>
-        </div>
-        <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
-          {filteredDocs.slice(0, 8).map((doc) => {
-            const saved = savedDocs.has(doc.id);
-            return (
-              <div key={doc.id} className="flex-shrink-0 w-28 text-left">
-                <div className="relative w-28 h-40 rounded-[18px] overflow-hidden mb-2 shadow-lg shadow-black/50" style={{ border: `1px solid ${th.cardBorder}` }}>
-                  <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
-                  <DocCover doc={doc} />
-                  {/* Floating bookmark */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setBookmarkTarget(doc); }}
-                    className="absolute top-1.5 right-1.5 w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
-                    style={{ backgroundColor: "rgba(0,0,0,0.55)", color: saved ? "#c4973a" : "rgba(255,255,255,0.6)" }}
+      {/* Category Rows */}
+      {([
+        { key: "confession", label: "Confessions",       esLabel: "Confesiones" },
+        { key: "creed",      label: "Creeds",            esLabel: "Credos" },
+        { key: "catechism",  label: "Catechisms",        esLabel: "Catecismos" },
+        { key: "council",    label: "Councils & Synods", esLabel: "Concilios y Sínodos" },
+        { key: "debate",     label: "Debates",           esLabel: "Debates" },
+        { key: "theses",     label: "Theses",            esLabel: "Tesis" },
+        { key: "solas",      label: "The Five Solas",    esLabel: "Las Cinco Solas" },
+        { key: "history",    label: "Church History",    esLabel: "Historia de la Iglesia" },
+      ] as { key: string; label: string; esLabel: string }[]).map(({ key, label, esLabel }) => {
+        const docs = LEARN_DOCUMENTS.filter((d) => d.category === key);
+        if (docs.length === 0) return null;
+        const showAll = catExpanded[key] ?? false;
+        const displayed = showAll ? docs : docs.slice(0, 3);
+        return (
+          <div key={key} className="mb-7">
+            <div className="flex items-center justify-between px-4 mb-3">
+              <p className="text-sm font-black" style={{ color: th.textPrimary }}>
+                {lang === "es" ? esLabel : label}
+              </p>
+              {docs.length > 3 && (
+                <button
+                  onClick={() => setCatExpanded((p) => ({ ...p, [key]: !p[key] }))}
+                  className="text-xs font-semibold"
+                  style={{ color: th.accent }}
+                >
+                  {showAll
+                    ? (lang === "es" ? "Mostrar menos" : "Show less")
+                    : (lang === "es" ? "Ver todo" : "See all")}
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-3 px-4">
+              {displayed.map((doc) => (
+                <button
+                  key={doc.id}
+                  onClick={() => setSelected(doc.id)}
+                  className="text-left active:scale-95 transition-transform"
+                >
+                  <div
+                    className="relative w-full rounded-[14px] overflow-hidden mb-1.5 shadow-md shadow-black/40"
+                    style={{ aspectRatio: "2/3", border: `1px solid ${th.cardBorder}` }}
                   >
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
+                    <DocCover doc={doc} size="full" />
+                  </div>
+                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
+                    {documentTitle(doc, lang)}
+                  </p>
+                  <p className="text-[9px] mt-0.5" style={{ color: th.textSecondary }}>{doc.year}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+
+      <p className="text-center text-[10px] px-4 pb-10 mt-4" style={{ color: th.footerText }}>
+        All documents are public domain · Progress saved locally in your browser
+      </p>
+
+      {/* ── My Highlights Pocket ──────────────────────────────────────────────── */}
+      {showHighlightPocket && (
+        <div className="fixed inset-0 z-[65]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "white" }}>
+          <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
+
+            {/* Header */}
+            <div
+              className="px-5 pb-4 flex items-center justify-between flex-shrink-0"
+              style={{ borderBottom: "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}
+            >
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                  {lang === "es" ? "Documentos Históricos" : "Historical Documents"}
+                </p>
+                <h2 className="text-[30px] leading-none font-black mt-1">
+                  {lang === "es" ? "Mis Resaltados" : "My Highlights"}
+                </h2>
+              </div>
+              <button
+                onClick={() => { setShowHighlightPocket(false); setConfirmRemoveId(null); setHlSearch(""); }}
+                className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                style={{ background: "rgba(255,255,255,0.07)" }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="px-5 pt-4 pb-3 flex-shrink-0">
+              <label
+                className="flex items-center gap-3 rounded-[22px] px-4 py-3"
+                style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" />
+                  <path d="M16.5 16.5L21 21" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+                <input
+                  value={hlSearch}
+                  onChange={(e) => setHlSearch(e.target.value)}
+                  placeholder={lang === "es" ? "Buscar documento, sección o texto..." : "Search document, section, or text..."}
+                  className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/35"
+                />
+                {hlSearch && (
+                  <button onClick={() => setHlSearch("")} className="text-white/40 text-sm active:text-white/70 flex-shrink-0 leading-none">
+                    ✕
+                  </button>
+                )}
+              </label>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="overflow-y-auto flex-1 px-5 pb-10">
+              {docHighlights.length === 0 ? (
+                <div
+                  className="rounded-[30px] p-7 text-center mt-4"
+                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                >
+                  <p className="font-black text-lg mb-2">
+                    {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
+                  </p>
+                  <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    {lang === "es"
+                      ? "Selecciona texto mientras lees un documento para guardar un resaltado."
+                      : "Select text while reading a document to save a highlight."}
+                  </p>
+                </div>
+              ) : filteredDocHls.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>
+                    {lang === "es" ? "Sin resultados" : `No results for "${hlSearch}"`}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-7 pt-2">
+
+                  {/* Recent */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: "#c9a961" }}>
+                      {lang === "es" ? "Recientes" : "Recent"}
+                    </p>
+                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
+                      {filteredDocHls.slice(0, 5).map((hl) => {
+                        const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
+                        const dot = DOT[hl.color] ?? "#c9a961";
+                        return (
+                          <div
+                            key={hl.id}
+                            className="w-[82%] snap-start rounded-[26px] p-4 flex flex-col gap-2 flex-shrink-0 overflow-hidden"
+                            style={{ background: `linear-gradient(135deg,${dot}18 0%,rgba(255,255,255,0.04) 100%)`, border: `1px solid ${dot}30` }}
+                          >
+                            <p className="text-[9px] font-black uppercase tracking-[0.18em] truncate" style={{ color: dot }}>
+                              {hl.docTitle}
+                            </p>
+                            <p
+                              className="text-[13px] leading-snug line-clamp-3 flex-1"
+                              style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
+                            >
+                              &ldquo;{hl.text}&rdquo;
+                            </p>
+                            <button
+                              onClick={() => { setSelected(hl.docId); setShowHighlightPocket(false); }}
+                              className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+                              style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.28)" }}
+                            >
+                              {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* By Document */}
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: "#c9a961" }}>
+                      {lang === "es" ? "Por Documento" : "By Document"}
+                    </p>
+                    <div className="space-y-3">
+                      {Object.keys(hlByDoc).map((docId) => {
+                        const { docTitle: dTitle, sections } = hlByDoc[docId];
+                        const sectionIds = Object.keys(sections);
+                        const totalHls = Object.values(sections).reduce((n, arr) => n + arr.length, 0);
+                        return (
+                          <div
+                            key={docId}
+                            className="rounded-[28px] p-4"
+                            style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}
+                          >
+                            <button
+                              className="w-full flex items-center justify-between mb-1 active:opacity-70 transition-opacity"
+                              onClick={() => setHlDocCollapsed((p) => ({ ...p, [docId]: !p[docId] }))}
+                            >
+                              <p className="font-black text-sm text-left">{dTitle}</p>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="text-[10px] font-black px-2.5 py-0.5 rounded-full"
+                                  style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                                >
+                                  {totalHls}
+                                </span>
+                                <svg
+                                  width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                  stroke="rgba(255,255,255,0.35)" strokeWidth="2.2"
+                                  strokeLinecap="round" strokeLinejoin="round"
+                                  style={{ transform: hlDocCollapsed[docId] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
+                                >
+                                  <path d="M6 9l6 6 6-6" />
+                                </svg>
+                              </div>
+                            </button>
+                            {!hlDocCollapsed[docId] && <div className="space-y-2 mt-3">
+                              {sectionIds.map((secId) => {
+                                const sectionLabel = FULL_DOCUMENT_SECTIONS[docId]?.find(s => s.id === secId)?.title
+                                  ?? LEARN_DOCUMENTS.find(d => d.id === docId)?.sections.find(s => s.id === secId)?.title
+                                  ?? secId.replace(/-/g, " ");
+                                return (
+                                  <div
+                                    key={secId}
+                                    className="rounded-[22px] p-3"
+                                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                  >
+                                    <p
+                                      className="text-[9px] font-black uppercase tracking-widest mb-2"
+                                      style={{ color: "rgba(201,169,97,0.65)" }}
+                                    >
+                                      {sectionLabel}
+                                    </p>
+                                    <div className="space-y-2">
+                                      {sections[secId].map((hl) => {
+                                        const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
+                                        const dot = DOT[hl.color] ?? "#c9a961";
+                                        return (
+                                          <div
+                                            key={hl.id}
+                                            className="rounded-[18px] p-3"
+                                            style={{ background: `${dot}0a`, border: `1px solid ${dot}22` }}
+                                          >
+                                            <div className="flex items-start gap-2 mb-2">
+                                              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
+                                              <p
+                                                className="text-[13px] leading-snug flex-1"
+                                                style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
+                                              >
+                                                &ldquo;{hl.text}&rdquo;
+                                              </p>
+                                              <button
+                                                onClick={() => setConfirmRemoveId(hl.id)}
+                                                className="text-xs flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
+                                                style={{ color: "rgba(255,255,255,0.2)" }}
+                                              >
+                                                ×
+                                              </button>
+                                            </div>
+                                            <button
+                                              onClick={() => { setSelected(hl.docId); setShowHighlightPocket(false); }}
+                                              className="text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition-transform"
+                                              style={{ background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.22)" }}
+                                            >
+                                              {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Confirm remove */}
+          {confirmRemoveId && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
+              <div
+                className="w-full max-w-[300px] rounded-[28px] p-5 text-center"
+                style={{ background: "#1a1d27", border: "1px solid rgba(201,169,97,0.18)" }}
+              >
+                <p className="font-black text-base mb-1">
+                  {lang === "es" ? "¿Eliminar resaltado?" : "Remove highlight?"}
+                </p>
+                <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.45)" }}>
+                  {lang === "es" ? "Esta acción no se puede deshacer." : "This cannot be undone."}
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setConfirmRemoveId(null)}
+                    className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
+                    style={{ background: "rgba(255,255,255,0.07)" }}
+                  >
+                    {lang === "es" ? "Cancelar" : "Cancel"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      const target = docHighlights.find(h => h.id === confirmRemoveId);
+                      if (target) {
+                        const key = `tulip-reader-highlights:learn-${target.docId}-${target.sectionId}`;
+                        try {
+                          const raw = localStorage.getItem(key);
+                          const arr = raw ? (JSON.parse(raw) as Highlight[]) : [];
+                          localStorage.setItem(key, JSON.stringify(arr.filter(h => h.id !== confirmRemoveId)));
+                        } catch {}
+                        setDocHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
+                      }
+                      setConfirmRemoveId(null);
+                    }}
+                    className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
+                    style={{ background: "rgba(239,68,68,0.18)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.28)" }}
+                  >
+                    {lang === "es" ? "Eliminar" : "Delete"}
                   </button>
                 </div>
-                <button onClick={() => setSelected(doc.id)} className="w-full text-left">
-                  <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
-                  <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <span style={{ color: th.star, fontSize: "10px" }}>★</span>
-                    <span style={{ color: th.textSecondary, fontSize: "10px" }}>{doc.year}</span>
-                  </div>
-                </button>
               </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* My Documents */}
-      <div id="my-documents" className="px-4 pb-10">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
-              {lang === "es" ? "Tu colección" : "Your Collection"}
-            </p>
-            <p className="text-base font-black mt-0.5" style={{ color: th.textPrimary }}>
-              {lang === "es" ? "Mis Documentos" : "My Documents"}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button style={{ color: th.iconMuted }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.8"/><path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-            <button style={{ color: th.iconMuted }}>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex mb-5" style={{ borderBottom: `1px solid ${th.tabStripBorder}` }}>
-          {(["all","confession","creed","debate","council"] as DocTab[]).map((tab) => {
-            const labels: Record<string,string> = { all:"All", confession:"Confessions", creed:"Creeds", debate:"Debates", council:"Councils" };
-            const active = activeTab === tab;
-            return (
-              <button key={tab} onClick={() => setActiveTab(tab)}
-                className="flex-1 py-2.5 text-[10px] font-bold transition-all"
-                style={{ borderBottom: active ? `2px solid ${th.tabActiveBorder}` : "2px solid transparent", color: active ? th.accentLight : th.tabInactiveColor, marginBottom: "-1px" }}>
-                {labels[tab]}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Empty state */}
-        {listDocs.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mb-3 flex justify-center">
-              <GeneratedMetaIcon type="document" size={44} />
             </div>
-            <p className="text-sm font-bold mb-1" style={{ color: th.textMuted }}>
-              {lang === "es" ? "No se encontraron documentos" : "No documents found"}
-            </p>
-            <p className="text-xs" style={{ color: th.textFaint }}>
-              {lang === "es" ? "Prueba otro tipo o pestaña" : "Try selecting a different type or tab"}
-            </p>
-          </div>
-        )}
-
-        {/* Document rows — Study Tools Continue Reading card style */}
-        <div className="space-y-3">
-          {listDocs.map((doc) => {
-            const pct = progressMap[doc.id] ?? 0;
-            const isDone = pct === 100;
-            const saved = savedDocs.has(doc.id);
-            const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
-            const catLabel = lang === "es"
-              ? (({ confession:"Confesión", catechism:"Catecismo", creed:"Credo", council:"Concilio", debate:"Debate", history:"Historia", theses:"Tesis", solas:"Solas" } as Record<string,string>)[doc.category] ?? doc.category)
-              : doc.category.charAt(0).toUpperCase() + doc.category.slice(1);
-            return (
-              <div
-                key={doc.id}
-                className="rounded-[24px] border overflow-hidden"
-                style={{ background: th.cardBg, borderColor: th.cardBorder }}
-              >
-                <div
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setSelected(doc.id)}
-                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") setSelected(doc.id); }}
-                  className="block w-full text-left p-4 active:scale-[0.99] transition-transform"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: th.accent }}>{catLabel}</p>
-                      <h3 className="text-[17px] font-black mt-1 truncate leading-tight" style={{ color: th.textPrimary }}>
-                        {documentTitle(doc, lang)}
-                      </h3>
-                      <p className="text-xs mt-1" style={{ color: th.textSecondary }}>{doc.origin} · {doc.year}</p>
-                      {isDone ? (
-                        <p className="text-xs font-bold mt-2" style={{ color: "#34d399" }}>{lang === "es" ? "✓ Completado" : "✓ Completed"}</p>
-                      ) : pct > 0 ? (
-                        <>
-                          <div className="mt-2.5 flex items-center gap-2">
-                            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
-                              <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: th.progressBar }} />
-                            </div>
-                            <span style={{ color: th.textSecondary, fontSize: "11px", fontWeight: "bold", flexShrink: 0 }}>{pct}%</span>
-                          </div>
-                          {savedProgress && (
-                            <p className="text-[10px] mt-1" style={{ color: th.textSecondary }}>
-                              {lang === "es" ? "Página" : "Page"} {savedProgress.page} {lang === "es" ? "de" : "of"} {savedProgress.total}
-                            </p>
-                          )}
-                        </>
-                      ) : (
-                        <p style={{ color: th.startReading, fontSize: "11px", marginTop: "6px", fontWeight: "700" }}>
-                          {lang === "es" ? "Empezar a leer →" : "Start reading →"}
-                        </p>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {isDone ? (
-                        <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ border: "2px solid #34d399" }}>
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        </div>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            onClick={(e) => { e.stopPropagation(); setBookmarkTarget(doc); }}
-                            className="w-9 h-9 flex items-center justify-center rounded-full transition-colors"
-                            style={{ color: saved ? "#c4973a" : th.textVeryFaint, background: "rgba(255,255,255,0.04)" }}
-                          >
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                              <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
-                          <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: th.catActiveBg, color: th.accent }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                              <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+          )}
         </div>
-
-        <p className="text-center text-[10px] mt-10" style={{ color: th.footerText }}>
-          All documents are public domain · Progress saved locally in your browser
-        </p>
-      </div>
+      )}
 
       {/* Bookmark modal */}
       {bookmarkTarget && (

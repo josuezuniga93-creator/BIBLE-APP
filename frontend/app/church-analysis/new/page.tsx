@@ -123,7 +123,7 @@ export default function NewAnalysisPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const { lang } = useLanguage();
-  const isLight = theme === "light-elegant" || theme === "light-pink";
+  const isLight = false;
 
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");

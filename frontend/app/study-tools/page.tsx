@@ -1368,7 +1368,7 @@ export default function StudyToolsPage() {
         </header>
 
         <section
-          className="relative overflow-hidden rounded-[28px] p-6 mb-5 border"
+          className="study-tools-hero relative overflow-hidden rounded-[28px] p-6 mb-5 border"
           style={{
             background: "linear-gradient(135deg, rgba(201,169,97,0.20), rgba(22,30,46,0.96) 48%, rgba(10,15,27,0.98))",
             borderColor: "rgba(201,169,97,0.20)",
@@ -1379,7 +1379,7 @@ export default function StudyToolsPage() {
             className="absolute -right-8 -top-8 w-36 h-36 rounded-full"
             style={{ background: "radial-gradient(circle, rgba(201,169,97,0.20), transparent 68%)" }}
           />
-          <div className="relative z-10 max-w-[78%]">
+          <div className="study-tools-hero-copy relative z-10 max-w-[78%]">
             <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: "#d7bd78" }}>
               {lang === "es" ? "Comentario y diccionario" : "Commentary & Dictionary"}
             </p>
@@ -1393,7 +1393,7 @@ export default function StudyToolsPage() {
             </p>
           </div>
           <div
-            className="absolute right-5 bottom-5 w-16 h-16 rounded-[22px] flex items-center justify-center"
+            className="study-tools-hero-icon absolute right-5 bottom-5 w-16 h-16 rounded-[22px] flex items-center justify-center"
             style={{ background: "rgba(201,169,97,0.16)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.20)" }}
           >
             <BookIcon />
@@ -1421,7 +1421,7 @@ export default function StudyToolsPage() {
           </div>
         </label>
 
-        <div className="flex rounded-full p-1 mb-5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="study-tools-tabs flex rounded-full p-1 mb-5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
           {[
             { key: "commentaries" as const, label: lang === "es" ? "Comentarios" : "Commentaries" },
             { key: "dictionary" as const, label: lang === "es" ? "Diccionario" : "Dictionary" },

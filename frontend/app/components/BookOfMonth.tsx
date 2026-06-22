@@ -33,25 +33,25 @@ export default function BookOfMonth() {
   useEffect(() => {
     const check = () => {
       const t = localStorage.getItem("ryc-theme") ?? "";
-      setIsLE(t === "light-elegant");
+      setIsLE(t === "white-noir");
       setIsPN(t === "premium-neon");
     };
     check();
     window.addEventListener("ryc-theme-change", check as EventListener);
     return () => window.removeEventListener("ryc-theme-change", check as EventListener);
   }, []);
-  const bAC    = isPN ? "#a78bfa"                : "rgba(201,169,97,1)";
-  const bACdim = isPN ? "rgba(167,139,250,0.70)" : "rgba(201,169,97,0.70)";
-  const bACbg  = isPN ? "rgba(124,58,237,0.12)"  : "rgba(201,169,97,0.12)";
-  const bACbd  = isPN ? "rgba(124,58,237,0.22)"  : "rgba(201,169,97,0.22)";
-  const bBtnBg = isPN ? "#7c3aed"                : "rgba(201,169,97,1)";
-  const bBtnTx = isPN ? "#ede8ff"                : "#08090f";
+  const bAC    = isPN ? "#a78bfa"                : isLE ? "#111111" : "rgba(201,169,97,1)";
+  const bACdim = isPN ? "rgba(167,139,250,0.70)" : isLE ? "rgba(10,10,10,0.55)" : "rgba(201,169,97,0.70)";
+  const bACbg  = isPN ? "rgba(124,58,237,0.12)"  : isLE ? "#e5e7eb" : "rgba(201,169,97,0.12)";
+  const bACbd  = isPN ? "rgba(124,58,237,0.22)"  : isLE ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.22)";
+  const bBtnBg = isPN ? "#7c3aed"                : isLE ? "#050505" : "rgba(201,169,97,1)";
+  const bBtnTx = isPN ? "#ede8ff"                : isLE ? "#ffffff" : "#08090f";
 
   return (
     <section className="mt-8 mb-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <h3 className="text-[15px] font-bold" style={{ color: isLE ? "#1c1409" : "var(--color-text, #fff)" }}>
+        <h3 className="text-[15px] font-bold" style={{ color: isLE ? "#0a0a0a" : "var(--color-text, #fff)" }}>
           {lang === "es" ? "Libro del Mes" : "Book of the Month"}
         </h3>
         <span className="text-[11px]" style={{ color: bACdim }}>
@@ -64,10 +64,10 @@ export default function BookOfMonth() {
         className="rounded-2xl overflow-hidden"
         style={{
           background: isLE
-            ? "linear-gradient(145deg, rgba(201,169,97,0.10) 0%, #ede4d4 40%, #e8dece 100%)"
+            ? "#f3f4f6"
             : "linear-gradient(145deg, rgba(201,169,97,0.08) 0%, rgba(10,11,18,0.98) 45%, rgba(8,9,15,1) 100%)",
-          border: isLE ? "1px solid rgba(124,92,46,0.22)" : "1px solid rgba(201,169,97,0.18)",
-          boxShadow: isLE ? "0 4px 28px rgba(28,20,9,0.10)" : "0 4px 32px rgba(0,0,0,0.4)",
+          border: isLE ? "1px solid rgba(10,10,10,0.12)" : "1px solid rgba(201,169,97,0.18)",
+          boxShadow: isLE ? "0 3px 18px rgba(10,10,10,0.08)" : "0 4px 32px rgba(0,0,0,0.4)",
         }}
       >
         <div className="flex">
@@ -94,7 +94,7 @@ export default function BookOfMonth() {
               style={{
                 height: "42%",
                 background: isLE
-                  ? "linear-gradient(to top, rgba(232,222,200,0.55), rgba(232,222,200,0.18) 45%, transparent 100%)"
+                  ? "linear-gradient(to top, rgba(243,244,246,0.45), transparent 100%)"
                   : "linear-gradient(to top, rgba(10,11,18,0.62), rgba(10,11,18,0.22) 45%, transparent 100%)",
               }}
             />
@@ -122,7 +122,7 @@ export default function BookOfMonth() {
               {/* Title */}
               <h4
                 className="font-bold leading-snug mb-1"
-                style={{ fontSize: "17px", letterSpacing: "-0.1px", color: isLE ? "#1c1409" : "white" }}
+                style={{ fontSize: "17px", letterSpacing: "-0.1px", color: isLE ? "#0a0a0a" : "white" }}
               >
                 {book.title}
               </h4>
@@ -133,7 +133,7 @@ export default function BookOfMonth() {
               </p>
 
               {/* Subtitle */}
-              <p className="text-[11px] italic" style={{ color: isLE ? "rgba(28,20,9,0.50)" : "rgba(255,255,255,0.48)" }}>
+              <p className="text-[11px] italic" style={{ color: isLE ? "rgba(10,10,10,0.52)" : "rgba(255,255,255,0.48)" }}>
                 {book.subtitle}
               </p>
             </div>
@@ -144,13 +144,13 @@ export default function BookOfMonth() {
         <div
           className="mx-4 mt-1 rounded-xl px-3.5 py-3"
           style={{
-            background: isLE ? "rgba(28,20,9,0.04)" : "rgba(255,255,255,0.045)",
-            border: isLE ? "1px solid rgba(124,92,46,0.12)" : "1px solid rgba(255,255,255,0.07)",
+            background: isLE ? "#ffffff" : "rgba(255,255,255,0.045)",
+            border: isLE ? "1px solid rgba(10,10,10,0.10)" : "1px solid rgba(255,255,255,0.07)",
           }}
         >
           <p
             className="text-[12px] leading-relaxed"
-            style={{ color: isLE ? "rgba(28,20,9,0.72)" : "rgba(255,255,255,0.76)" }}
+            style={{ color: isLE ? "rgba(10,10,10,0.72)" : "rgba(255,255,255,0.76)" }}
           >
             {book.description}
           </p>
@@ -161,7 +161,7 @@ export default function BookOfMonth() {
           <div
             className="rounded-xl px-3 py-2.5"
             style={{
-              background: isLE ? "rgba(28,20,9,0.04)" : "rgba(255,255,255,0.045)",
+              background: isLE ? "#ffffff" : "rgba(255,255,255,0.045)",
               border: `1px solid ${bACbd}`,
               minWidth: "92px",
             }}
@@ -174,11 +174,11 @@ export default function BookOfMonth() {
             </p>
             <p
               className="text-[7px] uppercase tracking-wider font-bold mb-1"
-              style={{ color: isLE ? "rgba(28,20,9,0.35)" : "rgba(255,255,255,0.34)" }}
+              style={{ color: isLE ? "rgba(10,10,10,0.40)" : "rgba(255,255,255,0.34)" }}
             >
               Amazon
             </p>
-            <p className="text-[15px] font-bold leading-none" style={{ color: isLE ? "#1c1409" : "rgba(255,255,255,0.92)" }}>
+            <p className="text-[15px] font-bold leading-none" style={{ color: isLE ? "#0a0a0a" : "rgba(255,255,255,0.92)" }}>
               {book.price}
             </p>
           </div>

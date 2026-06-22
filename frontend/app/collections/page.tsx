@@ -120,6 +120,30 @@ const HL_COLORS: { key: HLColor; dot: string; ring: string }[] = [
   { key: "pink",   dot: "#f558f2", ring: "rgba(245,88,242,0.30)" },
 ];
 
+// ─── Section config ───────────────────────────────────────────────────────────
+
+interface SectionDef {
+  key: "bible" | "books" | "history";
+  labelEn: string;
+  labelEs: string;
+  icon: string;
+  color: string;
+  match: (context: string) => boolean;
+}
+
+const SECTIONS: SectionDef[] = [
+  {
+    key: "bible",
+    labelEn: "Scripture",
+    labelEs: "Escritura",
+    icon: "✝",
+    color: "#c9a961",
+    match: (ctx) => ctx.startsWith("bible-"),
+  },
+];
+
+// Note: Free Books highlights live in /library · Historical Docs highlights live in /learn
+
 // ─── Highlight color detail ───────────────────────────────────────────────────
 
 function HighlightColorDetail({
@@ -248,7 +272,127 @@ function HighlightColorDetail({
   );
 }
 
+// ─── Section highlight detail ─────────────────────────────────────────────────
+
+function SectionHighlightDetail({
+  section,
+  highlights: initialHighlights,
+  onClose,
+}: {
+  section: SectionDef;
+  highlights: AggregatedHighlight[];
+  onClose: () => void;
+}) {
+  const { lang } = useLanguage();
+  const router = useRouter();
+  const [highlights, setHighlights] = useState(initialHighlights);
+
+  const handleDelete = (hl: AggregatedHighlight) => {
+    deleteHighlight(hl.context, hl.id);
+    setHighlights((prev) => prev.filter((h) => h.id !== hl.id));
+  };
+
+  const handleNavigate = (hl: AggregatedHighlight) => {
+    router.push(highlightHref(hl.context));
+  };
+
+  const HL_DOT: Record<HLColor, string> = {
+    purple: "#7546e3", yellow: "#f2f06d", red: "#e34646",
+    blue: "#46d3e3", lime: "#a9f558", pink: "#f558f2", gold: "#c9a961",
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex flex-col max-w-lg mx-auto" style={{ background: "#0f0f0f" }}>
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-5 pb-4 border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+        <button
+          onClick={onClose}
+          className="w-9 h-9 flex items-center justify-center rounded-full"
+          style={{ background: "rgba(255,255,255,0.07)", color: "rgba(255,255,255,0.6)" }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M19 12H5M12 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <div className="flex items-center gap-2.5 flex-1">
+          <span className="text-xl">{section.icon}</span>
+          <p className="text-base font-bold text-white">{lang === "es" ? section.labelEs : section.labelEn}</p>
+          <span className="text-[10px] font-black px-2 py-0.5 rounded-full ml-1"
+            style={{ background: section.color + "25", color: section.color }}>
+            {highlights.length}
+          </span>
+        </div>
+      </div>
+
+      {/* List */}
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+        {highlights.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-4xl mb-3">{section.icon}</div>
+            <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+              {lang === "es" ? "Aún no hay resaltados" : "No highlights yet"}
+            </p>
+            <p className="text-xs mt-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+              {lang === "es"
+                ? "Resalta texto en esta sección para verlo aquí."
+                : "Highlight text in this section to see it here."}
+            </p>
+          </div>
+        ) : (
+          highlights.map((hl) => {
+            const dot = HL_DOT[hl.color] ?? "#c9a961";
+            const isBible = isBibleHighlight(hl.context);
+            const verseNum = isBible ? parseBibleVerseNum(hl.id) : null;
+            const bibleRef = (() => {
+              if (!isBible) return null;
+              const m = hl.context.match(/^bible-(.+)-(\d+)$/);
+              if (!m || verseNum === null) return null;
+              const bookName = m[1].replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+              return `${bookName} ${m[2]}:${verseNum}`;
+            })();
+
+            return (
+              <div key={hl.id}
+                className="rounded-2xl px-4 py-3.5 space-y-2 active:scale-[0.98] transition-transform cursor-pointer"
+                style={{ background: dot + "10", border: `1px solid ${dot}28` }}
+                onClick={() => handleNavigate(hl)}
+              >
+                <p className="text-sm leading-relaxed font-medium"
+                  style={{ color: "rgba(255,255,255,0.9)", fontFamily: "Georgia, serif", borderLeft: `3px solid ${dot}`, paddingLeft: "10px" }}>
+                  &ldquo;{hl.text}&rdquo;
+                </p>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full self-start"
+                      style={{ background: dot + "18", color: dot }}>
+                      {bibleRef ?? hl.contextLabel}
+                    </span>
+                    <span className="text-[9px] pl-1" style={{ color: "rgba(255,255,255,0.2)" }}>
+                      {new Date(hl.createdAt).toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
+                    </span>
+                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(hl); }}
+                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                    style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.2)" }}
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                      <path d="M18 6L6 18M6 6l12 12"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Highlights section ───────────────────────────────────────────────────────
+
+type HLView = "color" | "section";
 
 function HighlightsSection() {
   const { lang } = useLanguage();
@@ -257,6 +401,8 @@ function HighlightsSection() {
   const [editingColor, setEditingColor]   = useState<HLColor | null>(null);
   const [editValue, setEditValue]         = useState("");
   const [openColor, setOpenColor]         = useState<{ key: HLColor; dot: string } | null>(null);
+  const [openSection, setOpenSection]     = useState<SectionDef | null>(null);
+  const [hlView, setHlView]               = useState<HLView>("section");
 
   useEffect(() => {
     setAllHighlights(loadAllHighlights());
@@ -264,6 +410,7 @@ function HighlightsSection() {
   }, []);
 
   const countFor = (color: HLColor) => allHighlights.filter((h) => h.color === color).length;
+  const countForSection = (sec: SectionDef) => allHighlights.filter((h) => sec.match(h.context)).length;
 
   const startEdit = (color: HLColor, currentName: string) => {
     setEditingColor(color);
@@ -294,8 +441,19 @@ function HighlightsSection() {
     );
   }
 
+  if (openSection) {
+    return (
+      <SectionHighlightDetail
+        section={openSection}
+        highlights={allHighlights.filter((h) => openSection.match(h.context))}
+        onClose={() => setOpenSection(null)}
+      />
+    );
+  }
+
   return (
     <section className="space-y-3">
+      {/* Header + total */}
       <div className="flex items-center justify-between">
         <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
           {lang === "es" ? "Mis Resaltados" : "My Highlights"}
@@ -305,84 +463,154 @@ function HighlightsSection() {
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        {HL_COLORS.map(({ key, dot, ring }) => {
-          const count = countFor(key);
-          const name = colorNames[key];
-          const isEditing = editingColor === key;
-
+      {/* View toggle */}
+      <div className="flex gap-1 p-1 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+        {(["section", "color"] as HLView[]).map((v) => {
+          const active = hlView === v;
+          const labelEn = v === "section" ? "By Section" : "By Color";
+          const labelEs = v === "section" ? "Por Sección" : "Por Color";
           return (
-            <div
-              key={key}
-              className="rounded-2xl overflow-hidden"
-              style={{ background: dot + "10", border: `1px solid ${dot}28` }}
+            <button
+              key={v}
+              onClick={() => setHlView(v)}
+              className="flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all"
+              style={{
+                background: active ? "rgba(201,169,97,0.18)" : "transparent",
+                border: active ? "1px solid rgba(201,169,97,0.3)" : "1px solid transparent",
+                color: active ? "#c9a961" : "rgba(255,255,255,0.30)",
+              }}
             >
-              {/* Color bar */}
-              <div className="h-1 w-full" style={{ background: dot }} />
-
-              <div className="p-3.5 space-y-2.5">
-                {/* Swatch + count */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className="w-7 h-7 rounded-full border-2 flex-shrink-0"
-                    style={{ background: dot, borderColor: ring, boxShadow: `0 0 8px ${ring}` }}
-                  />
-                  <span
-                    className="text-[10px] font-black px-2 py-0.5 rounded-full"
-                    style={{ background: dot + "22", color: dot }}
-                  >
-                    {count}
-                  </span>
-                </div>
-
-                {/* Color name — editable */}
-                {isEditing ? (
-                  <input
-                    autoFocus
-                    value={editValue}
-                    onChange={(e) => setEditValue(e.target.value)}
-                    onBlur={commitEdit}
-                    onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditingColor(null); }}
-                    className="w-full text-sm font-bold rounded-lg px-2 py-1 focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.07)", color: "#fff", border: `1px solid ${dot}50` }}
-                  />
-                ) : (
-                  <button
-                    onClick={() => { if (count > 0) openDetail({ key, dot }); }}
-                    onContextMenu={(e) => { e.preventDefault(); startEdit(key, name); }}
-                    className="w-full text-left"
-                  >
-                    <p className="text-sm font-bold leading-none" style={{ color: "rgba(255,255,255,0.85)" }}>{name}</p>
-                    <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
-                      {count === 0 ? "No highlights" : `${count} passage${count !== 1 ? "s" : ""}`}
-                    </p>
-                  </button>
-                )}
-
-                {/* View / Edit row */}
-                <div className="flex items-center justify-between pt-0.5">
-                  <button
-                    onClick={() => startEdit(key, name)}
-                    className="text-[9px] font-bold"
-                    style={{ color: "rgba(255,255,255,0.25)" }}
-                  >
-                    Rename
-                  </button>
-                  {count > 0 && (
-                    <button
-                      onClick={() => openDetail({ key, dot })}
-                      className="text-[9px] font-bold px-2.5 py-1 rounded-lg"
-                      style={{ background: dot + "18", color: dot }}
-                    >
-                      View all →
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+              {lang === "es" ? labelEs : labelEn}
+            </button>
           );
         })}
       </div>
+
+      {/* ── By Section view ─────────────────────────────────────────────────── */}
+      {hlView === "section" && (
+        <div className="space-y-3">
+          {SECTIONS.map((sec) => {
+            const count = countForSection(sec);
+            const sectionHighlights = allHighlights.filter((h) => sec.match(h.context));
+            const preview = sectionHighlights[0];
+            return (
+              <button
+                key={sec.key}
+                onClick={() => { if (count > 0) setOpenSection(sec); }}
+                className="w-full rounded-2xl overflow-hidden text-left transition-all active:scale-[0.98]"
+                style={{
+                  background: sec.color + "0d",
+                  border: `1px solid ${sec.color}${count > 0 ? "35" : "15"}`,
+                  opacity: count === 0 ? 0.55 : 1,
+                }}
+              >
+                {/* Top accent bar */}
+                <div className="h-0.5 w-full" style={{ background: `linear-gradient(to right, ${sec.color}, transparent)` }} />
+
+                <div className="p-4 flex items-start gap-3.5">
+                  {/* Icon */}
+                  <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl"
+                    style={{ background: sec.color + "18", border: `1px solid ${sec.color}28` }}>
+                    {sec.icon}
+                  </div>
+
+                  {/* Label + count + preview */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.88)" }}>
+                        {lang === "es" ? sec.labelEs : sec.labelEn}
+                      </p>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0"
+                        style={{ background: sec.color + "22", color: sec.color }}>
+                        {count}
+                      </span>
+                    </div>
+                    {preview ? (
+                      <p className="text-[11px] leading-relaxed line-clamp-2"
+                        style={{ color: "rgba(255,255,255,0.38)", fontFamily: "Georgia, serif" }}>
+                        &ldquo;{preview.text}&rdquo;
+                      </p>
+                    ) : (
+                      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+                        {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
+                      </p>
+                    )}
+                  </div>
+
+                  {count > 0 && (
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="flex-shrink-0 mt-1"
+                      style={{ color: sec.color + "80" }}>
+                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* ── By Color view ───────────────────────────────────────────────────── */}
+      {hlView === "color" && (
+        <div className="grid grid-cols-2 gap-3">
+          {HL_COLORS.map(({ key, dot, ring }) => {
+            const count = countFor(key);
+            const name = colorNames[key];
+            const isEditing = editingColor === key;
+
+            return (
+              <div
+                key={key}
+                className="rounded-2xl overflow-hidden"
+                style={{ background: dot + "10", border: `1px solid ${dot}28` }}
+              >
+                <div className="h-1 w-full" style={{ background: dot }} />
+                <div className="p-3.5 space-y-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="w-7 h-7 rounded-full border-2 flex-shrink-0"
+                      style={{ background: dot, borderColor: ring, boxShadow: `0 0 8px ${ring}` }} />
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full"
+                      style={{ background: dot + "22", color: dot }}>
+                      {count}
+                    </span>
+                  </div>
+                  {isEditing ? (
+                    <input autoFocus value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={commitEdit}
+                      onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditingColor(null); }}
+                      className="w-full text-sm font-bold rounded-lg px-2 py-1 focus:outline-none"
+                      style={{ background: "rgba(255,255,255,0.07)", color: "#fff", border: `1px solid ${dot}50` }}
+                    />
+                  ) : (
+                    <button onClick={() => { if (count > 0) openDetail({ key, dot }); }}
+                      onContextMenu={(e) => { e.preventDefault(); startEdit(key, name); }}
+                      className="w-full text-left">
+                      <p className="text-sm font-bold leading-none" style={{ color: "rgba(255,255,255,0.85)" }}>{name}</p>
+                      <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                        {count === 0 ? "No highlights" : `${count} passage${count !== 1 ? "s" : ""}`}
+                      </p>
+                    </button>
+                  )}
+                  <div className="flex items-center justify-between pt-0.5">
+                    <button onClick={() => startEdit(key, name)} className="text-[9px] font-bold"
+                      style={{ color: "rgba(255,255,255,0.25)" }}>
+                      Rename
+                    </button>
+                    {count > 0 && (
+                      <button onClick={() => openDetail({ key, dot })}
+                        className="text-[9px] font-bold px-2.5 py-1 rounded-lg"
+                        style={{ background: dot + "18", color: dot }}>
+                        View all →
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
