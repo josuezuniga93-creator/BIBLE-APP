@@ -11,7 +11,7 @@ import { getBookCoverImage } from "../../lib/bookCoverImages";
 import { useLanguage } from "../../lib/useLanguage";
 import { translateToSpanish } from "../../lib/googleTranslate";
 import { applyHighlightsToHtml, type Highlight } from "../../lib/highlights";
-import { useTheme } from "../../lib/useTheme";
+import { useTheme, type Theme } from "../../lib/useTheme";
 import { BookmarkModal } from "../../components/BookmarkModal";
 import { isAnySaved } from "../../lib/collections";
 import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
@@ -127,8 +127,15 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── Theme ──────────────────────────────────────────────────────────────────
   const { theme } = useTheme();
-  const isLight    = theme === "white-noir";
-  const isGoldNavy = theme === "gold-navy";
+  // Read from data-theme on the <html> element directly — the <head> inline script
+  // sets this before React hydrates, so the first client render gets the right theme
+  // without waiting for useEffect.  Falls back to hook state on SSR.
+  const activeTheme: Theme =
+    (typeof window !== "undefined"
+      ? (document.documentElement.getAttribute("data-theme") as Theme)
+      : null) ?? theme;
+  const isLight    = activeTheme === "white-noir";
+  const isGoldNavy = activeTheme === "gold-navy";
 
   const th = {
     pageBg:                  isLight ? "#f5f1eb"                                : isGoldNavy ? "#0e1018"                          : "#0e0e18",
@@ -478,7 +485,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // ── Full-screen reading overlay ─────────────────────────────────────────────
   if (!showDetail) {
     return (
-      <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+      <div className="ryc-reader-bg fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
         {/* Study Tools style top bar */}
         <div
@@ -701,7 +708,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── Detail page ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+    <div className="min-h-screen ryc-reader-bg" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div

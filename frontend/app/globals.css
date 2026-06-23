@@ -2764,6 +2764,14 @@ html[data-theme="white-noir"] .badge-gallery button {
   color: rgba(250, 247, 251, 0.86) !important;
 }
 
+/* ── Library reader — White Noir instant background fix ─────────────────────
+   CSS responds to data-theme the moment the <head> inline script sets it,
+   before React hydrates.  !important overrides the inline style on the root.  */
+html[data-theme="white-noir"] .ryc-reader-bg {
+  background-color: #ffffff !important;
+  color: #0a0a0a !important;
+}
+
 .home-story-modal .home-story-label {
   color: rgba(250, 247, 251, 0.6) !important;
 }
