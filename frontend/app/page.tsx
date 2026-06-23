@@ -7,6 +7,7 @@ import {
   type StreakData,
 } from "./lib/streakData";
 import { useLanguage } from "./lib/useLanguage";
+import { useTheme } from "./lib/useTheme";
 import { translateToSpanish } from "./lib/googleTranslate";
 import { localizeReference } from "./lib/spanishContent";
 
@@ -206,24 +207,48 @@ function GgArticleReader({
     return () => { cancelled = true; };
   }, [isEs, englishContent, title]);
 
+  const { theme } = useTheme();
+  const activeTheme =
+    (typeof window !== "undefined"
+      ? document.documentElement.getAttribute("data-theme")
+      : null) ?? theme;
+  const isLight = activeTheme === "white-noir";
+
+  const gg = {
+    pageBg:       isLight ? "#ffffff"              : "#0a0b14",
+    headerBorder: isLight ? "rgba(0,0,0,0.08)"     : "rgba(255,255,255,0.07)",
+    btnBg:        isLight ? "rgba(0,0,0,0.06)"     : "rgba(255,255,255,0.06)",
+    btnStroke:    isLight ? "#0a0a0a"              : "white",
+    authorLabel:  isLight ? "rgba(0,0,0,0.45)"     : "rgba(201,169,97,0.60)",
+    titleHdr:     isLight ? "#0a0a0a"              : "#ffffff",
+    imgBorder:    isLight ? "rgba(0,0,0,0.10)"     : "rgba(201,169,97,0.22)",
+    artTitle:     isLight ? "#0a0a0a"              : "#c9a961",
+    byLine:       isLight ? "rgba(0,0,0,0.50)"     : "rgba(255,255,255,0.45)",
+    spinnerTrack: isLight ? "rgba(0,0,0,0.15)"     : "rgba(201,169,97,0.25)",
+    spinnerHead:  isLight ? "#0a0a0a"              : "#c9a961",
+    transColor:   isLight ? "rgba(0,0,0,0.50)"     : "rgba(201,169,97,0.65)",
+    paraColor:    isLight ? "#1a1a1a"              : "rgba(255,255,255,0.82)",
+    fallbackTxt:  isLight ? "rgba(0,0,0,0.40)"     : "rgba(255,255,255,0.40)",
+  };
+
   return (
-    <div className="fixed inset-0 z-[250] flex flex-col" style={{ background: "#0a0b14", paddingTop: "env(safe-area-inset-top)" }}>
+    <div className="ryc-reader-bg fixed inset-0 z-[250] flex flex-col" style={{ background: gg.pageBg, paddingTop: "env(safe-area-inset-top)" }}>
       {/* Header */}
-      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-3 pb-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="flex-shrink-0 flex items-center gap-3 px-4 pt-3 pb-3" style={{ borderBottom: `1px solid ${gg.headerBorder}` }}>
         <button
           onClick={onClose}
           className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          style={{ background: gg.btnBg }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={gg.btnStroke} strokeWidth="2.2" strokeLinecap="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
           </svg>
         </button>
         <div className="flex-1 min-w-0">
-          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "rgba(201,169,97,0.60)" }}>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: gg.authorLabel }}>
             {author}
           </p>
-          <p className="text-[13px] font-bold text-white leading-tight truncate">{artTitle || title}</p>
+          <p className="text-[13px] font-bold leading-tight truncate" style={{ color: gg.titleHdr }}>{artTitle || title}</p>
         </div>
       </div>
 
@@ -232,27 +257,27 @@ function GgArticleReader({
         {status === "ready" && (
           <div className="px-5 pt-6 pb-16">
             {image && (
-              <div className="rounded-2xl overflow-hidden mb-5" style={{ border: "1px solid rgba(201,169,97,0.22)" }}>
+              <div className="rounded-2xl overflow-hidden mb-5" style={{ border: `1px solid ${gg.imgBorder}` }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={image} alt={`Portrait — ${author}`} className="w-full object-cover" style={{ maxHeight: 280 }} onError={(e) => { e.currentTarget.style.display = "none"; }} />
               </div>
             )}
-            <h1 className="text-[22px] font-bold leading-snug mb-1" style={{ color: "#c9a961", fontFamily: "'Iowan Old Style','Georgia',serif" }}>
+            <h1 className="text-[22px] font-bold leading-snug mb-1" style={{ color: gg.artTitle, fontFamily: "'Iowan Old Style','Georgia',serif" }}>
               {artTitle || title}
             </h1>
-            <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+            <p className="text-[12px]" style={{ color: gg.byLine }}>
               {lang === "es" ? "por" : "by"} {author}{authorYears ? ` · ${authorYears}` : ""}
             </p>
             {lang === "es" && translating && (
-              <p className="text-[11px] mt-2 flex items-center gap-2" style={{ color: "rgba(201,169,97,0.65)" }}>
-                <span className="inline-block w-3 h-3 rounded-full animate-spin" style={{ border: "2px solid rgba(201,169,97,0.25)", borderTopColor: "#c9a961" }} />
+              <p className="text-[11px] mt-2 flex items-center gap-2" style={{ color: gg.transColor }}>
+                <span className="inline-block w-3 h-3 rounded-full animate-spin" style={{ border: `2px solid ${gg.spinnerTrack}`, borderTopColor: gg.spinnerHead }} />
                 Traduciendo al español…
               </p>
             )}
             <div className="mb-7" />
             <div style={{ fontFamily: "'Iowan Old Style','Georgia',serif" }}>
               {content.split(/\n\n+/).filter(Boolean).map((para, i) => (
-                <p key={i} className="text-[16px] leading-[1.85] mb-5" style={{ color: "rgba(255,255,255,0.82)" }}>
+                <p key={i} className="text-[16px] leading-[1.85] mb-5" style={{ color: gg.paraColor }}>
                   {para.trim()}
                 </p>
               ))}
@@ -262,7 +287,7 @@ function GgArticleReader({
 
         {status === "fallback" && (
           <div className="flex flex-col items-center justify-center h-full gap-2 px-8 text-center">
-            <span className="text-[13px]" style={{ color: "rgba(255,255,255,0.40)" }}>Article text coming soon.</span>
+            <span className="text-[13px]" style={{ color: gg.fallbackTxt }}>Article text coming soon.</span>
           </div>
         )}
       </div>
