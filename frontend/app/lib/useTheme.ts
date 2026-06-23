@@ -49,11 +49,22 @@ function readThemeFromStorage(): Theme {
   return "gold-navy";
 }
 
+function readThemeEarly(): Theme {
+  // Called during client-side lazy init — data-theme is already set by the
+  // inline <head> script before React hydrates, so check it first.
+  if (typeof window === "undefined") return "gold-navy";
+  try {
+    const fromHtml = document.documentElement.getAttribute("data-theme") as Theme;
+    if (fromHtml && VALID_THEMES.includes(fromHtml)) return fromHtml;
+  } catch {}
+  return readThemeFromStorage();
+}
+
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>("gold-navy");
+  const [theme, setThemeState] = useState<Theme>(readThemeEarly);
 
   useEffect(() => {
-    // Read from storage on mount
+    // Re-read on mount to ensure sync with storage (handles any edge cases)
     const active = readThemeFromStorage();
     setThemeState(active);
     document.documentElement.setAttribute("data-theme", active);

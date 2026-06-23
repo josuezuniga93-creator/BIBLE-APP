@@ -2623,7 +2623,7 @@ html[data-theme="white-noir"] .streak-current-dot {
 html[data-theme="white-noir"] .card-author-label { color: rgba(255,255,255,0.72) !important; }
 html[data-theme="white-noir"] .mem-header-label { color: #111111 !important; }
 html[data-theme="white-noir"] .mem-verse-ref { color: #0a0a0a !important; }
-html[data-theme="white-noir"] .mem-verse-text { color: rgba(10,10,10,0.68) !important; }
+html[data-theme="white-noir"] .mem-verse-text { color: #0a0a0a !important; }
 html[data-theme="white-noir"] .mem-hint-text { color: rgba(28,20,9,0.38) !important; }
 
 /* ── Fullscreen Bible Memorization — White Noir ─────────────────────────── */
@@ -2650,7 +2650,7 @@ html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-verse-card {
   border-color: rgba(0,0,0,0.08) !important;
 }
 html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-verse-text {
-  color: rgba(10,10,10,0.82) !important;
+  color: #0a0a0a !important;
 }
 html[data-theme="white-noir"] .mem-fullscreen-overlay .mem-fs-context-card {
   background: rgba(0,0,0,0.04) !important;
