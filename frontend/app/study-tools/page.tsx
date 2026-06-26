@@ -2,6 +2,7 @@
 
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 import {
   DICTIONARY_ENTRIES,
   findCompleteCommentaryByReference,
@@ -273,6 +274,8 @@ function categoryLabel(entry: DictionaryEntry, lang: "en" | "es") {
 
 export default function StudyToolsPage() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = theme === "white-noir";
   const [tab, setTab] = useState<ToolTab>("commentaries");
   const [query, setQuery] = useState("");
   const [reader, setReader] = useState<CommentarySearchResult | null>(null);
@@ -745,9 +748,9 @@ export default function StudyToolsPage() {
   }, [query, tab, manifest]);
 
   return (
-    <div className="min-h-screen bg-[#0b101d] text-white">
+    <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0b101d", color: isLight ? "#0a0a0a" : "#ffffff" }}>
       {reader && (
-        <div className="fixed inset-0 z-50 bg-[#0b101d] text-white select-none">
+        <div className="fixed inset-0 z-50 select-none" style={{ background: isLight ? "#ffffff" : "#0b101d", color: isLight ? "#0a0a0a" : "#ffffff" }}>
           {/* Reader controls panel — slides up on single tap */}
           <div
             className="fixed left-0 right-0 z-[69] px-5"
@@ -755,57 +758,60 @@ export default function StudyToolsPage() {
               bottom: 0,
               paddingTop: 16,
               paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
-              background: "rgba(12,14,22,0.98)",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
+              background: isLight ? "rgba(255,255,255,0.98)" : "rgba(12,14,22,0.98)",
+              borderTop: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
               transform: (showReaderControls && !selection && !pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
               transition: "transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
               pointerEvents: (showReaderControls && !selection && !pendingRemoveId) ? "auto" : "none",
+              boxShadow: isLight ? "0 -8px 30px rgba(0,0,0,0.08)" : "none",
             }}
             onPointerDown={(e) => e.stopPropagation()}
           >
             <div className="max-w-lg mx-auto">
-              <p className="text-[9px] uppercase tracking-[0.22em] font-black text-center mb-3" style={{ color: "rgba(201,169,97,0.6)" }}>
+              <p className="text-[9px] uppercase tracking-[0.22em] font-black text-center mb-3" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(201,169,97,0.6)" }}>
                 {lang === "es" ? "Opciones de lectura" : "Reading Options"}
               </p>
               <div className="flex items-center gap-3">
                 {/* Font size */}
-                <div className="flex items-center gap-2 flex-1 justify-center rounded-2xl px-4 py-2" style={{ background: "rgba(255,255,255,0.06)" }}>
+                <div className="flex items-center gap-2 flex-1 justify-center rounded-2xl px-4 py-2" style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)" }}>
                   <button
                     onClick={() => {
                       const next = Math.max(13, readerFontSize - 1);
                       setReaderFontSize(next);
                       setReaderPage(0);
                     }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white/60 active:scale-90"
-                    style={{ background: "rgba(255,255,255,0.07)" }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black active:scale-90"
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
                   >
                     A-
                   </button>
-                  <span className="text-sm font-black text-white/50 w-8 text-center">{readerFontSize}</span>
+                  <span className="text-sm font-black w-8 text-center" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>{readerFontSize}</span>
                   <button
                     onClick={() => {
                       const next = Math.min(24, readerFontSize + 1);
                       setReaderFontSize(next);
                       setReaderPage(0);
                     }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black text-white/60 active:scale-90"
-                    style={{ background: "rgba(255,255,255,0.07)" }}
+                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black active:scale-90"
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
                   >
                     A+
                   </button>
                 </div>
-                <div className="w-px h-8 flex-shrink-0" style={{ background: "rgba(255,255,255,0.10)" }} />
+                <div className="w-px h-8 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)" }} />
                 <button
                   onClick={() => { setShowHighlightPocket(true); setShowReaderControls(false); }}
                   className="h-11 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black active:scale-95 flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.20)" }}
+                  style={isLight
+                    ? { background: "rgba(0,0,0,0.06)", color: "#0a0a0a", border: "1px solid rgba(0,0,0,0.12)" }
+                    : { background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.20)" }}
                 >
                   {lang === "es" ? "Bolsa" : "Pocket"}
                 </button>
                 <button
                   onClick={() => setShowReaderControls(false)}
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-white/35 text-lg font-black active:scale-95 flex-shrink-0"
-                  style={{ background: "rgba(255,255,255,0.07)" }}
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black active:scale-95 flex-shrink-0"
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}
                 >
                   {"x"}
                 </button>
@@ -818,18 +824,19 @@ export default function StudyToolsPage() {
               bottom: 0,
               paddingTop: 14,
               paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
-              background: "rgba(12,14,22,0.98)",
-              borderTop: "1px solid rgba(255,255,255,0.08)",
+              background: isLight ? "rgba(255,255,255,0.98)" : "rgba(12,14,22,0.98)",
+              borderTop: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
               transform: ((selection && selectedText) || pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
               transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
               pointerEvents: ((selection && selectedText) || pendingRemoveId) ? "auto" : "none",
+              boxShadow: isLight ? "0 -8px 30px rgba(0,0,0,0.08)" : "none",
             }}
             onPointerDown={(event) => event.stopPropagation()}
           >
             <div className="max-w-lg mx-auto flex items-center gap-3">
               {pendingRemoveId ? (
                 <>
-                  <p className="flex-1 text-sm font-black text-white/70">
+                  <p className="flex-1 text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>
                     {lang === "es" ? "Eliminar resaltado?" : "Remove this highlight?"}
                   </p>
                   <button
@@ -841,8 +848,8 @@ export default function StudyToolsPage() {
                   </button>
                   <button
                     onClick={() => setPendingRemoveId(null)}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95 flex-shrink-0"
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}
                   >
                     {"x"}
                   </button>
@@ -860,18 +867,18 @@ export default function StudyToolsPage() {
                       />
                     ))}
                   </div>
-                  <div className="w-px h-7 flex-shrink-0" style={{ background: "rgba(255,255,255,0.12)" }} />
+                  <div className="w-px h-7 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)" }} />
                   <button
                     onClick={copySelection}
-                    className="h-10 px-4 rounded-2xl text-sm font-black text-white/70 active:scale-95 flex-shrink-0"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}
                   >
                     {lang === "es" ? "Copiar" : "Copy"}
                   </button>
                   <button
                     onClick={clearSelection}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-white/40 text-xl font-black active:scale-95 flex-shrink-0"
-                    style={{ background: "rgba(255,255,255,0.08)" }}
+                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95 flex-shrink-0"
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}
                   >
                     {"x"}
                   </button>
@@ -882,7 +889,7 @@ export default function StudyToolsPage() {
           <div className="h-full max-w-lg mx-auto flex flex-col">
             <div
               className="flex items-center justify-between gap-3 px-5 pb-2 flex-shrink-0"
-              style={{ borderBottom: "1px solid rgba(201,169,97,0.10)", paddingTop: "max(env(safe-area-inset-top), 10px)" }}
+              style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.10)", paddingTop: "max(env(safe-area-inset-top), 10px)" }}
             >
               <div className="min-w-0">
                 <h2 className="text-lg leading-tight font-black line-clamp-2">
@@ -891,8 +898,8 @@ export default function StudyToolsPage() {
               </div>
               <button
                 onClick={() => setReader(null)}
-                className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center text-white/60 active:scale-95"
-                style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)" }}
+                className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
+                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
                 aria-label={lang === "es" ? "Volver" : "Back"}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -908,7 +915,7 @@ export default function StudyToolsPage() {
             >
               <div className="mb-2">
                 {reader.requestedVerse && (
-                  <p className="text-[11px] text-white/38">
+                  <p className="text-[11px]" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
                     {lang === "es" ? "Matthew Henry explica esta seccion" : "Matthew Henry section"}: {reader.verses?.length ? `v.${reader.verses[0]}-${reader.verses[reader.verses.length - 1]}` : `v.${reader.matchedVerse}`}
                   </p>
                 )}
@@ -920,8 +927,8 @@ export default function StudyToolsPage() {
               >
                 <div
                   ref={textLayerRef}
-                  className={`relative pt-1 text-white/82 font-serif select-none whitespace-pre-line ${isLargeFont ? '' : 'h-full overflow-hidden'}`}
-                  style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: isLargeFont ? "pan-y" : "none", fontSize: readerFontSize, lineHeight: 1.58 }}
+                  className={`relative pt-1 font-serif select-none whitespace-pre-line ${isLargeFont ? '' : 'h-full overflow-hidden'}`}
+                  style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: isLargeFont ? "pan-y" : "none", fontSize: readerFontSize, lineHeight: 1.58, color: isLight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.82)" }}
                   onClick={(event) => {
                     if (didStartSelectionPress.current) {
                       didStartSelectionPress.current = false;
@@ -1102,7 +1109,7 @@ export default function StudyToolsPage() {
                 className="flex-shrink-0 px-7 pt-2 space-y-2"
                 style={{ paddingBottom: "max(env(safe-area-inset-bottom), 14px)" }}
               >
-                <div className="flex items-center justify-between px-1 text-xs font-bold text-white/62">
+                <div className="flex items-center justify-between px-1 text-xs font-bold" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
                   <span>
                     {lang === "es" ? "Pagina" : "Page"} {currentReaderPage + 1} {lang === "es" ? "de" : "of"} {readerPages.length}
                   </span>
@@ -1110,13 +1117,13 @@ export default function StudyToolsPage() {
                 </div>
                 <div
                   className="h-1.5 rounded-full overflow-hidden mb-2"
-                  style={{ background: "rgba(255,255,255,0.08)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}
                 >
                   <div
                     className="h-full rounded-full"
                     style={{
                       width: `${readingPercent(currentReaderPage, readerPages.length)}%`,
-                      background: "#c9a961",
+                      background: isLight ? "#0a0a0a" : "#c9a961",
                     }}
                   />
                 </div>
@@ -1125,7 +1132,7 @@ export default function StudyToolsPage() {
                     onClick={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
                     disabled={currentReaderPage === 0}
                     className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)" }}
                   >
                     ← {lang === "es" ? "Anterior" : "Prev"}
                   </button>
@@ -1133,7 +1140,7 @@ export default function StudyToolsPage() {
                     onClick={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
                     disabled={currentReaderPage >= readerPages.length - 1}
                     className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
-                    style={{ background: "#c9a961", color: "#10131d" }}
+                    style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}
                   >
                     {lang === "es" ? "Siguiente" : "Next"} →
                   </button>
@@ -1145,11 +1152,11 @@ export default function StudyToolsPage() {
       )}
 
       {showHighlightPocket && (
-        <div className="fixed inset-0 z-[65] text-white" style={{ background: "#070b14" }}>
+        <div className="fixed inset-0 z-[65]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "#ffffff" }}>
           <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
-            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
+            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                   {lang === "es" ? "Matthew Henry en tu bolsillo" : "Matthew Henry in your pocket"}
                 </p>
                 <h2 className="text-[30px] leading-none font-black mt-1">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
@@ -1157,7 +1164,7 @@ export default function StudyToolsPage() {
               <button
                 onClick={() => { setShowHighlightPocket(false); setConfirmPocketRemoveId(null); }}
                 className="w-11 h-11 rounded-full flex items-center justify-center"
-                style={{ background: "rgba(255,255,255,0.07)" }}
+                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)" }}
               >
                 ✕
               </button>
@@ -1165,9 +1172,9 @@ export default function StudyToolsPage() {
             <div className="px-5 pt-4 flex-shrink-0">
               <label
                 className="flex items-center gap-3 rounded-[22px] px-4 py-3"
-                style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}
+                style={{ background: isLight ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.055)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}
               >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white/35 flex-shrink-0">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
                   <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" />
                   <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
                 </svg>
@@ -1175,12 +1182,14 @@ export default function StudyToolsPage() {
                   value={highlightSearchQuery}
                   onChange={(event) => setHighlightSearchQuery(event.target.value)}
                   placeholder={lang === "es" ? "Buscar libro, capitulo o texto..." : "Search book, chapter, or text..."}
-                  className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/35"
+                  className={`min-w-0 flex-1 bg-transparent outline-none text-sm font-bold ${isLight ? "placeholder:text-black/35" : "placeholder:text-white/35"}`}
+                  style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
                 />
                 {highlightSearchQuery && (
                   <button
                     onClick={() => setHighlightSearchQuery("")}
-                    className="text-white/35 text-sm font-black"
+                    className="text-sm font-black"
+                    style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}
                     aria-label={lang === "es" ? "Limpiar busqueda" : "Clear search"}
                   >
                     ✕
@@ -1190,16 +1199,16 @@ export default function StudyToolsPage() {
             </div>
             <div className="overflow-y-auto flex-1 px-5 py-5 space-y-7 pb-10">
               {highlights.length === 0 ? (
-                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <p className="font-black text-white/70">{lang === "es" ? "Aun no hay resaltados" : "No highlights yet"}</p>
-                  <p className="text-sm text-white/38 mt-2">
+                <div className="rounded-[30px] p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="font-black" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>{lang === "es" ? "Aun no hay resaltados" : "No highlights yet"}</p>
+                  <p className="text-sm mt-2" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
                     {lang === "es" ? "Selecciona texto en el lector para guardar una explicacion." : "Select text in the reader to save an explanation."}
                   </p>
                 </div>
               ) : recentHighlights.length === 0 ? (
-                <div className="rounded-[30px] p-7 text-center" style={{ background: "rgba(255,255,255,0.045)", border: "1px solid rgba(255,255,255,0.08)" }}>
-                  <p className="font-black text-white/70">{lang === "es" ? "Sin resultados" : "No results"}</p>
-                  <p className="text-sm text-white/38 mt-2">
+                <div className="rounded-[30px] p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}>
+                  <p className="font-black" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>{lang === "es" ? "Sin resultados" : "No results"}</p>
+                  <p className="text-sm mt-2" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
                     {lang === "es" ? "Prueba buscar otro libro, capitulo o frase." : "Try another book, chapter, or phrase."}
                   </p>
                 </div>
@@ -1208,42 +1217,45 @@ export default function StudyToolsPage() {
                   <section>
                     <div className="flex items-end justify-between gap-3 mb-3">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                           {lang === "es" ? "Reciente" : "Recent"}
                         </p>
                         <h3 className="text-xl font-black">{lang === "es" ? "Mis resaltados recientes" : "My Most Recent Highlights"}</h3>
                       </div>
-                      <p className="text-xs font-bold text-white/35">{recentHighlights.length}</p>
+                      <p className="text-xs font-bold" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>{recentHighlights.length}</p>
                     </div>
                     <div className="flex gap-3 overflow-x-auto pb-1 -mx-5 px-5 snap-x">
                       {recentHighlights.slice(0, 8).map((highlight) => (
                         <article
                           key={`recent-${highlight.id}`}
                           className="min-w-[82%] snap-start rounded-[26px] p-4"
-                          style={{ background: "linear-gradient(135deg, rgba(201,169,97,0.10), rgba(255,255,255,0.045))", border: "1px solid rgba(201,169,97,0.16)" }}
+                          style={isLight
+                            ? { background: "rgba(0,0,0,0.04)", border: "1px solid rgba(0,0,0,0.12)" }
+                            : { background: "linear-gradient(135deg, rgba(201,169,97,0.10), rgba(255,255,255,0.045))", border: "1px solid rgba(201,169,97,0.16)" }}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>
                                 {highlight.reference}
                               </p>
-                              <h4 className="text-sm font-black mt-1 text-white/85">{highlight.sectionTitle}</h4>
+                              <h4 className="text-sm font-black mt-1" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)" }}>{highlight.sectionTitle}</h4>
                             </div>
                             <button
                               onClick={() => setConfirmPocketRemoveId(highlight.id)}
-                              className="text-white/30 text-sm font-black"
+                              className="text-sm font-black"
+                              style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}
                               aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}
                             >
                               ✕
                             </button>
                           </div>
-                          <p className="mt-3 text-sm leading-6 text-white/64 line-clamp-5">
+                          <p className="mt-3 text-sm leading-6 line-clamp-5" style={{ color: isLight ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.64)" }}>
                             "{highlight.text}"
                           </p>
                           <button
                             onClick={() => openHighlightInReader(highlight)}
                             className="mt-4 text-xs font-black px-3 py-2 rounded-full"
-                            style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
+                            style={isLight ? { background: "rgba(0,0,0,0.07)", color: "#0a0a0a" } : { background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
                           >
                             {lang === "es" ? "Abrir resaltado" : "Open highlight"}
                           </button>
@@ -1254,56 +1266,57 @@ export default function StudyToolsPage() {
 
                   <section>
                     <div className="mb-3">
-                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                         {lang === "es" ? "Organizado" : "Organized"}
                       </p>
                       <h3 className="text-xl font-black">{lang === "es" ? "Por libro y capitulo" : "By Book & Chapter"}</h3>
                     </div>
                     <div className="space-y-4">
                       {highlightsByBookChapter.map((bookGroup) => (
-                        <section key={bookGroup.book} className="rounded-[28px] p-4" style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                        <section key={bookGroup.book} className="rounded-[28px] p-4" style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}>
                           <div className="flex items-center justify-between gap-3 mb-3">
                             <h4 className="text-lg font-black">{bookGroup.bookName}</h4>
-                            <span className="text-[10px] uppercase tracking-[0.16em] font-black px-3 py-1 rounded-full" style={{ color: "#c9a961", background: "rgba(201,169,97,0.10)" }}>
+                            <span className="text-[10px] uppercase tracking-[0.16em] font-black px-3 py-1 rounded-full" style={isLight ? { color: "#0a0a0a", background: "rgba(0,0,0,0.07)" } : { color: "#c9a961", background: "rgba(201,169,97,0.10)" }}>
                               {bookGroup.chapters.reduce((sum, chapter) => sum + chapter.items.length, 0)}
                             </span>
                           </div>
                           <div className="space-y-3">
                             {bookGroup.chapters.map((chapterGroup) => (
-                              <div key={`${bookGroup.book}-${chapterGroup.chapter}`} className="rounded-[22px] p-3" style={{ background: "rgba(255,255,255,0.035)" }}>
+                              <div key={`${bookGroup.book}-${chapterGroup.chapter}`} className="rounded-[22px] p-3" style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)" }}>
                                 <div className="flex items-center justify-between gap-3 mb-2">
                                   <p className="text-sm font-black">
                                     {lang === "es" ? "Capitulo" : "Chapter"} {chapterGroup.chapter}
                                   </p>
-                                  <p className="text-xs font-bold text-white/35">
+                                  <p className="text-xs font-bold" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
                                     {chapterGroup.items.length} {chapterGroup.items.length === 1 ? (lang === "es" ? "resaltado" : "highlight") : (lang === "es" ? "resaltados" : "highlights")}
                                   </p>
                                 </div>
                                 <div className="space-y-2">
                                   {chapterGroup.items.map((highlight) => (
-                                    <article key={highlight.id} className="rounded-[18px] p-3" style={{ background: "rgba(6,10,18,0.70)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                                    <article key={highlight.id} className="rounded-[18px] p-3" style={{ background: isLight ? "rgba(0,0,0,0.035)" : "rgba(6,10,18,0.70)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.06)" }}>
                                       <div className="flex items-start justify-between gap-3">
                                         <div>
                                           <p className="text-[10px] uppercase tracking-[0.16em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>
                                             {highlight.reference}
                                           </p>
-                                          <h5 className="text-sm font-black mt-1 text-white/82">{highlight.sectionTitle}</h5>
+                                          <h5 className="text-sm font-black mt-1" style={{ color: isLight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.82)" }}>{highlight.sectionTitle}</h5>
                                         </div>
                                         <button
                                           onClick={() => setConfirmPocketRemoveId(highlight.id)}
-                                          className="text-white/30 text-sm font-black"
+                                          className="text-sm font-black"
+                                          style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}
                                           aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}
                                         >
                                           ✕
                                         </button>
                                       </div>
-                                      <p className="mt-2 text-sm leading-6 text-white/62">
+                                      <p className="mt-2 text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
                                         "{highlight.text}"
                                       </p>
                                       <button
                                         onClick={() => openHighlightInReader(highlight)}
                                         className="mt-3 text-xs font-black px-3 py-2 rounded-full"
-                                        style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
+                                        style={isLight ? { background: "rgba(0,0,0,0.07)", color: "#0a0a0a" } : { background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}
                                       >
                                         {lang === "es" ? "Abrir resaltado" : "Open highlight"}
                                       </button>
@@ -1322,15 +1335,15 @@ export default function StudyToolsPage() {
             </div>
           </div>
           {confirmPocketRemoveId && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
-              <div className="w-full max-w-sm rounded-[28px] p-5 text-center" style={{ background: "#111827", border: "1px solid rgba(201,169,97,0.22)" }}>
-                <p className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: "#c9a961" }}>
+            <div className="absolute inset-0 z-10 flex items-center justify-center px-8 backdrop-blur-sm" style={{ background: isLight ? "rgba(0,0,0,0.30)" : "rgba(0,0,0,0.55)" }}>
+              <div className="w-full max-w-sm rounded-[28px] p-5 text-center" style={{ background: isLight ? "#ffffff" : "#111827", border: isLight ? "1px solid rgba(0,0,0,0.14)" : "1px solid rgba(201,169,97,0.22)", color: isLight ? "#0a0a0a" : "#ffffff" }}>
+                <p className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                   {lang === "es" ? "Confirmar" : "Confirm"}
                 </p>
                 <h3 className="text-xl font-black mt-2">
                   {lang === "es" ? "Eliminar resaltado?" : "Delete this highlight?"}
                 </h3>
-                <p className="text-sm leading-6 text-white/55 mt-2">
+                <p className="text-sm leading-6 mt-2" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}>
                   {lang === "es"
                     ? "Esto quitara este resaltado de tu bolsillo."
                     : "This will remove this highlight from your pocket."}
@@ -1339,7 +1352,7 @@ export default function StudyToolsPage() {
                   <button
                     onClick={() => setConfirmPocketRemoveId(null)}
                     className="h-11 rounded-2xl text-sm font-black active:scale-95"
-                    style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.72)" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}
                   >
                     {lang === "es" ? "Cancelar" : "Cancel"}
                   </button>
@@ -1362,31 +1375,37 @@ export default function StudyToolsPage() {
 
       <main className="max-w-lg mx-auto px-5 pt-7 pb-32">
         <header className="mb-4">
-          <p className="text-[11px] font-black uppercase tracking-[0.26em]" style={{ color: "#c9a961" }}>
+          <p className="text-[11px] font-black uppercase tracking-[0.26em]" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
             {lang === "es" ? "Herramientas de estudio" : "Study Tools"}
           </p>
         </header>
 
         <section
           className="study-tools-hero relative overflow-hidden rounded-[28px] p-6 mb-5 border"
-          style={{
-            background: "linear-gradient(135deg, rgba(201,169,97,0.20), rgba(22,30,46,0.96) 48%, rgba(10,15,27,0.98))",
-            borderColor: "rgba(201,169,97,0.20)",
-            boxShadow: "0 22px 60px rgba(0,0,0,0.25)",
-          }}
+          style={isLight
+            ? {
+                background: "linear-gradient(135deg, rgba(0,0,0,0.05), #f7f7f7 48%, #ffffff)",
+                borderColor: "rgba(0,0,0,0.10)",
+                boxShadow: "0 22px 60px rgba(0,0,0,0.06)",
+              }
+            : {
+                background: "linear-gradient(135deg, rgba(201,169,97,0.20), rgba(22,30,46,0.96) 48%, rgba(10,15,27,0.98))",
+                borderColor: "rgba(201,169,97,0.20)",
+                boxShadow: "0 22px 60px rgba(0,0,0,0.25)",
+              }}
         >
           <div
             className="absolute -right-8 -top-8 w-36 h-36 rounded-full"
-            style={{ background: "radial-gradient(circle, rgba(201,169,97,0.20), transparent 68%)" }}
+            style={{ background: isLight ? "radial-gradient(circle, rgba(0,0,0,0.06), transparent 68%)" : "radial-gradient(circle, rgba(201,169,97,0.20), transparent 68%)" }}
           />
           <div className="study-tools-hero-copy relative z-10 max-w-[78%]">
-            <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: "#d7bd78" }}>
+            <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: isLight ? "#0a0a0a" : "#d7bd78" }}>
               {lang === "es" ? "Comentario y diccionario" : "Commentary & Dictionary"}
             </p>
             <h1 className="mt-3 text-[31px] leading-[0.98] font-black tracking-tight">
               {lang === "es" ? "Estudia el texto con claridad." : "Study the text with clarity."}
             </h1>
-            <p className="mt-3 text-sm leading-relaxed text-white/62">
+            <p className="mt-3 text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
               {lang === "es"
                 ? "Busca un versiculo para leer Matthew Henry, o cambia al diccionario para explorar palabras biblicas."
                 : "Search a verse for Matthew Henry, or switch to the dictionary to explore Bible words."}
@@ -1394,20 +1413,22 @@ export default function StudyToolsPage() {
           </div>
           <div
             className="study-tools-hero-icon absolute right-5 bottom-5 w-16 h-16 rounded-[22px] flex items-center justify-center"
-            style={{ background: "rgba(201,169,97,0.16)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.20)" }}
+            style={isLight
+              ? { background: "rgba(0,0,0,0.06)", color: "#0a0a0a", border: "1px solid rgba(0,0,0,0.12)" }
+              : { background: "rgba(201,169,97,0.16)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.20)" }}
           >
             <BookIcon />
           </div>
         </section>
 
-        <label className="block rounded-[24px] px-4 py-4 mb-5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(201,169,97,0.16)" }}>
-          <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: "#c9a961" }}>
+        <label className="block rounded-[24px] px-4 py-4 mb-5" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.16)" }}>
+          <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
             {tab === "commentaries"
               ? lang === "es" ? "Buscar un versiculo" : "Search a verse"
               : lang === "es" ? "Buscar una palabra" : "Search a word"}
           </span>
           <div className="flex items-center gap-3 mt-2">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-white/35 flex-shrink-0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
               <path d="M21 21l-4.5-4.5M10.8 18a7.2 7.2 0 100-14.4 7.2 7.2 0 000 14.4z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             <input
@@ -1416,12 +1437,13 @@ export default function StudyToolsPage() {
               placeholder={tab === "commentaries"
                 ? lang === "es" ? "Ej. Romanos 1:1, Juan 3:16" : "Ex. Romans 1:1, John 3:16"
                 : lang === "es" ? "Ej. pacto, justificacion, Sion" : "Ex. covenant, justification, Zion"}
-              className="w-full bg-transparent outline-none text-base font-bold text-white placeholder:text-white/28"
+              className={`w-full bg-transparent outline-none text-base font-bold ${isLight ? "placeholder:text-black/28" : "placeholder:text-white/28"}`}
+              style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
             />
           </div>
         </label>
 
-        <div className="study-tools-tabs flex rounded-full p-1 mb-5" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="study-tools-tabs flex rounded-full p-1 mb-5" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}>
           {[
             { key: "commentaries" as const, label: lang === "es" ? "Comentarios" : "Commentaries" },
             { key: "dictionary" as const, label: lang === "es" ? "Diccionario" : "Dictionary" },
@@ -1431,8 +1453,8 @@ export default function StudyToolsPage() {
               onClick={() => setTab(item.key)}
               className="flex-1 h-11 rounded-full text-sm font-black transition-all"
               style={{
-                background: tab === item.key ? "#c9a961" : "transparent",
-                color: tab === item.key ? "#10131d" : "rgba(255,255,255,0.52)",
+                background: tab === item.key ? (isLight ? "#0a0a0a" : "#c9a961") : "transparent",
+                color: tab === item.key ? (isLight ? "#ffffff" : "#10131d") : (isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.52)"),
               }}
             >
               {item.label}
@@ -1443,9 +1465,9 @@ export default function StudyToolsPage() {
         {tab === "commentaries" ? (
           <section className="space-y-4">
             {hasReferenceQuery && commentaryLoading && (
-              <div className="rounded-[24px] p-5 border flex items-center gap-3" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }}>
-                <div className="w-5 h-5 rounded-full border-2 border-white/15 border-t-[#c9a961] animate-spin" />
-                <p className="text-sm font-bold text-white/55">
+              <div className="rounded-[24px] p-5 border flex items-center gap-3" style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)", borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}>
+                <div className={`w-5 h-5 rounded-full border-2 animate-spin ${isLight ? "border-black/15 border-t-[#0a0a0a]" : "border-white/15 border-t-[#c9a961]"}`} />
+                <p className="text-sm font-bold" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}>
                   {lang === "es" ? "Buscando en Matthew Henry..." : "Searching Matthew Henry..."}
                 </p>
               </div>
@@ -1453,14 +1475,16 @@ export default function StudyToolsPage() {
 
             {hasReferenceQuery && !commentaryLoading && (
               bookResult ? (
-                <article className="rounded-[28px] p-5 border" style={{ background: "linear-gradient(145deg, rgba(201,169,97,0.13), rgba(255,255,255,0.045))", borderColor: "rgba(201,169,97,0.26)" }}>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                <article className="rounded-[28px] p-5 border" style={isLight
+                  ? { background: "linear-gradient(145deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))", borderColor: "rgba(0,0,0,0.12)" }
+                  : { background: "linear-gradient(145deg, rgba(201,169,97,0.13), rgba(255,255,255,0.045))", borderColor: "rgba(201,169,97,0.26)" }}>
+                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                     {bookResult.source}
                   </p>
                   <h2 className="mt-2 text-2xl font-black">
                     {bookResult.bookName}
                   </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-white/48">
+                  <p className="mt-2 text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)" }}>
                     {lang === "es"
                       ? `Comentario completo disponible por ${bookResult.chapters} capitulos. Escoge un capitulo para leer.`
                       : `Full commentary available across ${bookResult.chapters} chapters. Choose a chapter to read.`}
@@ -1471,7 +1495,7 @@ export default function StudyToolsPage() {
                         key={chapter}
                         onClick={() => openBookChapter(bookResult, chapter)}
                         className="h-12 rounded-2xl text-sm font-black active:scale-95"
-                        style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.10)", color: "rgba(255,255,255,0.84)" }}
+                        style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", color: isLight ? "rgba(0,0,0,0.84)" : "rgba(255,255,255,0.84)" }}
                       >
                         {chapter}
                       </button>
@@ -1479,36 +1503,38 @@ export default function StudyToolsPage() {
                   </div>
                 </article>
               ) : commentaryResult ? (
-                <article className="rounded-[28px] p-5 border" style={{ background: "linear-gradient(145deg, rgba(201,169,97,0.13), rgba(255,255,255,0.045))", borderColor: "rgba(201,169,97,0.26)" }}>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                <article className="rounded-[28px] p-5 border" style={isLight
+                  ? { background: "linear-gradient(145deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))", borderColor: "rgba(0,0,0,0.12)" }
+                  : { background: "linear-gradient(145deg, rgba(201,169,97,0.13), rgba(255,255,255,0.045))", borderColor: "rgba(201,169,97,0.26)" }}>
+                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                     {commentaryResult.source}
                   </p>
                   <h2 className="mt-2 text-2xl font-black">
                     {commentaryResult.title ?? `${commentaryResult.bookName} ${commentaryResult.chapter}${commentaryResult.requestedVerse ? `:${commentaryResult.requestedVerse}` : ""}`}
                   </h2>
                   {commentaryResult.requestedVerse && (
-                    <p className="mt-1 text-xs text-white/40">
+                    <p className="mt-1 text-xs" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
                       {lang === "es" ? "Seccion de Henry" : "Henry section"}: {commentaryResult.verses?.length ? `v.${commentaryResult.verses[0]}-${commentaryResult.verses[commentaryResult.verses.length - 1]}` : `v.${commentaryResult.matchedVerse}`}
                     </p>
                   )}
-                  <p className="mt-4 text-[15px] leading-7 text-white/74">
+                  <p className="mt-4 text-[15px] leading-7" style={{ color: isLight ? "rgba(0,0,0,0.74)" : "rgba(255,255,255,0.74)" }}>
                     {commentaryResult.text.length > 480 ? `${commentaryResult.text.slice(0, 480)}...` : commentaryResult.text}
                   </p>
                   <button
                     onClick={() => openReader(commentaryResult)}
                     className="mt-5 inline-flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-black"
-                    style={{ background: "#c9a961", color: "#10131d" }}
+                    style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}
                   >
                     {lang === "es" ? "Leer Comentario" : "Read Commentary"}
                     <span>→</span>
                   </button>
                 </article>
               ) : (
-                <div className="rounded-[24px] p-5 border text-center" style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.08)" }}>
-                  <p className="text-sm font-bold text-white/72">
+                <div className="rounded-[24px] p-5 border text-center" style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)", borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}>
+                  <p className="text-sm font-bold" style={{ color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}>
                     {lang === "es" ? "No encontre esa referencia." : "I could not find that reference."}
                   </p>
-                  <p className="mt-2 text-xs leading-relaxed text-white/42">
+                  <p className="mt-2 text-xs leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
                     {lang === "es"
                       ? "Prueba un libro como Proverbios, o una referencia como Romanos 1:5, Juan 3:16, Salmo 23:1 o Genesis 1:1."
                       : "Try a book like Proverbs, or a reference like Romans 1:5, John 3:16, Psalm 23:1, or Genesis 1:1."}
@@ -1521,7 +1547,7 @@ export default function StudyToolsPage() {
               <div className="space-y-3">
                 <div className="flex items-end justify-between gap-4 px-1">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                       {lang === "es" ? "Reciente" : "Recent"}
                     </p>
                     <h2 className="text-2xl font-black mt-1">
@@ -1529,21 +1555,23 @@ export default function StudyToolsPage() {
                     </h2>
                   </div>
                   {continueReading.length > 0 && (
-                    <p className="text-xs font-bold text-white/35">
+                    <p className="text-xs font-bold" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
                       {continueReading.length} {lang === "es" ? "guardados" : "saved"}
                     </p>
                   )}
                 </div>
 
                 {continueReading.length === 0 ? (
-                  <div className="rounded-[28px] p-5 border" style={{ background: "linear-gradient(145deg, rgba(201,169,97,0.10), rgba(255,255,255,0.04))", borderColor: "rgba(201,169,97,0.18)" }}>
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: "#c9a961", color: "#10131d" }}>
+                  <div className="rounded-[28px] p-5 border" style={isLight
+                    ? { background: "linear-gradient(145deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))", borderColor: "rgba(0,0,0,0.10)" }
+                    : { background: "linear-gradient(145deg, rgba(201,169,97,0.10), rgba(255,255,255,0.04))", borderColor: "rgba(201,169,97,0.18)" }}>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}>
                       <BookIcon />
                     </div>
                     <h3 className="text-xl font-black">
                       {lang === "es" ? "Busca una referencia para empezar" : "Search a reference to begin"}
                     </h3>
-                    <p className="mt-2 text-sm leading-relaxed text-white/48">
+                    <p className="mt-2 text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.48)" }}>
                       {lang === "es"
                         ? "Cuando abras un comentario de Matthew Henry, aparecera aqui para que puedas continuar leyendo."
                         : "When you open a Matthew Henry commentary, it will appear here so you can keep reading."}
@@ -1553,7 +1581,7 @@ export default function StudyToolsPage() {
                   <div
                     key={item.id}
                     className="rounded-[24px] border overflow-hidden"
-                    style={{ background: "rgba(255,255,255,0.045)", borderColor: "rgba(255,255,255,0.08)" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.045)", borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}
                   >
                     <div
                       role="button"
@@ -1566,25 +1594,25 @@ export default function StudyToolsPage() {
                     >
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0">
-                          <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: "#c9a961" }}>
+                          <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                             {item.source}
                           </p>
                           <h3 className="text-lg font-black mt-1 truncate">
                             {item.title ?? `${item.bookName} ${item.chapter}${item.requestedVerse ? `:${item.requestedVerse}` : ""}`}
                           </h3>
-                          <p className="text-xs text-white/42 mt-1">
+                          <p className="text-xs mt-1" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
                             {lang === "es" ? "Pagina" : "Page"} {(item.readerPage ?? 0) + 1}
                             {item.pageCount ? ` ${lang === "es" ? "de" : "of"} ${item.pageCount}` : ""} · {readingPercent(item.readerPage ?? 0, item.pageCount)}%
                           </p>
-                          <p className="text-xs text-white/34 mt-1">
+                          <p className="text-xs mt-1" style={{ color: isLight ? "rgba(0,0,0,0.34)" : "rgba(255,255,255,0.34)" }}>
                             {item.bookName} {item.chapter}
                             {item.requestedVerse ? `:${item.requestedVerse}` : ""}
                           </p>
                           {item.pageCount && (
-                            <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
+                            <div className="mt-3 h-1 rounded-full overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}>
                               <div
                                 className="h-full rounded-full"
-                                style={{ width: `${readingPercent(item.readerPage ?? 0, item.pageCount)}%`, background: "#c9a961" }}
+                                style={{ width: `${readingPercent(item.readerPage ?? 0, item.pageCount)}%`, background: isLight ? "#0a0a0a" : "#c9a961" }}
                               />
                             </div>
                           )}
@@ -1596,13 +1624,13 @@ export default function StudyToolsPage() {
                               event.stopPropagation();
                               removeContinueReading(item.id);
                             }}
-                            className="w-9 h-9 rounded-full flex items-center justify-center text-white/38 active:scale-95"
-                            style={{ background: "rgba(255,255,255,0.06)" }}
+                            className="w-9 h-9 rounded-full flex items-center justify-center active:scale-95"
+                            style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}
                             aria-label={lang === "es" ? "Quitar de continuar leyendo" : "Remove from continue reading"}
                           >
                             ✕
                           </button>
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}>
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.14)", color: isLight ? "#0a0a0a" : "#c9a961" }}>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                               <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
@@ -1619,19 +1647,19 @@ export default function StudyToolsPage() {
               <button
                 onClick={() => setShowHighlightPocket(true)}
                 className="w-full rounded-[24px] px-5 py-4 text-left active:scale-[0.99]"
-                style={{ background: "rgba(201,169,97,0.10)", border: "1px solid rgba(201,169,97,0.18)" }}
+                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(201,169,97,0.10)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                       {lang === "es" ? "En tu bolsillo" : "In your pocket"}
                     </p>
                     <h2 className="text-lg font-black mt-1">{lang === "es" ? "Mis resaltados de Henry" : "My Henry Highlights"}</h2>
-                    <p className="text-xs text-white/42 mt-1">
+                    <p className="text-xs mt-1" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
                       {highlights.length} {lang === "es" ? "explicaciones guardadas" : "saved explanations"}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: "#c9a961", color: "#10131d" }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}>
                     <BookIcon />
                   </div>
                 </div>
@@ -1642,19 +1670,19 @@ export default function StudyToolsPage() {
           <section>
             <div className="space-y-3">
               {(query ? dictionaryEntries : DICTIONARY_ENTRIES).map((entry) => (
-                <article key={entry.id} className="rounded-[24px] p-4 border" style={{ background: "rgba(255,255,255,0.045)", borderColor: "rgba(255,255,255,0.08)" }}>
+                <article key={entry.id} className="rounded-[24px] p-4 border" style={{ background: isLight ? "rgba(0,0,0,0.035)" : "rgba(255,255,255,0.045)", borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: "#c9a961" }}>
+                      <p className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                         {categoryLabel(entry, lang)}
                       </p>
                       <h3 className="text-xl font-black mt-1">{lang === "es" ? entry.termEs : entry.term}</h3>
                     </div>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.14)", color: isLight ? "#0a0a0a" : "#c9a961" }}>
                       <DictionaryIcon />
                     </div>
                   </div>
-                  <p className="mt-3 text-sm leading-relaxed text-white/58">
+                  <p className="mt-3 text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.58)" : "rgba(255,255,255,0.58)" }}>
                     {lang === "es" ? entry.definitionEs : entry.definition}
                   </p>
                   {entry.originalLanguages && entry.originalLanguages.length > 0 && (
@@ -1663,15 +1691,15 @@ export default function StudyToolsPage() {
                         <div
                           key={`${entry.id}-${note.strongs}`}
                           className="rounded-2xl px-3 py-3"
-                          style={{ background: "rgba(201,169,97,0.10)", border: "1px solid rgba(201,169,97,0.14)" }}
+                          style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(201,169,97,0.10)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.14)" }}
                         >
                           <div className="flex items-center justify-between gap-3">
-                            <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: "#c9a961" }}>
+                            <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
                               {note.language} · {note.strongs}
                             </p>
-                            <p className="text-sm font-black text-white">{note.lemma}</p>
+                            <p className="text-sm font-black" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{note.lemma}</p>
                           </div>
-                          <p className="mt-1 text-xs text-white/50">
+                          <p className="mt-1 text-xs" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>
                             {note.transliteration} — {note.meaning}
                           </p>
                         </div>
@@ -1680,7 +1708,7 @@ export default function StudyToolsPage() {
                   )}
                   <div className="flex flex-wrap gap-2 mt-4">
                     {entry.references.map((ref) => (
-                      <span key={ref} className="text-[11px] font-bold px-3 py-1.5 rounded-full" style={{ background: "rgba(201,169,97,0.12)", color: "#d7bd78" }}>
+                      <span key={ref} className="text-[11px] font-bold px-3 py-1.5 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#d7bd78" }}>
                         {ref}
                       </span>
                     ))}

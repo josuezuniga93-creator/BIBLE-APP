@@ -15,6 +15,7 @@ const BOLLS_ID: Record<string, string> = {
   // English
   nkjv:  "NKJV",
   esv:   "ESV",
+  csb:   "CSB",
   nasb:  "NASB",
   niv:   "NIV2011",
   lsb:   "LSB",

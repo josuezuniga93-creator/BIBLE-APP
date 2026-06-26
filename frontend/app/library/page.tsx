@@ -14,6 +14,7 @@ import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
 import { bookTitle } from "../lib/spanishContent";
 import { loadHighlights, type Highlight } from "../lib/highlights";
+import { syncKey } from "../lib/cloudSync";
 import { STATIC_BOOK_CATALOG as _CATALOG_FOR_SLUGS } from "../lib/bookCatalog";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
@@ -790,10 +791,10 @@ export default function LibraryPage() {
           {/* Header */}
           <div
             className="px-5 pb-4 flex items-center justify-between flex-shrink-0"
-            style={{ borderBottom: "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}
+            style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}
           >
             <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
+              <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
                 {lang === "es" ? "Libros Gratuitos" : "Free Books"}
               </p>
               <h2 className="text-[30px] leading-none font-black mt-1">
@@ -803,7 +804,7 @@ export default function LibraryPage() {
             <button
               onClick={() => { setShowHighlightPocket(false); setConfirmRemoveId(null); setHlSearch(""); }}
               className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-              style={{ background: "rgba(255,255,255,0.07)" }}
+              style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.4)" : undefined }}
             >
               ✕
             </button>
@@ -813,20 +814,21 @@ export default function LibraryPage() {
           <div className="px-5 pt-4 pb-3 flex-shrink-0">
             <label
               className="flex items-center gap-3 rounded-[22px] px-4 py-3"
-              style={{ background: "rgba(255,255,255,0.055)", border: "1px solid rgba(255,255,255,0.08)" }}
+              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.055)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" />
-                <path d="M16.5 16.5L21 21" stroke="rgba(255,255,255,0.35)" strokeWidth="1.8" strokeLinecap="round" />
+                <circle cx="11" cy="11" r="7" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" />
+                <path d="M16.5 16.5L21 21" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" strokeLinecap="round" />
               </svg>
               <input
                 value={hlSearch}
                 onChange={(e) => setHlSearch(e.target.value)}
                 placeholder={lang === "es" ? "Buscar libro, capítulo o texto..." : "Search book, chapter, or text..."}
-                className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold text-white placeholder:text-white/35"
+                className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold"
+                style={{ color: isLight ? "#0a0a0a" : "white" }}
               />
               {hlSearch && (
-                <button onClick={() => setHlSearch("")} className="text-white/40 text-sm active:text-white/70 flex-shrink-0 leading-none">
+                <button onClick={() => setHlSearch("")} className="text-sm flex-shrink-0 leading-none" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
                   ✕
                 </button>
               )}
@@ -838,12 +840,12 @@ export default function LibraryPage() {
             {bookHighlights.length === 0 ? (
               <div
                 className="rounded-[30px] p-7 text-center mt-4"
-                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}
+                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
               >
                 <p className="font-black text-lg mb-2">
                   {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
                 </p>
-                <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <p className="text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
                   {lang === "es"
                     ? "Selecciona texto mientras lees un libro para guardar un resaltado."
                     : "Select text while reading a book to save a highlight."}
@@ -851,7 +853,7 @@ export default function LibraryPage() {
               </div>
             ) : filteredHls.length === 0 ? (
               <div className="text-center py-10">
-                <p className="text-sm font-bold" style={{ color: "rgba(255,255,255,0.4)" }}>
+                <p className="text-sm font-bold" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
                   {lang === "es" ? "Sin resultados" : `No results for "${hlSearch}"`}
                 </p>
               </div>
@@ -860,7 +862,7 @@ export default function LibraryPage() {
 
                 {/* Recent */}
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: "#c9a961" }}>
+                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
                     {lang === "es" ? "Recientes" : "Recent"}
                   </p>
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
@@ -871,14 +873,14 @@ export default function LibraryPage() {
                         <div
                           key={hl.id}
                           className="w-[80vw] snap-start rounded-[26px] p-4 flex flex-col gap-2 flex-shrink-0 overflow-hidden"
-                          style={{ background: `linear-gradient(135deg,${dot}18 0%,rgba(255,255,255,0.04) 100%)`, border: `1px solid ${dot}30` }}
+                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : `linear-gradient(135deg,${dot}18 0%,rgba(255,255,255,0.04) 100%)`, border: isLight ? "1px solid rgba(0,0,0,0.08)" : `1px solid ${dot}30` }}
                         >
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: dot }}>
+                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.45)" : dot }}>
                             {hl.bookTitle} · Ch. {hl.chapter}
                           </p>
                           <p
                             className="text-[13px] leading-snug line-clamp-2"
-                            style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
+                            style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
                           >
                             &ldquo;{hl.text.slice(0, 65)}{hl.text.length > 65 ? '…' : ''}&rdquo;
                           </p>
@@ -886,7 +888,7 @@ export default function LibraryPage() {
                             href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.id}`}
                             onClick={() => setShowHighlightPocket(false)}
                             className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
-                            style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.28)" }}
+                            style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.28)" }}
                           >
                             {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
                           </Link>
@@ -898,7 +900,7 @@ export default function LibraryPage() {
 
                 {/* By Book & Chapter */}
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: "#c9a961" }}>
+                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
                     {lang === "es" ? "Por Libro" : "By Book"}
                   </p>
                   <div className="space-y-3">
@@ -910,7 +912,7 @@ export default function LibraryPage() {
                         <div
                           key={slug}
                           className="rounded-[28px] p-4"
-                          style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}
+                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
                         >
                           <button
                             className="w-full flex items-center justify-between active:opacity-70 transition-opacity"
@@ -925,13 +927,13 @@ export default function LibraryPage() {
                             <div className="flex items-center gap-2">
                               <span
                                 className="text-[10px] font-black px-2.5 py-0.5 rounded-full"
-                                style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                                style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961" }}
                               >
                                 {totalHls}
                               </span>
                               <svg
                                 width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                stroke="rgba(255,255,255,0.35)" strokeWidth="2"
+                                stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="2"
                                 strokeLinecap="round" strokeLinejoin="round"
                                 style={{ transform: collapsedBooks.has(slug) ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
                               >
@@ -944,11 +946,11 @@ export default function LibraryPage() {
                               <div
                                 key={chNum}
                                 className="rounded-[22px] p-3"
-                                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}
+                                style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(255,255,255,0.06)" }}
                               >
                                 <p
                                   className="text-[9px] font-black uppercase tracking-widest mb-2"
-                                  style={{ color: "rgba(201,169,97,0.65)" }}
+                                  style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(201,169,97,0.65)" }}
                                 >
                                   {lang === "es" ? `Capítulo ${chNum}` : `Chapter ${chNum}`}
                                 </p>
@@ -960,20 +962,20 @@ export default function LibraryPage() {
                                       <div
                                         key={hl.id}
                                         className="rounded-[18px] p-3"
-                                        style={{ background: `${dot}0a`, border: `1px solid ${dot}22` }}
+                                        style={{ background: isLight ? "rgba(0,0,0,0.03)" : `${dot}0a`, border: isLight ? "1px solid rgba(0,0,0,0.07)" : `1px solid ${dot}22` }}
                                       >
                                         <div className="flex items-start gap-2 mb-2">
                                           <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
                                           <p
                                             className="text-[13px] leading-snug flex-1"
-                                            style={{ color: "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
+                                            style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
                                           >
                                             &ldquo;{hl.text}&rdquo;
                                           </p>
                                           <button
                                             onClick={() => setConfirmRemoveId(hl.id)}
                                             className="text-xs flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
-                                            style={{ color: "rgba(255,255,255,0.2)" }}
+                                            style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)" }}
                                           >
                                             ×
                                           </button>
@@ -982,7 +984,7 @@ export default function LibraryPage() {
                                           href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.id}`}
                                           onClick={() => setShowHighlightPocket(false)}
                                           className="text-[10px] font-black px-3 py-1 rounded-full inline-block active:scale-95 transition-transform"
-                                          style={{ background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.22)" }}
+                                          style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.22)" }}
                                         >
                                           {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
                                         </Link>
@@ -1009,19 +1011,19 @@ export default function LibraryPage() {
           <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
             <div
               className="w-full max-w-[300px] rounded-[28px] p-5 text-center"
-              style={{ background: "#1a1d27", border: "1px solid rgba(201,169,97,0.18)" }}
+              style={{ background: isLight ? "#f5f5f5" : "#1a1d27", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)", color: isLight ? "#0a0a0a" : "white" }}
             >
               <p className="font-black text-base mb-1">
                 {lang === "es" ? "¿Eliminar resaltado?" : "Remove highlight?"}
               </p>
-              <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.45)" }}>
+              <p className="text-sm mb-5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
                 {lang === "es" ? "Esta acción no se puede deshacer." : "This cannot be undone."}
               </p>
               <div className="flex gap-3">
                 <button
                   onClick={() => setConfirmRemoveId(null)}
                   className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
-                  style={{ background: "rgba(255,255,255,0.07)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)" }}
                 >
                   {lang === "es" ? "Cancelar" : "Cancel"}
                 </button>
@@ -1033,7 +1035,9 @@ export default function LibraryPage() {
                       try {
                         const raw = localStorage.getItem(key);
                         const arr = raw ? (JSON.parse(raw) as Highlight[]) : [];
-                        localStorage.setItem(key, JSON.stringify(arr.filter(h => h.id !== confirmRemoveId)));
+                        const value = JSON.stringify(arr.filter(h => h.id !== confirmRemoveId));
+                        localStorage.setItem(key, value);
+                        syncKey(key, value).catch(() => {});
                       } catch {}
                       setBookHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
                     }

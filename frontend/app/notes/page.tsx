@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import { bibleBookName } from "../lib/spanishContent";
@@ -1025,6 +1026,9 @@ function NoteEditorModal({
 
 export default function NotesPage() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
+  const isLight = activeTheme === "white-noir";
   const [notes, setNotes] = useState<SermonNote[]>([]);
   const [mounted, setMounted] = useState(false);
 
@@ -1264,10 +1268,11 @@ export default function NotesPage() {
 
               <button
                 onClick={() => openNewNote(activeTab === "sermon" ? (selectedBookNum ?? undefined) : undefined)}
-                className="flex min-h-12 flex-shrink-0 items-center gap-2 rounded-2xl px-4 text-[12px] font-black text-[#08090f] transition-all active:scale-[0.97]"
+                className="flex min-h-12 flex-shrink-0 items-center gap-2 rounded-2xl px-4 text-[12px] font-black transition-all active:scale-[0.97]"
                 style={{
-                  background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 74%, #ffffff 26%))",
-                  boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 20%, transparent)",
+                  background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 74%, #ffffff 26%))",
+                  color: isLight ? "#0a0a0a" : "#08090f",
+                  boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 20%, transparent)",
                 }}
               >
                 <span className="text-lg leading-none">+</span>
@@ -1499,18 +1504,23 @@ export default function NotesPage() {
               <div>
                 {sorted.length === 0 ? (
                   <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
-                    <div className="w-full rounded-[32px] border border-white/[0.08] bg-white/[0.035] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+                    <div className="w-full rounded-[32px] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]"
+                      style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "#f9fafb" : "rgba(255,255,255,0.035)" }}>
                       <div className="relative mx-auto mb-5 w-fit">
                         <div
-                          className="w-24 h-24 rounded-[30px] border border-white/[0.09] flex items-center justify-center shadow-2xl"
-                          style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))" }}
+                          className="w-24 h-24 rounded-[30px] flex items-center justify-center shadow-2xl"
+                          style={{
+                            border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
+                            background: isLight ? "#e5e7eb" : "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))",
+                          }}
                         >
                           <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-lo)" }}>
                           <path d="M12 20h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black" style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>+</div>
+                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black"
+                          style={{ borderColor: "var(--bg)", background: isLight ? "#d1d5db" : "var(--accent)", color: isLight ? "#0a0a0a" : "#08090f" }}>+</div>
                       </div>
                       <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>{t(lang, "notes_general_empty_title")}</h2>
                       <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>{t(lang, "notes_general_empty_sub")}</p>
@@ -1520,11 +1530,11 @@ export default function NotesPage() {
                       </div>
                       <button
                         onClick={() => openNewNote()}
-                        className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all shadow-lg"
+                        className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all"
                         style={{
-                          background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
-                          color: "#08090f",
-                          boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
+                          background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
+                          color: "#0a0a0a",
+                          boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
                         }}
                       >
                         <span className="text-base font-black">+</span>
@@ -1555,11 +1565,15 @@ export default function NotesPage() {
             {/* ── Empty state (no sermon notes) ──────────────────────────────── */}
             {sermonNoteCount === 0 && (
               <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
-                <div className="w-full rounded-[32px] border border-white/[0.08] bg-white/[0.035] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
+                <div className="w-full rounded-[32px] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]"
+                  style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "#f9fafb" : "rgba(255,255,255,0.035)" }}>
                   <div className="relative mx-auto mb-5 w-fit">
                     <div
-                      className="w-24 h-24 rounded-[30px] border border-white/[0.09] flex items-center justify-center shadow-2xl"
-                      style={{ background: "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))" }}
+                      className="w-24 h-24 rounded-[30px] flex items-center justify-center shadow-2xl"
+                      style={{
+                        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
+                        background: isLight ? "#e5e7eb" : "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))",
+                      }}
                     >
                       <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-lo)" }}>
                       <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1569,7 +1583,8 @@ export default function NotesPage() {
                       <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       </svg>
                     </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black" style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black"
+                      style={{ borderColor: "var(--bg)", background: isLight ? "#d1d5db" : "var(--accent)", color: isLight ? "#0a0a0a" : "#08090f" }}>
                       +
                     </div>
                   </div>
@@ -1586,11 +1601,11 @@ export default function NotesPage() {
                   </div>
                   <button
                     onClick={() => openNewNote()}
-                    className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all shadow-lg"
+                    className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all"
                     style={{
-                      background: "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
-                      color: "#08090f",
-                      boxShadow: "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
+                      background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
+                      color: "#0a0a0a",
+                      boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
                     }}
                   >
                     <span className="text-base font-black">+</span>

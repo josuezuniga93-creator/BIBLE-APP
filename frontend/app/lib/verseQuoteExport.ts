@@ -139,28 +139,12 @@ export async function renderVerseToCanvas(
   // ── 8. Branding — centered, premium ─────────────────────────────────────────
   const brandY = HEIGHT - 60;
 
-  // Logo centered above text
-  if (opts.logoSrc) {
-    try {
-      const logo = new Image();
-      logo.crossOrigin = "anonymous";
-      logo.src = opts.logoSrc;
-      await new Promise<void>((res) => { logo.onload = () => res(); logo.onerror = () => res(); });
-      if (logo.complete && logo.naturalWidth > 0) {
-        const lSize = 28;
-        ctx.globalAlpha = 0.45;
-        ctx.drawImage(logo, WIDTH / 2 - lSize / 2, brandY - lSize - 10, lSize, lSize);
-        ctx.globalAlpha = 1;
-      }
-    } catch { /* logo failed */ }
-  }
-
   // Domain centered
   ctx.fillStyle  = "rgba(255,255,255,0.28)";
   ctx.font       = "400 18px sans-serif";
   ctx.textAlign  = "center";
   (ctx as any).letterSpacing = "3px";
-  ctx.fillText("TULIPBIBLEAPP.COM", WIDTH / 2, brandY);
+  ctx.fillText("Tulip Bible App", WIDTH / 2, brandY);
   (ctx as any).letterSpacing = "0px";
 }
 

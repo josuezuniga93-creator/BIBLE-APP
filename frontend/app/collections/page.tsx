@@ -10,6 +10,7 @@ import {
 import { getBookmarks, removeBookmark as removeBookmarkById, type Bookmark } from "../lib/bookmarks";
 import type { Highlight, HLColor } from "../lib/highlights";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
 
 // ─── Highlight aggregation ────────────────────────────────────────────────────
@@ -396,6 +397,8 @@ type HLView = "color" | "section";
 
 function HighlightsSection() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const [allHighlights, setAllHighlights] = useState<AggregatedHighlight[]>([]);
   const [colorNames, setColorNames]       = useState<ColorNames>(DEFAULT_NAMES);
   const [editingColor, setEditingColor]   = useState<HLColor | null>(null);
@@ -455,16 +458,16 @@ function HighlightsSection() {
     <section className="space-y-3">
       {/* Header + total */}
       <div className="flex items-center justify-between">
-        <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+        <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}>
           {lang === "es" ? "Mis Resaltados" : "My Highlights"}
         </h2>
-        <span className="text-[10px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <span className="text-[10px]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}>
           {allHighlights.length} {lang === "es" ? "total" : "total"}
         </span>
       </div>
 
       {/* View toggle */}
-      <div className="flex gap-1 p-1 rounded-xl" style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+      <div className="flex gap-1 p-1 rounded-xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}>
         {(["section", "color"] as HLView[]).map((v) => {
           const active = hlView === v;
           const labelEn = v === "section" ? "By Section" : "By Color";
@@ -475,9 +478,9 @@ function HighlightsSection() {
               onClick={() => setHlView(v)}
               className="flex-1 py-1.5 rounded-lg text-[11px] font-bold transition-all"
               style={{
-                background: active ? "rgba(201,169,97,0.18)" : "transparent",
-                border: active ? "1px solid rgba(201,169,97,0.3)" : "1px solid transparent",
-                color: active ? "#c9a961" : "rgba(255,255,255,0.30)",
+                background: active ? (isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.18)") : "transparent",
+                border: active ? (isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.3)") : "1px solid transparent",
+                color: active ? (isLight ? "#0a0a0a" : "#c9a961") : (isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)"),
               }}
             >
               {lang === "es" ? labelEs : labelEn}
@@ -517,7 +520,7 @@ function HighlightsSection() {
                   {/* Label + count + preview */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.88)" }}>
+                      <p className="text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.88)" }}>
                         {lang === "es" ? sec.labelEs : sec.labelEn}
                       </p>
                       <span className="text-[10px] font-black px-2 py-0.5 rounded-full flex-shrink-0"
@@ -527,11 +530,11 @@ function HighlightsSection() {
                     </div>
                     {preview ? (
                       <p className="text-[11px] leading-relaxed line-clamp-2"
-                        style={{ color: "rgba(255,255,255,0.38)", fontFamily: "Georgia, serif" }}>
+                        style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.38)", fontFamily: "Georgia, serif" }}>
                         &ldquo;{preview.text}&rdquo;
                       </p>
                     ) : (
-                      <p className="text-[11px]" style={{ color: "rgba(255,255,255,0.22)" }}>
+                      <p className="text-[11px]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.22)" }}>
                         {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
                       </p>
                     )}
@@ -580,21 +583,21 @@ function HighlightsSection() {
                       onBlur={commitEdit}
                       onKeyDown={(e) => { if (e.key === "Enter") commitEdit(); if (e.key === "Escape") setEditingColor(null); }}
                       className="w-full text-sm font-bold rounded-lg px-2 py-1 focus:outline-none"
-                      style={{ background: "rgba(255,255,255,0.07)", color: "#fff", border: `1px solid ${dot}50` }}
+                      style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)", color: isLight ? "#0a0a0a" : "#fff", border: `1px solid ${dot}50` }}
                     />
                   ) : (
                     <button onClick={() => { if (count > 0) openDetail({ key, dot }); }}
                       onContextMenu={(e) => { e.preventDefault(); startEdit(key, name); }}
                       className="w-full text-left">
-                      <p className="text-sm font-bold leading-none" style={{ color: "rgba(255,255,255,0.85)" }}>{name}</p>
-                      <p className="text-[10px] mt-1" style={{ color: "rgba(255,255,255,0.3)" }}>
+                      <p className="text-sm font-bold leading-none" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)" }}>{name}</p>
+                      <p className="text-[10px] mt-1" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.3)" }}>
                         {count === 0 ? "No highlights" : `${count} passage${count !== 1 ? "s" : ""}`}
                       </p>
                     </button>
                   )}
                   <div className="flex items-center justify-between pt-0.5">
                     <button onClick={() => startEdit(key, name)} className="text-[9px] font-bold"
-                      style={{ color: "rgba(255,255,255,0.25)" }}>
+                      style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.25)" }}>
                       Rename
                     </button>
                     {count > 0 && (
@@ -641,13 +644,16 @@ function itemHref(item: SavedItem): string {
 }
 
 function EmptyState({ lang }: { lang: import("../lib/i18n").Lang }) {
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-      <div className="w-20 h-20 rounded-3xl bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-4xl mb-5">
+      <div className="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mb-5"
+        style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}>
         🔖
       </div>
-      <p className="text-base font-bold text-white/70 mb-2">{t(lang, "col_empty_title")}</p>
-      <p className="text-sm text-white/30 max-w-xs leading-relaxed">{t(lang, "col_empty_sub")}</p>
+      <p className="text-base font-bold mb-2" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>{t(lang, "col_empty_title")}</p>
+      <p className="text-sm max-w-xs leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}>{t(lang, "col_empty_sub")}</p>
     </div>
   );
 }
@@ -797,6 +803,8 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
 }
 
 function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () => void; lang: import("../lib/i18n").Lang }) {
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const topItem = col.items.sort((a, b) => b.savedAt - a.savedAt)[0];
   return (
     <button
@@ -812,11 +820,11 @@ function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () =
             {col.items.length}
           </span>
         </div>
-        <p className="text-sm font-bold text-white/90 mb-0.5">{col.name}</p>
+        <p className="text-sm font-bold mb-0.5" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.90)" }}>{col.name}</p>
         {topItem ? (
-          <p className="text-[10px] text-white/35 line-clamp-1">{topItem.title}</p>
+          <p className="text-[10px] line-clamp-1" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.35)" }}>{topItem.title}</p>
         ) : (
-          <p className="text-[10px] text-white/25">{t(lang, "col_empty")}</p>
+          <p className="text-[10px]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.25)" }}>{t(lang, "col_empty")}</p>
         )}
       </div>
     </button>
@@ -827,6 +835,8 @@ function CollectionCard({ col, onClick, lang }: { col: Collection; onClick: () =
 
 function BookmarksSection() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
 
@@ -851,10 +861,10 @@ function BookmarksSection() {
     return (
       <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
         <div className="text-4xl mb-3">🔖</div>
-        <p className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <p className="text-sm font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.4)" }}>
           {lang === "es" ? "Sin marcadores aún" : "No bookmarks yet"}
         </p>
-        <p className="text-xs mt-1 max-w-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.2)" }}>
+        <p className="text-xs mt-1 max-w-xs leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}>
           {lang === "es"
             ? "Toca 'Guardar' en cualquier versículo para marcarlo aquí."
             : "Tap 'Save' on any verse to bookmark it."}
@@ -887,13 +897,13 @@ function BookmarksSection() {
               <div className="flex items-center gap-2">
                 <span
                   className="text-[11px] font-black uppercase tracking-widest"
-                  style={{ color: "#c9a961" }}
+                  style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
                 >
                   {cat}
                 </span>
                 <span
                   className="text-[9px] font-black px-1.5 py-0.5 rounded-full"
-                  style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)", color: isLight ? "rgba(0,0,0,0.50)" : "#c9a961" }}
                 >
                   {items.length}
                 </span>
@@ -916,31 +926,31 @@ function BookmarksSection() {
                   <div
                     key={bm.id}
                     className="rounded-2xl px-4 py-3.5 space-y-2"
-                    style={{ background: "rgba(201,169,97,0.07)", border: "1px solid rgba(201,169,97,0.18)" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(201,169,97,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.18)" }}
                   >
                     {/* Reference */}
                     <span
                       className="text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full inline-block"
-                      style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}
+                      style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)", color: isLight ? "rgba(0,0,0,0.55)" : "#c9a961" }}
                     >
                       {bm.ref}
                     </span>
                     {/* Verse text */}
                     <p
                       className="text-sm leading-relaxed"
-                      style={{ color: "rgba(255,255,255,0.85)", fontFamily: "Georgia, serif", borderLeft: "3px solid rgba(201,169,97,0.5)", paddingLeft: "10px" }}
+                      style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.85)", fontFamily: "Georgia, serif", borderLeft: "3px solid rgba(201,169,97,0.5)", paddingLeft: "10px" }}
                     >
                       {bm.text}
                     </p>
                     {/* Date + remove */}
                     <div className="flex items-center justify-between gap-2 pt-0.5">
-                      <span className="text-[9px]" style={{ color: "rgba(255,255,255,0.2)" }}>
+                      <span className="text-[9px]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}>
                         {new Date(bm.date).toLocaleDateString(lang === "es" ? "es-MX" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </span>
                       <button
                         onClick={() => handleRemove(bm.id)}
                         className="w-6 h-6 rounded-full flex items-center justify-center transition-colors flex-shrink-0"
-                        style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.25)" }}
+                        style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.25)" }}
                         title={lang === "es" ? "Eliminar marcador" : "Remove bookmark"}
                       >
                         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -965,6 +975,8 @@ type CollectionsTab = "highlights" | "collections" | "bookmarks";
 
 function CollectionsInner() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const searchParams = useSearchParams();
   const [collections, setCollections] = useState<Collection[]>([]);
   const [selected, setSelected]       = useState<Collection | null>(null);
@@ -993,12 +1005,12 @@ function CollectionsInner() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-screen text-white" style={{ background: isLight ? "#f9fafb" : "#0f0f0f" }}>
 
       {/* Header */}
       <div className="px-4 pt-6 pb-2">
-        <h1 className="text-xl font-bold">{t(lang, "col_heading")}</h1>
-        <p className="text-xs text-white/30 mt-0.5">{t(lang, "col_sub")}</p>
+        <h1 className="text-xl font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{t(lang, "col_heading")}</h1>
+        <p className="text-xs mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}>{t(lang, "col_sub")}</p>
       </div>
 
       {/* Tab bar */}
@@ -1011,9 +1023,9 @@ function CollectionsInner() {
               onClick={() => setActiveTab(key)}
               className="flex-1 py-2 rounded-xl text-[11px] font-bold transition-all"
               style={{
-                background: active ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.04)",
-                border: active ? "1px solid rgba(201,169,97,0.3)" : "1px solid rgba(255,255,255,0.07)",
-                color: active ? "#c9a961" : "rgba(255,255,255,0.35)",
+                background: active ? (isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)") : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)"),
+                border: active ? (isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.3)") : (isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)"),
+                color: active ? (isLight ? "#0a0a0a" : "#c9a961") : (isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.35)"),
               }}
             >
               {lang === "es" ? labelEs : labelEn}
@@ -1031,11 +1043,11 @@ function CollectionsInner() {
         {activeTab === "collections" && (
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}>
                 {t(lang, "col_heading")}
               </h2>
               {collections.length > 0 && (
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)", color: isLight ? "rgba(0,0,0,0.50)" : "#c9a961" }}>
                   {collections.length}
                 </span>
               )}
@@ -1052,9 +1064,9 @@ function CollectionsInner() {
             )}
 
             {collections.length > 0 && (
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 text-center">
-                <p className="text-sm font-bold text-white/40 mb-1">{t(lang, "col_add_more")}</p>
-                <p className="text-xs text-white/25 leading-relaxed">{t(lang, "col_add_more_sub")}</p>
+              <div className="rounded-2xl p-5 text-center" style={{ border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)", background: isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)" }}>
+                <p className="text-sm font-bold mb-1" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>{t(lang, "col_add_more")}</p>
+                <p className="text-xs leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.25)" }}>{t(lang, "col_add_more_sub")}</p>
               </div>
             )}
           </section>
@@ -1064,7 +1076,7 @@ function CollectionsInner() {
         {activeTab === "bookmarks" && (
           <section className="space-y-3">
             <div className="flex items-center justify-between mb-1">
-              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: "#c9a961" }}>
+              <h2 className="text-[11px] font-black uppercase tracking-widest" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}>
                 {lang === "es" ? "Mis Marcadores" : "My Bookmarks"}
               </h2>
             </div>
@@ -1085,7 +1097,7 @@ function CollectionsInner() {
 
 export default function CollectionsPage() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+    <Suspense fallback={<div className="min-h-screen" />}>
       <CollectionsInner />
     </Suspense>
   );

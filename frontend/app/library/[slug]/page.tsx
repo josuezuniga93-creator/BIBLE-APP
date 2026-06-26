@@ -205,7 +205,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     th.borderLight              = "rgba(0,0,0,0.05)";
     th.borderMed                = "rgba(0,0,0,0.09)";
     th.drawerBg                 = "#f5f5f5";
-    th.readNowGradient          = "linear-gradient(135deg,#333,#0a0a0a)";
+    th.readNowGradient          = "#f3f4f6";
     th.nextBtnGradient          = "linear-gradient(135deg,#333,#0a0a0a)";
     th.prevBtnBg                = "rgba(0,0,0,0.05)";
     th.prevBtnBorder            = "rgba(0,0,0,0.10)";
@@ -232,6 +232,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     th.progressBar              = "linear-gradient(90deg,#333,#0a0a0a)";
     th.sliderCss                = `.reader-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.reader-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#333,#0a0a0a);cursor:pointer;border:2px solid rgba(0,0,0,0.15)}.reader-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,#333,#0a0a0a);cursor:pointer;border:2px solid rgba(0,0,0,0.15)}`;
     th.footerText               = "rgba(10,10,10,0.25)";
+    th.addLibBorder             = "rgba(0,0,0,0.10)";
+    th.addLibText               = "#0a0a0a";
   }
 
   const { lang } = useLanguage();
@@ -801,8 +803,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           <div className="px-4 flex flex-col gap-2.5 mb-5">
             <button
               onClick={() => setShowDetail(false)}
-              className="w-full py-3.5 rounded-2xl font-bold text-sm text-white active:scale-[0.98] transition-transform"
-              style={{ background: th.readNowGradient }}
+              className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
+              style={{ background: th.readNowGradient, color: isLight ? "#0a0a0a" : "#ffffff" }}
             >
               {lang === "es" ? "Leer Ahora" : "Read Now"}
             </button>
@@ -811,7 +813,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
               style={{ border: `1px solid ${th.addLibBorder}`, color: th.addLibText, backgroundColor: "transparent" }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c9a961" : th.addLibText }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? (isLight ? "#0a0a0a" : "#c9a961") : th.addLibText }}>
                 <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
               </svg>
               {bookmarked ? (lang === "es" ? "Guardado en colección" : "Saved to Collection") : (lang === "es" ? "Guardar en Colección" : "Save to Collection")}

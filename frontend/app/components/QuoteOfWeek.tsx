@@ -1,16 +1,26 @@
 "use client";
 import { getCurrentQuote } from "../data/quotes";
 import { useLanguage } from "../lib/useLanguage";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "../lib/supabase/client";
+import { getCloudUser } from "../lib/cloudSync";
+import type { User } from "@supabase/supabase-js";
+
+type Liker = { userId: string; userName: string; avatarUrl: string | null };
 
 export default function QuoteOfWeek() {
   const quote = getCurrentQuote();
   const { lang } = useLanguage();
+  const router = useRouter();
   const text = lang === "es" ? quote.textEs : quote.text;
   const [copied, setCopied] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(0);
   const [sharing, setSharing] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [likers, setLikers] = useState<Liker[]>([]);
+  const [heartPopKey, setHeartPopKey] = useState(0);
+  const supabase = useMemo(() => createClient(), []);
   const [isLightElegant, setIsLightElegant] = useState(false);
   const [isPremiumNeon,  setIsPremiumNeon]  = useState(false);
   useEffect(() => {
@@ -23,8 +33,8 @@ export default function QuoteOfWeek() {
     window.addEventListener("ryc-theme-change", check as EventListener);
     return () => window.removeEventListener("ryc-theme-change", check as EventListener);
   }, []);
-  const qAC  = isPremiumNeon ? "#a78bfa" : isLightElegant ? "#111111" : "#c9a961";
-  const qACb = isPremiumNeon ? "rgba(167,139,250,0.70)" : isLightElegant ? "rgba(17,17,17,0.70)" : "rgba(201,169,97,0.70)";
+  const qAC  = isPremiumNeon ? "#a78bfa" : isLightElegant ? "#444444" : "#c9a961";
+  const qACb = isPremiumNeon ? "rgba(167,139,250,0.70)" : isLightElegant ? "rgba(60,60,60,0.60)" : "rgba(201,169,97,0.70)";
 
   function handleCopy() {
     const shareText = `"${text}" — ${quote.author} (${quote.born}–${quote.died})`;
@@ -192,10 +202,64 @@ export default function QuoteOfWeek() {
     return lines;
   }
 
-  function handleLike() {
-    if (!liked) {
-      setLiked(true);
-      setLikeCount((c) => c + 1);
+  useEffect(() => {
+    let active = true;
+
+    async function fetchLikers() {
+      const { data } = await supabase
+        .from("quote_likes")
+        .select("user_id,user_name,avatar_url")
+        .eq("quote_id", quote.id);
+      if (!active) return;
+      setLikers(
+        (data ?? []).map((r) => ({
+          userId: r.user_id as string,
+          userName: (r.user_name as string | null) ?? "Believer",
+          avatarUrl: (r.avatar_url as string | null) ?? null,
+        }))
+      );
+    }
+
+    getCloudUser().then((u) => { if (active) setUser(u); });
+    fetchLikers();
+
+    const channel = supabase
+      .channel(`quote-likes-${quote.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "quote_likes", filter: `quote_id=eq.${quote.id}` },
+        () => fetchLikers()
+      )
+      .subscribe();
+
+    return () => {
+      active = false;
+      supabase.removeChannel(channel);
+    };
+  }, [quote.id, supabase]);
+
+  const liked = !!user && likers.some((l) => l.userId === user.id);
+  const otherLikers = user ? likers.filter((l) => l.userId !== user.id) : likers;
+
+  async function handleLike() {
+    if (!user) {
+      router.push("/auth/login");
+      return;
+    }
+    if (liked) {
+      setLikers((prev) => prev.filter((l) => l.userId !== user.id));
+      await supabase.from("quote_likes").delete().eq("quote_id", quote.id).eq("user_id", user.id);
+    } else {
+      setHeartPopKey((k) => k + 1);
+      const userName = (user.user_metadata?.full_name as string | undefined) || user.email || "Believer";
+      const avatarUrl = (user.user_metadata?.avatar_url as string | undefined) ?? null;
+      setLikers((prev) => [...prev, { userId: user.id, userName, avatarUrl }]);
+      await supabase.from("quote_likes").upsert({
+        quote_id: quote.id,
+        user_id: user.id,
+        user_name: userName,
+        avatar_url: avatarUrl,
+      });
     }
   }
 
@@ -209,9 +273,13 @@ export default function QuoteOfWeek() {
         >
           {lang === "es" ? "Cita de la Semana" : "Quote of the Week"}
         </h3>
-        <span className="text-[11px]" style={{ color: qACb }}>
-          {lang === "es" ? "Voces del pasado" : "Voices from the past"}
-        </span>
+        <Link
+          href="/quotes"
+          className="text-xs font-bold active:opacity-70 flex-shrink-0"
+          style={{ color: qAC }}
+        >
+          {lang === "es" ? "Ver todo →" : "See all →"}
+        </Link>
       </div>
 
       {/* Quote card */}
@@ -219,8 +287,8 @@ export default function QuoteOfWeek() {
         className="quote-week-media-card relative rounded-2xl overflow-hidden w-full"
         style={{
           minHeight: "370px",
-          background: isLightElegant ? "#f0f1f3" : "#0b0d15",
-          border: isLightElegant ? "1px solid rgba(10,10,10,0.14)" : "1px solid rgba(201,169,97,0.10)",
+          background: isLightElegant ? "transparent" : "#0b0d15",
+          border: isLightElegant ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.10)",
           boxShadow: isLightElegant ? "0 4px 20px rgba(10,10,10,0.10)" : undefined,
         }}
       >
@@ -240,7 +308,7 @@ export default function QuoteOfWeek() {
           className="absolute inset-0"
           style={{
             background: isLightElegant
-              ? "linear-gradient(to right, rgba(240,241,243,0) 34%, rgba(240,241,243,0.42) 45%, rgba(240,241,243,0.88) 58%, rgba(240,241,243,0.97) 74%, rgba(240,241,243,1) 100%)"
+              ? "linear-gradient(to right, rgba(0,0,0,0) 32%, rgba(0,0,0,0.22) 44%, rgba(0,0,0,0.55) 57%, rgba(0,0,0,0.72) 72%, rgba(0,0,0,0.78) 100%)"
               : "linear-gradient(to right, rgba(11,13,21,0) 34%, rgba(11,13,21,0.22) 45%, rgba(11,13,21,0.78) 58%, rgba(11,13,21,0.98) 74%, rgba(11,13,21,1) 100%)",
           }}
         />
@@ -250,47 +318,71 @@ export default function QuoteOfWeek() {
           className="absolute inset-y-0 flex flex-col justify-center"
           style={{ left: "52%", right: "5%", paddingTop: "20px", paddingBottom: "22px" }}
         >
-          <p className="text-[15px] italic font-semibold leading-[1.22] mb-5 tracking-[-0.02em]" style={{ color: isLightElegant ? "#0a0a0a" : "#ffffff" }}>
+          <p className="text-[15px] italic font-semibold leading-[1.22] mb-5 tracking-[-0.02em]" style={{ color: "#ffffff" }}>
             {lang === "es" ? `"${quote.textEs}"` : `"${quote.text}"`}
           </p>
           <div>
-            <p className="text-[14px] font-bold mb-0.5" style={{ color: qAC }}>
+            <p className="text-[14px] font-bold mb-0.5" style={{ color: isLightElegant ? "#ffffff" : qAC }}>
               {quote.author}
             </p>
-            <p className="text-[11px]" style={{ color: isLightElegant ? "rgba(10,10,10,0.50)" : "rgba(255,255,255,0.42)" }}>
+            <p className="text-[11px]" style={{ color: isLightElegant ? "rgba(255,255,255,0.60)" : "rgba(255,255,255,0.42)" }}>
               {quote.born}–{quote.died}
             </p>
           </div>
         </div>
+
+        {/* Community heart — bottom-left of the card, over the dark overlay */}
+        <div className="absolute left-3 bottom-3 flex flex-col items-start gap-1.5">
+          <button onClick={handleLike} className="flex items-center gap-1.5">
+            <svg
+              key={heartPopKey}
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill={liked ? "#e53e3e" : "none"}
+              stroke={liked ? "#e53e3e" : "rgba(255,255,255,0.60)"}
+              strokeWidth="2"
+              className={heartPopKey > 0 ? "animate-heart-pop" : ""}
+            >
+              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+            </svg>
+            <span className="text-[12px] font-semibold" style={{ color: "rgba(255,255,255,0.85)" }}>
+              {likers.length}
+            </span>
+          </button>
+
+          {otherLikers.length > 0 && (
+            <div className="flex items-center -space-x-2">
+              {otherLikers.slice(0, 5).map((l) => (
+                <div
+                  key={l.userId}
+                  className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-[9px] font-bold"
+                  style={{ border: "1.5px solid rgba(11,13,21,0.9)", background: qACb, color: "#0b0d15" }}
+                  title={l.userName}
+                >
+                  {l.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={l.avatarUrl} alt={l.userName} className="w-full h-full object-cover" />
+                  ) : (
+                    l.userName.slice(0, 2).toUpperCase()
+                  )}
+                </div>
+              ))}
+              {otherLikers.length > 5 && (
+                <div
+                  className="w-6 h-6 rounded-full flex items-center justify-center text-[8px] font-bold"
+                  style={{ border: "1.5px solid rgba(11,13,21,0.9)", background: "rgba(255,255,255,0.15)", color: "#fff" }}
+                >
+                  +{otherLikers.length - 5}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Interactive bar */}
-      <div className="flex items-center justify-between mt-3 px-1">
-        {/* Like */}
-        <button
-          onClick={handleLike}
-          className="flex items-center gap-1.5 text-[12px] transition-all"
-          style={{ color: liked ? qAC : isLightElegant ? "rgba(10,10,10,0.48)" : "rgba(255,255,255,0.4)" }}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill={liked ? qAC : "none"}
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-          </svg>
-          <span>
-            {likeCount > 0
-              ? likeCount
-              : lang === "es"
-              ? "Me inspira"
-              : "Inspiring"}
-          </span>
-        </button>
-
+      <div className="flex items-center justify-end mt-3 px-1">
         {/* Copy + Share */}
         <div className="flex items-center gap-3">
           <button
@@ -350,6 +442,7 @@ export default function QuoteOfWeek() {
           </button>
         </div>
       </div>
+
     </section>
   );
 }

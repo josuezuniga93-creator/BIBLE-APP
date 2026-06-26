@@ -9,13 +9,13 @@ const VALID_THEMES: Theme[] = ["gold-navy", "white-noir"];
 
 export const THEMES: Record<Theme, { label: string; emoji: string; desc: string; preview: string[] }> = {
   "gold-navy": {
-    label: "Gold Navy",
+    label: "Dark Mode",
     emoji: "✨",
     desc: "Dark navy with warm amber gold accents",
     preview: ["#0e1018", "#c9a961", "#1a1d27", "#ffffff"],
   },
   "white-noir": {
-    label: "White Noir",
+    label: "Light Mode",
     emoji: "◻️",
     desc: "Clean white with black ink — premium monochrome",
     preview: ["#ffffff", "#0a0a0a", "#f7f7f7", "#0a0a0a"],
@@ -46,13 +46,13 @@ function readThemeFromStorage(): Theme {
       return fromCookie;
     }
   } catch {}
-  return "gold-navy";
+  return "white-noir";
 }
 
 function readThemeEarly(): Theme {
   // Called during client-side lazy init — data-theme is already set by the
   // inline <head> script before React hydrates, so check it first.
-  if (typeof window === "undefined") return "gold-navy";
+  if (typeof window === "undefined") return "white-noir";
   try {
     const fromHtml = document.documentElement.getAttribute("data-theme") as Theme;
     if (fromHtml && VALID_THEMES.includes(fromHtml)) return fromHtml;

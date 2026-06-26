@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -129,6 +130,7 @@ function PastGatheringCard({
   onAddFamily,
   onRemoveFamily,
   onShare,
+  isLight,
 }: {
   g: Gathering;
   onEdit: (g: Gathering) => void;
@@ -136,6 +138,7 @@ function PastGatheringCard({
   onAddFamily: (id: string, name: string) => void;
   onRemoveFamily: (id: string, name: string) => void;
   onShare: (g: Gathering) => void;
+  isLight: boolean;
 }) {
   const [addingFamily, setAddingFamily] = useState(false);
   const [familyInput, setFamilyInput] = useState("");
@@ -228,7 +231,7 @@ function PastGatheringCard({
                 placeholder="Family name…"
                 autoFocus
                 className="flex-1 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none"
-                style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, #7c3aed)" + "44" }}
+                style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, #7c3aed)" + "44" }}
               />
               <button
                 onClick={commitFamily}
@@ -390,6 +393,8 @@ function GatheringCard({
 
 export default function FellowshipPage() {
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const [gatherings, setGatherings] = useState<Gathering[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -587,6 +592,7 @@ export default function FellowshipPage() {
                     onAddFamily={handleAddFamily}
                     onRemoveFamily={handleRemoveFamily}
                     onShare={handleShare}
+                    isLight={isLight}
                   />
                 ))}
               </div>
@@ -617,7 +623,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                     placeholder={lang === "es" ? "ej. Estudio Bíblico del martes" : "e.g. Tuesday Bible Study"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", opacity: 1, color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", opacity: 1, color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     autoFocus
                   />
                 </div>
@@ -631,7 +637,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
                     placeholder={lang === "es" ? "ej. Casa de Juan / 123 Oak St" : "e.g. John's home / 123 Oak St"}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                 </div>
 
@@ -644,7 +650,7 @@ export default function FellowshipPage() {
                       value={form.date}
                       onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                       className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                      style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                      style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     />
                   </div>
                   <div>
@@ -654,7 +660,7 @@ export default function FellowshipPage() {
                       value={form.time}
                       onChange={(e) => setForm((f) => ({ ...f, time: e.target.value }))}
                       className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                      style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                      style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                     />
                   </div>
                 </div>
@@ -668,7 +674,7 @@ export default function FellowshipPage() {
                     placeholder={lang === "es" ? "Tema de estudio, qué traer, etc." : "Study topic, what to bring, etc."}
                     rows={3}
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none resize-none"
-                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                 </div>
 
@@ -683,7 +689,7 @@ export default function FellowshipPage() {
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
                     placeholder="+1 555 000 0000"
                     className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                    style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                    style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                   />
                   <p className="text-[9px] mt-1" style={{ color: "var(--fg, rgba(255,255,255,0.25))" }}>
                     {lang === "es" ? "Aparecerá un botón de “Enviar Mensaje” en la tarjeta de esta reunión." : 'A "Send Message" button will appear on this gathering\'s card.'}
@@ -695,24 +701,24 @@ export default function FellowshipPage() {
                   onClick={() => setForm((f) => ({ ...f, reminder: !f.reminder }))}
                   className="w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all"
                   style={{
-                    borderColor: form.reminder ? "var(--accent, #7c3aed)" : "rgba(255,255,255,0.1)",
-                    background: form.reminder ? "var(--accent, #7c3aed)" + "18" : "rgba(255,255,255,0.03)",
+                    borderColor: form.reminder ? "var(--accent, #7c3aed)" : (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.1)"),
+                    background: form.reminder ? "var(--accent, #7c3aed)" + "18" : (isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)"),
                   }}
                 >
                   <div className="flex items-center gap-3">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: form.reminder ? "var(--accent, #7c3aed)" : "rgba(255,255,255,0.3)" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ color: form.reminder ? "var(--accent, #7c3aed)" : (isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.3)") }}>
                       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                       <path d="M13.73 21a2 2 0 01-3.46 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                     <div className="text-left">
-                      <p className="text-sm font-semibold" style={{ color: form.reminder ? "var(--accent, #7c3aed)" : "rgba(255,255,255,0.6)" }}>
+                      <p className="text-sm font-semibold" style={{ color: form.reminder ? "var(--accent, #7c3aed)" : (isLight ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.6)") }}>
                         {lang === "es" ? "Activar recordatorio" : "Set reminder"}
                       </p>
-                      <p className="text-[10px] mt-0.5" style={{ color: "rgba(255,255,255,0.3)" }}>{lang === "es" ? "1 día antes + la mañana de la reunión" : "1 day before + morning of"}</p>
+                      <p className="text-[10px] mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.3)" }}>{lang === "es" ? "1 día antes + la mañana de la reunión" : "1 day before + morning of"}</p>
                     </div>
                   </div>
                   <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all" style={{
-                    borderColor: form.reminder ? "var(--accent, #7c3aed)" : "rgba(255,255,255,0.2)",
+                    borderColor: form.reminder ? "var(--accent, #7c3aed)" : (isLight ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.2)"),
                     background: form.reminder ? "var(--accent, #7c3aed)" : "transparent",
                   }}>
                     {form.reminder && <span className="text-white text-[10px]">✓</span>}
@@ -725,7 +731,7 @@ export default function FellowshipPage() {
                 <button
                   onClick={() => { setShowForm(false); setEditId(null); }}
                   className="flex-1 py-3 rounded-xl border font-bold text-sm transition-colors"
-                  style={{ borderColor: "rgba(255,255,255,0.1)", color: "var(--fg, rgba(255,255,255,0.5))" }}
+                  style={{ borderColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.1)", color: "var(--fg, rgba(255,255,255,0.5))" }}
                 >
                   {t("notes_cancel")}
                 </button>
@@ -756,7 +762,7 @@ export default function FellowshipPage() {
               <p className="text-sm font-black" style={{ color: "var(--fg, #fff)" }}>{lang === "es" ? "Enviar Detalles de la Reunión" : "Send Gathering Details"}</p>
 
               {/* Preview */}
-              <div className="rounded-xl px-4 py-3 text-xs leading-relaxed whitespace-pre-line" style={{ background: "rgba(255,255,255,0.04)", color: "var(--fg, rgba(255,255,255,0.6))", border: "1px solid rgba(255,255,255,0.07)" }}>
+              <div className="rounded-xl px-4 py-3 text-xs leading-relaxed whitespace-pre-line" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: "var(--fg, rgba(255,255,255,0.6))", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)" }}>
                 {buildSmsBody(smsModal.g)}
               </div>
 
@@ -770,7 +776,7 @@ export default function FellowshipPage() {
                   placeholder="+1 555 000 0000"
                   autoFocus
                   className="w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-                  style={{ background: "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: "var(--fg, #fff)", border: "1px solid var(--accent, rgba(255,255,255,0.1))" }}
                 />
               </div>
 
@@ -784,7 +790,7 @@ export default function FellowshipPage() {
                     setTimeout(() => setCopyMsg(false), 2000);
                   }}
                   className="flex-1 py-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-                  style={{ borderColor: "rgba(255,255,255,0.12)", color: "var(--fg, rgba(255,255,255,0.5))" }}
+                  style={{ borderColor: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)", color: "var(--fg, rgba(255,255,255,0.5))" }}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
                     <rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" strokeWidth="1.8"/>

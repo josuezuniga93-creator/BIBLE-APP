@@ -7,6 +7,7 @@ import {
   type Collection, type SavedItem,
 } from "../lib/collections";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
@@ -22,6 +23,9 @@ interface BookmarkModalProps {
 
 export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
+  const light = activeTheme === "white-noir";
   const [collections, setCollections] = useState<Collection[]>([]);
   const [checkedIds, setCheckedIds]   = useState<Set<string>>(new Set());
   const [showCreate, setShowCreate]   = useState(false);
@@ -92,16 +96,30 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
       >
       <div
         className="w-full max-w-sm rounded-2xl overflow-hidden pointer-events-auto"
-        style={{ backgroundColor: "#181828", border: "1px solid rgba(255,255,255,0.08)", maxHeight: "80vh", display: "flex", flexDirection: "column" }}
+        style={{
+          backgroundColor: light ? "#f9fafb" : "#181828",
+          border: light ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
+          maxHeight: "80vh",
+          display: "flex",
+          flexDirection: "column",
+        }}
         onClick={(e) => e.stopPropagation()}
       >
 
         {/* Header */}
-        <div className="px-5 py-3 border-b border-white/[0.07]">
-          <p className="text-[10px] font-black tracking-widest text-white/30 uppercase mb-0.5">{t(lang, "bm_save_to")}</p>
+        <div
+          className="px-5 py-3"
+          style={{ borderBottom: light ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
+        >
+          <p
+            className="text-[10px] font-black tracking-widest uppercase mb-0.5"
+            style={{ color: light ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}
+          >
+            {t(lang, "bm_save_to")}
+          </p>
           <p
             className="text-sm font-bold leading-snug"
-            style={{ fontFamily: "Georgia, serif", color: "rgba(255,255,255,0.85)" }}
+            style={{ fontFamily: "Georgia, serif", color: light ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)" }}
           >
             {label}
           </p>
@@ -110,7 +128,12 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
         {/* Collection list */}
         <div className="overflow-y-auto flex-1">
           {collections.length === 0 && !showCreate && (
-            <p className="text-center text-xs text-white/30 py-6">{t(lang, "bm_no_collections")}</p>
+            <p
+              className="text-center text-xs py-6"
+              style={{ color: light ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}
+            >
+              {t(lang, "bm_no_collections")}
+            </p>
           )}
           {collections.map((col) => {
             const checked = checkedIds.has(col.id);
@@ -118,13 +141,24 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               <button
                 key={col.id}
                 onClick={() => handleToggle(col.id)}
-                className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors active:bg-white/[0.04]"
-                style={checked ? { borderLeft: `3px solid ${col.color}` } : { borderLeft: "3px solid transparent" }}
+                className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors"
+                style={{
+                  borderLeft: checked ? `3px solid ${col.color}` : "3px solid transparent",
+                  backgroundColor: "transparent",
+                }}
               >
                 <span className="text-xl flex-shrink-0">{col.emoji}</span>
                 <div className="flex-1 text-left">
-                  <p className="text-sm font-bold text-white/85">{col.name}</p>
-                  <p className="text-[10px] text-white/30">
+                  <p
+                    className="text-sm font-bold"
+                    style={{ color: light ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)" }}
+                  >
+                    {col.name}
+                  </p>
+                  <p
+                    className="text-[10px]"
+                    style={{ color: light ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}
+                  >
                     {col.items.length} {col.items.length === 1 ? t(lang, "col_item") : t(lang, "col_items")}
                   </p>
                 </div>
@@ -133,7 +167,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   className="w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 transition-all"
                   style={{
                     backgroundColor: checked ? col.color : "transparent",
-                    border: checked ? `2px solid ${col.color}` : "2px solid rgba(255,255,255,0.2)",
+                    border: checked ? `2px solid ${col.color}` : light ? "2px solid rgba(0,0,0,0.18)" : "2px solid rgba(255,255,255,0.2)",
                   }}
                 >
                   {checked && <span className="text-white text-[10px] font-black">✓</span>}
@@ -144,7 +178,10 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
 
           {/* New Collection form */}
           {showCreate && (
-            <div className="px-5 py-4 border-t border-white/[0.07] space-y-3">
+            <div
+              className="px-5 py-4 space-y-3"
+              style={{ borderTop: light ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
+            >
               {/* Emoji row */}
               <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 {COLLECTION_EMOJIS.map((e) => (
@@ -153,8 +190,12 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                     onClick={() => setNewEmoji(e)}
                     className="flex-shrink-0 w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all"
                     style={{
-                      backgroundColor: newEmoji === e ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.05)",
-                      border: newEmoji === e ? "1px solid rgba(255,255,255,0.3)" : "1px solid transparent",
+                      backgroundColor: newEmoji === e
+                        ? (light ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.15)")
+                        : (light ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.05)"),
+                      border: newEmoji === e
+                        ? (light ? "1px solid rgba(0,0,0,0.25)" : "1px solid rgba(255,255,255,0.3)")
+                        : "1px solid transparent",
                     }}
                   >
                     {e}
@@ -168,8 +209,12 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                 onChange={(e) => setNewName(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") handleCreate(); }}
                 placeholder={t(lang, "bm_col_name_placeholder")}
-                className="w-full px-3 py-2.5 rounded-xl text-sm text-white placeholder-white/30 outline-none"
-                style={{ backgroundColor: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}
+                className="w-full px-3 py-2.5 rounded-xl text-sm outline-none"
+                style={{
+                  backgroundColor: light ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)",
+                  border: light ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)",
+                  color: light ? "#0a0a0a" : "#ffffff",
+                }}
               />
               {/* Color swatches */}
               <div className="flex gap-2">
@@ -180,7 +225,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                     className="w-6 h-6 rounded-full flex-shrink-0 transition-transform active:scale-90"
                     style={{
                       backgroundColor: c,
-                      outline: newColor === c ? `2px solid white` : "none",
+                      outline: newColor === c ? (light ? "2px solid #0a0a0a" : "2px solid white") : "none",
                       outlineOffset: "2px",
                     }}
                   />
@@ -190,7 +235,11 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowCreate(false); setNewName(""); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white/50 border border-white/10"
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  style={{
+                    color: light ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.50)",
+                    border: light ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)",
+                  }}
                 >
                   {t(lang, "bm_cancel")}
                 </button>
@@ -210,21 +259,41 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           {!showCreate && (
             <button
               onClick={() => setShowCreate(true)}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-left border-t border-white/[0.07] active:bg-white/[0.04] transition-colors"
+              className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
+              style={{ borderTop: light ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
             >
-              <div className="w-8 h-8 rounded-full bg-white/[0.07] flex items-center justify-center text-white/50 text-lg">+</div>
-              <p className="text-sm font-bold text-white/50">{t(lang, "bm_new_collection")}</p>
+              <div
+                className="w-8 h-8 rounded-full flex items-center justify-center text-lg"
+                style={{
+                  backgroundColor: light ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)",
+                  color: light ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.50)",
+                }}
+              >
+                +
+              </div>
+              <p
+                className="text-sm font-bold"
+                style={{ color: light ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.50)" }}
+              >
+                {t(lang, "bm_new_collection")}
+              </p>
             </button>
           )}
         </div>
 
         {/* Save button */}
         {!showCreate && (
-          <div className="px-5 pt-3 pb-6 border-t border-white/[0.07]">
+          <div
+            className="px-5 pt-3 pb-6"
+            style={{ borderTop: light ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
+          >
             <button
               onClick={handleSave}
-              className="w-full py-3.5 rounded-2xl text-sm font-black text-white transition-all active:scale-[0.98]"
-              style={{ background: "linear-gradient(135deg,#ec4899,#7c3aed)" }}
+              className="w-full py-3.5 rounded-2xl text-sm font-black transition-all active:scale-[0.98]"
+              style={{
+                background: light ? "#111111" : "linear-gradient(135deg,#ec4899,#7c3aed)",
+                color: "#ffffff",
+              }}
             >
               {toast || t(lang, "bm_save")}
             </button>

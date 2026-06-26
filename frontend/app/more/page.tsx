@@ -158,25 +158,25 @@ function RebuttalAppIcon() {
 // ─── App grid config ──────────────────────────────────────────────────────────
 
 const APP_TILE_DEFS = [
-  { href: "/bible-plans",       Icon: PlansAppIcon,        labelKey: "more_tile_plans"       as const, color: "#5b21b6" },
-  { href: "/library",           Icon: LibraryAppIcon,      labelKey: "more_tile_books"       as const, color: "#0369a1" },
-  { href: "/learn",             Icon: HistoricalAppIcon,   labelKey: "more_tile_history"     as const, color: "#78350f" },
-  { href: "/bible-tracker",     Icon: TrackerAppIcon,      labelKey: "more_tile_tracker"     as const, color: "#065f46" },
-  { href: "/kids-books",        Icon: KidsAppIcon,         labelKey: "more_tile_kids"        as const, color: "#c2410c" },
-  { href: "/videos",            Icon: VideosAppIcon,       labelKey: "more_tile_videos"      as const, color: "#1e3a8a" },
-  { href: "/study-tools",       Icon: StudyToolsAppIcon,   labelKey: "more_tile_study_tools" as const, color: "#8a6b2d" },
-  { href: "/collections",       Icon: CollectionsAppIcon,  labelKey: "more_tile_collections" as const, color: "#92400e" },
-  { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed" },
-  { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a" },
-  { href: "/give",              Icon: GiveAppIcon,         labelKey: "more_tile_give"        as const, color: "#b45309" },
-  { href: "/church-analysis",  Icon: RebuttalAppIcon,     labelKey: "more_tile_rebuttal"    as const, color: "#6b1d1d" },
+  { href: "/bible-plans",       Icon: PlansAppIcon,        labelKey: "more_tile_plans"       as const, color: "#5b21b6", sub: { en: "Guided reading plans", es: "Planes de lectura guiados" } },
+  { href: "/library",           Icon: LibraryAppIcon,      labelKey: "more_tile_books"       as const, color: "#0369a1", sub: { en: "Free books & theology", es: "Libros gratis y teología" } },
+  { href: "/learn",             Icon: HistoricalAppIcon,   labelKey: "more_tile_history"     as const, color: "#78350f", sub: { en: "Historical documents & creeds", es: "Documentos históricos y credos" } },
+  { href: "/bible-tracker",     Icon: TrackerAppIcon,      labelKey: "more_tile_tracker"     as const, color: "#065f46", sub: { en: "Track your reading progress", es: "Sigue tu progreso de lectura" } },
+  { href: "/kids-books",        Icon: KidsAppIcon,         labelKey: "more_tile_kids"        as const, color: "#c2410c", sub: { en: "Bible stories for children", es: "Historias bíblicas para niños" } },
+  { href: "/videos",            Icon: VideosAppIcon,       labelKey: "more_tile_videos"      as const, color: "#1e3a8a", sub: { en: "Teaching & testimonies", es: "Enseñanza y testimonios" } },
+  { href: "/study-tools",       Icon: StudyToolsAppIcon,   labelKey: "more_tile_study_tools" as const, color: "#8a6b2d", sub: { en: "Commentaries & concordance", es: "Comentarios y concordancia" } },
+  { href: "/collections",       Icon: CollectionsAppIcon,  labelKey: "more_tile_collections" as const, color: "#92400e", sub: { en: "Saved verses & notes", es: "Versículos y notas guardados" } },
+  { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed", sub: { en: "Connect with believers", es: "Conéctate con creyentes" } },
+  { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a", sub: { en: "Find a church near you", es: "Encuentra una iglesia cerca" } },
+  { href: "/give",              Icon: GiveAppIcon,         labelKey: "more_tile_give"        as const, color: "#b45309", sub: { en: "Support the ministry", es: "Apoya el ministerio" } },
+  { href: "/church-analysis",  Icon: RebuttalAppIcon,     labelKey: "more_tile_rebuttal"    as const, color: "#6b1d1d", sub: { en: "Analyze church teachings", es: "Analiza enseñanzas de iglesias" } },
 ];
 
-const TILE_GROUP_DEFS = [
-  { titleKey: "more_group_rhythms" as const, dekKey: "more_group_rhythms_dek" as const, columns: 2, indices: [0, 3] },
-  { titleKey: "more_group_explore" as const, dekKey: "more_group_explore_dek" as const, columns: 2, indices: [1, 2, 6, 4, 11] },
-  { titleKey: "more_group_connect" as const, dekKey: "more_group_connect_dek" as const, columns: 2, indices: [7, 8, 9, 10] },
-];
+// Top featured square cards, 2x2: Videos, Free Books (Library), Historical Documents, Study Tools
+const TOP_TILE_INDICES = [5, 1, 2, 6];
+// Remaining tiles as full-width banner cards, in exact required order:
+// Kid's Books, Bible Tracker, Plans, Fellowship, Collections, Find a Church, Church Analysis, Give
+const BANNER_TILE_INDICES = [4, 3, 0, 8, 7, 9, 11, 10];
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -243,6 +243,17 @@ export default function MorePage() {
 
   const isLight = theme === "white-noir";
 
+  const [isLightElegant, setIsLightElegant] = useState(false);
+  useEffect(() => {
+    const check = () => {
+      const t = localStorage.getItem("ryc-theme") ?? "";
+      setIsLightElegant(t === "white-noir");
+    };
+    check();
+    window.addEventListener("ryc-theme-change", check as EventListener);
+    return () => window.removeEventListener("ryc-theme-change", check as EventListener);
+  }, []);
+
   return (
     <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0f0f0f", color: isLight ? "#0a0a0a" : "white" }}>
       <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
@@ -285,16 +296,16 @@ export default function MorePage() {
           ) : (
             <div
               className="rounded-2xl overflow-hidden"
-              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: "1px solid rgba(201,169,97,0.20)" }}
+              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.20)" }}
             >
               <div className="flex items-center gap-4 px-4 py-5">
                 <div
                   className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.14)", border: "1px solid rgba(201,169,97,0.22)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.14)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.22)" }}
                 >
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="4" stroke="#c9a961" strokeWidth="1.8"/>
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round"/>
+                    <circle cx="12" cy="8" r="4" stroke={isLight ? "#555" : "#c9a961"} strokeWidth="1.8"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={isLight ? "#555" : "#c9a961"} strokeWidth="1.8" strokeLinecap="round"/>
                   </svg>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -306,7 +317,7 @@ export default function MorePage() {
                 <a
                   href="/auth/login"
                   className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.25)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.25)" }}
                 >
                   Sign In
                 </a>
@@ -315,110 +326,108 @@ export default function MorePage() {
           )}
         </section>
 
-        {/* ── Featured Videos banner ────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-2 px-1" style={{ color: "rgba(201,169,97,0.70)" }}>
-            {lang === "es" ? "Destacado" : "Featured"}
-          </p>
-
-          <Link href="/videos" className="block">
-            <div
-              className="rounded-2xl overflow-hidden active:scale-[0.985] transition-transform"
-              style={{
-                background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(140deg, #111420 0%, #0a0c14 60%, #0d0f1a 100%)",
-                border: "1px solid rgba(201,169,97,0.30)",
-                boxShadow: "0 8px 40px rgba(201,169,97,0.12), 0 2px 8px rgba(0,0,0,0.6)",
-              }}
-            >
-              {/* Top content row */}
-              <div className="flex items-center justify-between px-5 pt-5 pb-4 gap-4">
-                {/* Left: text */}
-                <div className="flex-1 min-w-0">
-                  {/* Eyebrow with small play icon */}
-                  <div className="flex items-center gap-1.5 mb-2">
-                    <div
-                      className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0"
-                      style={{ background: "rgba(201,169,97,0.20)" }}
+        {/* ── Features ──────────────────────────────────────────────────────── */}
+        <section style={{ marginTop: 24 }}>
+          {/* Top row: 2 featured square cards */}
+          <div className="grid grid-cols-2" style={{ gap: 10, marginBottom: 10 }}>
+            {TOP_TILE_INDICES.map((idx) => {
+              const { href, Icon, labelKey, color, sub } = APP_TILE_DEFS[idx];
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex flex-col justify-between active:scale-[0.98] transition-transform"
+                  style={{
+                    background: isLightElegant ? "#f4f4f4" : "rgba(255,255,255,0.04)",
+                    border: isLightElegant ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 16,
+                    padding: 20,
+                    height: 140,
+                  }}
+                >
+                  <div
+                    className="flex items-center justify-center flex-shrink-0"
+                    style={{
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
+                      color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
+                    }}
+                  >
+                    <Icon />
+                  </div>
+                  <div>
+                    <p className="font-bold" style={{ fontSize: 15, color: isLightElegant ? "#000000" : "#ffffff" }}>
+                      {t(lang, labelKey)}
+                    </p>
+                    <p
+                      className="leading-snug"
+                      style={{
+                        fontSize: 12,
+                        marginTop: 2,
+                        color: isLightElegant ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.40)",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
                     >
-                      <svg width="7" height="7" viewBox="0 0 10 10" fill="#c9a961">
-                        <path d="M2 1.5v7l6.5-3.5z"/>
-                      </svg>
-                    </div>
-                    <p className="text-[9px] font-black uppercase tracking-[0.20em]" style={{ color: "#c9a961" }}>
-                      {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
+                      {lang === "es" ? sub.es : sub.en}
                     </p>
                   </div>
+                </Link>
+              );
+            })}
+          </div>
 
-                  <p className="text-[28px] font-black leading-none mb-1.5">
-                    Videos
-                  </p>
-                  <p className="text-[11.5px] font-semibold mb-1.5" style={{ color: "rgba(201,169,97,0.85)" }}>
-                    {lang === "es" ? "Enseñanza Bíblica • Testimonios" : "Biblical Teaching • Testimonies"}
-                  </p>
-                  <p className="text-[11px] leading-relaxed mb-4" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
-                    {lang === "es"
-                      ? "Videos cristianos confiables arraigados en la Escritura."
-                      : "Watch trusted Christian videos rooted in Scripture and historic Christianity."}
-                  </p>
+          {/* Remaining features as full-width banner cards */}
+          <div className="flex flex-col" style={{ gap: 10 }}>
+            {BANNER_TILE_INDICES.map((idx) => {
+              const { href, Icon, labelKey, color, sub } = APP_TILE_DEFS[idx];
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="flex items-center active:scale-[0.985] transition-transform"
+                  style={{
+                    background: isLightElegant ? "#f4f4f4" : "rgba(255,255,255,0.04)",
+                    border: isLightElegant ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)",
+                    borderRadius: 14,
+                    padding: "16px 18px",
+                    height: 70,
+                  }}
+                >
                   <div
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-[12px] font-bold"
+                    className="flex items-center justify-center flex-shrink-0"
                     style={{
-                      background: "rgba(201,169,97,0.13)",
-                      color: "#c9a961",
-                      border: "1px solid rgba(201,169,97,0.38)",
+                      width: 36,
+                      height: 36,
+                      borderRadius: "50%",
+                      background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
+                      color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
                     }}
                   >
-                    {lang === "es" ? "Explorar Videos" : "Explore Videos"}
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+                    <Icon />
                   </div>
-                </div>
-
-                {/* Right: 3-D gold play icon */}
-                <div className="flex-shrink-0">
-                  <div
-                    className="w-[96px] h-[96px] rounded-[22px] flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(145deg, #f0d070 0%, #d4a843 40%, #b8872c 75%, #9a6e1e 100%)",
-                      boxShadow:
-                        "0 16px 48px rgba(201,169,97,0.50), 0 6px 16px rgba(201,169,97,0.30), inset 0 1px 0 rgba(255,255,220,0.35), inset 0 -2px 4px rgba(100,60,0,0.30)",
-                    }}
+                  <div className="flex-1 min-w-0" style={{ marginLeft: 14 }}>
+                    <p className="font-bold truncate" style={{ fontSize: 14, color: isLightElegant ? "#000000" : "#ffffff" }}>
+                      {t(lang, labelKey)}
+                    </p>
+                    <p className="truncate" style={{ fontSize: 11.5, marginTop: 1, color: isLightElegant ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.40)" }}>
+                      {lang === "es" ? sub.es : sub.en}
+                    </p>
+                  </div>
+                  <span
+                    className="flex-shrink-0"
+                    style={{ fontSize: 20, color: isLightElegant ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)" }}
                   >
-                    <svg width="36" height="36" viewBox="0 0 24 24" fill="rgba(15,17,26,0.88)" style={{ marginLeft: 4 }}>
-                      <path d="M6 4.5v15l13-7.5z"/>
-                    </svg>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </Link>
-        </section>
-
-        {/* ── App grid ──────────────────────────────────────────────────────── */}
-        <section className="space-y-4">
-          {TILE_GROUP_DEFS.map((group) => (
-            <div key={group.titleKey}>
-              <p className="text-[9px] font-black tracking-widest uppercase mb-2 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>
-                {t(lang, group.titleKey)}
-              </p>
-              <div className={`grid gap-2.5 ${group.columns === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                {group.indices.map((idx) => {
-                  const { href, Icon, labelKey, color } = APP_TILE_DEFS[idx];
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="pn-app-tile flex items-center gap-2.5 px-3 py-2.5 rounded-xl active:scale-95 transition-transform"
-                      style={{ backgroundColor: color }}
-                    >
-                      <span className="flex-shrink-0 opacity-90"><Icon /></span>
-                      <span className="text-[12px] font-bold text-white leading-tight">{t(lang, labelKey)}</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
+                    ›
+                  </span>
+                </Link>
+              );
+            })}
+          </div>
         </section>
 
         {/* ── Appearance ────────────────────────────────────────────────────── */}
@@ -426,8 +435,8 @@ export default function MorePage() {
           <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>Appearance</p>
           <div className="rounded-2xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
             {[
-              { key: "gold-navy", label: "Gold Navy", desc: "Dark navy with warm gold", swatch: ["#0e1018", "#c9a961"] },
-              { key: "white-noir", label: "White Noir", desc: "Clean white with black ink", swatch: ["#ffffff", "#0a0a0a"] },
+              { key: "gold-navy", label: "Dark Mode", desc: "Dark navy with warm gold", swatch: ["#0e1018", "#c9a961"] },
+              { key: "white-noir", label: "Light Mode", desc: "Clean white with black ink", swatch: ["#ffffff", "#0a0a0a"] },
             ].map((t, i, arr) => (
               <button
                 key={t.key}

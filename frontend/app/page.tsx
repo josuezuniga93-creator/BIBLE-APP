@@ -531,7 +531,7 @@ function VerseMemorizationWidget({
                   style={{
                     fontFamily: "'Iowan Old Style','Georgia',serif",
                     background: hidden ? `${accentColor}30` : "transparent",
-                    color: hidden ? "transparent" : "rgba(255,255,255,0.85)",
+                    color: hidden ? "transparent" : isLightElegant ? "rgba(10,10,10,0.85)" : "rgba(255,255,255,0.85)",
                     border: hidden ? `1px solid ${accentColor}40` : "1px solid transparent",
                     minWidth: `${Math.max(word.length * 0.55, 1.5)}ch`,
                     minHeight: "1.5rem",
@@ -1087,7 +1087,7 @@ export default function Home() {
   const isPremiumNeon   = false;
   const isGoldNavy      = theme === "gold-navy";
   const isLightPink     = false;
-  const isLightElegant  = theme === "white-noir";
+  const isLightElegant = theme === "white-noir";
 
   // Continue card backgrounds — match the active theme
   const meditCardBg = isPremiumNeon
@@ -1648,9 +1648,6 @@ export default function Home() {
               <h3 className="text-[17px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>
                 {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
               </h3>
-              <Link href="/videos" className="text-[11px] font-bold transition-colors" style={{ color: themeACSub85 }}>
-                {lang === "es" ? "Ver todo →" : "See all →"}
-              </Link>
             </div>
           </div>
 
@@ -1691,15 +1688,15 @@ export default function Home() {
                     {/* Play button */}
                     <div
                       className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
-                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : isLightElegant ? "rgba(10,10,10,0.85)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
+                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : isLightElegant ? "rgba(255,255,255,0.90)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
                     >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="#08090f" style={{ marginLeft: 3 }}>
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill={isLightElegant ? "#0a0a0a" : isPremiumNeon ? "#ffffff" : "#08090f"} style={{ marginLeft: 3 }}>
                         <path d="M8 5v14l11-7z" />
                       </svg>
                     </div>
                     {/* Text block */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: themeAC }}>
+                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: isLightElegant ? "rgba(255,255,255,0.85)" : themeAC }}>
                         {lang === "es" ? "Aprende. Mira. Crece." : "Learn. Watch. Grow."}
                       </p>
                       <p className="text-[14px] font-bold text-white leading-snug">

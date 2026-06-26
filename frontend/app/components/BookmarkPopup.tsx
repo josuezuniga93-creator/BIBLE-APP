@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getCategories, addCategory, saveBookmark } from "../lib/bookmarks";
+import { useTheme } from "../lib/useTheme";
 
 interface Props {
   ref_: string;
@@ -11,6 +12,9 @@ interface Props {
 }
 
 export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Props) {
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
+
   const [categories, setCategories] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>("");
   const [newCat, setNewCat] = useState("");
@@ -44,21 +48,25 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
         className="fixed z-[80] left-4 right-4 rounded-2xl p-4"
         style={{
           bottom: "calc(env(safe-area-inset-bottom, 16px) + 80px)",
-          background: "var(--bg, #0f1016)",
-          border: "1px solid rgba(201,169,97,0.25)",
-          boxShadow: "0 -4px 32px rgba(0,0,0,0.5)",
+          background: isLight ? "#ffffff" : "#0f1016",
+          border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.25)",
+          boxShadow: isLight ? "0 -4px 32px rgba(0,0,0,0.12)" : "0 -4px 32px rgba(0,0,0,0.5)",
         }}
       >
         {/* Header */}
         <div className="flex items-center justify-between mb-3">
-          <span className="text-[13px] font-bold text-white">
+          <span className="text-[13px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
             {lang === "es" ? "Guardar en categoría" : "Save to category"}
           </span>
-          <button onClick={onClose} className="text-[18px]" style={{ color: "rgba(255,255,255,0.4)" }}>×</button>
+          <button onClick={onClose} className="text-[18px]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.4)" }}>×</button>
         </div>
 
         {/* Verse preview */}
-        <p className="text-[11px] italic mb-3 leading-snug" style={{ color: "rgba(255,255,255,0.45)", borderLeft: "2px solid rgba(201,169,97,0.4)", paddingLeft: 8 }}>
+        <p className="text-[11px] italic mb-3 leading-snug" style={{
+          color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.45)",
+          borderLeft: isLight ? "2px solid rgba(0,0,0,0.20)" : "2px solid rgba(201,169,97,0.4)",
+          paddingLeft: 8,
+        }}>
           {ref_} — {text.length > 80 ? text.slice(0, 80) + "…" : text}
         </p>
 
@@ -68,8 +76,12 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
             onClick={() => setMode("pick")}
             className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold"
             style={{
-              background: mode === "pick" ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.06)",
-              color: mode === "pick" ? "#08090f" : "rgba(255,255,255,0.5)",
+              background: mode === "pick"
+                ? (isLight ? "rgba(0,0,0,0.12)" : "rgba(201,169,97,1)")
+                : (isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)"),
+              color: mode === "pick"
+                ? (isLight ? "#0a0a0a" : "#08090f")
+                : (isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.5)"),
             }}
           >
             {lang === "es" ? "Categoría existente" : "Existing"}
@@ -78,8 +90,12 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
             onClick={() => setMode("new")}
             className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold"
             style={{
-              background: mode === "new" ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.06)",
-              color: mode === "new" ? "#08090f" : "rgba(255,255,255,0.5)",
+              background: mode === "new"
+                ? (isLight ? "rgba(0,0,0,0.12)" : "rgba(201,169,97,1)")
+                : (isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)"),
+              color: mode === "new"
+                ? (isLight ? "#0a0a0a" : "#08090f")
+                : (isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.5)"),
             }}
           >
             {lang === "es" ? "+ Nueva categoría" : "+ New category"}
@@ -95,9 +111,15 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
                 onClick={() => setSelected(cat)}
                 className="text-left rounded-xl px-3 py-2 text-[12px] font-medium"
                 style={{
-                  background: selected === cat ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.04)",
-                  border: selected === cat ? "1px solid rgba(201,169,97,0.4)" : "1px solid transparent",
-                  color: selected === cat ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.7)",
+                  background: selected === cat
+                    ? (isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)")
+                    : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)"),
+                  border: selected === cat
+                    ? (isLight ? "1px solid rgba(0,0,0,0.25)" : "1px solid rgba(201,169,97,0.4)")
+                    : "1px solid transparent",
+                  color: selected === cat
+                    ? (isLight ? "#0a0a0a" : "rgba(201,169,97,1)")
+                    : (isLight ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.7)"),
                 }}
               >
                 {cat}
@@ -115,9 +137,9 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
             placeholder={lang === "es" ? "Nombre de categoría..." : "Category name..."}
             className="w-full rounded-xl px-3 py-2.5 mb-3 text-[13px]"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(201,169,97,0.2)",
-              color: "#fff",
+              background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)",
+              border: isLight ? "1px solid rgba(0,0,0,0.15)" : "1px solid rgba(201,169,97,0.2)",
+              color: isLight ? "#0a0a0a" : "#fff",
               outline: "none",
               fontSize: "16px",
             }}
@@ -128,9 +150,12 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
         <button
           onClick={handleSave}
           className="w-full rounded-xl py-2.5 text-[13px] font-bold"
-          style={{ background: "rgba(201,169,97,1)", color: "#08090f" }}
+          style={{
+            background: isLight ? "rgba(0,0,0,0.12)" : "rgba(201,169,97,1)",
+            color: isLight ? "#0a0a0a" : "#08090f",
+          }}
         >
-          {saved ? "✓ Saved!" : (lang === "es" ? "Guardar" : "Save")}
+          {saved ? "Saved!" : (lang === "es" ? "Guardar" : "Save")}
         </button>
       </div>
     </>

@@ -18,7 +18,7 @@ export function ThemeProvider() {
                 var m = document.cookie.match(/(?:^|;\\s*)ryc-theme=([^;]+)/);
                 if (m) saved = decodeURIComponent(m[1]);
               }
-              var theme = valid.includes(saved) ? saved : 'gold-navy';
+              var theme = valid.includes(saved) ? saved : 'white-noir';
               localStorage.setItem('ryc-theme', theme);
               document.documentElement.setAttribute('data-theme', theme);
             } catch(e) {}

@@ -12,6 +12,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 import type { FundamentalsCategory, VideoLanguage } from "../lib/videoTypes";
 
 // ─── Design constants (matches app-wide system) ────────────────────────────────
@@ -222,11 +223,12 @@ function removeFromHistory(videoId: string) {
 
 // ─── Back arrow icon ───────────────────────────────────────────────────────────
 
-function BackArrow({ onClick }: { onClick: () => void }) {
+function BackArrow({ onClick, isLight = false }: { onClick: () => void; isLight?: boolean }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 text-white/55 hover:text-white transition-colors py-1"
+      className="flex items-center gap-1.5 hover:opacity-80 transition-colors py-1"
+      style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}
     >
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round">
         <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -308,11 +310,13 @@ function VideoCard({
   size = "md",
   onClick,
   showChurch = false,
+  isLight = false,
 }: {
   video: VideoEntry;
   size?: "sm" | "md" | "lg";
   onClick: () => void;
   showChurch?: boolean;
+  isLight?: boolean;
 }) {
   const widthClass = size === "sm" ? "w-[130px]" : size === "lg" ? "w-[220px]" : "w-[165px]";
   const thumbQuality = size === "lg" ? "hq" : "mq";
@@ -321,7 +325,7 @@ function VideoCard({
     <button
       onClick={onClick}
       className={`flex-shrink-0 ${widthClass} rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all`}
-      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+      style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}
     >
       {/* Thumbnail */}
       <div className="relative" style={{ aspectRatio: "16/9" }}>
@@ -346,20 +350,20 @@ function VideoCard({
         )}
         {/* Short badge */}
         {video.isShort && (
-          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.90)", color: "#08090f" }}>
+          <span className="absolute top-1.5 left-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.90)", color: isLight ? "#0a0a0a" : "#08090f" }}>
             SHORT
           </span>
         )}
       </div>
       {/* Info */}
       <div className="p-2.5">
-        <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>
+        <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>
           {video.speaker}
         </p>
         {showChurch && video.church && (
-          <p className="text-[9px] mb-0.5 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{video.church}</p>
+          <p className="text-[9px] mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>{video.church}</p>
         )}
-        <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{video.title}</p>
+        <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{video.title}</p>
       </div>
     </button>
   );
@@ -371,17 +375,19 @@ function ShortCard({
   video,
   size = "md",
   onClick,
+  isLight = false,
 }: {
   video: VideoEntry;
   size?: "sm" | "md";
   onClick: () => void;
+  isLight?: boolean;
 }) {
   const widthClass = size === "sm" ? "w-[124px]" : "w-[142px]";
   return (
     <button
       onClick={onClick}
       className={`flex-shrink-0 ${widthClass} rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all relative`}
-      style={{ background: "#0d0d18", border: `1px solid ${BD_CARD}` }}
+      style={{ background: isLight ? "rgba(0,0,0,0.05)" : "#0d0d18", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}
     >
       {/* Vertical thumbnail (YouTube thumb cropped to 9:16) */}
       <div className="relative" style={{ aspectRatio: "9/16" }}>
@@ -390,10 +396,11 @@ function ShortCard({
           src={ytThumb(video.id, "hq")}
           alt={video.title}
           className="w-full h-full object-cover"
+          onError={(e) => { const t = e.currentTarget; if (!t.dataset.fallback) { t.dataset.fallback = "1"; t.src = ytThumb(video.id, "mq"); } }}
         />
         <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.10) 45%, rgba(8,9,15,0.05) 100%)" }} />
         {/* Short badge */}
-        <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.92)", color: "#08090f" }}>
+        <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.92)", color: isLight ? "#0a0a0a" : "#08090f" }}>
           SHORT
         </span>
         {/* Play ring */}
@@ -404,7 +411,7 @@ function ShortCard({
         </div>
         {/* Info pinned to bottom */}
         <div className="absolute bottom-0 left-0 right-0 p-2.5">
-          <p className="text-[9px] font-bold mb-0.5 truncate" style={{ color: AC }}>{video.speaker}</p>
+          <p className="text-[9px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.50)" : AC }}>{video.speaker}</p>
           <p className="text-[11px] font-semibold text-white leading-tight line-clamp-2">{video.title}</p>
         </div>
       </div>
@@ -414,11 +421,11 @@ function ShortCard({
 
 // ─── Continue Watching card ────────────────────────────────────────────────────
 
-function ContinueCard({ item, onClick, onRemove }: { item: WatchItem; onClick: () => void; onRemove: () => void }) {
+function ContinueCard({ item, onClick, onRemove, isLight = false }: { item: WatchItem; onClick: () => void; onRemove: () => void; isLight?: boolean }) {
   return (
     <div
       className="flex-shrink-0 w-[200px] rounded-xl overflow-hidden text-left active:scale-[0.97] transition-all relative"
-      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+      style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}
     >
       {/* Remove button */}
       <button
@@ -433,12 +440,12 @@ function ContinueCard({ item, onClick, onRemove }: { item: WatchItem; onClick: (
       </button>
 
       <button onClick={onClick} className="w-full text-left">
-        <div className="relative" style={{ aspectRatio: item.isShort ? "9/16" : "16/9", maxHeight: item.isShort ? 150 : undefined }}>
+        <div className="relative" style={{ aspectRatio: "16/9" }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={ytThumb(item.videoId, "hq")} alt={item.title} className="w-full h-full object-cover" />
+          <img src={ytThumb(item.videoId, "hq")} alt={item.title} className="w-full h-full object-cover" onError={(e) => { const t = e.currentTarget; if (!t.dataset.fallback) { t.dataset.fallback = "1"; t.src = ytThumb(item.videoId, "mq"); } }} />
           <div className="absolute inset-0 bg-black/25 flex items-center justify-center">
-            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: "rgba(201,169,97,0.92)" }}>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="#08090f"><polygon points="6,3 20,12 6,21"/></svg>
+            <div className="w-9 h-9 rounded-full flex items-center justify-center" style={{ background: isLight ? "rgba(30,30,30,0.85)" : "rgba(201,169,97,0.92)" }}>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill={isLight ? "#ffffff" : "#08090f"}><polygon points="6,3 20,12 6,21"/></svg>
             </div>
           </div>
           {/* Faux resume progress bar */}
@@ -447,8 +454,8 @@ function ContinueCard({ item, onClick, onRemove }: { item: WatchItem; onClick: (
           </div>
         </div>
         <div className="p-2.5">
-          {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{item.speaker}</p>}
-          <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{item.title}</p>
+          {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>{item.speaker}</p>}
+          <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{item.title}</p>
         </div>
       </button>
     </div>
@@ -546,21 +553,21 @@ function saveQuestion(item: QuestionItem) {
 
 // ─── Coming Soon feature banners (hero + 2 stacked, 231-style) ─────────────────
 
-function ComingSoonBanners({ onAsk }: { onAsk: () => void }) {
+function ComingSoonBanners({ onAsk, isLight = false }: { onAsk: () => void; isLight?: boolean }) {
   return (
     <section className="px-4 pt-4 mb-8">
-      <p className="text-[9px] font-black tracking-[0.22em] uppercase mb-3" style={{ color: "rgba(255,255,255,0.45)" }}>
+      <p className="text-[9px] font-black tracking-[0.22em] uppercase mb-3" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
         Coming Soon
       </p>
 
-      {/* Hero banner — Fundamentals (blue box) */}
+      {/* Hero banner — Fundamentals */}
       <div
         className="relative rounded-2xl overflow-hidden mb-3 flex flex-col justify-center"
-        style={{ minHeight: 132, background: "#0d1b33", border: "1px solid rgba(59,130,246,0.40)", padding: "18px" }}
+        style={{ minHeight: 132, background: isLight ? "#e2e2e2" : "#0d1b33", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(59,130,246,0.40)", padding: "18px" }}
       >
-        <p className="text-[10px] font-black tracking-widest uppercase mb-1.5" style={{ color: "#6ea8fe" }}>Series · Fundamentals of the Faith</p>
-        <h2 className="text-[26px] font-bold text-white leading-[1.06]" style={{ fontFamily: SERIF }}>Fundamentals</h2>
-        <span className="absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ color: "#6ea8fe", border: "1px solid rgba(59,130,246,0.45)" }}>SOON</span>
+        <p className="text-[10px] font-black tracking-widest uppercase mb-1.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#6ea8fe" }}>Series · Fundamentals of the Faith</p>
+        <h2 className="text-[26px] font-bold leading-[1.06]" style={{ fontFamily: SERIF, color: isLight ? "#0a0a0a" : "#ffffff" }}>Fundamentals</h2>
+        <span className="absolute top-3.5 right-3.5 text-[9px] font-bold px-2 py-0.5 rounded-full" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#6ea8fe", border: isLight ? "1px solid rgba(0,0,0,0.18)" : "1px solid rgba(59,130,246,0.45)" }}>SOON</span>
       </div>
 
       {/* Two stacked cards */}
@@ -568,23 +575,23 @@ function ComingSoonBanners({ onAsk }: { onAsk: () => void }) {
         {/* Testimonies */}
         <div
           className="relative rounded-2xl overflow-hidden flex flex-col justify-end"
-          style={{ minHeight: 104, background: "#1d1305", border: "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
+          style={{ minHeight: 104, background: isLight ? "#e2e2e2" : "#1d1305", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
         >
-          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Stories of Grace</p>
-          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Testimonies</h3>
-          <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: AC, border: `1px solid ${AC_BORDER}` }}>SOON</span>
+          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>Stories of Grace</p>
+          <h3 className="text-[17px] font-bold leading-[1.1]" style={{ fontFamily: SERIF, color: isLight ? "#0a0a0a" : "#ffffff" }}>Testimonies</h3>
+          <span className="absolute top-3 right-3 text-[8px] font-bold px-1.5 py-0.5 rounded-full" style={{ color: isLight ? "rgba(0,0,0,0.35)" : AC, border: isLight ? "1px solid rgba(0,0,0,0.18)" : `1px solid ${AC_BORDER}` }}>SOON</span>
         </div>
 
         {/* Ask a Question — opens request form */}
         <button
           onClick={onAsk}
           className="relative rounded-2xl overflow-hidden flex flex-col justify-end text-left active:scale-[0.97] transition-all"
-          style={{ minHeight: 104, background: "#0e1f1a", border: "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
+          style={{ minHeight: 104, background: isLight ? "#e2e2e2" : "#0e1f1a", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.30)", padding: "14px" }}
         >
-          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: AC }}>Ask &amp; Receive</p>
-          <h3 className="text-[17px] font-bold text-white leading-[1.1]" style={{ fontFamily: SERIF }}>Ask a Question</h3>
-          <span className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
+          <p className="text-[9px] font-black tracking-widest uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>Ask &amp; Receive</p>
+          <h3 className="text-[17px] font-bold leading-[1.1]" style={{ fontFamily: SERIF, color: isLight ? "#0a0a0a" : "#ffffff" }}>Ask a Question</h3>
+          <span className="absolute top-3 right-3 w-6 h-6 rounded-full flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.08)" : AC_BG, border: isLight ? "1px solid rgba(0,0,0,0.15)" : `1px solid ${AC_BORDER}` }}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.55)" : AC} strokeWidth="2.2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
           </span>
         </button>
       </div>
@@ -594,7 +601,7 @@ function ComingSoonBanners({ onAsk }: { onAsk: () => void }) {
 
 // ─── Ask a Question — request form (bottom sheet) ──────────────────────────────
 
-function QuestionFormModal({ onClose }: { onClose: () => void }) {
+function QuestionFormModal({ onClose, isLight = false }: { onClose: () => void; isLight?: boolean }) {
   const [question, setQuestion] = useState("");
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -623,66 +630,66 @@ function QuestionFormModal({ onClose }: { onClose: () => void }) {
 
       <div
         className="relative w-full max-w-md rounded-2xl overflow-hidden"
-        style={{ background: "#11131c", border: `1px solid ${AC_BORDER}`, maxHeight: "88vh", animation: "sheetDrop 0.26s cubic-bezier(0.22,1,0.36,1)" }}
+        style={{ background: isLight ? "#ffffff" : "#11131c", border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : AC_BORDER}`, maxHeight: "88vh", animation: "sheetDrop 0.26s cubic-bezier(0.22,1,0.36,1)" }}
       >
         <style>{`@keyframes sheetDrop{from{transform:translateY(-14px);opacity:0}to{transform:translateY(0);opacity:1}}`}</style>
 
         <button
           onClick={onClose}
           aria-label="Close"
-          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full text-white/55 active:scale-90"
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          className="absolute top-3 right-3 z-10 w-8 h-8 flex items-center justify-center rounded-full active:scale-90"
+          style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
         </button>
 
         {submitted ? (
           <div className="px-6 pt-4 pb-10 text-center">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: AC_BG, border: `1px solid ${AC_BORDER}` }}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={AC} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ background: isLight ? "rgba(0,0,0,0.06)" : AC_BG, border: `1px solid ${isLight ? "rgba(0,0,0,0.15)" : AC_BORDER}` }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#0a0a0a" : AC} strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
             </div>
-            <h2 className="text-[19px] font-bold text-white mb-2">Question received</h2>
-            <p className="text-[13px] leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.50)" }}>
+            <h2 className="text-[19px] font-bold mb-2" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Question received</h2>
+            <p className="text-[13px] leading-relaxed mb-6" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>
               Thanks for asking. We&rsquo;ll answer it in a short video &mdash; keep an eye on the Short Videos shelf.
             </p>
-            <button onClick={onClose} className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]" style={{ background: AC, color: "#08090f" }}>
+            <button onClick={onClose} className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]" style={{ background: isLight ? "#0a0a0a" : AC, color: isLight ? "#ffffff" : "#08090f" }}>
               Done
             </button>
           </div>
         ) : (
           <>
-            <div className="px-5 pt-2 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-              <p className="text-[9px] font-black tracking-widest uppercase" style={{ color: AC }}>Ask &amp; Receive</p>
-              <h2 className="text-[19px] font-bold text-white leading-tight">Ask a Question</h2>
-              <p className="text-[11px] mt-2" style={{ color: "rgba(255,255,255,0.42)" }}>
+            <div className="px-5 pt-2 pb-4" style={{ borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)"}` }}>
+              <p className="text-[9px] font-black tracking-widest uppercase" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>Ask &amp; Receive</p>
+              <h2 className="text-[19px] font-bold leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Ask a Question</h2>
+              <p className="text-[11px] mt-2" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
                 Submit your question and we&rsquo;ll answer it in a short video.
               </p>
             </div>
 
             <div className="px-5 py-4">
-              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>Your question</label>
+              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>Your question</label>
               <textarea
                 value={question}
                 onChange={(e) => setQuestion(e.target.value)}
                 rows={4}
                 placeholder="What would you like us to address?"
-                className="w-full rounded-xl px-3 py-2.5 text-[14px] text-white placeholder-white/30 outline-none resize-none mb-4"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                className={`w-full rounded-xl px-3 py-2.5 text-[14px] outline-none resize-none mb-4 ${isLight ? "text-black placeholder-black/30" : "text-white placeholder-white/30"}`}
+                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"}` }}
               />
-              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: "rgba(255,255,255,0.45)" }}>Email (optional)</label>
+              <label className="text-[10px] font-bold tracking-wide uppercase block mb-1.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>Email (optional)</label>
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
                 placeholder="So we can let you know when it's answered"
-                className="w-full rounded-xl px-3 py-2.5 text-[14px] text-white placeholder-white/30 outline-none mb-5"
-                style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}
+                className={`w-full rounded-xl px-3 py-2.5 text-[14px] outline-none mb-5 ${isLight ? "text-black placeholder-black/30" : "text-white placeholder-white/30"}`}
+                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"}` }}
               />
               <button
                 onClick={submit}
                 disabled={!question.trim()}
                 className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
-                style={{ background: AC, color: "#08090f", opacity: question.trim() ? 1 : 0.45 }}
+                style={{ background: isLight ? "#0a0a0a" : AC, color: isLight ? "#ffffff" : "#08090f", opacity: question.trim() ? 1 : 0.45 }}
               >
                 Submit Question
               </button>
@@ -701,20 +708,22 @@ function SectionHeader({
   title,
   onViewAll,
   color = AC,
+  isLight = false,
 }: {
   label: string;
   title: string;
   onViewAll?: () => void;
   color?: string;
+  isLight?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between px-4 mb-3">
       <div>
-        <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color }}>{label}</p>
-        <h3 className="text-[16px] font-bold text-white">{title}</h3>
+        <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : color }}>{label}</p>
+        <h3 className="text-[16px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{title}</h3>
       </div>
       {onViewAll && (
-        <button onClick={onViewAll} className="text-[11px] font-bold" style={{ color: "rgba(201,169,97,0.55)" }}>
+        <button onClick={onViewAll} className="text-[11px] font-bold" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(201,169,97,0.55)" }}>
           View all →
         </button>
       )}
@@ -727,26 +736,29 @@ function SectionHeader({
 function TopicCategoryCard({
   section,
   onSelect,
+  isLight = false,
 }: {
   section: FundamentalsSection;
   onSelect: (section: FundamentalsSection) => void;
+  isLight?: boolean;
 }) {
   const color = CATEGORY_COLORS[section.category];
+  const dotColor = isLight ? "rgba(0,0,0,0.25)" : color;
   const available = section.topics.filter((t) => t.videoCount > 0).length;
 
   return (
     <button
       onClick={() => onSelect(section)}
       className="rounded-2xl p-4 text-left transition-all active:scale-[0.97]"
-      style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}
+      style={{ background: isLight ? "rgba(0,0,0,0.09)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}
     >
-      {/* Gold accent dot */}
-      <span className="block w-2.5 h-2.5 rounded-full mb-3" style={{ background: color, boxShadow: `0 0 10px ${color}66` }} />
-      <p className="text-[14px] font-bold text-white leading-tight mb-1">{section.category}</p>
-      <p className="text-[10px] tracking-wide" style={{ color: "rgba(255,255,255,0.40)" }}>
+      {/* Accent dot */}
+      <span className="block w-2.5 h-2.5 rounded-full mb-3" style={{ background: dotColor, boxShadow: isLight ? "none" : `0 0 10px ${color}66` }} />
+      <p className="text-[14px] font-bold leading-tight mb-1" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{section.category}</p>
+      <p className="text-[10px] tracking-wide" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
         {section.topics.length} topics
       </p>
-      <p className="text-[10px] mt-2 font-semibold tracking-wide uppercase" style={{ color: available > 0 ? color : "rgba(255,255,255,0.25)" }}>
+      <p className="text-[10px] mt-2 font-semibold tracking-wide uppercase" style={{ color: isLight ? (available > 0 ? "rgba(0,0,0,0.55)" : "rgba(0,0,0,0.25)") : (available > 0 ? color : "rgba(255,255,255,0.25)") }}>
         {available > 0 ? `${available} available` : "Coming soon"}
       </p>
     </button>
@@ -760,13 +772,18 @@ function CategorySheet({
   onClose,
   onSeeAll,
   onSelectTopic,
+  isLight = false,
 }: {
   section: FundamentalsSection;
   onClose: () => void;
   onSeeAll: () => void;
   onSelectTopic: (topicId: string) => void;
+  isLight?: boolean;
 }) {
-  const color = CATEGORY_COLORS[section.category];
+  const catColor = CATEGORY_COLORS[section.category];
+  const color = isLight ? "rgba(0,0,0,0.45)" : catColor;
+  const dotColor = isLight ? "rgba(0,0,0,0.30)" : catColor;
+  const borderColor = isLight ? "rgba(0,0,0,0.12)" : `${catColor}33`;
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -789,8 +806,8 @@ function CategorySheet({
       <div
         className="relative rounded-t-3xl overflow-hidden"
         style={{
-          background: "#11131c",
-          borderTop: `1px solid ${color}33`,
+          background: isLight ? "#ffffff" : "#11131c",
+          borderTop: `1px solid ${borderColor}`,
           maxHeight: "82vh",
           animation: "sheetUp 0.28s cubic-bezier(0.22,1,0.36,1)",
         }}
@@ -799,28 +816,28 @@ function CategorySheet({
 
         {/* Grabber */}
         <div className="flex justify-center pt-3 pb-1">
-          <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+          <span className="block w-10 h-1 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.18)" }} />
         </div>
 
         {/* Header */}
-        <div className="px-5 pt-2 pb-4" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="px-5 pt-2 pb-4" style={{ borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)"}` }}>
           <div className="flex items-center gap-3">
-            <span className="block w-3 h-3 rounded-full flex-shrink-0" style={{ background: color, boxShadow: `0 0 12px ${color}77` }} />
+            <span className="block w-3 h-3 rounded-full flex-shrink-0" style={{ background: dotColor, boxShadow: isLight ? "none" : `0 0 12px ${catColor}77` }} />
             <div className="flex-1">
               <p className="text-[9px] font-black tracking-widest uppercase" style={{ color }}>
                 Fundamentals of the Faith
               </p>
-              <h2 className="text-[19px] font-bold text-white leading-tight">{section.category}</h2>
+              <h2 className="text-[19px] font-bold leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{section.category}</h2>
             </div>
             <button
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center rounded-full text-white/60 transition-all active:scale-90"
-              style={{ background: "rgba(255,255,255,0.06)" }}
+              className="w-8 h-8 flex items-center justify-center rounded-full transition-all active:scale-90"
+              style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
           </div>
-          <p className="text-[11px] mt-2.5" style={{ color: "rgba(255,255,255,0.42)" }}>
+          <p className="text-[11px] mt-2.5" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
             Tap any topic to jump into that part of the study
           </p>
         </div>
@@ -835,11 +852,11 @@ function CategorySheet({
                   key={topic.id}
                   onClick={() => onSelectTopic(topic.id)}
                   className="w-full text-left rounded-xl px-4 py-3.5 flex items-center justify-between gap-3 cursor-pointer active:scale-[0.98] transition-all"
-                  style={{ background: "rgba(255,255,255,0.035)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-[14px] font-semibold text-white leading-snug">{topic.title}</p>
-                    <p className="text-[10px] mt-0.5 font-semibold tracking-wide uppercase" style={{ color: hasVideos ? color : "rgba(255,255,255,0.30)" }}>
+                    <p className="text-[14px] font-semibold leading-snug" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{topic.title}</p>
+                    <p className="text-[10px] mt-0.5 font-semibold tracking-wide uppercase" style={{ color: hasVideos ? color : (isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)") }}>
                       {hasVideos ? `${topic.videoCount} video${topic.videoCount !== 1 ? "s" : ""} · Start watching` : "Coming soon · Browse section"}
                     </p>
                   </div>
@@ -853,11 +870,11 @@ function CategorySheet({
         </div>
 
         {/* Footer */}
-        <div className="px-4 pt-2 pb-5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="px-4 pt-2 pb-5" style={{ borderTop: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)"}` }}>
           <button
             onClick={onSeeAll}
             className="w-full py-3 rounded-xl text-[13px] font-bold transition-all active:scale-[0.98]"
-            style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
+            style={{ background: isLight ? "rgba(0,0,0,0.06)" : AC_BG, color: isLight ? "#0a0a0a" : AC, border: `1px solid ${isLight ? "rgba(0,0,0,0.15)" : AC_BORDER}` }}
           >
             See the full library
           </button>
@@ -874,13 +891,17 @@ function FundamentalsDetailView({
   onBack,
   onPlayVideo,
   focusTopicId,
+  isLight = false,
 }: {
   section: FundamentalsSection;
   onBack: () => void;
   onPlayVideo: (id: string, title: string) => void;
   focusTopicId?: string;
+  isLight?: boolean;
 }) {
-  const color = CATEGORY_COLORS[section.category];
+  const catColor = CATEGORY_COLORS[section.category];
+  const color = isLight ? "rgba(0,0,0,0.45)" : catColor;
+  const dotColor = isLight ? "rgba(0,0,0,0.30)" : catColor;
   const filtered = section.topics;
 
   useEffect(() => {
@@ -890,19 +911,19 @@ function FundamentalsDetailView({
   }, [focusTopicId]);
 
   return (
-    <div className="min-h-screen" style={{ background: BG_ROOT }}>
+    <div className="min-h-screen" style={{ background: isLight ? "#f9fafb" : BG_ROOT }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <BackArrow onClick={onBack} />
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: isLight ? "#f9fafb" : BG_ROOT, borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}>
+        <BackArrow onClick={onBack} isLight={isLight} />
         <div className="flex items-center gap-3 mt-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: `${color}20` }}>
-            <span className="block w-3 h-3 rounded-full" style={{ background: color, boxShadow: `0 0 10px ${color}66` }} />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.06)" : `${catColor}20` }}>
+            <span className="block w-3 h-3 rounded-full" style={{ background: dotColor, boxShadow: isLight ? "none" : `0 0 10px ${catColor}66` }} />
           </div>
           <div>
             <p className="text-[9px] font-black tracking-widest uppercase" style={{ color }}>
               Fundamentals of the Faith
             </p>
-            <h1 className="text-[18px] font-bold text-white">{section.category}</h1>
+            <h1 className="text-[18px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{section.category}</h1>
           </div>
         </div>
       </div>
@@ -920,22 +941,22 @@ function FundamentalsDetailView({
                 onClick={() => hasVideos && topic.featuredVideoId && onPlayVideo(topic.featuredVideoId, topic.title)}
                 className={`rounded-xl px-4 py-3.5 transition-all ${hasVideos ? "cursor-pointer active:scale-[0.98]" : ""}`}
                 style={{
-                  background: focused ? `${color}14` : BG_CARD,
-                  border: focused ? `1px solid ${color}66` : `1px solid ${BD_CARD}`,
-                  boxShadow: focused ? `0 0 0 1px ${color}33` : undefined,
+                  background: focused ? (isLight ? "rgba(0,0,0,0.05)" : `${catColor}14`) : (isLight ? "rgba(0,0,0,0.03)" : BG_CARD),
+                  border: focused ? `1px solid ${isLight ? "rgba(0,0,0,0.20)" : `${catColor}66`}` : `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}`,
+                  boxShadow: focused && !isLight ? `0 0 0 1px ${catColor}33` : undefined,
                 }}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-[14px] font-semibold text-white leading-snug">{topic.title}</p>
+                  <p className="text-[14px] font-semibold leading-snug" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{topic.title}</p>
                   {hasVideos ? (
                     <span
                       className="flex-shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: `${color}18`, color }}
+                      style={{ background: isLight ? "rgba(0,0,0,0.08)" : `${catColor}18`, color }}
                     >
                       {topic.videoCount} video{topic.videoCount !== 1 ? "s" : ""}
                     </span>
                   ) : (
-                    <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.05)", color: "rgba(255,255,255,0.32)" }}>
+                    <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: isLight ? "rgba(0,0,0,0.32)" : "rgba(255,255,255,0.32)" }}>
                       Coming soon
                     </span>
                   )}
@@ -958,6 +979,7 @@ function VideoListView({
   onPlay,
   showSearch = true,
   showChurch = false,
+  isLight = false,
 }: {
   title: string;
   videos: VideoEntry[];
@@ -965,6 +987,7 @@ function VideoListView({
   onPlay: (id: string, title: string) => void;
   showSearch?: boolean;
   showChurch?: boolean;
+  isLight?: boolean;
 }) {
   const [q, setQ] = useState("");
   const filtered = videos.filter(
@@ -976,18 +999,18 @@ function VideoListView({
   );
 
   return (
-    <div className="min-h-screen" style={{ background: BG_ROOT }}>
+    <div className="min-h-screen" style={{ background: isLight ? "#f9fafb" : BG_ROOT }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <BackArrow onClick={onBack} />
-        <h1 className="text-[18px] font-bold text-white mt-3">{title}</h1>
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: isLight ? "#f9fafb" : BG_ROOT, borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}>
+        <BackArrow onClick={onBack} isLight={isLight} />
+        <h1 className="text-[18px] font-bold mt-3" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{title}</h1>
         {showSearch && (
-          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.10)" }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round">
+          <div className="mt-3 flex items-center gap-2 px-3 py-2 rounded-xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)"}` }}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="2" strokeLinecap="round">
               <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
             </svg>
             <input
-              className="flex-1 bg-transparent text-[13px] text-white placeholder-white/30 outline-none"
+              className={`flex-1 bg-transparent text-[13px] outline-none ${isLight ? "text-black placeholder-black/30" : "text-white placeholder-white/30"}`}
               placeholder="Search videos…"
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -1000,7 +1023,7 @@ function VideoListView({
       <div className="px-4 pt-4 pb-24">
         <div className="grid grid-cols-2 gap-3">
           {filtered.map((v) => (
-            <div key={v.id} className="rounded-xl overflow-hidden" style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
+            <div key={v.id} className="rounded-xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}>
               <button
                 onClick={() => onPlay(v.id, v.title)}
                 className="w-full text-left active:scale-[0.97] transition-all"
@@ -1020,13 +1043,13 @@ function VideoListView({
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{v.speaker}</p>
+                  <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>{v.speaker}</p>
                   {showChurch && v.church && (
-                    <p className="text-[9px] mb-0.5 truncate" style={{ color: "rgba(255,255,255,0.35)" }}>{v.church}</p>
+                    <p className="text-[9px] mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>{v.church}</p>
                   )}
-                  <p className="text-[11px] font-semibold text-white/80 leading-tight line-clamp-2">{v.title}</p>
+                  <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{v.title}</p>
                   {v.datePublished && (
-                    <p className="text-[9px] mt-1.5" style={{ color: "rgba(255,255,255,0.28)" }}>
+                    <p className="text-[9px] mt-1.5" style={{ color: isLight ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.28)" }}>
                       {new Date(v.datePublished).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
                     </p>
                   )}
@@ -1036,7 +1059,7 @@ function VideoListView({
           ))}
         </div>
         {filtered.length === 0 && (
-          <p className="text-center text-white/30 text-[14px] mt-12">No videos found.</p>
+          <p className="text-center text-[14px] mt-12" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}>No videos found.</p>
         )}
       </div>
     </div>
@@ -1049,17 +1072,19 @@ function ShortsGridView({
   videos,
   onBack,
   onPlay,
+  isLight = false,
 }: {
   videos: VideoEntry[];
   onBack: () => void;
   onPlay: (id: string, title: string, isShort: boolean) => void;
+  isLight?: boolean;
 }) {
   return (
-    <div className="min-h-screen" style={{ background: BG_ROOT }}>
-      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <BackArrow onClick={onBack} />
-        <h1 className="text-[18px] font-bold text-white mt-3">Short Videos</h1>
-        <p className="text-[11px] mt-1" style={{ color: "rgba(255,255,255,0.40)" }}>
+    <div className="min-h-screen" style={{ background: isLight ? "#f9fafb" : BG_ROOT }}>
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: isLight ? "#f9fafb" : BG_ROOT, borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}>
+        <BackArrow onClick={onBack} isLight={isLight} />
+        <h1 className="text-[18px] font-bold mt-3" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Short Videos</h1>
+        <p className="text-[11px] mt-1" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
           Quick vertical teachings, made for your phone
         </p>
       </div>
@@ -1072,20 +1097,20 @@ function ShortsGridView({
                 key={v.id}
                 onClick={() => onPlay(v.id, v.title, true)}
                 className="rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-all relative"
-                style={{ background: "#0d0d18", border: `1px solid ${BD_CARD}` }}
+                style={{ background: isLight ? "rgba(0,0,0,0.05)" : "#0d0d18", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}
               >
                 <div className="relative" style={{ aspectRatio: "9/16" }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={ytThumb(v.id, "hq")} alt={v.title} className="w-full h-full object-cover" />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.10) 45%, rgba(8,9,15,0.05) 100%)" }} />
-                  <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: "rgba(201,169,97,0.92)", color: "#08090f" }}>SHORT</span>
+                  <span className="absolute top-2 left-2 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.92)", color: isLight ? "#0a0a0a" : "#08090f" }}>SHORT</span>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.18)", backdropFilter: "blur(4px)", border: "1px solid rgba(255,255,255,0.25)" }}>
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="white"><polygon points="6,3 20,12 6,21"/></svg>
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: AC }}>{v.speaker}</p>
+                    <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.50)" : AC }}>{v.speaker}</p>
                     <p className="text-[12px] font-semibold text-white leading-tight line-clamp-2">{v.title}</p>
                   </div>
                 </div>
@@ -1093,7 +1118,7 @@ function ShortsGridView({
             ))}
           </div>
         ) : (
-          <p className="text-center text-white/30 text-[14px] mt-12">No shorts yet — content in progress.</p>
+          <p className="text-center text-[14px] mt-12" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}>No shorts yet — content in progress.</p>
         )}
       </div>
     </div>
@@ -1113,6 +1138,10 @@ type Screen =
 
 export default function VideosPage() {
   const { lang, t } = useLanguage();
+  const { theme } = useTheme();
+  const isLight =
+    (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" ||
+    theme === "white-noir";
   const [screen, setScreen] = useState<Screen>({ id: "home" });
   const [player, setPlayer] = useState<{ videoId: string; title: string; isShort?: boolean } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1172,6 +1201,7 @@ export default function VideosPage() {
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
+          isLight={isLight}
         />
       </>
     );
@@ -1185,6 +1215,7 @@ export default function VideosPage() {
           videos={allShorts}
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
+          isLight={isLight}
         />
       </>
     );
@@ -1200,6 +1231,7 @@ export default function VideosPage() {
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
+          isLight={isLight}
         />
       </>
     );
@@ -1215,6 +1247,7 @@ export default function VideosPage() {
           onBack={() => go({ id: "home" })}
           onPlay={playVideo}
           showChurch
+          isLight={isLight}
         />
       </>
     );
@@ -1228,6 +1261,7 @@ export default function VideosPage() {
           onBack={() => go({ id: "home" })}
           onSelectCategory={(s) => go({ id: "fundamentals-detail", section: s })}
           onPlay={playVideo}
+          isLight={isLight}
         />
       </>
     );
@@ -1242,6 +1276,7 @@ export default function VideosPage() {
           focusTopicId={screen.focusTopicId}
           onBack={() => go({ id: "fundamentals-home" })}
           onPlayVideo={playVideo}
+          isLight={isLight}
         />
       </>
     );
@@ -1252,7 +1287,7 @@ export default function VideosPage() {
   return (
     <>
       {player && <VideoPlayerModal videoId={player.videoId} title={player.title} onClose={() => setPlayer(null)} />}
-      {askOpen && <QuestionFormModal onClose={() => setAskOpen(false)} />}
+      {askOpen && <QuestionFormModal onClose={() => setAskOpen(false)} isLight={isLight} />}
       {sheetSection && (
         <CategorySheet
           section={sheetSection}
@@ -1263,27 +1298,28 @@ export default function VideosPage() {
             setSheetSection(null);
             go({ id: "fundamentals-detail", section: s, focusTopicId: topicId });
           }}
+          isLight={isLight}
         />
       )}
 
-      <div className="min-h-screen pb-24 text-white" style={{ background: BG_ROOT }}>
+      <div className="min-h-screen pb-24" style={{ background: isLight ? "#f9fafb" : BG_ROOT, color: isLight ? "#0a0a0a" : "#ffffff" }}>
 
         {/* ── Header ──────────────────────────────────────────────────────────── */}
         <div
           className="sticky top-0 z-20 flex items-center justify-between px-4 pt-5 pb-3"
-          style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+          style={{ background: isLight ? "#f9fafb" : BG_ROOT, borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}
         >
           <div>
-            <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: AC }}>
+            <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : AC }}>
               Tulip Bible App
             </p>
-            <h1 className="text-[22px] font-bold text-white leading-none">{t("videos_heading")}</h1>
+            <h1 className="text-[22px] font-bold leading-none" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{t("videos_heading")}</h1>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setShowSubmitSheet(true)}
               className="px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 transition-all active:scale-[0.97]"
-              style={{ background: AC_BG, color: AC, border: `1px solid ${AC_BORDER}` }}
+              style={{ background: isLight ? "rgba(0,0,0,0.06)" : AC_BG, color: isLight ? "#0a0a0a" : AC, border: `1px solid ${isLight ? "rgba(0,0,0,0.15)" : AC_BORDER}` }}
             >
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
               {lang === "es" ? "Enviar" : "Submit"}
@@ -1291,9 +1327,9 @@ export default function VideosPage() {
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
               className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
-              style={{ background: showSearch ? AC_BG : "rgba(255,255,255,0.06)", border: showSearch ? `1px solid ${AC_BORDER}` : "1px solid transparent" }}
+              style={{ background: showSearch ? (isLight ? "rgba(0,0,0,0.06)" : AC_BG) : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"), border: showSearch ? `1px solid ${isLight ? "rgba(0,0,0,0.15)" : AC_BORDER}` : "1px solid transparent" }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={showSearch ? AC : "rgba(255,255,255,0.55)"} strokeWidth="2" strokeLinecap="round">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={showSearch ? (isLight ? "#0a0a0a" : AC) : (isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)")} strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
             </button>
@@ -1303,19 +1339,19 @@ export default function VideosPage() {
         {/* ── Search bar ──────────────────────────────────────────────────────── */}
         {showSearch && (
           <div className="px-4 py-3">
-            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round">
+            <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"}` }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="2" strokeLinecap="round">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
               <input
                 autoFocus
-                className="flex-1 bg-transparent text-[14px] text-white placeholder-white/30 outline-none"
+                className={`flex-1 bg-transparent text-[14px] outline-none ${isLight ? "text-black placeholder-black/30" : "text-white placeholder-white/30"}`}
                 placeholder={t("videos_search_placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className="text-white/30 hover:text-white/60">✕</button>
+                <button onClick={() => setSearchQuery("")} className={isLight ? "text-black/30 hover:text-black/60" : "text-white/30 hover:text-white/60"}>✕</button>
               )}
             </div>
           </div>
@@ -1324,16 +1360,16 @@ export default function VideosPage() {
         {/* ── Search results ───────────────────────────────────────────────────── */}
         {searchQuery && (
           <div className="px-4 pb-6">
-            <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: "rgba(255,255,255,0.30)" }}>
+            <p className="text-[10px] font-bold tracking-widest uppercase mb-3" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}>
               {searchResults.length} {lang === "es" ? (searchResults.length === 1 ? "resultado" : "resultados") : `result${searchResults.length !== 1 ? "s" : ""}`}
             </p>
             <div className="grid grid-cols-2 gap-3">
               {searchResults.map((v) => (
-                <VideoCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+                <VideoCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch isLight={isLight} />
               ))}
             </div>
             {searchResults.length === 0 && (
-              <p className="text-center text-white/30 text-[14px] mt-8">{lang === "es" ? "Sin resultados para" : "No results for"} &ldquo;{searchQuery}&rdquo;</p>
+              <p className="text-center text-[14px] mt-8" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }}>{lang === "es" ? "Sin resultados para" : "No results for"} &ldquo;{searchQuery}&rdquo;</p>
             )}
           </div>
         )}
@@ -1343,20 +1379,20 @@ export default function VideosPage() {
             {/* ── Cinematic hero ────────────────────────────────────────────── */}
             {currentFeatured ? (
               <div className="pt-4">
-                <SectionHeader label={lang === "es" ? "Esta Semana" : "This Week"} title={lang === "es" ? "Video Destacado" : "Featured Video"} color={AC} />
+                <SectionHeader label={lang === "es" ? "Esta Semana" : "This Week"} title={lang === "es" ? "Video Destacado" : "Featured Video"} color={AC} isLight={isLight} />
                 <FeaturedVideoBanner
                   video={currentFeatured}
                   onWatch={() => playVideo(currentFeatured.id, currentFeatured.title)}
                 />
               </div>
             ) : (
-              <ComingSoonBanners onAsk={() => setAskOpen(true)} />
+              <ComingSoonBanners onAsk={() => setAskOpen(true)} isLight={isLight} />
             )}
 
             {/* ── Continue Watching (only when there's history) ─────────────── */}
             {visibleHistory.length > 0 && (
               <section className="mb-8">
-                <SectionHeader label={lang === "es" ? "Continúa donde lo dejaste" : "Pick up where you left off"} title={t("videos_continue_watching")} color={AC} />
+                <SectionHeader label={lang === "es" ? "Continúa donde lo dejaste" : "Pick up where you left off"} title={t("videos_continue_watching")} color={AC} isLight={isLight} />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {visibleHistory.map((item) => (
                     <ContinueCard
@@ -1367,6 +1403,7 @@ export default function VideosPage() {
                         removeFromHistory(item.videoId);
                         setHistory(loadWatchHistory());
                       }}
+                      isLight={isLight}
                     />
                   ))}
                 </div>
@@ -1380,17 +1417,18 @@ export default function VideosPage() {
                 title={lang === "es" ? "Videos Cortos" : "Short Videos"}
                 onViewAll={() => go({ id: "short" })}
                 color="#c9a961"
+                isLight={isLight}
               />
               {allShorts.length > 0 ? (
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {allShorts.map((v) => (
-                    <ShortCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, true, v.speaker)} />
+                    <ShortCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, true, v.speaker)} isLight={isLight} />
                   ))}
                 </div>
               ) : (
                 <div className="px-4">
-                  <div className="rounded-2xl px-4 py-6 text-center" style={{ background: BG_CARD, border: `1px dashed ${BD_CARD}` }}>
-                    <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                  <div className="rounded-2xl px-4 py-6 text-center" style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px dashed ${isLight ? "rgba(0,0,0,0.10)" : BD_CARD}` }}>
+                    <p className="text-[12px]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
                       Short vertical teachings are coming soon.
                     </p>
                   </div>
@@ -1400,7 +1438,7 @@ export default function VideosPage() {
 
             {/* ── Featured Videos (landscape grid, 231-style) ────────────────── */}
             <section className="mb-8 px-4">
-              <h3 className="text-[16px] font-bold text-white mb-3">Featured Videos</h3>
+              <h3 className="text-[16px] font-bold mb-3" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Featured Videos</h3>
               {archiveVideos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
                   {archiveVideos.map((v) => (
@@ -1409,20 +1447,20 @@ export default function VideosPage() {
                       onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)}
                       className="text-left active:scale-[0.97] transition-all"
                     >
-                      <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
+                      <div className="relative rounded-xl overflow-hidden" style={{ aspectRatio: "16/9", background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={ytThumb(v.id, "mq")} alt={v.title} className="w-full h-full object-cover" />
                         {v.isFeatured && (
-                          <span className="absolute top-1.5 left-1.5 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: AC, color: "#08090f" }}>NEW</span>
+                          <span className="absolute top-1.5 left-1.5 text-[8px] font-black tracking-widest px-1.5 py-0.5 rounded" style={{ background: isLight ? "rgba(0,0,0,0.10)" : AC, color: isLight ? "#0a0a0a" : "#08090f" }}>NEW</span>
                         )}
                       </div>
-                      <p className="text-[12px] font-semibold text-white/85 leading-tight line-clamp-2 mt-2">{v.title}</p>
+                      <p className="text-[12px] font-semibold leading-tight line-clamp-2 mt-2" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.85)" }}>{v.title}</p>
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl px-4 py-8 text-center" style={{ background: BG_CARD, border: `1px dashed ${BD_CARD}` }}>
-                  <p className="text-[12px]" style={{ color: "rgba(255,255,255,0.40)" }}>
+                <div className="rounded-2xl px-4 py-8 text-center" style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px dashed ${isLight ? "rgba(0,0,0,0.10)" : BD_CARD}` }}>
+                  <p className="text-[12px]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
                     Featured teaching videos are coming soon.
                   </p>
                 </div>
@@ -1433,13 +1471,13 @@ export default function VideosPage() {
             <section className="mb-8">
               <div className="px-4 mb-4">
                 <div className="flex items-center gap-3 mb-4">
-                  <span className="h-px flex-1" style={{ background: "linear-gradient(to right, transparent, rgba(201,169,97,0.35))" }} />
-                  <p className="text-[9px] font-black tracking-[0.22em] uppercase" style={{ color: AC }}>
+                  <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to right, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to right, transparent, rgba(201,169,97,0.35))" }} />
+                  <p className="text-[9px] font-black tracking-[0.22em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.40)" : AC }}>
                     Fundamentals of the Faith
                   </p>
-                  <span className="h-px flex-1" style={{ background: "linear-gradient(to left, transparent, rgba(201,169,97,0.35))" }} />
+                  <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to left, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to left, transparent, rgba(201,169,97,0.35))" }} />
                 </div>
-                <h3 className="text-[18px] font-bold text-white text-center">Browse by Topic</h3>
+                <h3 className="text-[18px] font-bold text-center" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Browse by Topic</h3>
               </div>
               <div className="px-4 grid grid-cols-2 gap-3">
                 {FUNDAMENTALS.map((section) => (
@@ -1447,6 +1485,7 @@ export default function VideosPage() {
                     key={section.category}
                     section={section}
                     onSelect={(s) => setSheetSection(s)}
+                    isLight={isLight}
                   />
                 ))}
               </div>
@@ -1454,7 +1493,7 @@ export default function VideosPage() {
                 <button
                   onClick={() => go({ id: "fundamentals-home" })}
                   className="w-full py-3 rounded-xl text-[12px] font-bold tracking-wide transition-all active:scale-[0.98]"
-                  style={{ background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.55)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}` }}
                 >
                   See the full library
                 </button>
@@ -1469,10 +1508,11 @@ export default function VideosPage() {
                   title="Community Videos"
                   onViewAll={() => go({ id: "community" })}
                   color="#10b981"
+                  isLight={isLight}
                 />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {communityVideos.map((v) => (
-                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch isLight={isLight} />
                   ))}
                 </div>
               </section>
@@ -1486,10 +1526,11 @@ export default function VideosPage() {
                   title="Testimonies"
                   onViewAll={() => go({ id: "testimonies" })}
                   color="#c9a961"
+                  isLight={isLight}
                 />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {testimoniesVideos.map((v) => (
-                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch />
+                    <VideoCard key={v.id} video={v} size="md" onClick={() => playVideo(v.id, v.title, v.isShort, v.speaker)} showChurch isLight={isLight} />
                   ))}
                 </div>
               </section>
@@ -1509,18 +1550,18 @@ export default function VideosPage() {
             />
             <div
               className="relative rounded-t-3xl overflow-hidden"
-              style={{ background: "#11131c", borderTop: `1px solid ${AC_BORDER}`, maxHeight: "85vh" }}
+              style={{ background: isLight ? "#ffffff" : "#11131c", borderTop: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : AC_BORDER}`, maxHeight: "85vh" }}
             >
               {/* Drag handle */}
               <div className="flex justify-center pt-3 pb-1">
-                <span className="block w-10 h-1 rounded-full" style={{ background: "rgba(255,255,255,0.18)" }} />
+                <span className="block w-10 h-1 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.18)" : "rgba(255,255,255,0.18)" }} />
               </div>
 
               <div className="px-6 pt-4 pb-10 overflow-y-auto">
                 {/* Submit a Video */}
-                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>{lang === "es" ? "Enviar un Video" : "Submit a Video"}</p>
-                <h2 className="text-[20px] font-bold text-white mb-2">{lang === "es" ? "Comparte Enseñanza Bíblica" : "Share Biblical Teaching"}</h2>
-                <p className="text-[13px] leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>{lang === "es" ? "Enviar un Video" : "Submit a Video"}</p>
+                <h2 className="text-[20px] font-bold mb-2" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{lang === "es" ? "Comparte Enseñanza Bíblica" : "Share Biblical Teaching"}</h2>
+                <p className="text-[13px] leading-relaxed mb-5" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}>
                   {lang === "es"
                     ? "¿Eres pastor o maestro? Envía un video para revisión y publicación en el canal oficial de YouTube de Tulip Bible App — compartiendo sana doctrina con creyentes en todo el mundo."
                     : "Are you a pastor or teacher? Submit a video to be reviewed and published through the official Tulip Bible App YouTube channel — sharing sound doctrine with believers worldwide."}
@@ -1529,18 +1570,18 @@ export default function VideosPage() {
                   href="/videos/submit"
                   onClick={() => setShowSubmitSheet(false)}
                   className="flex items-center justify-center gap-2 w-full py-3 rounded-xl text-[14px] font-extrabold mb-6 transition-all active:scale-[0.98]"
-                  style={{ background: `linear-gradient(135deg, #d9b970, #c9a961)`, color: "#08090f" }}
+                  style={{ background: isLight ? "#0a0a0a" : `linear-gradient(135deg, #d9b970, #c9a961)`, color: isLight ? "#ffffff" : "#08090f" }}
                 >
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 5v14M5 12h14"/></svg>
                   {lang === "es" ? "Ir al Formulario" : "Go to Submit Form"}
                 </Link>
 
                 {/* Divider */}
-                <div className="mb-6" style={{ height: "1px", background: "rgba(255,255,255,0.07)" }} />
+                <div className="mb-6" style={{ height: "1px", background: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)" }} />
 
                 {/* Video Philosophy */}
-                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: AC }}>{lang === "es" ? "Nuestra Filosofía de Video" : "Our Video Philosophy"}</p>
-                <p className="text-[13px] leading-relaxed mb-4" style={{ color: "rgba(255,255,255,0.55)", fontFamily: SERIF }}>
+                <p className="text-[9px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>{lang === "es" ? "Nuestra Filosofía de Video" : "Our Video Philosophy"}</p>
+                <p className="text-[13px] leading-relaxed mb-4" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)", fontFamily: SERIF }}>
                   {lang === "es"
                     ? "Todos los videos aprobados se publican en el canal oficial de YouTube de Tulip Bible App y se integran aquí — manteniendo la experiencia nativa de la app con responsabilidad doctrinal."
                     : "All approved videos are published through the official Tulip Bible App YouTube channel and embedded here — keeping the experience native to the app while maintaining doctrinal accountability."}
@@ -1550,7 +1591,7 @@ export default function VideosPage() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-[12px] font-bold"
-                  style={{ color: AC }}
+                  style={{ color: isLight ? "#0a0a0a" : AC }}
                 >
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M5 12h14m-6-6 6 6-6 6"/></svg>
                   Visit our YouTube channel
@@ -1570,21 +1611,23 @@ function FundamentalsHomeView({
   onBack,
   onSelectCategory,
   onPlay,
+  isLight = false,
 }: {
   onBack: () => void;
   onSelectCategory: (s: FundamentalsSection) => void;
   onPlay: (id: string, title: string) => void;
+  isLight?: boolean;
 }) {
   const totalTopics = FUNDAMENTALS.reduce((a, s) => a + s.topics.length, 0);
 
   return (
-    <div className="min-h-screen pb-24" style={{ background: BG_ROOT }}>
+    <div className="min-h-screen pb-24" style={{ background: isLight ? "#f9fafb" : BG_ROOT }}>
       {/* Header */}
-      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: BG_ROOT, borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
-        <BackArrow onClick={onBack} />
+      <div className="sticky top-0 z-10 px-4 pt-4 pb-3" style={{ background: isLight ? "#f9fafb" : BG_ROOT, borderBottom: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)"}` }}>
+        <BackArrow onClick={onBack} isLight={isLight} />
         <div className="mt-3">
-          <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: AC }}>Educational Library</p>
-          <h1 className="text-[20px] font-bold text-white">Fundamentals of the Faith</h1>
+          <p className="text-[9px] font-black tracking-widest uppercase mb-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : AC }}>Educational Library</p>
+          <h1 className="text-[20px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Fundamentals of the Faith</h1>
         </div>
       </div>
 
@@ -1595,48 +1638,52 @@ function FundamentalsHomeView({
             { label: "Categories", value: FUNDAMENTALS.length.toString() },
             { label: "Topics", value: totalTopics.toString() },
           ].map((s) => (
-            <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: BG_CARD, border: `1px solid ${BD_CARD}` }}>
-              <p className="text-[20px] font-bold text-white">{s.value}</p>
-              <p className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>{s.label}</p>
+            <div key={s.label} className="rounded-xl p-3 text-center" style={{ background: isLight ? "rgba(0,0,0,0.03)" : BG_CARD, border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : BD_CARD}` }}>
+              <p className="text-[20px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{s.value}</p>
+              <p className="text-[9px] font-bold tracking-wider uppercase mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Category sections */}
         {FUNDAMENTALS.map((section) => {
-          const color = CATEGORY_COLORS[section.category];
+          const catColor = CATEGORY_COLORS[section.category];
+          const dotColor = isLight ? "rgba(0,0,0,0.30)" : catColor;
 
           return (
             <div key={section.category} className="mb-4">
               <button
                 onClick={() => onSelectCategory(section)}
                 className="w-full rounded-2xl p-4 text-left transition-all active:scale-[0.98]"
-                style={{ background: `linear-gradient(135deg, ${color}12, ${color}04)`, border: `1px solid ${color}22` }}
+                style={{
+                  background: isLight ? "rgba(0,0,0,0.03)" : `linear-gradient(135deg, ${catColor}12, ${catColor}04)`,
+                  border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : `${catColor}22`}`,
+                }}
               >
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: `${color}20` }}>
-                      <span className="block w-2.5 h-2.5 rounded-full" style={{ background: color, boxShadow: `0 0 8px ${color}66` }} />
+                    <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.06)" : `${catColor}20` }}>
+                      <span className="block w-2.5 h-2.5 rounded-full" style={{ background: dotColor, boxShadow: isLight ? "none" : `0 0 8px ${catColor}66` }} />
                     </div>
                     <div>
-                      <p className="text-[15px] font-bold text-white">{section.category}</p>
-                      <p className="text-[10px]" style={{ color: "rgba(255,255,255,0.35)" }}>
+                      <p className="text-[15px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{section.category}</p>
+                      <p className="text-[10px]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
                         {section.topics.length} topics
                       </p>
                     </div>
                   </div>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.30)" strokeWidth="2" strokeLinecap="round">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)"} strokeWidth="2" strokeLinecap="round">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {section.topics.slice(0, 4).map((t) => (
-                    <span key={t.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.45)" }}>
+                    <span key={t.id} className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
                       {t.title}
                     </span>
                   ))}
                   {section.topics.length > 4 && (
-                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: "rgba(255,255,255,0.25)" }}>
+                    <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)" }}>
                       +{section.topics.length - 4} more
                     </span>
                   )}
@@ -1649,16 +1696,16 @@ function FundamentalsHomeView({
         {/* Submit CTA */}
         <div
           className="rounded-2xl p-5 mt-2"
-          style={{ background: "rgba(201,169,97,0.06)", border: `1px solid ${AC_BORDER}` }}
+          style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(201,169,97,0.06)", border: `1px solid ${isLight ? "rgba(0,0,0,0.12)" : AC_BORDER}` }}
         >
-          <p className="text-[13px] font-bold text-white mb-1">Help Build the Library</p>
-          <p className="text-[12px] mb-3" style={{ color: "rgba(255,255,255,0.45)" }}>
+          <p className="text-[13px] font-bold mb-1" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>Help Build the Library</p>
+          <p className="text-[12px] mb-3" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
             Are you a pastor, teacher, or ministry? Submit a video for any of these topics for review.
           </p>
           <Link
             href="/videos/submit"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-[12px] font-bold transition-all active:scale-[0.98]"
-            style={{ background: AC, color: "#08090f" }}
+            style={{ background: isLight ? "#0a0a0a" : AC, color: isLight ? "#ffffff" : "#08090f" }}
           >
             Submit a Video →
           </Link>

@@ -2,6 +2,8 @@
 // localStorage key: "tulip_notes_v1"
 // Accent color for the Notes section: emerald green
 
+import { syncKey } from "./cloudSync";
+
 export interface SermonNote {
   id: string;
   noteType?: "sermon" | "general"; // "sermon" = tied to a Bible book; "general" = freeform
@@ -49,7 +51,9 @@ export function loadNotes(): SermonNote[] {
 export function saveNotes(notes: SermonNote[]): void {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+    const value = JSON.stringify(notes);
+    localStorage.setItem(NOTES_STORAGE_KEY, value);
+    syncKey(NOTES_STORAGE_KEY, value).catch(() => {});
   } catch {
     // Storage quota exceeded — fail silently
   }

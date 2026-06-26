@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { BadgeDefinition, badgeText, evaluateBadgeUnlocks, type BadgeLang } from "../lib/badges";
 import { useLanguage } from "../lib/useLanguage";
+import { useTheme } from "../lib/useTheme";
 
 export function ShareIcon({ className = "h-5 w-5" }: { className?: string }) {
   return (
@@ -179,8 +180,32 @@ export async function shareBadge(badge: BadgeDefinition, lang: BadgeLang) {
   }
 }
 
+const SHOWN_KEY = "tulip_badges_shown_v1";
+
+// Module-level set: survives component unmount/remount (page navigation within same session)
+const _shownThisRuntime = new Set<string>();
+
+// Seed from localStorage on first load so we survive hard reloads too
+if (typeof window !== "undefined") {
+  try {
+    const raw = localStorage.getItem(SHOWN_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    if (Array.isArray(arr)) arr.forEach((id: string) => _shownThisRuntime.add(id));
+  } catch {}
+}
+
+function markShown(id: string) {
+  _shownThisRuntime.add(id);
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(SHOWN_KEY, JSON.stringify([..._shownThisRuntime]));
+  } catch {}
+}
+
 export function BadgeRuntime() {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
   const [queue, setQueue] = useState<BadgeDefinition[]>([]);
   const [active, setActive] = useState<BadgeDefinition | null>(null);
   const activeRef = useRef<BadgeDefinition | null>(null);
@@ -192,9 +217,16 @@ export function BadgeRuntime() {
   useEffect(() => {
     function check() {
       const unlocked = evaluateBadgeUnlocks();
-      if (unlocked.length > 0) {
-        setQueue((prev) => [...prev, ...unlocked]);
-      }
+      if (unlocked.length === 0) return;
+      // Filter out any badge already shown this runtime (module-level — survives navigation)
+      const newOnes = unlocked.filter((b) => !_shownThisRuntime.has(b.id));
+      if (newOnes.length === 0) return;
+      // Mark immediately before setQueue so re-entrant calls (from "tulip-badges-change") are blocked
+      for (const b of newOnes) markShown(b.id);
+      setQueue((prev) => {
+        const existingIds = new Set([...prev.map((b) => b.id), activeRef.current?.id].filter(Boolean) as string[]);
+        return [...prev, ...newOnes.filter((b) => !existingIds.has(b.id))];
+      });
     }
 
     const timer = window.setInterval(check, 2500);
@@ -223,17 +255,25 @@ export function BadgeRuntime() {
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5">
       <div className="absolute inset-0 bg-black/58 backdrop-blur-md" />
-      <div className="relative w-full max-w-[360px] overflow-hidden rounded-[2rem] border border-[#d8b867]/30 bg-[#071326]/95 p-6 text-center shadow-2xl shadow-black/50">
+      <div
+        className="relative w-full max-w-[360px] overflow-hidden rounded-[2rem] p-6 text-center shadow-2xl"
+        style={{
+          background: isLight ? "#ffffff" : "rgba(7,19,38,0.95)",
+          border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(216,184,103,0.30)",
+          boxShadow: isLight ? "0 20px 60px rgba(0,0,0,0.15)" : undefined,
+        }}
+      >
         <button
           type="button"
           onClick={() => setActive(null)}
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/10 bg-white/5 text-white/55"
+          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full"
+          style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.55)" }}
           aria-label={lang === "es" ? "Cerrar insignia" : "Close badge popup"}
         >
           ×
         </button>
 
-        <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#d8b867]">
+        <p className="text-[11px] font-black uppercase tracking-[0.24em]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "#d8b867" }}>
           {lang === "es" ? "Insignia Ganada" : "Badge Earned"}
         </p>
         <img
@@ -241,22 +281,24 @@ export function BadgeRuntime() {
           alt={copy.name}
           className="mx-auto mt-4 h-40 w-40 object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.35)]"
         />
-        <h2 className="mt-4 text-3xl font-black leading-tight text-white">{copy.name}</h2>
-        <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6 text-white/68">{copy.reason}</p>
+        <h2 className="mt-4 text-3xl font-black leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h2>
+        <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.68)" }}>{copy.reason}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
           <button
             type="button"
             onClick={() => shareBadge(active, lang)}
             aria-label={lang === "es" ? "Compartir insignia" : "Share badge"}
-            className="grid place-items-center rounded-2xl bg-[#d8b867] px-4 py-3 text-[#071326] active:scale-[0.98]"
+            className="grid place-items-center rounded-2xl px-4 py-3 active:scale-[0.98]"
+            style={{ background: isLight ? "#e5e7eb" : "#d8b867", color: isLight ? "#0a0a0a" : "#071326" }}
           >
             <ShareIcon className="h-5 w-5" />
           </button>
           <button
             type="button"
             onClick={() => setActive(null)}
-            className="rounded-2xl border border-white/12 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white/80 active:scale-[0.98]"
+            className="rounded-2xl px-4 py-3 text-sm font-bold active:scale-[0.98]"
+            style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.12)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.80)" }}
           >
             {lang === "es" ? "Seguir" : "Keep Going"}
           </button>

@@ -9,6 +9,8 @@
 //   tulip-church-analyses church analysis results
 //   ryc-bookmarks        bookmarks
 //   tulip_badges_earned_v1 earned badges
+//   tulip-reader-highlights:* library book & historical document highlights
+//   tulip_notes_v1       sermon/scripture notes
 //
 // Keys NOT synced (device-local preferences):
 //   ryc-theme, ryc-device-mode, ryc-scripture-font, tulip_notif_enabled, etc.
@@ -35,6 +37,9 @@ const SYNC_PREFIXES = [
   "tulip_badges_earned_v1",
   "tulip_scripture_shares_v1",
   "tulip_bible_tracker_v1",
+  // Highlights (library books & historical documents) and sermon notes
+  "tulip-reader-highlights:",
+  "tulip_notes_v1",
   // Account & preferences
   "tulip_user_name",
   "ryc-lang",

@@ -329,9 +329,12 @@ function useTheme() { return useContext(ThemeCtx); }
 
 function readStoredAppTheme(): AppTheme {
   if (typeof window === "undefined") return "premium-neon";
+  // Check DOM attribute first — set by early script before React hydrates
+  const dom = document.documentElement.getAttribute("data-theme") as AppTheme | null;
+  if (dom === "white-noir" || dom === "premium-neon" || dom === "gold-navy" || dom === "light-pink" || dom === "light-elegant") return dom;
   try {
     const v = localStorage.getItem("ryc-theme");
-    if (v === "white-noir" || v === "premium-neon" || v === "gold-navy" || v === "light-pink" || v === "light-elegant") return v;
+    if (v === "white-noir" || v === "premium-neon" || v === "gold-navy" || v === "light-pink" || v === "light-elegant") return v as AppTheme;
   } catch { /* ignore */ }
   return "premium-neon";
 }

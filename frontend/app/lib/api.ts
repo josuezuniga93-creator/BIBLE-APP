@@ -154,6 +154,7 @@ const HELLOAO_TRANSLATION_ID: Record<string, string> = {
   // The following go through the bolls.life proxy (values unused but key must be present)
   nkjv:  "NKJV",
   esv:   "ESV",
+  csb:   "CSB",
   nasb:  "NASB",
   niv:   "NIV2011",
   lsb:   "LSB",

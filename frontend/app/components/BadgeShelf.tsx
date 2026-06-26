@@ -21,11 +21,13 @@ function BadgeGalleryCard({
   earned,
   lang,
   isPN = false,
+  isLE = false,
 }: {
   badge: BadgeDefinition & { earnedAt?: string };
   earned: boolean;
   lang: BadgeLang;
   isPN?: boolean;
+  isLE?: boolean;
 }) {
   const stats = collectBadgeStats();
   const progress = getBadgeProgress(badge, stats);
@@ -36,22 +38,27 @@ function BadgeGalleryCard({
       type={earned ? "button" : undefined}
       onClick={earned ? () => shareBadge(badge, lang) : undefined}
       aria-label={earned ? (lang === "es" ? `Compartir ${copy.name}` : `Share ${copy.name}`) : undefined}
-      className={`w-full rounded-3xl p-4 ${earned ? "bg-white/[0.045] text-left active:scale-[0.985]" : "bg-white/[0.025] opacity-55 grayscale"}`}
-      style={{ border: earned ? `1px solid ${isPN ? "rgba(124,58,237,0.30)" : "rgba(216,184,103,0.30)"}` : "1px solid rgba(255,255,255,0.08)" }}
+      className={`w-full rounded-3xl p-4 ${earned ? `${isLE ? "" : "bg-white/[0.045]"} text-left active:scale-[0.985]` : "bg-white/[0.025] opacity-55 grayscale"}`}
+      style={{
+        background: earned && isLE ? "rgba(0,0,0,0.04)" : undefined,
+        border: earned
+          ? `1px solid ${isLE ? "rgba(0,0,0,0.10)" : isPN ? "rgba(124,58,237,0.30)" : "rgba(216,184,103,0.30)"}`
+          : `1px solid ${isLE ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}`,
+      }}
     >
       <img src={badge.image} alt={copy.name} className="mx-auto h-24 w-24 object-contain" />
-      <h3 className="mt-3 text-center text-sm font-black leading-tight text-white">{copy.name}</h3>
-      <p className="mt-1 text-center text-[11px] leading-5 text-white/50">{copy.reason}</p>
+      <h3 className="mt-3 text-center text-sm font-black leading-tight" style={{ color: isLE ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h3>
+      <p className="mt-1 text-center text-[11px] leading-5" style={{ color: isLE ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>{copy.reason}</p>
       {earned ? (
         <div className="mt-3 flex items-center justify-center rounded-full px-3 py-1.5"
-          style={{ background: isPN ? "rgba(124,58,237,0.12)" : "rgba(216,184,103,0.12)", color: isPN ? "#a78bfa" : "#d8b867" }}>
+          style={{ background: isLE ? "rgba(0,0,0,0.06)" : isPN ? "rgba(124,58,237,0.12)" : "rgba(216,184,103,0.12)", color: isLE ? "rgba(0,0,0,0.50)" : isPN ? "#a78bfa" : "#d8b867" }}>
           <span className="text-[10px] font-black uppercase tracking-widest">
             {lang === "es" ? "Ganada" : "Earned"}
           </span>
         </div>
       ) : (
-        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8">
-          <span className="block h-full rounded-full" style={{ width: `${Math.round(progress * 100)}%`, background: isPN ? "#7c3aed" : "#d8b867" }} />
+        <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/8" style={{ background: isLE ? "rgba(0,0,0,0.08)" : undefined }}>
+          <span className="block h-full rounded-full" style={{ width: `${Math.round(progress * 100)}%`, background: isLE ? "rgba(0,0,0,0.30)" : isPN ? "#7c3aed" : "#d8b867" }} />
         </div>
       )}
     </Tag>
@@ -165,7 +172,7 @@ export function BadgeShelf() {
                   <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em]" style={{ color: isLE ? "#333333" : isPN ? "#a78bfa" : "#d8b867" }}>{categoryTitle(category, lang)}</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {category.badges.map((badge) => (
-                      <BadgeGalleryCard key={badge.id} badge={badge} earned={earnedIds.has(badge.id)} lang={lang} isPN={isPN} />
+                      <BadgeGalleryCard key={badge.id} badge={badge} earned={earnedIds.has(badge.id)} lang={lang} isPN={isPN} isLE={isLE} />
                     ))}
                   </div>
                 </section>

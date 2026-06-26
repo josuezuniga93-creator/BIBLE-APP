@@ -643,6 +643,15 @@ html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
   animation: pop-in 0.4s ease-out forwards;
 }
 
+@keyframes heartPop {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.animate-heart-pop {
+  animation: heartPop 0.3s ease-out;
+}
+
 /* Animated shimmer for the title text */
 .title-gradient {
   background: linear-gradient(
@@ -1099,6 +1108,9 @@ html[data-theme="sage"] input::placeholder, html[data-theme="rose"] input::place
 /* ── Focus styles */
 textarea:focus {
   box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.3);
+}
+html[data-theme="white-noir"] textarea:focus {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.12);
 }
 
 /* Button hover glow */
@@ -2770,6 +2782,18 @@ html[data-theme="white-noir"] .badge-gallery button {
 html[data-theme="white-noir"] .ryc-reader-bg {
   background-color: #ffffff !important;
   color: #0a0a0a !important;
+}
+
+/* ── White Noir scrollbar — light grey instead of purple ──────────────────── */
+html[data-theme="white-noir"] ::-webkit-scrollbar {
+  width: 3px;
+}
+html[data-theme="white-noir"] ::-webkit-scrollbar-track {
+  background: transparent;
+}
+html[data-theme="white-noir"] ::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 10px;
 }
 
 .home-story-modal .home-story-label {

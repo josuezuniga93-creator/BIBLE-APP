@@ -24,7 +24,7 @@ import BookmarkPopup from "../components/BookmarkPopup";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-type BibleTranslation = "kjv" | "geneva" | "nkjv" | "esv" | "nasb" | "niv" | "lsb" | "rv1960" | "ntv" | "nvi" | "lbla";
+type BibleTranslation = "kjv" | "geneva" | "nkjv" | "esv" | "csb" | "nasb" | "niv" | "lsb" | "rv1960" | "ntv" | "nvi" | "lbla";
 type FontSize = "sm" | "base" | "lg" | "xl" | "2xl";
 const FONT_SIZES: FontSize[] = ["sm", "base", "lg", "xl", "2xl"];
 const FONT_SIZE_CLASSES: Record<FontSize, string> = {
@@ -101,6 +101,7 @@ const ES_BOOK_NAMES: Record<number, string> = {
 const SPANISH_TRANSLATIONS: BibleTranslation[] = ["rv1960","nvi","ntv","lbla"];
 const TRANSLATION_OPTIONS = [
   { key: "esv",    group: "en", name: "English Standard Version",       abbr: "ESV",  note: "Recommended", detail: "Clear modern English" },
+  { key: "csb",    group: "en", name: "Christian Standard Bible",        abbr: "CSB",  note: "",            detail: "Readable formal equivalence" },
   { key: "kjv",    group: "en", name: "King James Version",             abbr: "KJV",  note: "1611",        detail: "Classic traditional text" },
   { key: "nkjv",   group: "en", name: "New King James Version",         abbr: "NKJV", note: "",            detail: "Traditional style, modernized" },
   { key: "nasb",   group: "en", name: "New American Standard Bible",    abbr: "NASB", note: "",            detail: "Formal English translation" },
@@ -373,6 +374,9 @@ function VerseSelectionTray({
   onBookmark: (data: { ref: string; text: string }) => void;
 }) {
   const { lang } = useLanguage();
+  const { theme } = useTheme();
+  const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
+  const isLight = activeTheme === "white-noir";
   const [copied, setCopied] = useState(false);
   const [showImageEditor, setShowImageEditor] = useState(false);
 
@@ -461,7 +465,7 @@ function VerseSelectionTray({
                 background: val.dot,
                 outline: currentColor === key ? "3px solid rgba(201,169,97,1)" : "none",
                 outlineOffset: currentColor === key ? 2 : 0,
-                boxShadow: currentColor === key ? "none" : "0 0 0 1.5px rgba(255,255,255,0.15)",
+                boxShadow: currentColor === key ? "none" : (isLight ? "0 0 0 1.5px rgba(0,0,0,0.15)" : "0 0 0 1.5px rgba(255,255,255,0.15)"),
               }}
             />
           ))}
@@ -511,9 +515,9 @@ function VerseSelectionTray({
               }}
               className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "rgba(255,255,255,0.72)",
+                background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
+                border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
+                color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.72)",
               }}
             >
               {/* Clipboard icon 14×14 */}
@@ -526,13 +530,13 @@ function VerseSelectionTray({
               <span>{copied ? (lang === "es" ? "Copiado" : "Copied") : (lang === "es" ? "Copiar" : "Copy")}</span>
             </button>
 
-            {/* Create Image — gold, opens full-screen editor */}
+            {/* Create Image — opens full-screen editor */}
             <button
               onClick={() => { if (!selectedText) return; setShowImageEditor(true); }}
               className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
               style={{
-                background: "rgba(201,169,97,1)",
-                border: "1px solid rgba(201,169,97,0.4)",
+                background: isLight ? "#e5e7eb" : "rgba(201,169,97,1)",
+                border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.4)",
                 color: "#08090f",
               }}
             >
@@ -547,9 +551,9 @@ function VerseSelectionTray({
               onClick={handleShare}
               className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "rgba(255,255,255,0.72)",
+                background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
+                border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
+                color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.72)",
               }}
             >
               {/* Share icon 14×14 */}
@@ -568,9 +572,9 @@ function VerseSelectionTray({
               onClick={handleBookmark}
               className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
               style={{
-                background: "rgba(255,255,255,0.06)",
-                border: "1px solid rgba(255,255,255,0.09)",
-                color: "rgba(255,255,255,0.72)",
+                background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
+                border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
+                color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.72)",
               }}
             >
               {/* Bookmark icon 14×14 */}
@@ -636,7 +640,8 @@ export default function LexiconPage() {
 
 function LexiconInner() {
   const { theme } = useTheme();
-  const isLight = false;
+  const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
+  const isLight = activeTheme === "white-noir";
   const { lang } = useLanguage();
   const searchParams = useSearchParams();
   const [books, setBooks]       = useState<BookMeta[]>([]);
@@ -1250,18 +1255,21 @@ function LexiconInner() {
       )}
 
       {/* ── Minimal sticky header ── */}
-      <header className="border-b border-white/[0.06] bg-[#0f0f0f]/95 backdrop-blur-sm sticky top-0 md:top-14 z-30 print:hidden">
+      <header className="sticky top-0 md:top-14 z-30 print:hidden backdrop-blur-sm"
+        style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.06)", background: isLight ? "rgba(249,250,251,0.95)" : "rgba(15,15,15,0.95)" }}>
         <div className="max-w-screen-xl mx-auto px-4 min-h-12 py-1.5 flex items-center gap-1">
 
           {/* Font size */}
           <button
             onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.max(i - 1, 0)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {} }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors font-bold text-[11px]">
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-[11px]"
+            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}>
             A-
           </button>
           <button
             onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.min(i + 1, FONT_SIZES.length - 1)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {}; }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors font-bold text-sm">
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-sm"
+            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}>
             A+
           </button>
 
@@ -1270,7 +1278,8 @@ function LexiconInner() {
           {/* Font family picker */}
           <button
             onClick={() => setShowFontPicker((v) => !v)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors text-white/30 hover:text-white/60 hover:bg-white/[0.07] font-bold text-[13px]"
+            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-[13px]"
+            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}
             title={lang === "es" ? "Cambiar fuente bíblica" : "Change scripture font"}>
             Ff
           </button>
@@ -1278,7 +1287,8 @@ function LexiconInner() {
           {/* Translation pill — opens picker */}
           <button
             onClick={openTranslationPicker}
-            className="ml-1 h-9 px-3 rounded-full border border-white/[0.12] bg-white/[0.04] text-[11px] font-bold text-white/58 hover:border-white/25 hover:text-white/75 transition-colors">
+            className="ml-1 h-9 px-3 rounded-full text-[11px] font-bold transition-colors"
+            style={{ border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.58)" }}>
             {currentTranslation.abbr}
           </button>
 
@@ -1288,10 +1298,10 @@ function LexiconInner() {
               onClick={() => setShowNavSearch((v) => !v)}
               className="ml-1 h-9 px-3 rounded-full border text-[11px] font-bold transition-all flex items-center gap-1.5"
               style={{
-                background: showNavSearch ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.045)",
-                borderColor: showNavSearch ? "rgba(201,169,97,0.4)" : "rgba(255,255,255,0.12)",
-                color: showNavSearch ? "rgba(201,169,97,1)" : "rgba(255,255,255,0.58)",
-                boxShadow: showNavSearch ? "0 10px 28px rgba(201,169,97,0.12)" : "none",
+                background: showNavSearch ? (isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)") : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)"),
+                borderColor: showNavSearch ? (isLight ? "rgba(0,0,0,0.20)" : "rgba(201,169,97,0.4)") : (isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"),
+                color: showNavSearch ? (isLight ? "#0a0a0a" : "rgba(201,169,97,1)") : (isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.58)"),
+                boxShadow: showNavSearch && !isLight ? "0 10px 28px rgba(201,169,97,0.12)" : "none",
               }}
               aria-label={lang === "es" ? "Buscar pasaje bíblico" : "Search Bible passage"}
             >
@@ -1310,18 +1320,17 @@ function LexiconInner() {
               onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
               className="rounded-2xl border p-3"
               style={{
-                background:
-                  "radial-gradient(circle at 15% 0%, rgba(201,169,97,0.14), transparent 34%), linear-gradient(135deg, rgba(18,20,29,0.98), rgba(8,9,15,0.98))",
-                borderColor: "rgba(201,169,97,0.24)",
-                boxShadow: "0 18px 54px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05)",
+                background: isLight ? "#f3f4f6" : "radial-gradient(circle at 15% 0%, rgba(201,169,97,0.14), transparent 34%), linear-gradient(135deg, rgba(18,20,29,0.98), rgba(8,9,15,0.98))",
+                borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.24)",
+                boxShadow: isLight ? "0 4px 20px rgba(0,0,0,0.08)" : "0 18px 54px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "rgba(201,169,97,0.78)" }}>
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(201,169,97,0.78)" }}>
                     {lang === "es" ? "Buscar Pasaje" : "Scripture Search"}
                   </p>
-                  <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.34)" }}>
+                  <p className="text-[11px] mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.34)" }}>
                     {lang === "es" ? "Ve directo a un libro, capítulo o versículo" : "Jump straight to a book and chapter"}
                   </p>
                 </div>
@@ -1329,7 +1338,7 @@ function LexiconInner() {
                   type="button"
                   onClick={() => { setShowNavSearch(false); setNavQuery(""); }}
                   className="h-8 w-8 rounded-full text-sm transition-colors"
-                  style={{ background: "rgba(255,255,255,0.055)", color: "rgba(255,255,255,0.38)", border: "1px solid rgba(255,255,255,0.08)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.055)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.38)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}
                   aria-label={lang === "es" ? "Cerrar búsqueda" : "Close search"}
                 >
                   ✕
@@ -1339,13 +1348,13 @@ function LexiconInner() {
               <div
                 className="flex items-center gap-2 rounded-2xl border px-3 py-2.5"
                 style={{
-                  background: "rgba(255,255,255,0.055)",
-                  borderColor: "rgba(255,255,255,0.09)",
+                  background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.055)",
+                  borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.09)",
                 }}
               >
                 <div
                   className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.12)", color: "rgba(201,169,97,0.92)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(201,169,97,0.92)" }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                     <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
@@ -1359,16 +1368,16 @@ function LexiconInner() {
                   onChange={(e) => setNavQuery(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
                   placeholder={lang === "es" ? "Juan 3, Romanos 8, Hechos 1..." : "John 3, Romans 8, Acts 1..."}
-                  style={{ fontSize: "16px" }}
-                  className="min-w-0 flex-1 bg-transparent text-[15px] text-white placeholder:text-white/28 focus:outline-none"
+                  style={{ fontSize: "16px", color: isLight ? "#0a0a0a" : "#ffffff" }}
+                  className="min-w-0 flex-1 bg-transparent text-[15px] placeholder:text-black/30 focus:outline-none"
                 />
                 <button
                   type="submit"
                   className="rounded-xl px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
                   style={{
-                    background: "linear-gradient(135deg, #d8bc78, #c9a961)",
+                    background: isLight ? "#e5e7eb" : "linear-gradient(135deg, #d8bc78, #c9a961)",
                     color: "#08090f",
-                    boxShadow: "0 8px 20px rgba(201,169,97,0.18)",
+                    boxShadow: isLight ? "none" : "0 8px 20px rgba(201,169,97,0.18)",
                   }}
                 >
                   {lang === "es" ? "Ir" : "Go"}
@@ -1385,8 +1394,20 @@ function LexiconInner() {
       {showFontPicker && (
         <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 print:hidden" onClick={() => setShowFontPicker(false)}>
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-          <div className="relative bg-[#1a1a1a] rounded-2xl border border-white/[0.08] px-5 pb-6 pt-5 w-full max-w-sm overflow-y-auto" style={{ maxHeight: "80vh" }} onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs font-black uppercase tracking-widest text-white/30 mb-4">
+          <div
+            className="relative rounded-2xl px-5 pb-6 pt-5 w-full max-w-sm overflow-y-auto"
+            style={{
+              maxHeight: "80vh",
+              background: isLight ? "#ffffff" : "#1a1a1a",
+              border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
+              boxShadow: isLight ? "0 8px 40px rgba(0,0,0,0.15)" : undefined,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <p
+              className="text-xs font-black uppercase tracking-widest mb-4"
+              style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}
+            >
               {lang === "es" ? "Fuente de Escritura" : "Scripture Font"}
             </p>
             <div className="space-y-2">
@@ -1394,17 +1415,27 @@ function LexiconInner() {
                 <button
                   key={f.key}
                   onClick={() => selectFont(f.key)}
-                  className={`w-full flex items-center justify-between px-4 py-3 rounded-xl border transition-all ${
-                    scriptureFont === f.key
-                      ? "border-violet-500/40 bg-violet-500/10"
-                      : "border-white/[0.07] bg-white/[0.03] hover:bg-white/[0.05]"
-                  }`}
+                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
+                  style={{
+                    background: scriptureFont === f.key
+                      ? (isLight ? "rgba(139,92,246,0.10)" : "rgba(139,92,246,0.10)")
+                      : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)"),
+                    border: scriptureFont === f.key
+                      ? "1px solid rgba(139,92,246,0.35)"
+                      : (isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)"),
+                  }}
                 >
                   <div className="text-left">
-                    <p className="text-sm font-semibold" style={{ color: scriptureFont === f.key ? "#c4b5fd" : "rgba(255,255,255,0.7)", fontFamily: f.family }}>
+                    <p
+                      className="text-sm font-semibold"
+                      style={{
+                        color: scriptureFont === f.key ? "#7c3aed" : (isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.70)"),
+                        fontFamily: f.family,
+                      }}
+                    >
                       {f.label} — {lang === "es" ? "En el principio era el Verbo" : "In the beginning was the Word"}
                     </p>
-                    <p className="text-[10px] text-white/30 mt-0.5">
+                    <p className="text-[10px] mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}>
                       {lang === "es"
                         ? ({
                             georgia: "Clásica y cálida",
@@ -1418,7 +1449,7 @@ function LexiconInner() {
                         : f.desc}
                     </p>
                   </div>
-                  {scriptureFont === f.key && <span className="text-violet-400 text-xs flex-shrink-0 ml-2">✓</span>}
+                  {scriptureFont === f.key && <span className="text-violet-600 text-xs flex-shrink-0 ml-2">✓</span>}
                 </button>
               ))}
             </div>
@@ -1552,7 +1583,7 @@ function LexiconInner() {
                           ...(isSelected ? {
                             textDecorationLine: "underline",
                             textDecorationStyle: "dotted",
-                            textDecorationColor: colorCfg ? colorCfg.dot : "rgba(201,169,97,0.95)",
+                            textDecorationColor: colorCfg ? colorCfg.dot : (isLight ? "rgba(0,0,0,0.35)" : "rgba(201,169,97,0.95)"),
                             textUnderlineOffset: "5px",
                             textDecorationThickness: "2px",
                           } : {}),
@@ -1571,7 +1602,7 @@ function LexiconInner() {
                             borderRadius: "3px",
                             padding: "0 3px",
                             color: "rgba(255,255,255,0.9)",
-                          } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : "rgba(167,139,250,0.5)" }}
+                          } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : (isLight ? "rgba(0,0,0,0.28)" : "rgba(167,139,250,0.5)") }}
                         >
                           {verse.verse}
                         </span>

@@ -9,6 +9,7 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
+import { useTheme } from "../lib/useTheme";
 
 interface KidsBook {
   id: string;
@@ -530,22 +531,31 @@ function coverHref(book: KidsBook) {
 
 // ─── Hero "Editor's Pick" ─────────────────────────────────────────────────────
 
-function EditorsPick({ book }: { book: KidsBook }) {
+function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
   const [imgError, setImgError] = useState(false);
   const src = coverHref(book);
 
   return (
     <section className="mb-20">
       <div className="flex items-center gap-4 mb-6">
-        <p className="text-[11px] font-bold tracking-[0.25em] text-[#c9a961] uppercase">
+        <p
+          className="text-[11px] font-bold tracking-[0.25em] uppercase"
+          style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
+        >
           Editor&rsquo;s Pick
         </p>
-        <div className="flex-1 h-px bg-[#c9a961]/25" />
+        <div
+          className="flex-1 h-px"
+          style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.25)" }}
+        />
       </div>
 
       {/* Featured cover — centered above "Featured" label */}
       <div className="flex flex-col items-center mb-8">
-        <div className="relative w-[160px] aspect-[2/3] rounded-xl overflow-hidden bg-[#111] shadow-2xl mb-4 group">
+        <div
+          className="relative w-[160px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl mb-4 group"
+          style={{ background: isLight ? "#f0f0f0" : "#111111" }}
+        >
           {src && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -555,23 +565,35 @@ function EditorsPick({ book }: { book: KidsBook }) {
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-[#1a1220] to-[#0d0a14]">
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
+              style={{ background: isLight ? "#e8e8e8" : "linear-gradient(to bottom right, #1a1220, #0d0a14)" }}
+            >
               <span className="text-6xl mb-4">{book.fallbackEmoji ?? "📖"}</span>
-              <p className="text-white/40 text-xs font-semibold leading-snug">{book.title}</p>
+              <p
+                className="text-xs font-semibold leading-snug"
+                style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.40)" }}
+              >{book.title}</p>
             </div>
           )}
           {/* Subtle edge vignette */}
           <div
             className="absolute inset-0 pointer-events-none"
-            style={{ background: "linear-gradient(to top, rgba(10,6,22,0.25) 0%, transparent 30%), linear-gradient(to bottom, rgba(10,6,22,0.10) 0%, transparent 25%)" }}
+            style={{
+              display: isLight ? "none" : undefined,
+              background: "linear-gradient(to top, rgba(10,6,22,0.25) 0%, transparent 30%), linear-gradient(to bottom, rgba(10,6,22,0.10) 0%, transparent 25%)",
+            }}
           />
           {/* Gold sheen */}
           <div
             className="absolute inset-0 pointer-events-none opacity-30"
-            style={{ background: "radial-gradient(ellipse 70% 50% at 20% 12%, rgba(201,169,97,0.22) 0%, transparent 70%)" }}
+            style={{ display: isLight ? "none" : undefined, background: "radial-gradient(ellipse 70% 50% at 20% 12%, rgba(201,169,97,0.22) 0%, transparent 70%)" }}
           />
         </div>
-        <p className="text-[11px] font-bold tracking-[0.2em] text-white/45 uppercase">
+        <p
+          className="text-[11px] font-bold tracking-[0.2em] uppercase"
+          style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.45)" }}
+        >
           Featured of the Month
         </p>
       </div>
@@ -579,33 +601,48 @@ function EditorsPick({ book }: { book: KidsBook }) {
       {/* Copy — full width below the cover */}
       <div className="flex flex-col">
         <div className="flex flex-col justify-start flex-1 min-w-0">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight leading-[1.05] mb-2">
+          <h2
+            className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-[1.05] mb-2"
+            style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
+          >
             {book.title}
           </h2>
-          <p className="text-base italic text-[#c9a961] mb-5">by {book.author}</p>
-          <p className="text-[15px] text-white/65 leading-relaxed mb-6 max-w-2xl">
+          <p className="text-base italic mb-5" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "#c9a961" }}>by {book.author}</p>
+          <p
+            className="text-[15px] leading-relaxed mb-6 max-w-2xl"
+            style={{ color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.65)" }}
+          >
             {book.description}
           </p>
 
           {/* Metadata strip */}
           <div className="grid grid-cols-3 gap-6 max-w-md mb-7">
             <div>
-              <p className="text-[10px] font-bold tracking-wider text-white/35 uppercase mb-1">
+              <p
+                className="text-[10px] font-bold tracking-wider uppercase mb-1"
+                style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.35)" }}
+              >
                 Publisher
               </p>
-              <p className="text-sm text-white/80">{book.publisher ?? "—"}</p>
+              <p className="text-sm" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{book.publisher ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold tracking-wider text-white/35 uppercase mb-1">
+              <p
+                className="text-[10px] font-bold tracking-wider uppercase mb-1"
+                style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.35)" }}
+              >
                 Pages
               </p>
-              <p className="text-sm text-white/80">{book.pages ?? "—"}</p>
+              <p className="text-sm" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{book.pages ?? "—"}</p>
             </div>
             <div>
-              <p className="text-[10px] font-bold tracking-wider text-white/35 uppercase mb-1">
+              <p
+                className="text-[10px] font-bold tracking-wider uppercase mb-1"
+                style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.35)" }}
+              >
                 Reading level
               </p>
-              <p className="text-sm text-white/80">{book.readingLevel ?? "—"}</p>
+              <p className="text-sm" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{book.readingLevel ?? "—"}</p>
             </div>
           </div>
 
@@ -614,7 +651,8 @@ function EditorsPick({ book }: { book: KidsBook }) {
               href={book.buyLink ?? "#"}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-[#c9a961] text-[#1a0e2e] text-sm font-bold hover:bg-[#d9b971] transition-colors"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold hover:opacity-90 transition-colors"
+              style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#1a0e2e" }}
             >
               {book.buyLabel ?? "Buy"}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -633,6 +671,8 @@ function EditorsPick({ book }: { book: KidsBook }) {
 function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
   const [imgError, setImgError] = useState(false);
   const src = coverHref(book);
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
 
   // Lock scroll & close on Escape
   useEffect(() => {
@@ -654,14 +694,14 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
       {/* Modal panel */}
       <div
         className="relative w-full max-w-sm rounded-2xl overflow-hidden shadow-2xl"
-        style={{ backgroundColor: "#13131a", border: "1px solid rgba(255,255,255,0.08)" }}
+        style={{ backgroundColor: isLight ? "#ffffff" : "#13131a", border: `1px solid ${isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)"}` }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 w-8 h-8 flex items-center justify-center rounded-full transition-colors"
-          style={{ backgroundColor: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}
+          style={{ backgroundColor: isLight ? "#ffffff" : "rgba(255,255,255,0.08)", border: isLight ? "1px solid rgba(0,0,0,0.20)" : undefined, color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.6)" }}
           aria-label="Close"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -671,7 +711,7 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
 
         {/* Cover */}
         <div className="w-full flex items-center justify-center pt-8 pb-5 px-8"
-          style={{ backgroundColor: "#0e0e14" }}>
+          style={{ backgroundColor: isLight ? "#ffffff" : "#0e0e14" }}>
           {src && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -683,51 +723,51 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
             />
           ) : (
             <div className="w-40 h-56 flex flex-col items-center justify-center rounded-md"
-              style={{ backgroundColor: "#1a1a24" }}>
+              style={{ backgroundColor: isLight ? "#e8e8e8" : "#1a1a24" }}>
               <span className="text-5xl mb-2">{book.fallbackEmoji ?? "📖"}</span>
             </div>
           )}
         </div>
 
         {/* Info */}
-        <div className="px-6 pb-7 pt-5">
+        <div className="px-6 pb-7 pt-5" style={{ backgroundColor: isLight ? "#ffffff" : "#13131a" }}>
           {/* Age badge */}
           <span className="inline-block text-[10px] font-bold tracking-widest px-2.5 py-1 rounded-full mb-3"
-            style={{ backgroundColor: "rgba(201,169,97,0.12)", color: "#c9a961" }}>
+            style={{ backgroundColor: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961" }}>
             {book.ageLabel.toUpperCase()}
           </span>
 
-          <h2 className="text-[18px] font-bold text-white leading-snug mb-1">
+          <h2 className="text-[18px] font-bold leading-snug mb-1" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
             {book.title}
           </h2>
-          <p className="text-[13px] italic mb-4" style={{ color: "#c9a961" }}>
+          <p className="text-[13px] italic mb-4" style={{ color: isLight ? "#333333" : "#c9a961" }}>
             by {book.author}
           </p>
 
-          <p className="text-[13px] leading-relaxed mb-5" style={{ color: "rgba(255,255,255,0.55)" }}>
+          <p className="text-[13px] leading-relaxed mb-5" style={{ color: isLight ? "#111111" : "rgba(255,255,255,0.55)" }}>
             {book.description}
           </p>
 
           {/* Meta grid */}
           {(book.publisher || book.pages || book.readingLevel) && (
             <div className="grid grid-cols-3 gap-3 mb-6 py-4 rounded-xl px-3"
-              style={{ backgroundColor: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+              style={{ backgroundColor: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)"}` }}>
               {book.publisher && (
                 <div>
-                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Publisher</p>
-                  <p className="text-[12px] text-white leading-snug">{book.publisher}</p>
+                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.40)" }}>Publisher</p>
+                  <p className="text-[12px] leading-snug" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{book.publisher}</p>
                 </div>
               )}
               {book.pages && (
                 <div>
-                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Pages</p>
-                  <p className="text-[12px] text-white">{book.pages}</p>
+                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.40)" }}>Pages</p>
+                  <p className="text-[12px]" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{book.pages}</p>
                 </div>
               )}
               {book.readingLevel && (
                 <div>
-                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: "rgba(255,255,255,0.3)" }}>Level</p>
-                  <p className="text-[12px] text-white leading-snug">{book.readingLevel}</p>
+                  <p className="text-[9px] font-bold tracking-widest uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.40)" }}>Level</p>
+                  <p className="text-[12px] leading-snug" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{book.readingLevel}</p>
                 </div>
               )}
             </div>
@@ -740,7 +780,7 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 w-full py-3.5 rounded-full text-[14px] font-bold transition-opacity hover:opacity-90"
-              style={{ backgroundColor: "#c9a961", color: "#111" }}
+              style={{ backgroundColor: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#111" }}
             >
               {book.buyLabel ?? "Buy"}
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
@@ -756,7 +796,7 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
 
 // ─── Section card grid ────────────────────────────────────────────────────────
 
-function BookCard({ book }: { book: KidsBook }) {
+function BookCard({ book, isLight }: { book: KidsBook; isLight: boolean }) {
   const [imgError, setImgError] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const src = coverHref(book);
@@ -771,7 +811,8 @@ function BookCard({ book }: { book: KidsBook }) {
         {/* Cover — opens modal */}
         <button
           onClick={() => setModalOpen(true)}
-          className="block relative w-full aspect-[2/3] rounded-xl overflow-hidden bg-[#111] group cursor-pointer text-left shadow-lg"
+          className="block relative w-full aspect-[2/3] rounded-xl overflow-hidden group cursor-pointer text-left shadow-lg"
+          style={{ background: isLight ? "#f0f0f0" : "#111111" }}
           aria-label={`View details for ${book.title}`}
         >
           {src && !imgError ? (
@@ -783,9 +824,15 @@ function BookCard({ book }: { book: KidsBook }) {
               onError={() => setImgError(true)}
             />
           ) : (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-br from-[#1a1220] to-[#0d0a14]">
+            <div
+              className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center"
+              style={{ background: isLight ? "#e8e8e8" : "linear-gradient(to bottom right, #1a1220, #0d0a14)" }}
+            >
               <span className="text-5xl mb-3">{book.fallbackEmoji ?? "📖"}</span>
-              <p className="text-white/35 text-[11px] font-semibold leading-snug line-clamp-3">
+              <p
+                className="text-[11px] font-semibold leading-snug line-clamp-3"
+                style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}
+              >
                 {book.title}
               </p>
             </div>
@@ -795,6 +842,7 @@ function BookCard({ book }: { book: KidsBook }) {
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
+              display: isLight ? "none" : undefined,
               background:
                 "linear-gradient(to top, rgba(10,6,22,0.30) 0%, transparent 35%), linear-gradient(to bottom, rgba(10,6,22,0.12) 0%, transparent 30%)",
             }}
@@ -813,18 +861,20 @@ function BookCard({ book }: { book: KidsBook }) {
         {/* Metadata under cover */}
         <div className="mt-4">
           <h3
-            className="text-[15px] font-bold text-white leading-snug mb-1 cursor-pointer hover:text-[#c9a961] transition-colors"
+            className="text-[15px] font-bold leading-snug mb-1 cursor-pointer transition-colors"
+            style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
             onClick={() => setModalOpen(true)}
           >{book.title}</h3>
-          <p className="text-[12px] italic text-[#c9a961]/85 mb-2">{book.author}</p>
-          <p className="text-[12px] text-white/45 leading-relaxed mb-3 line-clamp-3">
+          <p className="text-[12px] italic mb-2" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(201,169,97,0.85)" }}>{book.author}</p>
+          <p className="text-[12px] leading-relaxed mb-3 line-clamp-3" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.45)" }}>
             {book.description}
           </p>
           <a
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] font-bold text-[#c9a961] underline underline-offset-4 decoration-[#c9a961]/40 hover:decoration-[#c9a961] transition-colors"
+            className="text-[11px] font-bold underline underline-offset-4 decoration-[#c9a961]/40 hover:decoration-[#c9a961] transition-colors"
+            style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}
           >
             {label} ↗
           </a>
@@ -834,19 +884,22 @@ function BookCard({ book }: { book: KidsBook }) {
   );
 }
 
-function SectionHeader({ section, count }: { section: SectionMeta; count: number }) {
+function SectionHeader({ section, count, isLight }: { section: SectionMeta; count: number; isLight: boolean }) {
   return (
     <div className="mb-8">
       <div className="flex items-baseline justify-between gap-4 mb-2">
-        <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
           {section.name}
         </h2>
-        <p className="text-[10px] font-bold tracking-[0.2em] text-[#c9a961] uppercase whitespace-nowrap">
+        <p
+          className="text-[10px] font-bold tracking-[0.2em] uppercase whitespace-nowrap"
+          style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
+        >
           {count} {count === 1 ? "title" : "titles"}
         </p>
       </div>
-      <p className="text-[14px] text-white/45 leading-relaxed max-w-2xl">{section.dek}</p>
-      <div className="h-px bg-white/[0.08] mt-5" />
+      <p className="text-[14px] leading-relaxed max-w-2xl" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.45)" }}>{section.dek}</p>
+      <div className="h-px mt-5" style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }} />
     </div>
   );
 }
@@ -854,6 +907,9 @@ function SectionHeader({ section, count }: { section: SectionMeta; count: number
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function KidsBooksPage() {
+  const { theme } = useTheme();
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
+
   const booksBySection = SECTIONS
     .map((section) => ({
       section,
@@ -862,19 +918,25 @@ export default function KidsBooksPage() {
     .filter((s) => s.books.length > 0);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0c] text-white">
+    <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0a0a0c", color: isLight ? "#0a0a0a" : "#ffffff" }}>
       {/* Hero */}
       <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-14 pb-8">
-        <p className="text-[11px] font-bold tracking-[0.25em] text-[#c9a961] uppercase mb-4">
+        <p
+          className="text-[11px] font-bold tracking-[0.25em] uppercase mb-4"
+          style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
+        >
           The Reading Room  /  Christian Children&rsquo;s Literature
         </p>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-white tracking-tight leading-[1.04] mb-2">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.04] mb-2" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
           Books for children
         </h1>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl italic font-bold text-white/55 tracking-tight leading-[1.04] mb-6">
+        <h1
+          className="text-4xl sm:text-5xl md:text-6xl italic font-bold tracking-tight leading-[1.04] mb-6"
+          style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.55)" }}
+        >
           and the families who love them.
         </h1>
-        <p className="text-white/55 text-base sm:text-lg leading-relaxed max-w-2xl">
+        <p className="text-base sm:text-lg leading-relaxed max-w-2xl" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}>
           Gospel-centered reading lists for every age — curated to plant
           deep roots and make the gospel feel glorious to your children.
         </p>
@@ -882,15 +944,15 @@ export default function KidsBooksPage() {
 
       {/* Content */}
       <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
-        <EditorsPick book={EDITORS_PICK} />
+        <EditorsPick book={EDITORS_PICK} isLight={isLight} />
 
         <div className="space-y-20">
           {booksBySection.map(({ section, books }) => (
             <section key={section.name}>
-              <SectionHeader section={section} count={books.length} />
+              <SectionHeader section={section} count={books.length} isLight={isLight} />
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-12">
                 {books.map((book) => (
-                  <BookCard key={book.id} book={book} />
+                  <BookCard key={book.id} book={book} isLight={isLight} />
                 ))}
               </div>
             </section>
@@ -898,8 +960,8 @@ export default function KidsBooksPage() {
         </div>
 
         {/* Footer */}
-        <div className="mt-24 border-t border-white/[0.06] pt-10 text-center">
-          <p className="text-[13px] text-white/35 max-w-xl mx-auto leading-relaxed">
+        <div className="mt-24 pt-10 text-center" style={{ borderTop: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)"}` }}>
+          <p className="text-[13px] max-w-xl mx-auto leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.35)" }}>
             Curated from a Reformed perspective. Theological soundness, literary quality,
             and a love for Christ in every recommendation.
           </p>
