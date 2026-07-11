@@ -3,7 +3,7 @@
 import { type CSSProperties, type ReactNode, type Ref, type UIEventHandler, useEffect, useRef } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, type Theme } from "../lib/useTheme";
-import { BracketHighlightReader } from "./BracketHighlightReader";
+import { BracketHighlightReader, type ReaderHighlightAdapter } from "./BracketHighlightReader";
 
 type AppReaderTone = {
   pageBg: string;
@@ -70,6 +70,7 @@ export type AppReaderProps = {
   onNext: () => void;
   onClose: () => void;
   onPageOpen?: () => void;
+  highlightAdapter?: ReaderHighlightAdapter;
 };
 
 function activeTheme(fallback: Theme): Theme {
@@ -141,7 +142,7 @@ export function AppReaderShell({
   contentClassName = "flex-1 min-h-0 overflow-y-auto",
   contentStyle,
   contentOnScroll,
-  zIndexClassName = "z-[200]",
+  zIndexClassName = "z-[220]",
   showBottomControls = true,
 }: AppReaderShellProps) {
   const { lang } = useLanguage();
@@ -258,6 +259,7 @@ export function AppReader({
   onNext,
   onClose,
   onPageOpen,
+  highlightAdapter,
 }: AppReaderProps) {
   const { lang } = useLanguage();
   const { theme } = useTheme();
@@ -324,6 +326,7 @@ export function AppReader({
                 fontSizeClass={fontSizeClass}
                 scrollRef={scrollRef}
                 targetHighlightId={targetHighlightId}
+                highlightAdapter={highlightAdapter}
               />
             </div>
           )}

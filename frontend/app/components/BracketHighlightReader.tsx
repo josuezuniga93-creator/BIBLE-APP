@@ -13,7 +13,7 @@ import CreateImageEditor from "./CreateImageEditor";
 
 type HighlightColor = "gold" | "blue" | "rose" | "green";
 
-type ReaderHighlight = {
+export type ReaderHighlight = {
   id: string;
   text: string;
   color: HighlightColor;
@@ -21,6 +21,14 @@ type ReaderHighlight = {
   context: string;
   title: string;
   reference: string;
+};
+
+export type ReaderHighlightAdapter = {
+  load: (context: string) => UnifiedReaderHighlight[];
+  save: (context: string, highlight: UnifiedReaderHighlight) => void;
+  delete: (context: string, id: string) => void;
+  openAll?: () => void;
+  createId?: () => string;
 };
 
 type BracketSelection = {
@@ -59,6 +67,7 @@ type Props = {
   fontSizeClass?: string;
   scrollRef?: React.RefObject<HTMLElement | null>;
   targetHighlightId?: string;
+  highlightAdapter?: ReaderHighlightAdapter;
 };
 
 const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string; bg: string; dot: string }> = {
@@ -170,6 +179,7 @@ export function BracketHighlightReader({
   fontSizeClass = "text-[18px]",
   scrollRef,
   targetHighlightId,
+  highlightAdapter,
 }: Props) {
   const { lang } = useLanguage();
   const { theme } = useTheme();
@@ -211,7 +221,8 @@ export function BracketHighlightReader({
   }, [targetHighlightId, highlights]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setHighlights(getReaderHighlights(context).map((highlight) => ({
+    const loaded = highlightAdapter?.load(context) ?? getReaderHighlights(context);
+    setHighlights(loaded.map((highlight) => ({
       id: highlight.id,
       text: highlight.text,
       color: (highlight.color ?? "gold") as HighlightColor,
@@ -223,7 +234,7 @@ export function BracketHighlightReader({
     setSelection(null);
     setPendingRemoveId(null);
     setHighlightSearchQuery("");
-  }, [context, title, reference]);
+  }, [context, title, reference, highlightAdapter]);
 
   const parts = useMemo(() => splitTextByHighlights(text, highlights), [text, highlights]);
   const tokens = useMemo(() => tokenize(parts), [parts]);
@@ -292,7 +303,7 @@ export function BracketHighlightReader({
     const selected = normalizeText(selectedText);
     if (selected.length < 2) return;
     const newHighlight: ReaderHighlight = {
-      id: `reader_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      id: highlightAdapter?.createId?.() ?? `reader_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       text: selected,
       color,
       createdAt: Date.now(),
@@ -301,13 +312,21 @@ export function BracketHighlightReader({
       reference,
     };
     persistHighlights([newHighlight, ...highlights]);
-    saveReaderHighlight(context, newHighlight as UnifiedReaderHighlight);
+    if (highlightAdapter) {
+      highlightAdapter.save(context, newHighlight as UnifiedReaderHighlight);
+    } else {
+      saveReaderHighlight(context, newHighlight as UnifiedReaderHighlight);
+    }
     setSelection(null);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
-    deleteReaderHighlight(context, id);
+    if (highlightAdapter) {
+      highlightAdapter.delete(context, id);
+    } else {
+      deleteReaderHighlight(context, id);
+    }
     setPendingRemoveId(null);
   }
 
@@ -319,6 +338,10 @@ export function BracketHighlightReader({
   }
 
   function openUnifiedHighlights() {
+    if (highlightAdapter?.openAll) {
+      highlightAdapter.openAll();
+      return;
+    }
     if (typeof window !== "undefined") window.location.href = "/highlights";
   }
 

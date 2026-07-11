@@ -3,12 +3,14 @@
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
-import { AppReaderShell } from "../components/AppReader";
+import { AppReader } from "../components/AppReader";
+import type { ReaderHighlightAdapter } from "../components/BracketHighlightReader";
 import {
   deleteStudyToolHighlight,
   getStudyToolHighlights,
   saveStudyToolHighlight,
   type UnifiedHenryHighlight,
+  type UnifiedReaderHighlight,
 } from "../lib/unifiedHighlights";
 import {
   DICTIONARY_ENTRIES,
@@ -289,6 +291,7 @@ export default function StudyToolsPage() {
   const [query, setQuery] = useState("");
   const [reader, setReader] = useState<CommentarySearchResult | null>(null);
   const [readerPage, setReaderPage] = useState(0);
+  const [readerTargetHighlightId, setReaderTargetHighlightId] = useState<string | null>(null);
   const [selection, setSelection] = useState<BracketSelection | null>(null);
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [confirmPocketRemoveId, setConfirmPocketRemoveId] = useState<string | null>(null);
@@ -324,6 +327,58 @@ export default function StudyToolsPage() {
   const currentReference = reader
     ? `${reader.bookName} ${reader.chapter}${reader.requestedVerse ? `:${reader.requestedVerse}` : ""}`
     : "";
+  const studyReaderTitle = reader?.title ?? (reader ? `${reader.bookName} ${reader.chapter}` : "");
+  const studyReaderContext = reader
+    ? `study-tools-${reader.source}-${reader.book}-${reader.chapter}-${reader.requestedVerse ?? "chapter"}-${studyReaderTitle
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-|-$/g, "")}`
+    : "study-tools";
+  const studyHighlightAdapter = useMemo<ReaderHighlightAdapter | undefined>(() => {
+    if (!reader) return undefined;
+
+    const isCurrentReaderHighlight = (highlight: UnifiedHenryHighlight) =>
+      highlight.book === reader.book &&
+      highlight.chapter === reader.chapter &&
+      highlight.source === reader.source;
+
+    return {
+      createId: () => `mh_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      load: () =>
+        getStudyToolHighlights()
+          .filter(isCurrentReaderHighlight)
+          .map((highlight): UnifiedReaderHighlight => ({
+            id: highlight.id,
+            text: highlight.text,
+            color: highlight.color,
+            createdAt: highlight.createdAt,
+            context: studyReaderContext,
+            title: highlight.sectionTitle,
+            reference: highlight.reference,
+          })),
+      save: (_context, highlight) => {
+        saveStudyToolHighlight({
+          id: highlight.id,
+          text: highlight.text,
+          color: highlight.color,
+          createdAt: highlight.createdAt,
+          reference: currentReference,
+          sectionTitle: studyReaderTitle,
+          book: reader.book,
+          bookName: reader.bookName,
+          chapter: reader.chapter,
+          verse: reader.requestedVerse,
+          source: reader.source,
+        });
+        setHighlights(loadHenryHighlights());
+      },
+      delete: (_context, id) => {
+        deleteStudyToolHighlight(id);
+        setHighlights(loadHenryHighlights());
+      },
+      openAll: openUnifiedHighlights,
+    };
+  }, [currentReference, reader, studyReaderContext, studyReaderTitle]);
   const currentHighlights = useMemo(() => {
     if (!reader) return [];
     return highlights.filter((highlight) =>
@@ -432,9 +487,10 @@ export default function StudyToolsPage() {
     persistContinueReading(continueReading.filter((item) => item.id !== id));
   }
 
-  function openReader(result: CommentarySearchResult, page = 0) {
+  function openReader(result: CommentarySearchResult, page = 0, targetHighlightId: string | null = null) {
     setReader(result);
     setReaderPage(page);
+    setReaderTargetHighlightId(targetHighlightId);
     setSelection(null);
     upsertContinueReading(result, page);
   }
@@ -634,7 +690,7 @@ export default function StudyToolsPage() {
     const result = await findCompleteCommentaryByReference(ref);
     setCommentaryLoading(false);
     if (result) {
-      openReader(result, findPageForSavedHighlight(result.text, highlight.text, pageCharLimit));
+      openReader(result, findPageForSavedHighlight(result.text, highlight.text, pageCharLimit), highlight.id);
     } else {
       // fallback: open with the saved text
       openReader({
@@ -646,7 +702,7 @@ export default function StudyToolsPage() {
         source: highlight.source as CommentarySearchResult["source"],
         title: highlight.sectionTitle,
         text: highlight.text,
-      });
+      }, 0, highlight.id);
     }
   }
 
@@ -779,349 +835,39 @@ export default function StudyToolsPage() {
   return (
     <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0b101d", color: isLight ? "#0a0a0a" : "#ffffff" }}>
       {reader && (
-        <>
-          {/* Reader controls panel — slides up on single tap */}
-          <div
-            className="fixed left-0 right-0 z-[230] px-5"
-            style={{
-              bottom: 0,
-              paddingTop: 16,
-              paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
-              background: isLight ? "rgba(255,255,255,0.98)" : "rgba(12,14,22,0.98)",
-              borderTop: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
-              transform: (showReaderControls && !selection && !pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
-              transition: "transform 0.24s cubic-bezier(0.32, 0.72, 0, 1)",
-              pointerEvents: (showReaderControls && !selection && !pendingRemoveId) ? "auto" : "none",
-              boxShadow: isLight ? "0 -8px 30px rgba(0,0,0,0.08)" : "none",
-            }}
-            onPointerDown={(e) => e.stopPropagation()}
-          >
-            <div className="max-w-lg mx-auto">
-              <p className="text-[9px] uppercase tracking-[0.22em] font-black text-center mb-3" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(201,169,97,0.6)" }}>
-                {lang === "es" ? "Opciones de lectura" : "Reading Options"}
-              </p>
-              <div className="flex items-center gap-3">
-                {/* Font size */}
-                <div className="flex items-center gap-2 flex-1 justify-center rounded-2xl px-4 py-2" style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)" }}>
-                  <button
-                    onClick={() => {
-                      const next = Math.max(13, readerFontSize - 1);
-                      setReaderFontSize(next);
-                      setReaderPage(0);
-                    }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black active:scale-90"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
-                  >
-                    A-
-                  </button>
-                  <span className="text-sm font-black w-8 text-center" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>{readerFontSize}</span>
-                  <button
-                    onClick={() => {
-                      const next = Math.min(24, readerFontSize + 1);
-                      setReaderFontSize(next);
-                      setReaderPage(0);
-                    }}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center text-lg font-black active:scale-90"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
-                  >
-                    A+
-                  </button>
-                </div>
-                <div className="w-px h-8 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)" }} />
-                <button
-                  onClick={() => { openUnifiedHighlights(); setShowReaderControls(false); }}
-                  className="h-11 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black active:scale-95 flex-shrink-0"
-                  style={isLight
-                    ? { background: "rgba(0,0,0,0.06)", color: "#0a0a0a", border: "1px solid rgba(0,0,0,0.12)" }
-                    : { background: "rgba(201,169,97,0.12)", color: "#c9a961", border: "1px solid rgba(201,169,97,0.20)" }}
-                >
-                  {lang === "es" ? "Bolsa" : "Pocket"}
-                </button>
-                <button
-                  onClick={() => setShowReaderControls(false)}
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg font-black active:scale-95 flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}
-                >
-                  {"x"}
-                </button>
-              </div>
-            </div>
-          </div>
-          <div
-            className="fixed left-0 right-0 z-[240] px-5"
-            style={{
-              bottom: 0,
-              paddingTop: 14,
-              paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
-              background: isLight ? "rgba(255,255,255,0.98)" : "rgba(12,14,22,0.98)",
-              borderTop: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
-              transform: ((selection && selectedText) || pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
-              transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
-              pointerEvents: ((selection && selectedText) || pendingRemoveId) ? "auto" : "none",
-              boxShadow: isLight ? "0 -8px 30px rgba(0,0,0,0.08)" : "none",
-            }}
-            onPointerDown={(event) => event.stopPropagation()}
-          >
-            <div className="max-w-lg mx-auto flex items-center gap-3">
-              {pendingRemoveId ? (
-                <>
-                  <p className="flex-1 text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>
-                    {lang === "es" ? "Eliminar resaltado?" : "Remove this highlight?"}
-                  </p>
-                  <button
-                    onClick={() => { removeHighlight(pendingRemoveId); setPendingRemoveId(null); }}
-                    className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
-                    style={{ background: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,1)" }}
-                  >
-                    {lang === "es" ? "Eliminar" : "Remove"}
-                  </button>
-                  <button
-                    onClick={() => setPendingRemoveId(null)}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95 flex-shrink-0"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}
-                  >
-                    {"x"}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-4 flex-1 justify-center">
-                    {(Object.keys(HIGHLIGHT_COLORS) as HenryHighlightColor[]).map((color) => (
-                      <button
-                        key={color}
-                        onClick={() => addHighlightForSelection(color)}
-                        className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
-                        style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
-                        aria-label={HIGHLIGHT_COLORS[color].label}
-                      />
-                    ))}
-                  </div>
-                  <div className="w-px h-7 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)" }} />
-                  <button
-                    onClick={copySelection}
-                    className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}
-                  >
-                    {lang === "es" ? "Copiar" : "Copy"}
-                  </button>
-                  <button
-                    onClick={clearSelection}
-                    className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95 flex-shrink-0"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}
-                  >
-                    {"x"}
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-          <AppReaderShell
-            title={`${reader.bookName} ${reader.chapter}${reader.requestedVerse ? `:${reader.requestedVerse}` : ""} · ${reader.title ?? (lang === "es" ? "Comentario" : "Commentary")}`}
-            currentPage={currentReaderPage + 1}
-            totalPages={Math.max(1, readerPages.length)}
-            progressPercent={readingPercent(currentReaderPage, readerPages.length)}
-            previousDisabled={currentReaderPage === 0}
-            nextDisabled={currentReaderPage >= readerPages.length - 1}
-            onPrevious={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
-            onNext={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
-            onClose={() => setReader(null)}
-            contentRef={readerScrollRef}
-            contentOnScroll={refreshHighlightGeometry}
-            contentClassName={`max-w-lg mx-auto w-full flex-1 min-h-0 px-7 pt-2 flex flex-col ${isLargeFont ? 'overflow-y-auto' : 'overflow-hidden'}`}
-            contentStyle={{ backgroundColor: isLight ? "#ffffff" : "#0b101d" }}
-            zIndexClassName="z-[220]"
-          >
-              <div className="mb-2">
-                {reader.requestedVerse && (
-                  <p className="text-[11px]" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
-                    {lang === "es" ? "Matthew Henry explica esta seccion" : "Matthew Henry section"}: {reader.verses?.length ? `v.${reader.verses[0]}-${reader.verses[reader.verses.length - 1]}` : `v.${reader.matchedVerse}`}
-                  </p>
-                )}
-              </div>
-
-              <article
-                ref={articleRef}
-                className={isLargeFont ? 'shrink-0' : 'flex-1 min-h-0 overflow-hidden'}
-              >
-                <div
-                  ref={textLayerRef}
-                  className={`relative pt-1 font-serif select-none whitespace-pre-line ${isLargeFont ? '' : 'h-full overflow-hidden'}`}
-                  style={{ WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: isLargeFont ? "pan-y" : "none", fontSize: readerFontSize, lineHeight: 1.58, color: isLight ? "rgba(0,0,0,0.82)" : "rgba(255,255,255,0.82)" }}
-                  onClick={(event) => {
-                    if (didStartSelectionPress.current) {
-                      didStartSelectionPress.current = false;
-                      return;
-                    }
-                    if (!selection) {
-                      const target = event.target as HTMLElement;
-                      if (!target.closest("[data-commentary-word]")) {
-                        clearTimeout(controlsTimerRef.current);
-                        setShowReaderControls((prev) => {
-                          if (!prev) {
-                            controlsTimerRef.current = window.setTimeout(() => setShowReaderControls(false), 4000);
-                          }
-                          return !prev;
-                        });
-                      }
-                      return;
-                    }
-                    const target = event.target as HTMLElement;
-                    if (target.closest("[data-selection-handle]")) return;
-                    if (target.closest("[data-highlighted-word]")) return;
-                    clearSelection();
-                  }}
-                  onPointerMove={updateHandleDrag}
-                  onPointerUp={finishWordPress}
-                  onPointerCancel={finishWordPress}
-                  onPointerLeave={() => {
-                    clearLongPressTimer();
-                    activeHandle.current = null;
-                  }}
-                >
-                  <div className="pointer-events-none absolute inset-0 z-0">
-                    {[...highlightRects, ...selectionGeometry.rects].map((rect) => (
-                      <span
-                        key={rect.id}
-                        className="absolute rounded-[5px]"
-                        style={{
-                          left: rect.left,
-                          top: rect.top,
-                          width: rect.width,
-                          height: rect.height,
-                          background: rect.color,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  {selectionGeometry.startHandle && (
-                    <button
-                      type="button"
-                      aria-label={lang === "es" ? "Mover inicio de seleccion" : "Move selection start"}
-                      data-selection-handle
-                      onPointerDown={(event) => beginHandleDrag("start", event)}
-                      className="absolute z-20 active:opacity-70"
-                      style={{
-                        left: selectionGeometry.startHandle.left - 18,
-                        top: selectionGeometry.startHandle.top - 3,
-                        width: 36,
-                        height: 46,
-                        touchAction: "none",
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="absolute rounded-full"
-                        style={{
-                          left: 13,
-                          top: 2,
-                          width: 10,
-                          height: 36,
-                          background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)",
-                          boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)",
-                        }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute"
-                        style={{
-                          left: 5,
-                          top: 0,
-                          width: 0,
-                          height: 0,
-                          borderTop: "12px solid transparent",
-                          borderBottom: "12px solid transparent",
-                          borderRight: "14px solid #eeeeee",
-                          filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))",
-                        }}
-                      />
-                    </button>
-                  )}
-                  {selectionGeometry.endHandle && (
-                    <button
-                      type="button"
-                      aria-label={lang === "es" ? "Mover final de seleccion" : "Move selection end"}
-                      data-selection-handle
-                      onPointerDown={(event) => beginHandleDrag("end", event)}
-                      className="absolute z-20 active:opacity-70"
-                      style={{
-                        left: selectionGeometry.endHandle.left - 18,
-                        top: selectionGeometry.endHandle.top - 3,
-                        width: 36,
-                        height: 46,
-                        touchAction: "none",
-                        background: "none",
-                        border: "none",
-                        padding: 0,
-                      }}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className="absolute rounded-full"
-                        style={{
-                          left: 13,
-                          top: 2,
-                          width: 10,
-                          height: 36,
-                          background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)",
-                          boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)",
-                        }}
-                      />
-                      <span
-                        aria-hidden="true"
-                        className="absolute"
-                        style={{
-                          right: 5,
-                          top: 0,
-                          width: 0,
-                          height: 0,
-                          borderTop: "12px solid transparent",
-                          borderBottom: "12px solid transparent",
-                          borderLeft: "14px solid #eeeeee",
-                          filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))",
-                        }}
-                      />
-                    </button>
-                  )}
-                  {commentaryTokens.map((token, idx) => {
-                    if (token.type === "break") return <span key={`break-${idx}`}>{"\n\n"}</span>;
-                    const range = selectedRange(selection);
-                    if (token.type === "space") {
-                      return <span key={`space-${idx}`} className="relative z-10"> </span>;
-                    }
-
-                    return (
-                      <span
-                        key={`word-${token.index}`}
-                        data-commentary-word
-                        data-index={token.index}
-                        data-highlighted-word={token.highlight ? "true" : undefined}
-                        className="relative z-10"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          startWordPress(token.index, token.highlight);
-                        }}
-                        onPointerUp={(e) => {
-                          finishWordPress();
-                          if (token.highlight && !didStartSelectionPress.current) {
-                            e.stopPropagation();
-                            setPendingRemoveId(token.highlight.id);
-                          }
-                        }}
-                        onPointerCancel={finishWordPress}
-                      >
-                        {token.text}
-                      </span>
-                    );
-                  })}
-                </div>
-              </article>
-
-          </AppReaderShell>
-        </>
+        <AppReader
+          title={`${reader.bookName} ${reader.chapter}${reader.requestedVerse ? `:${reader.requestedVerse}` : ""} · ${studyReaderTitle}`}
+          sectionLabel={reader.requestedVerse
+            ? `${lang === "es" ? "Seccion de Matthew Henry" : "Matthew Henry section"}: ${reader.verses?.length ? `v.${reader.verses[0]}-${reader.verses[reader.verses.length - 1]}` : `v.${reader.matchedVerse}`}`
+            : undefined}
+          sectionTitle={studyReaderTitle}
+          showSectionTitle={false}
+          text={readerPages[currentReaderPage] ?? ""}
+          context={studyReaderContext}
+          reference={currentReference}
+          fontSizeClass={readerFontSize > 16 ? "text-[20px]" : "text-[17px]"}
+          currentPage={currentReaderPage + 1}
+          totalPages={Math.max(1, readerPages.length)}
+          progressPercent={readingPercent(currentReaderPage, readerPages.length)}
+          previousDisabled={currentReaderPage === 0}
+          nextDisabled={currentReaderPage >= readerPages.length - 1}
+          onPrevious={() => {
+            setReaderTargetHighlightId(null);
+            setReaderPage((page) => Math.max(0, page - 1));
+          }}
+          onNext={() => {
+            setReaderTargetHighlightId(null);
+            setReaderPage((page) => Math.min(readerPages.length - 1, page + 1));
+          }}
+          onClose={() => {
+            setReader(null);
+            setReaderTargetHighlightId(null);
+          }}
+          targetHighlightId={readerTargetHighlightId ?? undefined}
+          highlightAdapter={studyHighlightAdapter}
+        />
       )}
+
 
       {showHighlightPocket && (
         <div className="fixed inset-0 z-[250]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "#ffffff" }}>
