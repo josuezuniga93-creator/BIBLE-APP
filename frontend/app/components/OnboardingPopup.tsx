@@ -61,6 +61,14 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
   function handleGetStarted() {
     try {
       localStorage.setItem("tulip_onboarded", "true");
+      // Always persist the selected theme — even when the user accepts the
+      // pre-selected default without tapping a theme card. Otherwise ryc-theme
+      // stays unset and components reading localStorage fall back to
+      // dark-theme styling on a light page (invisible labels).
+      localStorage.setItem("ryc-theme", theme);
+      document.cookie = `ryc-theme=${theme};max-age=31536000;path=/;SameSite=Strict`;
+      document.documentElement.setAttribute("data-theme", theme);
+      window.dispatchEvent(new CustomEvent("ryc-theme-change", { detail: theme }));
     } catch { /**/ }
     setVisible(false);
     onComplete?.(name.trim(), lang);

@@ -7,6 +7,7 @@ import { getCloudUser, signOut } from "../lib/cloudSync";
 import { createClient } from "../lib/supabase/client";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import { BADGE_DEFINITIONS } from "../lib/badges";
+import { collectUnifiedHighlights } from "../lib/unifiedHighlights";
 import type { User } from "@supabase/supabase-js";
 import type { EarnedBadge } from "../lib/badges";
 
@@ -38,6 +39,8 @@ interface ActivityItem {
   navBook?: string;    // book name for lexicon URL
   navChapter?: number;
   navVerses?: number[];
+  navHref?: string;
+  sourceLabel?: string;
   badgeImage?: string; // /badges/xxx.png for badge items
 }
 
@@ -45,32 +48,22 @@ interface ActivityItem {
 function buildActivity(rows: SyncRow[]): ActivityItem[] {
   const items: ActivityItem[] = [];
 
+  for (const highlight of collectUnifiedHighlights(rows)) {
+    items.push({
+      type: "highlight",
+      label: highlight.title,
+      sub: `${highlight.sourceLabel}${highlight.text ? ` · "${highlight.text.slice(0, 140)}${highlight.text.length > 140 ? "..." : ""}"` : ""}`,
+      color: highlight.color,
+      updated_at: new Date(highlight.createdAt).toISOString(),
+      navHref: highlight.openHref,
+      sourceLabel: highlight.sourceLabel,
+    });
+  }
+
   for (const row of rows) {
     // ── Highlights: ryc-vcolor-{bookNum}-{chapter} ──
     if (row.storage_key.startsWith("ryc-vcolor-")) {
-      const parts = row.storage_key.split("-");
-      const bookNum = parseInt(parts[2]);
-      const chapter = parseInt(parts[3]);
-      const bookName = BOOK_MAP[bookNum] ?? `Book ${bookNum}`;
-      try {
-        const obj = JSON.parse(row.value) as Record<string, string>;
-        const verses = Object.entries(obj);
-        if (verses.length === 0) continue;
-        // One item per chapter (group verses)
-        const colors = [...new Set(verses.map(([, c]) => c))];
-        const verseNums = verses.map(([v]) => parseInt(v)).filter((n) => !isNaN(n));
-        const verseList = verses.map(([v]) => v).join(", ");
-        items.push({
-          type: "highlight",
-          label: `You highlighted ${bookName} ${chapter}`,
-          sub: `Verses: ${verseList}`,
-          color: COLOR_DOT[colors[0]] ?? AC,
-          updated_at: row.updated_at,
-          navBook: bookName,
-          navChapter: chapter,
-          navVerses: verseNums,
-        });
-      } catch { /* skip */ }
+      continue;
     }
 
     // ── Chapter notes: ryc-chapter-note-{bookNum}-{chapter} ──
@@ -161,9 +154,10 @@ function relTime(iso: string): string {
 // ─── Stat helpers ─────────────────────────────────────────────────────────────
 function countStats(rows: SyncRow[]) {
   let highlights = 0, notes = 0, bookmarks = 0, churches = 0, badges = 0;
+  highlights = collectUnifiedHighlights(rows).length;
   for (const r of rows) {
     if (r.storage_key.startsWith("ryc-vcolor-")) {
-      try { highlights += Object.keys(JSON.parse(r.value)).length; } catch { /**/ }
+      continue;
     } else if (r.storage_key.startsWith("ryc-chapter-note-")) {
       if (r.value?.trim().length > 2) notes++;
     } else if (r.storage_key === "ryc-bookmarks") {
@@ -190,13 +184,17 @@ const FILTERS: { key: Filter; label: string }[] = [
 
 // ─── Activity Card ────────────────────────────────────────────────────────────
 const TYPE_ICON: Record<ActivityType, string> = {
-  highlight: "✦", note: "✎", bookmark: "◈", church: "⛪", badge: "🏅",
+  highlight: "✦", note: "✎", bookmark: "◈", church: "✝", badge: "★",
 };
 
 function ActivityCard({ item }: { item: ActivityItem }) {
   const router = useRouter();
 
   function handleCardClick() {
+    if (item.navHref) {
+      router.push(item.navHref);
+      return;
+    }
     if (item.navBook && item.navChapter) {
       const params = new URLSearchParams({ book: item.navBook, chapter: String(item.navChapter) });
       if (item.navVerses && item.navVerses.length > 0) {
@@ -206,7 +204,7 @@ function ActivityCard({ item }: { item: ActivityItem }) {
     }
   }
 
-  const isNavigable = !!(item.navBook && item.navChapter);
+  const isNavigable = !!(item.navHref || (item.navBook && item.navChapter));
 
   return (
     <div
@@ -253,6 +251,9 @@ function ActivityCard({ item }: { item: ActivityItem }) {
               <p className="text-xs text-white/50 leading-relaxed line-clamp-2">{item.sub}</p>
             </div>
           )}
+          {item.sourceLabel && (
+            <p className="text-[10px] uppercase tracking-[0.14em] mt-2 text-white/30">{item.sourceLabel}</p>
+          )}
           {isNavigable && (
             <p className="text-[10px] mt-2" style={{ color: AC }}>Tap to read →</p>
           )}
@@ -287,6 +288,7 @@ export default function ProfilePage() {
   const [rows, setRows] = useState<SyncRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<Filter>("all");
+  const [activitySearch, setActivitySearch] = useState("");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -319,6 +321,9 @@ export default function ProfilePage() {
             key.startsWith("ryc-vcolor-") ||
             key.startsWith("ryc-chapter-note-") ||
             key === "ryc-bookmarks" ||
+            key.startsWith("axiom-hl-bible-") ||
+            key.startsWith("tulip-reader-highlights:") ||
+            key === "tulip-matthew-henry-highlights" ||
             key === "tulip-church-analyses" ||
             key === "tulip_badges_earned_v1"
           ) {
@@ -370,7 +375,17 @@ export default function ProfilePage() {
 
   const stats = countStats(rows);
   const allActivity = buildActivity(rows);
-  const filtered = filter === "all" ? allActivity : allActivity.filter((i) => i.type === filter);
+  const filteredByType = filter === "all" ? allActivity : allActivity.filter((i) => i.type === filter);
+  const searchNeedle = activitySearch.trim().toLowerCase();
+  const filtered = searchNeedle
+    ? filteredByType.filter((item) =>
+        [item.label, item.sub, item.sourceLabel]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(searchNeedle)
+      )
+    : filteredByType;
 
   const fullName = (user?.user_metadata?.full_name as string | undefined)?.toUpperCase() ?? "";
   const nameParts = fullName.split(" ");
@@ -517,7 +532,40 @@ export default function ProfilePage() {
 
         {/* ── Activity feed ────────────────────────────────────────────────── */}
         <div className="mt-5">
-          <p className="text-base font-black text-white mb-3">Activity</p>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-base font-black text-white">Activity</p>
+            <Link
+              href="/highlights"
+              className="rounded-full px-3 py-1.5 text-[11px] font-black"
+              style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.82)", border: "1px solid rgba(255,255,255,0.08)" }}
+            >
+              View all highlights →
+            </Link>
+          </div>
+
+          <div
+            className="mb-3 rounded-2xl px-4 py-3 flex items-center gap-3"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" style={{ color: "rgba(255,255,255,0.35)" }}>
+              <path d="m21 21-4.35-4.35M10.8 18.1a7.3 7.3 0 1 1 0-14.6 7.3 7.3 0 0 1 0 14.6Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+            <input
+              value={activitySearch}
+              onChange={(event) => setActivitySearch(event.target.value)}
+              placeholder="Search highlights, notes, saved items..."
+              className="w-full bg-transparent outline-none text-sm text-white placeholder:text-white/30"
+            />
+            {activitySearch && (
+              <button
+                onClick={() => setActivitySearch("")}
+                className="text-xs font-black text-white/35"
+                aria-label="Clear search"
+              >
+                ✕
+              </button>
+            )}
+          </div>
 
           {/* Filter tabs */}
           <div className="flex gap-2 overflow-x-auto pb-3 mb-4 no-scrollbar">
@@ -540,7 +588,11 @@ export default function ProfilePage() {
           {/* Cards */}
           {filtered.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-4xl mb-4">📖</p>
+              <div className="flex items-center justify-center mb-4" style={{ opacity: 0.3 }}>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </div>
               <p className="text-white font-semibold mb-1">Nothing here yet</p>
               <p className="text-white/40 text-sm">
                 {filter === "all"

@@ -93,7 +93,7 @@ export function BadgeShelf() {
 
   useEffect(() => {
     const check = () => {
-      const t = localStorage.getItem("ryc-theme") ?? "";
+      const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
       setIsLE(t === "white-noir");
       setIsPN(t === "premium-neon");
     };

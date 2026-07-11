@@ -498,7 +498,7 @@ export default function ChurchDirectoryPage() {
 
           {locationError && <p className="text-xs text-red-400">{locationError}</p>}
           {userCoords && !locationError && (
-            <p className="text-xs text-emerald-400/70">📍 {t(lang, "church_location_set")} {radius} {t(lang, "church_miles")}</p>
+            <p className="text-xs text-emerald-400/70">{t(lang, "church_location_set")} {radius} {t(lang, "church_miles")}</p>
           )}
 
           {/* Radius selector — only show when we have coords */}
@@ -548,7 +548,11 @@ export default function ChurchDirectoryPage() {
 
           {churches.length === 0 ? (
             <div className="text-center py-12 space-y-2">
-              <div className="text-4xl">⛪</div>
+              <div className="flex items-center justify-center" style={{ opacity: 0.3 }}>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v3M10.5 3.5h3"/><path d="M4 9h16v12H4z"/><path d="M9 21v-5h6v5"/><path d="M6 9V7l6-4 6 4v2"/>
+                </svg>
+              </div>
               <p className="text-white/40 text-sm font-semibold">{t(lang, "church_none")}</p>
               <p className="text-white/25 text-xs">{t(lang, "church_none_sub")}</p>
             </div>
@@ -617,7 +621,11 @@ export default function ChurchDirectoryPage() {
         {/* ── Submit Your Church ────────────────────────────────────────────── */}
         <div className="rounded-2xl border p-5 space-y-3" style={{ borderColor: "rgba(201,169,97,0.2)", background: "rgba(201,169,97,0.05)" }}>
           <div className="flex items-center gap-3">
-            <span className="text-2xl">⛪</span>
+            <span className="flex-shrink-0" style={{ color: "rgba(201,169,97,0.7)" }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 2v3M10.5 3.5h3"/><path d="M4 9h16v12H4z"/><path d="M9 21v-5h6v5"/><path d="M6 9V7l6-4 6 4v2"/>
+              </svg>
+            </span>
             <div>
               <p className="text-sm font-bold text-white">{lang === "es" ? "¿Tu iglesia aparece en la lista?" : "Is your church listed?"}</p>
               <p className="text-[11px] mt-0.5" style={{ color: "rgba(255,255,255,0.35)" }}>

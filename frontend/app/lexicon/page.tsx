@@ -21,6 +21,7 @@ import { exportVerseAsQuoteImage, BG_OPTIONS } from "../lib/verseQuoteExport";
 import CreateImageEditor from "../components/CreateImageEditor";
 import { recordScriptureShareForBadges } from "../lib/badges";
 import BookmarkPopup from "../components/BookmarkPopup";
+import { mirrorScriptureHighlight, removeMirroredScriptureHighlight } from "../lib/unifiedHighlights";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ function saveBibleHighlight(
   const filtered = arr.filter((h) => h.id !== id);
   filtered.push({ id, text: verseText, color, createdAt: Date.now() });
   localStorage.setItem(key, JSON.stringify(filtered));
+  mirrorScriptureHighlight({ bookName, bookNum, chapter, verseNum, verseText, color });
 }
 
 function removeBibleHighlight(bookName: string, bookNum: number, chapter: number, verseNum: number) {
@@ -79,6 +81,7 @@ function removeBibleHighlight(bookName: string, bookNum: number, chapter: number
   const filtered = arr.filter((h) => h.id !== id);
   if (filtered.length === 0) localStorage.removeItem(key);
   else localStorage.setItem(key, JSON.stringify(filtered));
+  removeMirroredScriptureHighlight(bookNum, chapter, verseNum);
 }
 
 // Spanish book names (book.num 1–66 → localized name)
@@ -715,7 +718,7 @@ function LexiconInner() {
   // Navigation search (type "Romans 3")
   const [showNavSearch, setShowNavSearch]   = useState(false);
   const [navQuery,      setNavQuery]        = useState("");
-  const [pendingVerseJump, setPendingVerseJump] = useState<number | null>(null);
+  const [pendingVerseJump, setPendingVerseJump] = useState<number[]>([]);
 
   // Verse selection tray (tap-to-highlight whole verse)
   const [selectedVerseNums, setSelectedVerseNums] = useState<number[]>([]);
@@ -896,7 +899,7 @@ function LexiconInner() {
     if (found) {
       setSelectedBook(found);
       setSelectedChapter(Math.max(1, Math.min(ch, found.chapters)));
-      setPendingVerseJump(verseJump && verseJump > 0 ? verseJump : null);
+      setPendingVerseJump(verseJump && verseJump > 0 ? [verseJump] : []);
       setActiveTab("reader");
       setShowNavSearch(false);
       setNavQuery("");
@@ -904,18 +907,20 @@ function LexiconInner() {
   }, [books]);
 
   useEffect(() => {
-    if (!pendingVerseJump || !chapterData) return;
-    const targetVerse = chapterData.verses.find((verse) => verse.verse === pendingVerseJump);
-    if (!targetVerse) {
-      setPendingVerseJump(null);
+    if (pendingVerseJump.length === 0 || !chapterData) return;
+    const validVerses = pendingVerseJump.filter((verseNum) =>
+      chapterData.verses.some((verse) => verse.verse === verseNum)
+    );
+    if (validVerses.length === 0) {
+      setPendingVerseJump([]);
       return;
     }
 
     const timer = window.setTimeout(() => {
-      const el = verseRefs.current[pendingVerseJump];
+      const el = verseRefs.current[validVerses[0]];
       el?.scrollIntoView({ behavior: "smooth", block: "center" });
-      setSelectedVerseNums([pendingVerseJump]);
-      setPendingVerseJump(null);
+      setSelectedVerseNums(validVerses);
+      setPendingVerseJump([]);
     }, 120);
 
     return () => window.clearTimeout(timer);
@@ -946,7 +951,7 @@ function LexiconInner() {
             // If specific verses requested, queue them for selection once chapter loads
             if (selectParam) {
               const nums = selectParam.split(",").map(Number).filter((n) => !isNaN(n) && n > 0);
-              if (nums.length > 0) setPendingVerseJump(nums[0]);
+              if (nums.length > 0) setPendingVerseJump(nums);
             }
             return;
           }
@@ -1520,7 +1525,7 @@ function LexiconInner() {
               <p className="pn-book-name text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{getBookDisplayName(selectedBook, translation)}</p>
               <p className="pn-chapter-num text-8xl font-black text-white leading-none mb-3">{selectedChapter}</p>
               <p className="pn-chapter-subtitle text-[11px] text-white/20 tracking-wide">
-                {translation === "rv1960" ? "Reina-Valera 1960" : translation === "nvi" ? "Nueva Versión Internacional" : translation === "ntv" ? "Nueva Traducción Viviente" : translation === "lbla" ? "La Biblia de las Américas" : translation === "nkjv" ? "New King James Version" : translation === "esv" ? "English Standard Version" : translation === "nasb" ? "New American Standard" : translation === "niv" ? "New International Version" : translation === "lsb" ? "Legacy Standard Bible" : `${selectedBook.testament === "OT" ? "Hebrew · Aramaic" : "Greek NT"} · ${translation === "geneva" ? "Geneva 1599" : "King James"}`}
+                {TRANSLATION_OPTIONS.find((option) => option.key === translation)?.name ?? "King James Version"}
               </p>
               {highlightedVerseCount > 0 && (
                 <div className="flex items-center justify-center gap-1.5 mt-3">

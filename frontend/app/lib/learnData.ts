@@ -9,6 +9,13 @@ import {
   thirtyNineArticlesFullText,
   westminsterLargerFullText,
 } from "./fullConfessionTexts";
+import {
+  councilCarthageFullText,
+  councilOrangeFullText,
+  ninetyFiveThesesFullText,
+  sinnersInHandsFullText,
+  smalcaldArticlesFullText,
+} from "./historicalPrimaryTexts";
 import bondageOfTheWillBook from "../../public/books/bondage-of-the-will.json";
 import freedomOfTheWillBook from "../../public/books/freedom-of-the-will.json";
 
@@ -858,17 +865,17 @@ export const FULL_DOCUMENT_SECTIONS: FullDocumentSectionMap = {
   "council-nicaea": nicaea325,
   "council-chalcedon": chalcedon451,
   "augustine-grace": augustineGraceFull,
-  "council-carthage": carthage418,
-  "council-orange": orange529,
+  "council-carthage": councilCarthageFullText,
+  "council-orange": councilOrangeFullText,
   "wycliffe": wycliffeFull,
   "jan-hus": janHusFull,
   "gutenberg": gutenbergFull,
-  "95theses": theses95,
+  "95theses": ninetyFiveThesesFullText,
   "diet-of-worms": dietOfWormsFull,
   "tyndale": tyndaleFull,
   "calvins-institutes": calvinsInstitutesFull,
   "augsburg-confession": augsburgConfessionFullText,
-  "smalcald-articles": smalcaldArticles,
+  "smalcald-articles": smalcaldArticlesFullText,
   "geneva-bible": genevaBibleFull,
   "belgic-confession": belgicConfessionFullText,
   "heidelberg": heidelbergCatechismFullText,
@@ -881,7 +888,7 @@ export const FULL_DOCUMENT_SECTIONS: FullDocumentSectionMap = {
   "westminster-shorter": wsc,
   "westminster-larger": westminsterLargerFullText,
   "1689-lbc": secondLondonBaptistFullText,
-  "sinners-in-hands": sinnersInHands,
+  "sinners-in-hands": sinnersInHandsFullText,
   "monergism-debate": monergismDebateFull,
 };
 

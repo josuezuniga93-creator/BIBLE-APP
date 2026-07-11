@@ -71,8 +71,18 @@ function ChurchAnalysisIcon({ size = 24 }: { size?: number }) {
 
 export default function ChurchAnalysisPage() {
   const { theme } = useTheme();
-  const isLight = false;
+  const [isLight, setIsLight] = useState(false);
   const [analyses, setAnalyses] = useState<ChurchAnalysis[]>([]);
+
+  useEffect(() => {
+    const t = document.documentElement.getAttribute("data-theme");
+    setIsLight(t === "white-noir");
+    const obs = new MutationObserver(() => {
+      setIsLight(document.documentElement.getAttribute("data-theme") === "white-noir");
+    });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => obs.disconnect();
+  }, []);
 
   useEffect(() => {
     setAnalyses(loadAnalyses());

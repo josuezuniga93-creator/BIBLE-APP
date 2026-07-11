@@ -61,7 +61,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
       "The masterwork of Reformed theology. Calvin's systematic exposition of Christian doctrine set the course of Protestant thought and remains indispensable for serious students of Scripture.",
     cover_emoji: "📚",
     tags: ["Theology", "Reformed", "Calvin", "Foundational"],
-    pg_id: null,
+    pg_id: 45001,
     coming_soon: false,
   },
   {
@@ -97,7 +97,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
       "Edwards's famous sermon that sparked the Great Awakening, together with other sermons on the excellency of Christ, the reality of heaven, and the importance of seeking God now.",
     cover_emoji: "⚡",
     tags: ["Sermons", "Great Awakening", "Edwards"],
-    pg_id: null,
+    pg_id: 34632,
     coming_soon: false,
   },
   {

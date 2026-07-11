@@ -3,6 +3,8 @@
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
+import { AppReaderShell } from "../components/AppReader";
+import { mirrorStudyToolHighlight, removeMirroredStudyToolHighlight } from "../lib/unifiedHighlights";
 import {
   DICTIONARY_ENTRIES,
   findCompleteCommentaryByReference,
@@ -289,6 +291,7 @@ export default function StudyToolsPage() {
   const controlsTimerRef = useRef<number>(0);
   const [highlights, setHighlights] = useState<HenryHighlight[]>([]);
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
+  const [deepLinkedHighlightId, setDeepLinkedHighlightId] = useState<string | null>(null);
   const [highlightSearchQuery, setHighlightSearchQuery] = useState("");
   const [commentaryResult, setCommentaryResult] = useState<CommentarySearchResult | null>(null);
   const [bookResult, setBookResult] = useState<BookSearchResult | null>(null);
@@ -297,6 +300,7 @@ export default function StudyToolsPage() {
   const longPressTimer = useRef<number | null>(null);
   const activeHandle = useRef<"start" | "end" | null>(null);
   const didStartSelectionPress = useRef(false);
+  const openedDeepLinkHighlightRef = useRef<string | null>(null);
   const readerScrollRef = useRef<HTMLDivElement | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
   const articleRef = useRef<HTMLDivElement | null>(null);
@@ -383,7 +387,20 @@ export default function StudyToolsPage() {
     setHighlights(loadHenryHighlights());
     setContinueReading(loadContinueReading());
     loadMatthewHenryManifest().then(setManifest);
+    try {
+      setDeepLinkedHighlightId(new URLSearchParams(window.location.search).get("highlight"));
+    } catch {
+      setDeepLinkedHighlightId(null);
+    }
   }, []);
+
+  useEffect(() => {
+    if (!deepLinkedHighlightId || openedDeepLinkHighlightRef.current === deepLinkedHighlightId) return;
+    const highlight = highlights.find((item) => item.id === deepLinkedHighlightId);
+    if (!highlight) return;
+    openedDeepLinkHighlightRef.current = deepLinkedHighlightId;
+    openHighlightInReader(highlight);
+  }, [deepLinkedHighlightId, highlights]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const persistContinueReading = useCallback((items: ContinueReadingItem[]) => {
     const sorted = [...items].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12);
@@ -501,11 +518,13 @@ export default function StudyToolsPage() {
       source: reader.source,
     };
     persistHighlights([newItem, ...highlights]);
+    mirrorStudyToolHighlight(newItem);
     setSelection(null);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
+    removeMirroredStudyToolHighlight(id);
   }
 
   function clearLongPressTimer() {
@@ -750,7 +769,7 @@ export default function StudyToolsPage() {
   return (
     <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0b101d", color: isLight ? "#0a0a0a" : "#ffffff" }}>
       {reader && (
-        <div className="fixed inset-0 z-50 select-none" style={{ background: isLight ? "#ffffff" : "#0b101d", color: isLight ? "#0a0a0a" : "#ffffff" }}>
+        <>
           {/* Reader controls panel — slides up on single tap */}
           <div
             className="fixed left-0 right-0 z-[69] px-5"
@@ -886,33 +905,21 @@ export default function StudyToolsPage() {
               )}
             </div>
           </div>
-          <div className="h-full max-w-lg mx-auto flex flex-col">
-            <div
-              className="flex items-center justify-between gap-3 px-5 pb-2 flex-shrink-0"
-              style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.10)", paddingTop: "max(env(safe-area-inset-top), 10px)" }}
-            >
-              <div className="min-w-0">
-                <h2 className="text-lg leading-tight font-black line-clamp-2">
-                  {reader.bookName} {reader.chapter}{reader.requestedVerse ? `:${reader.requestedVerse}` : ""} · {reader.title ?? (lang === "es" ? "Comentario" : "Commentary")}
-                </h2>
-              </div>
-              <button
-                onClick={() => setReader(null)}
-                className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.60)" }}
-                aria-label={lang === "es" ? "Volver" : "Back"}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </button>
-            </div>
-
-            <div
-              ref={readerScrollRef}
-              onScroll={refreshHighlightGeometry}
-              className={`flex-1 px-7 pt-2 flex flex-col ${isLargeFont ? 'overflow-y-auto' : 'overflow-hidden'}`}
-            >
+          <AppReaderShell
+            title={`${reader.bookName} ${reader.chapter}${reader.requestedVerse ? `:${reader.requestedVerse}` : ""} · ${reader.title ?? (lang === "es" ? "Comentario" : "Commentary")}`}
+            currentPage={currentReaderPage + 1}
+            totalPages={Math.max(1, readerPages.length)}
+            progressPercent={readingPercent(currentReaderPage, readerPages.length)}
+            previousDisabled={currentReaderPage === 0}
+            nextDisabled={currentReaderPage >= readerPages.length - 1}
+            onPrevious={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
+            onNext={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
+            onClose={() => setReader(null)}
+            contentRef={readerScrollRef}
+            contentOnScroll={refreshHighlightGeometry}
+            contentClassName={`max-w-lg mx-auto w-full flex-1 min-h-0 px-7 pt-2 flex flex-col ${isLargeFont ? 'overflow-y-auto' : 'overflow-hidden'}`}
+            zIndexClassName="z-50"
+          >
               <div className="mb-2">
                 {reader.requestedVerse && (
                   <p className="text-[11px]" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
@@ -1101,54 +1108,8 @@ export default function StudyToolsPage() {
                 </div>
               </article>
 
-            </div>
-
-            {/* Page nav — flex sibling of scroll area so it's never overlapped by content */}
-            {readerPages.length > 1 && (
-              <div
-                className="flex-shrink-0 px-7 pt-2 space-y-2"
-                style={{ paddingBottom: "max(env(safe-area-inset-bottom), 14px)" }}
-              >
-                <div className="flex items-center justify-between px-1 text-xs font-bold" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
-                  <span>
-                    {lang === "es" ? "Pagina" : "Page"} {currentReaderPage + 1} {lang === "es" ? "de" : "of"} {readerPages.length}
-                  </span>
-                  <span>{readingPercent(currentReaderPage, readerPages.length)}%</span>
-                </div>
-                <div
-                  className="h-1.5 rounded-full overflow-hidden mb-2"
-                  style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)" }}
-                >
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${readingPercent(currentReaderPage, readerPages.length)}%`,
-                      background: isLight ? "#0a0a0a" : "#c9a961",
-                    }}
-                  />
-                </div>
-                <div className="grid grid-cols-2 items-center gap-3">
-                  <button
-                    onClick={() => { setReaderPage((page) => Math.max(0, page - 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
-                    disabled={currentReaderPage === 0}
-                    className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)" }}
-                  >
-                    ← {lang === "es" ? "Anterior" : "Prev"}
-                  </button>
-                  <button
-                    onClick={() => { setReaderPage((page) => Math.min(readerPages.length - 1, page + 1)); clearSelection(); readerScrollRef.current?.scrollTo(0, 0); }}
-                    disabled={currentReaderPage >= readerPages.length - 1}
-                    className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
-                    style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}
-                  >
-                    {lang === "es" ? "Siguiente" : "Next"} →
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          </AppReaderShell>
+        </>
       )}
 
       {showHighlightPocket && (

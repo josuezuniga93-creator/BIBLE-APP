@@ -777,8 +777,24 @@ function CollectionDetail({ col, onClose, onUpdated, lang }: { col: Collection; 
                     <p className="text-sm font-bold text-white/85 leading-snug">{item.title}</p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm" style={{ backgroundColor: `${col.color}25` }}>
-                      {item.type === "learn" ? "📜" : item.type === "book" ? "📖" : item.type === "video" ? "▶️" : "✝️"}
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: `${col.color}25` }}>
+                      {item.type === "learn" ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: col.color }}>
+                          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                        </svg>
+                      ) : item.type === "book" ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: col.color }}>
+                          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                        </svg>
+                      ) : item.type === "video" ? (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: col.color }}>
+                          <polygon points="5 3 19 12 5 21 5 3"/>
+                        </svg>
+                      ) : (
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" style={{ color: col.color }}>
+                          <path d="M12 2v3M10.5 3.5h3"/><path d="M4 9h16v12H4z"/><path d="M9 21v-5h6v5"/><path d="M6 9V7l6-4 6 4v2"/>
+                        </svg>
+                      )}
                     </div>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="text-white/20">
                       <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>

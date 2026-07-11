@@ -2438,10 +2438,10 @@ html[data-theme="white-noir"] .mem-practice-btn {
 }
 
 /* Active nav tab pill — should be light gray in White Noir, not gold */
-html[data-theme="white-noir"] .mobile-nav-floating a.nav-tab[data-active="true"] {
+html[data-theme="white-noir"] .mobile-nav-floating .nav-tab[data-active="true"] {
   background: #eef0f2 !important;
 }
-html[data-theme="white-noir"] .mobile-nav-floating a.nav-tab[data-active="true"]::after {
+html[data-theme="white-noir"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
   background: #111111 !important;
   box-shadow: none !important;
 }
@@ -2453,6 +2453,17 @@ html[data-theme="white-noir"] .home-continue-scripture {
   background: #f3f4f6 !important;
   border-color: var(--border) !important;
   box-shadow: none !important;
+}
+
+/* Kids Books detail modal: keep the readable information panel solid white. */
+html[data-theme="white-noir"] .kids-book-modal-panel,
+html[data-theme="white-noir"] .kids-book-modal-info,
+html[data-theme="light"] .kids-book-modal-panel,
+html[data-theme="light"] .kids-book-modal-info {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #0a0a0a !important;
+  opacity: 1 !important;
 }
 
 /* Preserve readable labels on true dark action controls. */
@@ -2626,11 +2637,11 @@ html[data-theme="white-noir"] .home-open-link {
   color: rgba(10,10,10,0.44) !important;
 }
 html[data-theme="white-noir"] .streak-current-ring {
-  background: #e5e7eb !important;
-  border-color: #111111 !important;
+  background: #f3f4f6 !important;
+  border-color: #cfd4dc !important;
 }
 html[data-theme="white-noir"] .streak-current-dot {
-  background: #111111 !important;
+  background: #6b7280 !important;
 }
 html[data-theme="white-noir"] .card-author-label { color: rgba(255,255,255,0.72) !important; }
 html[data-theme="white-noir"] .mem-header-label { color: #111111 !important; }
@@ -2864,6 +2875,15 @@ html[data-theme="white-noir"] ::-webkit-scrollbar-thumb {
   margin: 0.35rem 0.12rem;
   border-radius: 0.95rem;
   transition: background-color 160ms ease, color 160ms ease;
+}
+
+.mobile-nav-floating button.nav-tab {
+  appearance: none;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 
 .mobile-nav-floating .nav-tab[data-active="true"] {

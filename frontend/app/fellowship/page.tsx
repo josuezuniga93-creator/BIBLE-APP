@@ -109,9 +109,9 @@ function emptyForm(): Omit<Gathering, "id"> {
 
 function buildSmsBody(g: Gathering): string {
   return [
-    `📖 ${g.title}`,
-    `📅 ${formatDate(g.date)} at ${formatTime(g.time)}`,
-    g.location ? `📍 ${g.location}` : null,
+    g.title,
+    `${formatDate(g.date)} at ${formatTime(g.time)}`,
+    g.location ? g.location : null,
     g.notes ? `\n${g.notes}` : null,
   ].filter(Boolean).join("\n");
 }
@@ -538,7 +538,12 @@ export default function FellowshipPage() {
 
           {upcoming.length === 0 ? (
             <div className="rounded-2xl border border-dashed py-10 text-center space-y-2" style={{ borderColor: "var(--accent, #7c3aed)", opacity: 0.35 }}>
-              <div className="text-3xl">🏠</div>
+              <div className="flex items-center justify-center">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/>
+                  <path d="M9 21V12h6v9"/>
+                </svg>
+              </div>
               <p className="text-sm font-semibold" style={{ color: "var(--fg, #fff)" }}>{t("fellowship_empty")}</p>
               <p className="text-xs" style={{ color: "var(--fg, rgba(255,255,255,0.4))" }}>{t("fellowship_empty_sub")}</p>
             </div>

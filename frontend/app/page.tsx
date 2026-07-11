@@ -974,14 +974,10 @@ export default function Home() {
   const [ggReader, setGgReader] = useState<{ title: string; author: string; authorYears?: string; url: string; content?: string; image?: string } | null>(null);
 
   // Theme detection — drives background glow color
-  const [theme, setTheme] = useState<string>(() => {
-    if (typeof window === "undefined") return "premium-neon";
-    // data-theme is set by the <head> early script before React runs — read it first
-    // so the initial client render matches CSS immediately (no flash of wrong colors)
-    const fromDom = document.documentElement.getAttribute("data-theme");
-    if (fromDom === "gold-navy" || fromDom === "white-noir") return fromDom;
-    return localStorage.getItem("ryc-theme") ?? "premium-neon";
-  });
+  // Deterministic initial value matching SSR — a lazy DOM read here causes a
+  // hydration mismatch (React silently keeps stale server-rendered styles).
+  // The mount effect below applies the authoritative theme immediately.
+  const [theme, setTheme] = useState<string>("white-noir");
   useEffect(() => {
     // Read authoritative theme: cookie first (unaffected by old ThemeProvider cache),
     // then localStorage, then data-theme as last resort. This bypasses any stale
@@ -993,14 +989,16 @@ export default function Home() {
         const ls = localStorage.getItem("ryc-theme");
         if (ls === "gold-navy" || ls === "white-noir") return ls;
       } catch { /**/ }
-      return document.documentElement.getAttribute("data-theme") ?? "premium-neon";
+      const domTheme = document.documentElement.getAttribute("data-theme");
+      return domTheme === "gold-navy" || domTheme === "white-noir" ? domTheme : "white-noir";
     };
     const authoritative = readAuthoritative();
     setTheme(authoritative);
     document.documentElement.setAttribute("data-theme", authoritative);
     const sync = (e?: Event) => {
       const detail = (e as CustomEvent)?.detail as string | undefined;
-      setTheme(detail ?? document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "premium-neon");
+      const next = detail ?? document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
+      setTheme(next === "gold-navy" || next === "white-noir" ? next : "white-noir");
     };
     window.addEventListener("ryc-theme-change", sync);
     return () => window.removeEventListener("ryc-theme-change", sync);
@@ -1155,6 +1153,40 @@ export default function Home() {
   const themeACBorderSm = isPremiumNeon ? "rgba(124,58,237,0.22)" : isLightElegant ? "rgba(10,10,10,0.11)" : AC_BORDER_SM;
   const themeACCtaGrad  = isPremiumNeon ? "linear-gradient(135deg,rgba(124,58,237,0.18),rgba(124,58,237,0.05))" : isLightElegant ? "#e5e7eb" : AC_CTA_GRAD;
   const themeACSub85    = isPremiumNeon ? "rgba(167,139,250,0.85)" : isLightElegant ? "rgba(10,10,10,0.70)" : "rgba(201,169,97,0.85)";
+  const videoCardBg = isLightElegant
+    ? "linear-gradient(135deg, #ffffff 0%, #f5f6f8 100%)"
+    : isLightPink
+    ? "linear-gradient(135deg, #fff4f8 0%, #fde7f1 100%)"
+    : isPremiumNeon
+    ? "linear-gradient(135deg, #130b2a 0%, #080a12 100%)"
+    : "linear-gradient(135deg, #171a23 0%, #080a12 100%)";
+  const videoCardBorder = isLightElegant
+    ? "rgba(0,0,0,0.10)"
+    : isLightPink
+    ? "rgba(157,23,77,0.16)"
+    : themeACBorderSm;
+  const videoPrimary = isLightElegant ? "#050505" : isLightPink ? "#4a0020" : "#ffffff";
+  const videoSecondary = isLightElegant
+    ? "rgba(5,5,5,0.58)"
+    : isLightPink
+    ? "rgba(74,0,32,0.58)"
+    : "rgba(255,255,255,0.68)";
+  const videoAccent = isLightElegant ? "#050505" : isLightPink ? "#be185d" : themeAC;
+  const videoAccentSoft = isLightElegant
+    ? "#eceff3"
+    : isLightPink
+    ? "rgba(219,39,119,0.12)"
+    : isPremiumNeon
+    ? "rgba(124,58,237,0.16)"
+    : "rgba(201,169,97,0.14)";
+  const videoCtaBg = isLightElegant
+    ? "#050505"
+    : isLightPink
+    ? "#be185d"
+    : isPremiumNeon
+    ? "#7c3aed"
+    : "#c9a961";
+  const videoCtaText = isLightElegant || isLightPink || isPremiumNeon ? "#ffffff" : "#08090f";
 
   // Background gradient baked into root div — never a separate child element.
   // Gold-navy uses a flat colour here; the lamp image div handles the top glow.
@@ -1366,7 +1398,7 @@ export default function Home() {
       )}
 
       {/* ── Page content ──────────────────────────────────────────────────── */}
-      <main className={`home-main relative max-w-lg mx-auto px-5 pb-28 ${isGoldNavy ? "pt-20" : "pt-10"}`}>
+      <main className={`home-main relative max-w-lg mx-auto px-5 pb-24 ${isGoldNavy ? "pt-20" : "pt-10"}`}>
 
         {/* Hero — date label + profile avatar */}
         <div className="flex items-center justify-between mb-3">
@@ -1401,11 +1433,11 @@ export default function Home() {
               ) : (
                 <div
                   className="w-8 h-8 rounded-full flex items-center justify-center"
-                  style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.12)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.05)", border: `1px solid ${isLight ? "rgba(0,0,0,0.13)" : "rgba(255,255,255,0.12)"}` }}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="4" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6"/>
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="rgba(255,255,255,0.4)" strokeWidth="1.6" strokeLinecap="round"/>
+                    <circle cx="12" cy="8" r="4" stroke={isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.4)"} strokeWidth="1.6"/>
+                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.4)"} strokeWidth="1.6" strokeLinecap="round"/>
                   </svg>
                 </div>
               )}
@@ -1598,7 +1630,7 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Historical Documents */}
+            {/* Historical Docs */}
             <Link
               href="/learn"
               className="home-media-card flex-shrink-0 w-[145px] h-[180px] rounded-2xl p-3 flex flex-col justify-between text-left active:scale-[0.98] transition-all relative overflow-hidden"
@@ -1629,7 +1661,7 @@ export default function Home() {
               </div>
               <div className="relative z-10">
                 <p className="card-type-label text-[9px] font-bold tracking-[0.15em] uppercase" style={{ color: isLightElegant ? "rgba(255,255,255,0.62)" : isGoldNavy ? "#c9a961" : "rgba(196,181,253,0.90)" }}>{lang === "es" ? "Historia" : "History"}</p>
-                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Documentos Históricos" : "Historical Documents"}</p>
+                <p className="text-[12px] font-bold leading-snug mt-0.5 text-white">{lang === "es" ? "Docs Históricos" : "Historical Docs"}</p>
                 <p className="text-[10px] mt-1.5 text-white/55">{lang === "es" ? "Historia de la iglesia" : "Church history"}</p>
               </div>
             </Link>
@@ -1648,66 +1680,140 @@ export default function Home() {
               <h3 className="text-[17px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>
                 {lang === "es" ? "Biblioteca de Videos" : "Video Library"}
               </h3>
+              <Link
+                href="/videos"
+                className="text-[12px] font-semibold"
+                style={{ color: isLightElegant ? "rgba(5,5,5,0.58)" : seeAllColor ?? themeACSub85 }}
+              >
+                {lang === "es" ? "Ver todo →" : "See all →"}
+              </Link>
             </div>
           </div>
 
-          <Link href="/videos" className="block group">
+          <Link
+            href="/videos"
+            className="block group"
+            aria-label={lang === "es" ? "Abrir biblioteca de videos" : "Open video library"}
+          >
             <div
-              className="home-video-media-card rounded-2xl overflow-hidden active:scale-[0.99] transition-all relative"
-              style={{ background: isLightElegant ? "#f3f4f6" : "#0d0d18", border: `1px solid ${themeACBorderSm}` }}
+              className="home-video-library-card rounded-[28px] overflow-hidden active:scale-[0.99] transition-all relative"
+              style={{
+                minHeight: 212,
+                background: videoCardBg,
+                border: `1px solid ${videoCardBorder}`,
+                boxShadow: isLightElegant
+                  ? "0 18px 42px rgba(0,0,0,0.08)"
+                  : "0 18px 42px rgba(0,0,0,0.26)",
+              }}
             >
-              {/* Background image — 16:9 hero, figure stays on the right */}
-              <div className="relative" style={{ aspectRatio: "16 / 9" }}>
+              <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src="/home-banner.png"
                   alt=""
-                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
-                  style={{ objectPosition: "right center" }}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]"
+                  style={{
+                    objectPosition: "center center",
+                    filter: isLightElegant ? "grayscale(1) contrast(1.08)" : "saturate(1.02)",
+                  }}
                 />
-
-                {/* Left-to-right darkening so overlay text reads cleanly */}
                 <div
                   className="absolute inset-0"
                   style={{
                     background: isLightElegant
-                      ? "linear-gradient(to right, rgba(8,9,15,0.68) 0%, rgba(8,9,15,0.44) 45%, rgba(8,9,15,0.10) 78%, transparent 100%)"
-                      : "linear-gradient(to right, rgba(8,9,15,0.92) 0%, rgba(8,9,15,0.65) 45%, rgba(8,9,15,0.15) 78%, transparent 100%)",
+                      ? "linear-gradient(to right, #ffffff 0%, rgba(255,255,255,0.96) 27%, rgba(255,255,255,0.64) 48%, rgba(255,255,255,0.10) 72%, transparent 100%)"
+                      : "linear-gradient(to right, #080a12 0%, rgba(8,10,18,0.92) 28%, rgba(8,10,18,0.55) 52%, rgba(8,10,18,0.08) 78%, transparent 100%)",
                   }}
                 />
-                {/* Bottom blend into the topic pills row */}
                 <div
-                  className="absolute inset-x-0 bottom-0 h-1/3"
-                  style={{ background: isLightElegant ? "linear-gradient(to bottom, transparent, rgba(13,13,24,0.58))" : "linear-gradient(to bottom, transparent, rgba(13,13,24,0.95))" }}
+                  className="absolute inset-0"
+                  style={{
+                    background: isLightElegant
+                      ? "radial-gradient(circle at 80% 18%, rgba(255,255,255,0.46), transparent 42%)"
+                      : `radial-gradient(circle at 74% 18%, ${isPremiumNeon ? "rgba(124,58,237,0.20)" : "rgba(201,169,97,0.16)"}, transparent 46%)`,
+                  }}
                 />
+              </div>
 
-                {/* Overlay — flex row: play button left, text stacked right */}
-                {/* Overlay — flex row: play button left, text stacked right */}
-                <div className="absolute inset-0 flex items-center" style={{ paddingLeft: "12px", paddingRight: "45%" }}>
-                  <div className="flex items-center gap-3 w-full">
-                    {/* Play button */}
-                    <div
-                      className="flex-shrink-0 w-14 h-14 rounded-full flex items-center justify-center transition-transform group-hover:scale-110"
-                      style={{ background: isPremiumNeon ? "rgba(124,58,237,0.92)" : isLightElegant ? "rgba(255,255,255,0.90)" : "rgba(201,169,97,0.92)", backdropFilter: "blur(8px)" }}
-                    >
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill={isLightElegant ? "#0a0a0a" : isPremiumNeon ? "#ffffff" : "#08090f"} style={{ marginLeft: 3 }}>
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    {/* Text block */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[9px] font-semibold uppercase tracking-widest mb-1 whitespace-nowrap" style={{ color: isLightElegant ? "rgba(255,255,255,0.85)" : themeAC }}>
-                        {lang === "es" ? "Aprende. Mira. Crece." : "Learn. Watch. Grow."}
-                      </p>
-                      <p className="text-[14px] font-bold text-white leading-snug">
-                        {lang === "es" ? (
-                          <><span className="block whitespace-nowrap">Voces de la iglesia.</span><span className="block whitespace-nowrap">Verdad bíblica.</span><span className="block whitespace-nowrap">Crecimiento cristiano.</span></>
-                        ) : (
-                          <><span className="block whitespace-nowrap">Church voices.</span><span className="block whitespace-nowrap">Biblical Truth.</span><span className="block whitespace-nowrap">Christian growth.</span></>
-                        )}
-                      </p>
-                    </div>
+              <div
+                className="absolute -left-8 -bottom-12 h-36 w-36 rounded-full"
+                style={{
+                  background: isLightElegant
+                    ? "rgba(0,0,0,0.035)"
+                    : isPremiumNeon
+                    ? "rgba(124,58,237,0.12)"
+                    : "rgba(201,169,97,0.10)",
+                }}
+                aria-hidden="true"
+              />
+
+              <div className="relative z-10 flex min-h-[212px] flex-col justify-between p-5 pr-[42%]">
+                <div>
+                  <div
+                    className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-1.5"
+                    style={{
+                      background: videoAccentSoft,
+                      color: videoAccent,
+                      border: `1px solid ${isLightElegant ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}`,
+                    }}
+                  >
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ background: videoAccent }}
+                    />
+                    <span className="text-[9px] font-black uppercase tracking-[0.18em]">
+                      {lang === "es" ? "Videos cristianos" : "Christian Videos"}
+                    </span>
                   </div>
+
+                  <h4
+                    className="max-w-[230px] text-[24px] font-black leading-[1.02] tracking-[-0.04em]"
+                    style={{ color: videoPrimary }}
+                  >
+                    {lang === "es" ? "Aprende con voces confiables." : "Learn from trusted voices."}
+                  </h4>
+                  <p
+                    className="mt-3 max-w-[230px] text-[12.5px] font-medium leading-relaxed"
+                    style={{ color: videoSecondary }}
+                  >
+                    {lang === "es"
+                      ? "Sermones, testimonios y enseñanza bíblica para crecer con claridad."
+                      : "Sermons, testimonies, and biblical teaching for focused growth."}
+                  </p>
+                </div>
+
+                <div className="mt-5 flex flex-wrap items-center gap-2">
+                  <div
+                    className="flex h-11 w-11 items-center justify-center rounded-full transition-transform group-hover:scale-105"
+                    style={{
+                      background: videoCtaBg,
+                      color: videoCtaText,
+                      boxShadow: isLightElegant ? "none" : "0 10px 24px rgba(0,0,0,0.22)",
+                    }}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: 2 }}>
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </div>
+                  <span
+                    className="rounded-full px-4 py-3 text-[12px] font-black"
+                    style={{
+                      background: isLightElegant ? "#050505" : "rgba(255,255,255,0.10)",
+                      color: isLightElegant ? "#ffffff" : videoPrimary,
+                      border: `1px solid ${isLightElegant ? "#050505" : "rgba(255,255,255,0.12)"}`,
+                    }}
+                  >
+                    {lang === "es" ? "Explorar videos" : "Explore videos"}
+                  </span>
+                  <span
+                    className="rounded-full px-3 py-2 text-[10px] font-bold"
+                    style={{
+                      color: videoSecondary,
+                      background: isLightElegant ? "rgba(0,0,0,0.045)" : "rgba(255,255,255,0.06)",
+                    }}
+                  >
+                    {lang === "es" ? "EN + ES" : "EN + ES"}
+                  </span>
                 </div>
               </div>
 
@@ -1727,7 +1833,7 @@ export default function Home() {
             <h3 className="text-[15px] font-bold text-white" style={sectionHdColor ? { color: sectionHdColor } : {}}>{lang === "es" ? "Tu racha" : "Your streak"}</h3>
             <p className="text-[12px] font-bold" style={{ color: "var(--accent-text)" }}>{streak} {lang === "es" ? (streak === 1 ? "día" : "días") : (streak === 1 ? "day" : "days")}</p>
           </div>
-          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3 py-4 flex justify-between" style={isLight ? { borderColor: "rgba(28,20,9,0.10)", background: "rgba(28,20,9,0.04)" } : {}}>
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.025] px-3 py-4 flex justify-between" style={isLight ? { borderColor: "rgba(28,20,9,0.10)", background: "#ffffff" } : {}}>
             {dayLabels.map((d, i) => {
               const isCurrent = i === todayIdx;
               const isDone = i < todayIdx && i >= Math.max(0, todayIdx - streak + 1);
@@ -1737,10 +1843,12 @@ export default function Home() {
                     className={"w-7 h-7 rounded-full flex items-center justify-center text-[10px]" + (isCurrent ? " streak-current-ring" : "")}
                     style={
                       isDone
-                        ? { background: themeAC, color: isPremiumNeon ? "#0a0514" : "#1a0e2e" }
+                        ? { background: themeAC, color: isLight ? "#ffffff" : isPremiumNeon ? "#0a0514" : "#1a0e2e" }
                         : isCurrent
-                          ? { background: themeACBg, border: `1px solid ${themeAC}` }
-                          : { background: isLight ? "rgba(28,20,9,0.08)" : "rgba(255,255,255,0.05)" }
+                          ? isLight
+                            ? { background: "#f3f4f6", border: "1.5px solid #cfd4dc" }
+                            : { background: themeACBg, border: `1.5px solid ${themeAC}` }
+                          : { background: isLight ? "#ffffff" : "transparent", border: isLight ? "1.5px dashed rgba(28,20,9,0.32)" : "1.5px dashed rgba(255,255,255,0.22)" }
                     }
                   >
                     {isDone && (
@@ -1748,11 +1856,11 @@ export default function Home() {
                         <path d="m5 13 4 4L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
-                    {isCurrent && <div className="streak-current-dot w-1.5 h-1.5 rounded-full" style={{ background: themeAC }} />}
+                    {isCurrent && <div className="streak-current-dot w-1.5 h-1.5 rounded-full" style={{ background: isLight ? "#6b7280" : themeAC }} />}
                   </div>
                   <span
-                    className={"text-[10px] " + (isCurrent ? "text-white font-semibold" : "text-white/35")}
-                    style={isLight ? { color: isCurrent ? (heroH1Color ?? undefined) : (heroYearColor ?? undefined) } : {}}
+                    className={"text-[10px] " + (isCurrent ? "text-white font-semibold" : "text-white/40")}
+                    style={isLight ? { color: isCurrent ? "#0a0a0a" : "rgba(28,20,9,0.45)" } : {}}
                   >{d}</span>
                 </div>
               );
@@ -1771,10 +1879,13 @@ export default function Home() {
             >
               <div className="flex items-start gap-4">
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center text-xl flex-shrink-0"
-                  style={{ background: isLightElegant ? "rgba(10,10,10,0.07)" : isPremiumNeon ? "rgba(124,58,237,0.18)" : "rgba(201,169,97,0.18)" }}
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ background: isLightElegant ? "rgba(201,169,97,0.16)" : isPremiumNeon ? "rgba(124,58,237,0.18)" : "rgba(201,169,97,0.18)" }}
                 >
-                  ☁️
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 18.5a4.5 4.5 0 0 1-.6-8.96 5.5 5.5 0 0 1 10.7-1.1A4.3 4.3 0 0 1 17.5 18.5H7Z" stroke={isLightElegant ? "#9b7228" : themeAC} strokeWidth="1.75" strokeLinejoin="round" />
+                    <path d="M12 12.2v4.4M10 14.2l2-2 2 2" stroke={isLightElegant ? "#9b7228" : themeAC} strokeWidth="1.45" opacity=".55" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </div>
                 <div className="flex-1">
                   <p className="font-bold text-base leading-snug" style={{ color: isLightElegant ? "#0a0a0a" : "white" }}>Save your study across every device</p>

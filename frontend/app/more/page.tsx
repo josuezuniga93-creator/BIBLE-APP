@@ -8,151 +8,64 @@ import { useTheme, type Theme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
 import { getCloudUser, pullFromCloud, pushToCloud } from "../lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
+import { AppSectionIcon } from "../components/AppSectionIcon";
 
 // ─── App tile icon components ─────────────────────────────────────────────────
 
 function PlansAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="18" height="18" rx="5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M7.5 12.5l3.5 3.5 6-7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="plans" size={23} />;
 }
 
 function LibraryAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
-      <rect x="9" y="4" width="4" height="16" rx="1.5" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M15 4l4 16" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="library" size={23} />;
 }
 
 function TrackerAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="3" y="3" width="18" height="18" rx="4" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M7.5 12l3 3 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="tracker" size={23} />;
 }
 
 function FamilyAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle cx="9" cy="7" r="3" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="17" cy="8" r="2.2" stroke="currentColor" strokeWidth="1.6" />
-      <path d="M2 20c0-4 3.1-6.5 7-6.5s7 2.5 7 6.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M17 14c2.5 0 5 1.5 5 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="worship" size={23} />;
 }
 
 function KidsAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M4 19V7a2 2 0 012-2h12a2 2 0 012 2v12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M2 19h20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M9 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M15 5V3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="kids" size={23} />;
 }
 
 function VideosAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="2" y="5" width="15" height="14" rx="3" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M17 9l5-3v12l-5-3V9z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="videos" size={23} />;
 }
 
 function GiveAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M12 21C12 21 3 15 3 9a5 5 0 0110 0 5 5 0 0110 0c0 6-9 12-9 12h-2z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="give" size={23} />;
 }
 
 function FellowshipAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
-      <circle cx="16" cy="8" r="3" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M2 20c0-3.5 2.7-5.5 6-5.5s6 2 6 5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-      <path d="M14 20c0-3.5 2.7-5.5 6-5.5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="fellowship" size={23} />;
 }
 
 function HistoricalAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M6 3h12a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.7"/>
-      <path d="M4 5c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2z" stroke="currentColor" strokeWidth="1.5"/>
-      <line x1="10" y1="9"  x2="17" y2="9"  stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="10" y1="13" x2="17" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="10" y1="17" x2="14" y2="17" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
+  return <AppSectionIcon name="historical" size={23} />;
 }
 
 function ChurchAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2v4M10 4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M3 10h18v11H3z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M9 21v-6h6v6" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-      <path d="M7 10V7l5-3 5 3v3" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="church" size={23} />;
 }
 
 function NotesAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.7" />
-      <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-      <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="notes" size={23} />;
 }
 
 function CollectionsAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-      <path d="M9 9h6M9 13h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
+  return <AppSectionIcon name="collections" size={23} />;
 }
 
 function StudyToolsAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M4 5.5h6.5A3.5 3.5 0 0114 9v12a3.5 3.5 0 00-3.5-3.5H4V5.5z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M20 5.5h-4A3.5 3.5 0 0012.5 9v12a3.5 3.5 0 013.5-3.5h4V5.5z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M8 10h3M16 10h2M8 13h2.5M16 13h2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
+  return <AppSectionIcon name="study-tools" size={23} />;
 }
 
 function RebuttalAppIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path d="M12 2v3M10.5 3.5h3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-      <path d="M4 9h16v12H4z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
-      <path d="M9 21v-5h6v5" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
-      <path d="M6 9V7l6-4 6 4v2" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/>
-      <circle cx="12" cy="14" r="1.4" fill="currentColor"/>
-    </svg>
-  );
+  return <AppSectionIcon name="church-analysis" size={23} />;
 }
 
 // ─── App grid config ──────────────────────────────────────────────────────────
@@ -246,7 +159,7 @@ export default function MorePage() {
   const [isLightElegant, setIsLightElegant] = useState(false);
   useEffect(() => {
     const check = () => {
-      const t = localStorage.getItem("ryc-theme") ?? "";
+      const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
       setIsLightElegant(t === "white-noir");
     };
     check();
@@ -331,7 +244,7 @@ export default function MorePage() {
           {/* Top row: 2 featured square cards */}
           <div className="grid grid-cols-2" style={{ gap: 10, marginBottom: 10 }}>
             {TOP_TILE_INDICES.map((idx) => {
-              const { href, Icon, labelKey, color, sub } = APP_TILE_DEFS[idx];
+              const { href, Icon, labelKey, sub } = APP_TILE_DEFS[idx];
               return (
                 <Link
                   key={href}
@@ -351,11 +264,14 @@ export default function MorePage() {
                       width: 40,
                       height: 40,
                       borderRadius: "50%",
+                      overflow: "hidden",
                       background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
                       color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
                     }}
                   >
-                    <Icon />
+                    <span style={{ lineHeight: 0 }}>
+                      <Icon />
+                    </span>
                   </div>
                   <div>
                     <p className="font-bold" style={{ fontSize: 15, color: isLightElegant ? "#000000" : "#ffffff" }}>
@@ -384,7 +300,7 @@ export default function MorePage() {
           {/* Remaining features as full-width banner cards */}
           <div className="flex flex-col" style={{ gap: 10 }}>
             {BANNER_TILE_INDICES.map((idx) => {
-              const { href, Icon, labelKey, color, sub } = APP_TILE_DEFS[idx];
+              const { href, Icon, labelKey, sub } = APP_TILE_DEFS[idx];
               return (
                 <Link
                   key={href}
@@ -401,14 +317,16 @@ export default function MorePage() {
                   <div
                     className="flex items-center justify-center flex-shrink-0"
                     style={{
-                      width: 36,
-                      height: 36,
+                      width: 40,
+                      height: 40,
                       borderRadius: "50%",
                       background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
                       color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
                     }}
                   >
-                    <Icon />
+                    <span style={{ lineHeight: 0 }}>
+                      <Icon />
+                    </span>
                   </div>
                   <div className="flex-1 min-w-0" style={{ marginLeft: 14 }}>
                     <p className="font-bold truncate" style={{ fontSize: 14, color: isLightElegant ? "#000000" : "#ffffff" }}>

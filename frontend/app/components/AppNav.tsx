@@ -4,21 +4,22 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
+import { AppSectionIcon, type AppSectionIconName } from "./AppSectionIcon";
 
 export function AppNav() {
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
   const { t } = useLanguage();
 
-  const NAV_LINKS = [
-    { href: "/lexicon",        label: t("nav_scripture"),  icon: "📖",  title: t("title_scripture") },
-    { href: "/learn",          label: t("nav_learn"),      icon: "🎓",  title: t("title_learn") },
-    { href: "/library",        label: t("nav_free_books"), icon: "🏛️", title: t("title_free_books") },
-    { href: "/family-worship", label: t("nav_family"),     icon: "🕯️", title: t("title_family") },
-    { href: "/bible-tracker",  label: t("nav_tracker"),    icon: "✅",  title: t("title_tracker") },
-    { href: "/bible-plans",    label: t("nav_plans"),      icon: "📅",  title: t("title_plans") },
-    { href: "/notes",          label: t("nav_notes"),      icon: "🗒️", title: t("title_notes") },
-    { href: "/kids-books",     label: t("nav_kids"),       icon: "📚",  title: t("title_kids") },
+  const NAV_LINKS: Array<{ href: string; label: string; icon: AppSectionIconName; title: string }> = [
+    { href: "/lexicon",        label: t("nav_scripture"),  icon: "bible",      title: t("title_scripture") },
+    { href: "/learn",          label: t("nav_learn"),      icon: "historical", title: t("title_learn") },
+    { href: "/library",        label: t("nav_free_books"), icon: "library",    title: t("title_free_books") },
+    { href: "/family-worship", label: t("nav_family"),     icon: "worship",    title: t("title_family") },
+    { href: "/bible-tracker",  label: t("nav_tracker"),    icon: "tracker",    title: t("title_tracker") },
+    { href: "/bible-plans",    label: t("nav_plans"),      icon: "plans",      title: t("title_plans") },
+    { href: "/notes",          label: t("nav_notes"),      icon: "notes",      title: t("title_notes") },
+    { href: "/kids-books",     label: t("nav_kids"),       icon: "kids",       title: t("title_kids") },
   ];
 
   return (
@@ -47,7 +48,7 @@ export function AppNav() {
                     : "text-white/40 hover:text-white/70 hover:bg-white/[0.05]"
                 }`}
               >
-                <span className="text-sm">{link.icon}</span>
+                <AppSectionIcon name={link.icon} size={16} active={active} />
                 {link.label}
               </Link>
             );
@@ -83,7 +84,7 @@ export function AppNav() {
                     : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
                 }`}
               >
-                <span className="text-base w-5 text-center">{link.icon}</span>
+                <span className="w-5 flex justify-center"><AppSectionIcon name={link.icon} size={18} active={active} /></span>
                 {link.label}
                 <span className="text-xs text-white/25 ml-auto">{link.title}</span>
               </Link>

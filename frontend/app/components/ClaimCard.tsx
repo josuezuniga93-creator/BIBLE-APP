@@ -66,13 +66,13 @@ export function ClaimCard({ claim, index, videoId, t }: ClaimCardProps) {
       {/* Three-panel grid */}
       <div className="grid md:grid-cols-3 print:grid-cols-1 gap-px bg-white/5 border-t border-white/10">
         {[
-          { label: t.scriptureLabel, content: claim.scriptureCheck, icon: "📖" },
-          { label: t.historicFaithLabel, content: claim.historicCheck, icon: "⛪" },
-          { label: t.theologianNoteLabel, content: claim.theologianNote, icon: "✍" },
-        ].map(({ label, content, icon }) => (
+          { label: t.scriptureLabel, content: claim.scriptureCheck },
+          { label: t.historicFaithLabel, content: claim.historicCheck },
+          { label: t.theologianNoteLabel, content: claim.theologianNote },
+        ].map(({ label, content }) => (
           <div key={label} className="bg-black/30 px-4 py-3 space-y-1.5">
             <p className="text-xs font-bold uppercase tracking-wider text-white/30">
-              {icon} {label}
+              {label}
             </p>
             <p className="text-white/60 text-sm leading-relaxed">{content}</p>
           </div>
@@ -83,7 +83,7 @@ export function ClaimCard({ claim, index, videoId, t }: ClaimCardProps) {
       {claim.bibleVerses && Object.keys(claim.bibleVerses).length > 0 && (
         <div className="border-t border-white/10 bg-black/25 px-4 py-3 space-y-3">
           <p className="text-xs font-bold uppercase tracking-wider text-white/30">
-            📜 {t.bibleVersesLabel}
+            {t.bibleVersesLabel}
           </p>
           {Object.entries(claim.bibleVerses).map(([ref, versions]) => (
             <div key={ref} className="space-y-1.5">

@@ -61,11 +61,18 @@ function readThemeEarly(): Theme {
 }
 
 export function useTheme() {
-  const [theme, setThemeState] = useState<Theme>(readThemeEarly);
+  // IMPORTANT: the initial state must be deterministic and identical to what
+  // the server rendered ("white-noir" is the SSR default). Reading the real
+  // theme lazily here caused hydration mismatches: React silently keeps the
+  // stale server-rendered inline styles when the first client render differs
+  // from SSR, leaving pages stuck in the wrong theme until a manual toggle.
+  // The real theme is applied in the mount effect below, which triggers a
+  // proper re-render with real DOM writes.
+  const [theme, setThemeState] = useState<Theme>("white-noir");
 
   useEffect(() => {
     // Re-read on mount to ensure sync with storage (handles any edge cases)
-    const active = readThemeFromStorage();
+    const active = readThemeEarly();
     setThemeState(active);
     document.documentElement.setAttribute("data-theme", active);
 

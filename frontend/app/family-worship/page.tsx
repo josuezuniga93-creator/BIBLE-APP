@@ -76,7 +76,7 @@ function buildTokens(theme: AppTheme): ThemeTokens {
       accent: "#050505",
       accentDim: "#eef0f2",
       accentText: "#ffffff",
-      labelColor: "#333333",
+      labelColor: "#555555",
       textPrimary: "#0a0a0a",
       textSecondary: "rgba(10,10,10,0.70)",
       textMuted: "rgba(10,10,10,0.52)",
@@ -89,15 +89,15 @@ function buildTokens(theme: AppTheme): ThemeTokens {
       inputText: "#0a0a0a",
       toggleOffBg: "rgba(17,17,17,0.12)",
       divider: "rgba(17,17,17,0.10)",
-      quoteBg: "#e5e7eb",
+      quoteBg: "#f3f4f6",
       blockquoteBorder: "#111111",
       toggleActive: "#050505",
       toastBg: "#ffffff",
       toastMuted: "rgba(17,17,17,0.60)",
       toastShadow: "0 10px 30px rgba(17,17,17,0.14)",
-      dangerText: "#a51d1d",
-      dangerBg: "rgba(165,29,29,0.08)",
-      successText: "#245c35",
+      dangerText: "#444444",
+      dangerBg: "rgba(17,17,17,0.06)",
+      successText: "#333333",
       pillBg: "rgba(17,17,17,0.07)",
       pillText: "#292929",
       badgeSectionBorder: "rgba(17,17,17,0.10)",
@@ -324,19 +324,19 @@ function buildTokens(theme: AppTheme): ThemeTokens {
   };
 }
 
-const ThemeCtx = createContext<ThemeTokens>(buildTokens("default"));
+const ThemeCtx = createContext<ThemeTokens>(buildTokens("white-noir"));
 function useTheme() { return useContext(ThemeCtx); }
 
 function readStoredAppTheme(): AppTheme {
-  if (typeof window === "undefined") return "premium-neon";
+  if (typeof window === "undefined") return "white-noir";
   // Check DOM attribute first — set by early script before React hydrates
   const dom = document.documentElement.getAttribute("data-theme") as AppTheme | null;
-  if (dom === "white-noir" || dom === "premium-neon" || dom === "gold-navy" || dom === "light-pink" || dom === "light-elegant") return dom;
+  if (dom === "white-noir" || dom === "gold-navy") return dom;
   try {
     const v = localStorage.getItem("ryc-theme");
-    if (v === "white-noir" || v === "premium-neon" || v === "gold-navy" || v === "light-pink" || v === "light-elegant") return v as AppTheme;
+    if (v === "white-noir" || v === "gold-navy") return v as AppTheme;
   } catch { /* ignore */ }
-  return "premium-neon";
+  return "white-noir";
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -1081,7 +1081,11 @@ function CompletionCard({
         padding: "32px 24px",
       }}
     >
-      <div className="text-3xl mb-4">🙏</div>
+      <div className="flex items-center justify-center mb-4">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: tk.textMuted, opacity: 0.6 }}>
+          <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+        </svg>
+      </div>
       <p style={{ fontSize: "1rem", fontWeight: 700, color: tk.textPrimary }}>
         {t(lang, "family_did_complete")}
       </p>
@@ -1212,7 +1216,11 @@ export default function FamilyWorshipPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const [appTheme, setAppTheme] = useState<AppTheme>(() => readStoredAppTheme());
+  // Must match the SSR value ("white-noir" — what readStoredAppTheme returns
+  // when window is undefined). A lazy client-side read here caused a hydration
+  // mismatch: React kept the stale dark server HTML, so Light Mode never
+  // applied to this page. The mount effect below applies the real theme.
+  const [appTheme, setAppTheme] = useState<AppTheme>("white-noir");
 
   useEffect(() => {
     setAppTheme(readStoredAppTheme());
@@ -1252,7 +1260,7 @@ export default function FamilyWorshipPage() {
 
   return (
     <ThemeCtx.Provider value={tokens}>
-      <div className="min-h-screen" style={{ background: tokens.rootBg }}>
+      <div className="min-h-screen" style={{ background: "var(--bg, #0e1018)" }}>
         {showConfetti && <ConfettiOverlay />}
 
         {/* ── Header (no card — floats on bg) ─────────────────────────────── */}
@@ -1407,7 +1415,12 @@ export default function FamilyWorshipPage() {
                 boxShadow: tokens.cardShadow,
               }}
             >
-              <p className="text-4xl mb-3">📖</p>
+              <div className="flex items-center justify-center mb-3">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </div>
               <p className="font-semibold mb-1" style={{ color: tokens.textSecondary }}>
                 {t(lang, "family_no_devotional")}
               </p>

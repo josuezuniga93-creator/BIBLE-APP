@@ -8,8 +8,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { Suspense } from "react";
 
-const AC = "#c9a961";
-
 function GoogleIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -26,7 +24,6 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // "gate" = full-experience landing; "email" = email form expanded
   const [view, setView] = useState<"gate" | "email">("gate");
   const [emailMode, setEmailMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
@@ -34,6 +31,14 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "error" | "success"; text: string } | null>(null);
+  const [isLight, setIsLight] = useState(false);
+
+  useEffect(() => {
+    const fromDom = document.documentElement.getAttribute("data-theme");
+    const fromLS = typeof localStorage !== "undefined" ? localStorage.getItem("theme") : null;
+    const theme = fromDom || fromLS || "";
+    setIsLight(theme === "white-noir" || theme === "light");
+  }, []);
 
   useEffect(() => {
     if (searchParams.get("error") === "auth_failed") {
@@ -88,13 +93,38 @@ function LoginContent() {
     setLoading(false);
   }
 
+  // Theme-aware color tokens
+  const pageBg         = isLight ? "#ffffff"                    : "#08090f";
+  const backBtnBg      = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.06)";
+  const backIconStroke = isLight ? "#0a0a0a"                    : "white";
+  const brandLabel     = isLight ? "rgba(0,0,0,0.35)"           : "rgba(0,0,0,0.35)";
+  const iconBoxBg      = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.06)";
+  const iconBoxBorder  = isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.10)";
+  const personStroke   = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.7)";
+  const headingColor   = isLight ? "#0a0a0a"                    : "#ffffff";
+  const subColor       = isLight ? "rgba(0,0,0,0.50)"           : "rgba(255,255,255,0.5)";
+  const primaryBtnBg   = "#0a0a0a";
+  const primaryBtnTxt  = "#ffffff";
+  const secondBtnBg    = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.07)";
+  const secondBtnBdr   = isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)";
+  const secondBtnTxt   = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.85)";
+  const dividerColor   = isLight ? "rgba(0,0,0,0.08)"           : "rgba(255,255,255,0.08)";
+  const orColor        = isLight ? "rgba(0,0,0,0.30)"           : "rgba(255,255,255,0.3)";
+  const inputBg        = isLight ? "rgba(0,0,0,0.04)"           : "rgba(255,255,255,0.06)";
+  const inputBorder    = isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)";
+  const inputColor     = isLight ? "#0a0a0a"                    : "#ffffff";
+  const footerColor    = isLight ? "rgba(0,0,0,0.40)"           : "rgba(255,255,255,0.4)";
+  const linkColor      = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.8)";
+  const h2Color        = isLight ? "#0a0a0a"                    : "#ffffff";
+
   // ── Gate screen ────────────────────────────────────────────────────────────
   if (view === "gate") {
     return (
       <div
         className="flex flex-col overflow-hidden"
         style={{
-          background: "#08090f",
+          background: pageBg,
+          backgroundColor: pageBg,
           height: "100dvh",
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
@@ -105,33 +135,33 @@ function LoginContent() {
           <button
             onClick={() => router.back()}
             className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
-            style={{ background: "rgba(255,255,255,0.06)" }}
+            style={{ background: backBtnBg }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={backIconStroke} strokeWidth="2.2" strokeLinecap="round">
               <path d="M19 12H5M12 5l-7 7 7 7"/>
             </svg>
           </button>
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,169,97,0.5)" }}>
+          <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: brandLabel }}>
             Tulip Bible
           </p>
           <div className="w-9" />
         </div>
 
-        {/* All content centered together — no gap between text and buttons */}
+        {/* All content centered */}
         <div className="flex-1 flex flex-col items-center justify-center px-6 text-center min-h-0">
           <div
             className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
-            style={{ background: "rgba(201,169,97,0.12)", border: "1px solid rgba(201,169,97,0.22)" }}
+            style={{ background: iconBoxBg, border: iconBoxBorder }}
           >
             <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="8" r="4" stroke={AC} strokeWidth="1.8"/>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={AC} strokeWidth="1.8" strokeLinecap="round"/>
+              <circle cx="12" cy="8" r="4" stroke={personStroke} strokeWidth="1.8"/>
+              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={personStroke} strokeWidth="1.8" strokeLinecap="round"/>
             </svg>
           </div>
-          <h1 className="text-[26px] font-bold text-white leading-tight mb-3">
+          <h1 className="text-[26px] font-bold leading-tight mb-3" style={{ color: headingColor }}>
             Access the Full Experience
           </h1>
-          <p className="text-[14px] leading-relaxed mb-7" style={{ color: "rgba(255,255,255,0.5)", maxWidth: 280 }}>
+          <p className="text-[14px] leading-relaxed mb-7" style={{ color: subColor, maxWidth: 280 }}>
             Sync your highlights, notes, and reading history across all your devices. Free forever — no ads.
           </p>
 
@@ -141,8 +171,8 @@ function LoginContent() {
               disabled={googleLoading}
               className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-all active:scale-95"
               style={{
-                background: `linear-gradient(135deg, ${AC}, #a8873a)`,
-                color: "#0f0f0f",
+                background: primaryBtnBg,
+                color: primaryBtnTxt,
                 opacity: googleLoading ? 0.7 : 1,
               }}
             >
@@ -154,9 +184,9 @@ function LoginContent() {
               onClick={() => setView("email")}
               className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
               style={{
-                background: "rgba(255,255,255,0.07)",
-                border: "1px solid rgba(255,255,255,0.10)",
-                color: "rgba(255,255,255,0.85)",
+                background: secondBtnBg,
+                border: secondBtnBdr,
+                color: secondBtnTxt,
               }}
             >
               Sign In with Email
@@ -178,7 +208,8 @@ function LoginContent() {
     <div
       className="flex flex-col overflow-hidden"
       style={{
-        background: "#08090f",
+        background: pageBg,
+        backgroundColor: pageBg,
         height: "100dvh",
         paddingTop: "env(safe-area-inset-top)",
         paddingBottom: "env(safe-area-inset-bottom)",
@@ -189,13 +220,13 @@ function LoginContent() {
         <button
           onClick={() => { setView("gate"); setMessage(null); }}
           className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
-          style={{ background: "rgba(255,255,255,0.06)" }}
+          style={{ background: backBtnBg }}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={backIconStroke} strokeWidth="2.2" strokeLinecap="round">
             <path d="M19 12H5M12 5l-7 7 7 7"/>
           </svg>
         </button>
-        <h2 className="text-[16px] font-bold text-white">
+        <h2 className="text-[16px] font-bold" style={{ color: h2Color }}>
           {emailMode === "signup" ? "Create Account" : "Sign In"}
         </h2>
       </div>
@@ -208,9 +239,8 @@ function LoginContent() {
           disabled={googleLoading || loading}
           className="w-full flex items-center justify-center gap-3 rounded-2xl py-3.5 mb-5 font-semibold text-sm transition-all active:scale-95"
           style={{
-            background: "rgba(255,255,255,0.07)",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "white",
+            background: primaryBtnBg,
+            color: primaryBtnTxt,
             opacity: googleLoading ? 0.6 : 1,
           }}
         >
@@ -219,9 +249,9 @@ function LoginContent() {
         </button>
 
         <div className="flex items-center gap-3 mb-5">
-          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
-          <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>or</span>
-          <div className="flex-1 h-px" style={{ background: "rgba(255,255,255,0.08)" }} />
+          <div className="flex-1 h-px" style={{ background: dividerColor }} />
+          <span className="text-xs" style={{ color: orColor }}>or</span>
+          <div className="flex-1 h-px" style={{ background: dividerColor }} />
         </div>
 
         <form onSubmit={handleEmailAuth} className="space-y-3">
@@ -232,10 +262,11 @@ function LoginContent() {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoFocus
-            className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none"
+            className="w-full rounded-xl px-4 py-3.5 outline-none"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background: inputBg,
+              border: inputBorder,
+              color: inputColor,
               fontSize: 16,
             }}
           />
@@ -246,10 +277,11 @@ function LoginContent() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={6}
-            className="w-full rounded-xl px-4 py-3.5 text-white placeholder-white/30 outline-none"
+            className="w-full rounded-xl px-4 py-3.5 outline-none"
             style={{
-              background: "rgba(255,255,255,0.06)",
-              border: "1px solid rgba(255,255,255,0.10)",
+              background: inputBg,
+              border: inputBorder,
+              color: inputColor,
               fontSize: 16,
             }}
           />
@@ -265,8 +297,8 @@ function LoginContent() {
             disabled={loading || googleLoading}
             className="w-full rounded-xl py-4 font-bold text-sm transition-all active:scale-95"
             style={{
-              background: `linear-gradient(135deg, ${AC}, #a8873a)`,
-              color: "#0f0f0f",
+              background: primaryBtnBg,
+              color: primaryBtnTxt,
               opacity: loading ? 0.6 : 1,
             }}
           >
@@ -276,12 +308,12 @@ function LoginContent() {
           </button>
         </form>
 
-        <p className="text-center text-sm mt-5" style={{ color: "rgba(255,255,255,0.4)" }}>
+        <p className="text-center text-sm mt-5" style={{ color: footerColor }}>
           {emailMode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}
           <button
             onClick={() => { setEmailMode(emailMode === "signin" ? "signup" : "signin"); setMessage(null); }}
             className="font-semibold underline"
-            style={{ color: AC }}
+            style={{ color: linkColor }}
           >
             {emailMode === "signin" ? "Sign up" : "Sign in"}
           </button>

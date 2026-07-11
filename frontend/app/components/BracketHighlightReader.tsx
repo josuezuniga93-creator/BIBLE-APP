@@ -4,6 +4,7 @@ import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } 
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { syncKey } from "../lib/cloudSync";
+import { mirrorReaderHighlight, removeMirroredReaderHighlight } from "../lib/unifiedHighlights";
 import CreateImageEditor from "./CreateImageEditor";
 
 type HighlightColor = "gold" | "blue" | "rose" | "green";
@@ -204,12 +205,13 @@ export function BracketHighlightReader({
   const textLayerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (scrollRef) return;
     if (typeof document === "undefined") return;
     document.documentElement.setAttribute("data-app-reader-open", "true");
     return () => {
       document.documentElement.removeAttribute("data-app-reader-open");
     };
-  }, []);
+  }, [scrollRef]);
 
   // Scroll to target highlight when navigated from library
   useEffect(() => {
@@ -309,11 +311,13 @@ export function BracketHighlightReader({
       reference,
     };
     persistHighlights([newHighlight, ...highlights]);
+    mirrorReaderHighlight(context, newHighlight);
     setSelection(null);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
+    removeMirroredReaderHighlight(context, id);
     setPendingRemoveId(null);
   }
 
@@ -559,6 +563,13 @@ export function BracketHighlightReader({
         ref={textLayerRef}
         className={`relative font-serif select-none whitespace-pre-line ${fontSizeClass} ${className}`}
         style={{ color: textColor, lineHeight: "1.9", WebkitUserSelect: "none", userSelect: "none", WebkitTouchCallout: "none", touchAction: "pan-y" }}
+        onClick={(event) => {
+          if (!selection) return;
+          const target = event.target as HTMLElement;
+          if (target.closest("[data-reader-word]")) return;
+          if (target.closest("[data-selection-handle]")) return;
+          clearSelection();
+        }}
         onPointerMove={updateHandleDrag}
         onPointerUp={finishWordPress}
         onPointerCancel={finishWordPress}
@@ -586,24 +597,26 @@ export function BracketHighlightReader({
           <button
             type="button"
             aria-label={lang === "es" ? "Mover inicio de selección" : "Move selection start"}
+            data-selection-handle
             onPointerDown={(event) => beginHandleDrag("start", event)}
             className="absolute z-20 active:opacity-70"
             style={{ left: selectionGeometry.startHandle.left - 18, top: selectionGeometry.startHandle.top - 3, width: 36, height: 46, touchAction: "none", background: "none", border: "none", padding: 0 }}
           >
-            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 34, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e5e5e5 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.55)" }} />
-            <span style={{ position: "absolute", left: 13, top: 24, width: 0, height: 0, borderTop: "13px solid #ededed", borderRight: "13px solid transparent", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.45))" }} />
+            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 36, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)", boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)" }} />
+            <span style={{ position: "absolute", left: 5, top: 0, width: 0, height: 0, borderTop: "12px solid transparent", borderBottom: "12px solid transparent", borderRight: "14px solid #eeeeee", filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))" }} />
           </button>
         )}
         {selectionGeometry.endHandle && (
           <button
             type="button"
             aria-label={lang === "es" ? "Mover final de selección" : "Move selection end"}
+            data-selection-handle
             onPointerDown={(event) => beginHandleDrag("end", event)}
             className="absolute z-20 active:opacity-70"
             style={{ left: selectionGeometry.endHandle.left - 18, top: selectionGeometry.endHandle.top - 3, width: 36, height: 46, touchAction: "none", background: "none", border: "none", padding: 0 }}
           >
-            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 34, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e5e5e5 100%)", boxShadow: "0 2px 8px rgba(0,0,0,0.55)" }} />
-            <span style={{ position: "absolute", right: 13, top: 24, width: 0, height: 0, borderTop: "13px solid #ededed", borderLeft: "13px solid transparent", filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.45))" }} />
+            <span style={{ position: "absolute", left: 13, top: 2, width: 10, height: 36, borderRadius: 99, background: "linear-gradient(180deg, #ffffff 0%, #e7e7e7 100%)", boxShadow: "0 6px 16px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.35)" }} />
+            <span style={{ position: "absolute", right: 5, top: 0, width: 0, height: 0, borderTop: "12px solid transparent", borderBottom: "12px solid transparent", borderLeft: "14px solid #eeeeee", filter: "drop-shadow(0 4px 7px rgba(0,0,0,0.50))" }} />
           </button>
         )}
         {tokens.map((token, idx) => {
@@ -616,7 +629,10 @@ export function BracketHighlightReader({
               data-index={token.index}
               data-hl-id={token.highlight?.id}
               className="relative z-10"
-              onPointerDown={() => startWordPress(token.index, token.highlight)}
+              onPointerDown={(event) => {
+                event.preventDefault();
+                startWordPress(token.index, token.highlight);
+              }}
               onPointerUp={finishWordPress}
               onPointerCancel={finishWordPress}
               onClick={() => token.highlight ? setPendingRemoveId(token.highlight.id) : undefined}

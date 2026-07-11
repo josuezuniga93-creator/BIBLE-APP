@@ -32,7 +32,7 @@ export default function BookOfMonth() {
   const [isPN, setIsPN] = useState(false);
   useEffect(() => {
     const check = () => {
-      const t = localStorage.getItem("ryc-theme") ?? "";
+      const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
       setIsLE(t === "white-noir");
       setIsPN(t === "premium-neon");
     };

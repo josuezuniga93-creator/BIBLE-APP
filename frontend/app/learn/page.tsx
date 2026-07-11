@@ -16,7 +16,7 @@ import { useLanguage } from "../lib/useLanguage";
 import { translateToSpanish } from "../lib/googleTranslate";
 import { t } from "../lib/i18n";
 import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
-import { BracketHighlightReader } from "../components/BracketHighlightReader";
+import { AppReader } from "../components/AppReader";
 import { syncKey } from "../lib/cloudSync";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
@@ -160,6 +160,12 @@ interface DocHighlight extends Highlight {
   sectionId: string;
 }
 
+type HighlightTarget = {
+  docId: string;
+  sectionId: string;
+  highlightId: string;
+};
+
 function loadAllDocHighlights(): DocHighlight[] {
   if (typeof window === "undefined") return [];
   const result: DocHighlight[] = [];
@@ -236,14 +242,15 @@ type FontSize = "sm" | "md" | "lg" | "xl";
 const FONT_SIZES: Record<FontSize, string> = { sm: "text-sm", md: "text-base", lg: "text-lg", xl: "text-xl" };
 
 function SectionReader({
-  doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, onJump, modeLabel, readerMode,
+  doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, modeLabel, readerMode,
+  targetHighlightId,
 }: {
   doc: LearnDocument; sections: LearnSection[]; section: LearnSection; completed: Set<string>;
   onToggle: (id: string) => void; onClose: () => void;
   onPrev: () => void; onNext: () => void; hasPrev: boolean; hasNext: boolean;
-  onJump: (id: string) => void;
   modeLabel: string;
   readerMode: ReaderMode;
+  targetHighlightId?: string;
 }) {
   const { theme } = useTheme();
   const isWhiteNoir = theme === "white-noir";
@@ -294,9 +301,6 @@ function SectionReader({
 
   const { lang } = useLanguage();
   const [fontSize, setFontSize] = useState<FontSize>("md");
-  const [showToc, setShowToc] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
-  const [showBookmark, setShowBookmark] = useState(false);
 
   // ── Spanish auto-translation ──────────────────────────────────────────────
   const [translatedSection, setTranslatedSection] = useState<string | null>(null);
@@ -322,14 +326,6 @@ function SectionReader({
     return () => { cancelled = true; };
   }, [lang, section.content, doc.id, section.id]);
 
-  const itemId = `learn::${doc.id}::${section.id}`;
-  const [bookmarked, setBookmarked] = useState(() => isAnySaved(itemId));
-
-  // Refresh bookmarked state when section changes
-  useEffect(() => { setBookmarked(isAnySaved(itemId)); }, [itemId]);
-
-  const contentRef = useRef<HTMLDivElement>(null);
-
   // ── In-section pagination ─────────────────────────────────────────────────
   const pageStorageKey = `axiom-page-learn-${doc.id}-${section.id}`;
   const {
@@ -338,28 +334,38 @@ function SectionReader({
     totalPages,
     goNextPage,
     goPrevPage,
+    goToPage,
     isFirstPage,
     isLastPage,
   } = usePagination({
-    content: section.content,
+    content: lang === "es" && translatedSection ? translatedSection : section.content,
     fontSize,
     storageKey: pageStorageKey,
     rawText: section.id.startsWith("md-luther-") || section.id.startsWith("md-edwards-"),
   });
 
-  // Scroll to top when page or section changes
   useEffect(() => {
-    contentRef.current?.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
-  }, [currentPage, section.id]);
+    if (!targetHighlightId || sectionPages.length === 0) return;
+    const key = `tulip-reader-highlights:learn-${doc.id}-${section.id}`;
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      const hls = JSON.parse(raw) as Array<{ id: string; text: string }>;
+      const target = hls.find((h) => h.id === targetHighlightId);
+      if (!target) return;
+      const snippet = target.text.slice(0, 30);
+      const pageIdx = sectionPages.findIndex((page) => page.includes(snippet));
+      if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
+        goToPage(pageIdx + 1);
+      }
+    } catch { /* ignore malformed highlight storage */ }
+  }, [targetHighlightId, sectionPages, currentPage, goToPage, doc.id, section.id]);
 
   const sectionIndex = sections.findIndex((s) => s.id === section.id);
-  const progressPct = sections.length > 0 ? Math.round(((sectionIndex + 1) / sections.length) * 100) : 0;
-  const sectionPageLabel = lang === "es" ? "Página" : "Page";
-  const sectionOfLabel = lang === "es" ? "de" : "of";
+  const progressPct = sections.length > 0 && sectionIndex >= 0
+    ? Math.round(((sectionIndex + (totalPages > 0 ? currentPage / totalPages : 1)) / sections.length) * 100)
+    : 0;
 
-  const sliderCss = `.hist-slider{-webkit-appearance:none;appearance:none;height:4px;border-radius:9999px;outline:none;cursor:pointer}.hist-slider::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};${th.sliderThumbShadow}border:2px solid rgba(255,255,255,0.3)}.hist-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:${th.sliderThumb};border:2px solid rgba(255,255,255,0.3)}`;
-
-  useEffect(() => { contentRef.current?.scrollTo({ top: 0, behavior: "smooth" }); }, [section.id]);
   useEffect(() => { if (!completed.has(section.id)) onToggle(section.id); }, [section.id]);
   useEffect(() => {
     if (sectionIndex < 0) return;
@@ -372,195 +378,72 @@ function SectionReader({
     });
   }, [doc.id, readerMode, section.id, sectionIndex, sections.length, progressPct]);
 
-  return (
-    <div className="fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
-
-      {/* Study Tools style top bar */}
-      <div
-        className="flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
-        style={{ backgroundColor: th.topBarBg, backdropFilter: "blur(12px)", borderBottom: `1px solid ${th.topBarBorder}` }}
-      >
-        <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
-          <h1 className="text-lg leading-tight font-black line-clamp-2" style={{ color: th.textPrimary }}>
-            {documentTitle(doc, lang)} · {documentSectionTitle(doc.id, section.title, lang)}
-          </h1>
-          <p className="mt-1 text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
-            {lang === "es" ? "Documento historico" : "Historical Document"}
-          </p>
-        </div>
-        <button
-          onClick={onClose}
-          className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
-          style={{ color: th.textMuted, background: "rgba(255,255,255,0.07)", border: `1px solid ${th.topBarBorder}` }}
-          aria-label={lang === "es" ? "Volver" : "Back"}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
-        </button>
-      </div>
-
-      {/* TOC Drawer */}
-      {showToc && (
-        <div className="fixed inset-0 z-40 flex" onClick={() => setShowToc(false)}>
-          <div className="absolute inset-0 bg-black/60" />
-          <div className="relative w-full max-w-xs h-full flex flex-col overflow-y-auto shadow-2xl"
-            style={{ backgroundColor: th.drawerBg, borderRight: `1px solid ${th.drawerBorder}` }}
-            onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.drawerBorder}` }}>
-              <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Secciones" : "Sections"}</p>
-              <button onClick={() => setShowToc(false)} className="text-lg" style={{ color: th.textMuted }}>✕</button>
-            </div>
-            <div className="p-3 space-y-0.5">
-              {sections.map((s, idx) => (
-                <button key={s.id} onClick={() => { onJump(s.id); setShowToc(false); }}
-                  className="w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors min-h-[40px]"
-                  style={{ backgroundColor: s.id === section.id ? th.drawerItemActive : "transparent", color: s.id === section.id ? th.drawerItemActiveColor : th.drawerItemColor, fontWeight: s.id === section.id ? "bold" : "normal" }}>
-                  {idx + 1}. {documentSectionTitle(doc.id, s.title, lang)}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Settings panel */}
-      {showSettings && (
-        <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 px-4" onClick={() => setShowSettings(false)}>
-          <div className="absolute inset-0 bg-black/50" />
-          <div className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
-            style={{ backgroundColor: th.settingsBg, border: `1px solid ${th.settingsBorder}` }}
-            onClick={(e) => e.stopPropagation()}>
-            <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>{lang === "es" ? "Ajustes de Lectura" : "Display Settings"}</p>
-            <div className="flex gap-2">
-              {(["sm","md","lg","xl"] as FontSize[]).map((fs) => (
-                <button key={fs} onClick={() => setFontSize(fs)} className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                  style={{ backgroundColor: fontSize === fs ? th.settingsBtnActive : th.settingsBtnInactive, border: fontSize === fs ? `1px solid ${th.settingsBtnActiveBorder}` : `1px solid ${th.settingsBtnInactiveBorder}`, color: fontSize === fs ? th.accentLight : th.textMuted }}>
-                  {lang === "es"
-                    ? fs === "sm" ? "Pequeño" : fs === "md" ? "Mediano" : fs === "lg" ? "Grande" : "Muy Grande"
-                    : fs === "sm" ? "Small" : fs === "md" ? "Medium" : fs === "lg" ? "Large" : "X-Large"}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Reading content */}
-      <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
-        <main className="max-w-lg mx-auto px-7 pt-5 pb-8">
-          <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-            {lang === "es" ? (modeLabel === "Full document" ? "Documento completo" : "Resumen") : modeLabel} · {documentSectionTitle(doc.id, section.label, lang)}
-            {totalPages > 1 && (
-              <span style={{ color: th.textFaint, fontWeight: "normal", letterSpacing: "0.05em" }}>
-                {" "}· p. {currentPage}/{totalPages}
-              </span>
-            )}
-          </p>
-          {/* Title only on first page */}
-          {isFirstPage && (
-            <h2 className="text-2xl font-black mb-8 leading-tight" style={{ color: th.textPrimary }}>
-              {documentSectionTitle(doc.id, section.title, lang)}
-            </h2>
-          )}
-          <div
-            key={`${section.id}-${currentPage}`}
-            className={`space-y-1 ${FONT_SIZES[fontSize]}`}
-            style={{ animation: "axiomPageIn 0.18s ease-out" }}
-          >
-            <style>{`@keyframes axiomPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-            {/* Spanish translation status */}
-            {lang === "es" && (translating || translatedSection) && (
-              <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
-                style={{ backgroundColor: "rgba(201,169,97,0.08)", border: "1px solid rgba(201,169,97,0.18)", color: th.textMuted }}>
-                {translating ? (
-                  <>
-                    <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
-                    <span>Traduciendo al español… {translateProgress}%</span>
-                  </>
-                ) : (
-                  <><span>🌐</span><span>Traducido al español automáticamente</span></>
-                )}
-              </div>
-            )}
-            <BracketHighlightReader
-              context={`learn-${doc.id}-${section.id}`}
-              text={lang === "es" && translatedSection ? translatedSection : sectionPages[currentPage - 1] ?? ""}
-              title={documentSectionTitle(doc.id, section.title, lang)}
-              reference={`${documentTitle(doc, lang)} · ${documentSectionTitle(doc.id, section.label, lang)}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
-              textColor={th.textContent}
-              fontSizeClass={FONT_SIZES[fontSize]}
-              scrollRef={contentRef}
-            />
-          </div>
-        </main>
-      </div>
-
-      {/* Study Tools style bottom progress + navigation */}
-      <div className="flex-shrink-0 px-5 py-3" style={{ backgroundColor: th.pageBg, borderTop: `1px solid ${th.bottomBarBorder}` }}>
-        <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.textSecondary }}>
-          <span>
-            {lang === "es" ? "Pagina" : "Page"} {currentPage} {lang === "es" ? "de" : "of"} {totalPages}
-          </span>
-          <span>{progressPct}%</span>
-        </div>
-        <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ backgroundColor: th.progressTrack }}>
-          <div className="h-full rounded-full transition-all" style={{ width: `${progressPct}%`, background: th.progressBar }} />
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <button
-            disabled={isFirstPage && !hasPrev}
-            onClick={() => { if (!goPrevPage()) onPrev(); }}
-            className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
-            style={{
-              backgroundColor: (!isFirstPage || hasPrev) ? th.navBtnBg : "transparent",
-              color: (!isFirstPage || hasPrev) ? th.navBtnColor : th.textMuted,
-              border: `1px solid ${th.navBtnBorder}`,
-              cursor: (!isFirstPage || hasPrev) ? "pointer" : "not-allowed",
-            }}
-          >
-            {lang === "es" ? "← Ant." : "← Prev"}
-          </button>
-          {isLastPage && !hasNext ? (
-            <button
-              onClick={onClose}
-              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{ background: "linear-gradient(135deg,#10b981,#059669)", color: "white" }}
-            >
-              {lang === "es" ? "Terminar" : "Finish"} ✓
-            </button>
-          ) : (
-            <button
-              onClick={() => { if (!goNextPage()) onNext(); }}
-              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm min-h-[44px]"
-              style={{ background: th.navNextGradient, color: "white" }}
-            >
-              {lang === "es" ? "Siguiente" : "Next"} →
-            </button>
-          )}
-        </div>
-      </div>
-
-      {showBookmark && (
-        <BookmarkModal
-          item={{
-            id: itemId,
-            type: "learn",
-            title: documentSectionTitle(doc.id, section.title, lang),
-            subtitle: documentTitle(doc, lang),
-            preview: section.content.replace(/[#*_`>]/g, "").slice(0, 120).trim(),
-          }}
-          label={`${documentTitle(doc, lang)} — ${documentSectionTitle(doc.id, section.title, lang)}`}
-          onClose={() => { setShowBookmark(false); setBookmarked(isAnySaved(itemId)); }}
-        />
+  const translatedText = sectionPages[currentPage - 1] ?? "";
+  const sectionTitleText = documentSectionTitle(doc.id, section.title, lang);
+  const sectionLabelText = documentSectionTitle(doc.id, section.label, lang);
+  const modeText = lang === "es" ? (modeLabel === "Full document" ? "Documento completo" : "Resumen") : modeLabel;
+  const translationStatus = lang === "es" && (translating || translatedSection) ? (
+    <div
+      className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
+      style={{
+        backgroundColor: isLight ? "rgba(0,0,0,0.04)" : "rgba(201,169,97,0.08)",
+        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.18)",
+        color: th.textMuted,
+      }}
+    >
+      {translating ? (
+        <>
+          <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
+          <span>Traduciendo al español... {translateProgress}%</span>
+        </>
+      ) : (
+        <span>Traducido al español automáticamente</span>
       )}
     </div>
+  ) : null;
+
+  return (
+    <AppReader
+      title={`${documentTitle(doc, lang)} · ${sectionTitleText}`}
+      eyebrow={lang === "es" ? "Documento histórico" : "Historical Document"}
+      sectionLabel={`${modeText} · ${sectionLabelText}`}
+      sectionTitle={sectionTitleText}
+      showSectionTitle={isFirstPage}
+      text={translatedText}
+      context={`learn-${doc.id}-${section.id}`}
+      reference={`${documentTitle(doc, lang)} · ${sectionLabelText}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
+      fontSizeClass={FONT_SIZES[fontSize]}
+      targetHighlightId={targetHighlightId}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      progressPercent={progressPct}
+      translationStatus={translationStatus}
+      previousDisabled={isFirstPage && !hasPrev}
+      nextDisabled={isLastPage && !hasNext}
+      finishLabel={isLastPage && !hasNext ? (lang === "es" ? "Terminar" : "Finish") : undefined}
+      onPrevious={() => { if (!goPrevPage()) onPrev(); }}
+      onNext={() => {
+        if (isLastPage && !hasNext) onClose();
+        else if (!goNextPage()) onNext();
+      }}
+      onClose={onClose}
+    />
   );
 }
 
 // ─── Document detail view ─────────────────────────────────────────────────────
 
-function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose: () => void; allDocs: LearnDocument[] }) {
+function DocumentDetail({
+  doc,
+  onClose,
+  allDocs,
+  highlightTarget,
+}: {
+  doc: LearnDocument;
+  onClose: () => void;
+  allDocs: LearnDocument[];
+  highlightTarget?: HighlightTarget | null;
+}) {
   const { theme } = useTheme();
   const { lang } = useLanguage();
   const isWhiteNoir = theme === "white-noir";
@@ -620,6 +503,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   const [bookmarked, setBookmarked] = useState(() => isAnySaved(`learn::${doc.id}`));
   const [showBookmarkModal, setShowBookmarkModal] = useState(false);
   const [savedReaderProgress, setSavedReaderProgress] = useState<ReaderProgress | null>(null);
+  const [readerTargetHighlightId, setReaderTargetHighlightId] = useState<string | null>(null);
 
   useEffect(() => { setCompleted(loadProgress(doc.id)); }, [doc.id]);
   useEffect(() => {
@@ -633,6 +517,16 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
   useEffect(() => {
     setSavedReaderProgress(loadReaderProgress(doc.id, readerMode));
   }, [doc.id, readerMode, reading]);
+
+  useEffect(() => {
+    if (!highlightTarget || highlightTarget.docId !== doc.id) return;
+    const targetMode: ReaderMode = fullDocumentSections?.some((section) => section.id === highlightTarget.sectionId)
+      ? "full"
+      : "overview";
+    setReaderMode(targetMode);
+    setReaderTargetHighlightId(highlightTarget.highlightId);
+    setReading(highlightTarget.sectionId);
+  }, [doc.id, fullDocumentSections, highlightTarget]);
 
   useEffect(() => {
     let cancelled = false;
@@ -675,13 +569,23 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
     return (
       <SectionReader
         doc={doc} sections={readerSections} section={currentSection} completed={completed} onToggle={toggleSection}
-        onClose={() => setReading(null)}
-        onPrev={() => { if (sectionIndex > 0) setReading(readerSections[sectionIndex - 1].id); }}
-        onNext={() => { if (sectionIndex < readerSections.length - 1) setReading(readerSections[sectionIndex + 1].id); }}
+        onClose={() => { setReading(null); setReaderTargetHighlightId(null); }}
+        onPrev={() => {
+          if (sectionIndex > 0) {
+            setReaderTargetHighlightId(null);
+            setReading(readerSections[sectionIndex - 1].id);
+          }
+        }}
+        onNext={() => {
+          if (sectionIndex < readerSections.length - 1) {
+            setReaderTargetHighlightId(null);
+            setReading(readerSections[sectionIndex + 1].id);
+          }
+        }}
         hasPrev={sectionIndex > 0} hasNext={sectionIndex < readerSections.length - 1}
-        onJump={(id) => setReading(id)}
         modeLabel={readerModeLabel}
         readerMode={readerMode}
+        targetHighlightId={readerTargetHighlightId ?? undefined}
       />
     );
   }
@@ -741,7 +645,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
               return (
                 <button
                   key={mode}
-                  onClick={() => { setReaderMode(mode); setReading(null); }}
+                  onClick={() => { setReaderMode(mode); setReading(null); setReaderTargetHighlightId(null); }}
                   className="py-2.5 rounded-xl text-xs font-black transition-all active:scale-[0.98]"
                   style={{ backgroundColor: active ? th.modeActiveBg : "transparent", color: active ? th.modeActiveText : th.modeInactiveText }}
                 >
@@ -751,7 +655,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
             })}
           </div>
         )}
-        <button onClick={() => setReading(validSavedProgress?.sectionId ?? readerSections[0]?.id ?? null)} className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
+        <button onClick={() => { setReaderTargetHighlightId(null); setReading(validSavedProgress?.sectionId ?? readerSections[0]?.id ?? null); }} className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
           style={{ background: th.readGradient, color: th.readBtnText }}>
           {validSavedProgress
             ? (lang === "es" ? "Continuar Leyendo" : "Continue Reading")
@@ -762,7 +666,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
           <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c4973a" : "currentColor" }}>
             <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
           </svg>
-          {bookmarked ? (lang === "es" ? "Guardado" : "Bookmarked") : (lang === "es" ? "Agregar a Biblioteca" : "Add to Library")}
+          {bookmarked ? (lang === "es" ? "Guardado en colección" : "Saved to Collection") : (lang === "es" ? "Guardar en Colección" : "Save to Collection")}
         </button>
       </div>
 
@@ -826,7 +730,7 @@ function DocumentDetail({ doc, onClose, allDocs }: { doc: LearnDocument; onClose
           {readerSections.map((section, idx) => {
             const done = completed.has(section.id);
             return (
-              <button key={section.id} onClick={() => setReading(section.id)}
+              <button key={section.id} onClick={() => { setReaderTargetHighlightId(null); setReading(section.id); }}
                 className="w-full flex items-center gap-3 p-3.5 rounded-2xl text-left transition-all active:scale-[0.99]"
                 style={{ backgroundColor: th.sectionRowBg, border: `1px solid ${th.sectionRowBorder}` }}>
                 <div
@@ -953,6 +857,7 @@ function LearnPageInner() {
   }
 
   const [selected, setSelected] = useState<string | null>(null);
+  const [highlightTarget, setHighlightTarget] = useState<HighlightTarget | null>(null);
   const [activeType, setActiveType] = useState("all");
   const [activeTab, setActiveTab] = useState<DocTab>("all");
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
@@ -979,10 +884,16 @@ function LearnPageInner() {
     if (showHighlightPocket) setDocHighlights(loadAllDocHighlights());
   }, [showHighlightPocket]);
 
-  // Deep-link: /learn?doc=ID opens that document directly
+  // Deep-link: /learn?doc=ID opens that document directly.
+  // /learn?doc=ID&section=SECTION_ID&hlid=HIGHLIGHT_ID opens the exact highlight.
   useEffect(() => {
     const docId = searchParams.get("doc");
     if (docId && LEARN_DOCUMENTS.some((d) => d.id === docId)) {
+      const sectionId = searchParams.get("section");
+      const highlightId = searchParams.get("hlid");
+      if (sectionId && highlightId) {
+        setHighlightTarget({ docId, sectionId, highlightId });
+      }
       setSelected(docId);
     }
   }, [searchParams]);
@@ -995,6 +906,7 @@ function LearnPageInner() {
 
   const handleClose = () => {
     setSelected(null);
+    setHighlightTarget(null);
     const map: Record<string, number> = {};
     for (const doc of LEARN_DOCUMENTS) { map[doc.id] = getDocPct(doc); }
     setProgressMap(map);
@@ -1013,7 +925,7 @@ function LearnPageInner() {
   }, [featuredDocs.length, carouselPaused]);
 
   const selectedDoc = selected ? LEARN_DOCUMENTS.find((d) => d.id === selected) : null;
-  if (selectedDoc) return <DocumentDetail doc={selectedDoc} onClose={handleClose} allDocs={LEARN_DOCUMENTS} />;
+  if (selectedDoc) return <DocumentDetail doc={selectedDoc} onClose={handleClose} allDocs={LEARN_DOCUMENTS} highlightTarget={highlightTarget} />;
 
   const available = LEARN_DOCUMENTS;
 
@@ -1437,7 +1349,11 @@ function LearnPageInner() {
                               &ldquo;{hl.text}&rdquo;
                             </p>
                             <button
-                              onClick={() => { setSelected(hl.docId); setShowHighlightPocket(false); }}
+                              onClick={() => {
+                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.id });
+                                setSelected(hl.docId);
+                                setShowHighlightPocket(false);
+                              }}
                               className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
                               style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.28)" }}
                             >
@@ -1531,7 +1447,11 @@ function LearnPageInner() {
                                               </button>
                                             </div>
                                             <button
-                                              onClick={() => { setSelected(hl.docId); setShowHighlightPocket(false); }}
+                                              onClick={() => {
+                                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.id });
+                                                setSelected(hl.docId);
+                                                setShowHighlightPocket(false);
+                                              }}
                                               className="text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition-transform"
                                               style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.22)" }}
                                             >

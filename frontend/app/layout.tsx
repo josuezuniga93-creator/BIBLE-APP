@@ -5,6 +5,7 @@ import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { BadgeRuntime } from "./components/BadgeRuntime";
+import { BackgroundCloudSync } from "./components/BackgroundCloudSync";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -27,19 +28,19 @@ const verseDisplay = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Bible",
+  title: "Tulip Bible",
   description:
-    "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Reformed & free.",
+    "Tulip Bible — Reformed study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   openGraph: {
-    title: "Bible",
-    description: "Study Scripture with Strong's Concordance and Matthew Henry Commentary.",
+    title: "Tulip Bible",
+    description: "Tulip Bible — Reformed study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
     type: "website",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Bible",
+    title: "Tulip Bible",
   },
   icons: {
     icon: [
@@ -76,6 +77,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <ThemeProvider />
+        <BackgroundCloudSync />
         <AppNav />
         {/* md:pt-14 = top nav height (hidden on mobile); pb-36 on mobile = bottom nav height */}
         <div className="layout-children md:pt-14 pb-36 md:pb-0">{children}</div>

@@ -285,7 +285,7 @@ function ActivePlanView({
         <div className="rounded-2xl border border-emerald-500/25 bg-emerald-500/[0.05] p-5">
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest">
-              📖 {lang === "es" ? "Lectura de Hoy" : "Today's Reading"} — {lang === "es" ? "Día" : "Day"} {todayEntry.day}
+              {lang === "es" ? "Lectura de Hoy" : "Today's Reading"} — {lang === "es" ? "Día" : "Day"} {todayEntry.day}
             </p>
             {todayTotal > 0 && (
               <span className="text-xs text-emerald-300/70 font-semibold">
@@ -334,7 +334,11 @@ function ActivePlanView({
                     {readingLabel(r, lang)}
                   </a>
 
-                  <span className="text-white/20 text-xs flex-shrink-0">📖</span>
+                  <span className="text-white/20 text-xs flex-shrink-0">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                    </svg>
+                  </span>
                 </div>
               );
             })}
@@ -645,26 +649,14 @@ export default function BiblePlansPage() {
                 </p>
                 <div className="space-y-3">
                   {[
-                    {
-                      icon: "📖",
-                      text: lang === "es" ? "La Escritura es una historia unificada de redención — leerla completa revela cómo cada parte se conecta con Cristo." : "Scripture is one unified story of redemption — reading it fully reveals how every part connects to Christ.",
-                    },
-                    {
-                      icon: "🌱",
-                      text: lang === "es" ? "«No solo de pan vivirá el hombre, sino de toda palabra que sale de la boca de Dios.» — Mateo 4:4" : '"Man does not live by bread alone, but by every word that comes from the mouth of God." — Matthew 4:4',
-                    },
-                    {
-                      icon: "🛡",
-                      text: lang === "es" ? "Todo el consejo de Dios protege contra el error. La lectura selectiva te deja vulnerable a la distorsión." : "The whole counsel of God protects against error. Selective reading leaves you vulnerable to distortion.",
-                    },
-                    {
-                      icon: "🔥",
-                      text: lang === "es" ? "«¿No es mi palabra como fuego, declara el SEÑOR, y como martillo que quebranta la roca?» — Jeremías 23:29" : '"Is not my word like fire, declares the LORD, and like a hammer that breaks the rock in pieces?" — Jeremiah 23:29',
-                    },
-                  ].map((item, i) => (
+                    lang === "es" ? "La Escritura es una historia unificada de redención — leerla completa revela cómo cada parte se conecta con Cristo." : "Scripture is one unified story of redemption — reading it fully reveals how every part connects to Christ.",
+                    lang === "es" ? "«No solo de pan vivirá el hombre, sino de toda palabra que sale de la boca de Dios.» — Mateo 4:4" : '"Man does not live by bread alone, but by every word that comes from the mouth of God." — Matthew 4:4',
+                    lang === "es" ? "Todo el consejo de Dios protege contra el error. La lectura selectiva te deja vulnerable a la distorsión." : "The whole counsel of God protects against error. Selective reading leaves you vulnerable to distortion.",
+                    lang === "es" ? "«¿No es mi palabra como fuego, declara el SEÑOR, y como martillo que quebranta la roca?» — Jeremías 23:29" : '"Is not my word like fire, declares the LORD, and like a hammer that breaks the rock in pieces?" — Jeremiah 23:29',
+                  ].map((text, i) => (
                     <div key={i} className="flex gap-3 items-start">
-                      <span className="text-lg flex-shrink-0">{item.icon}</span>
-                      <p className="text-white/45 text-sm leading-6">{item.text}</p>
+                      <span className="w-1 h-1 rounded-full mt-2.5 flex-shrink-0" style={{ background: "rgba(255,255,255,0.20)", display: "inline-block" }} />
+                      <p className="text-white/45 text-sm leading-6">{text}</p>
                     </div>
                   ))}
                 </div>

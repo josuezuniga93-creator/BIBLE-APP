@@ -1,10 +1,10 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import type { TranslationKey } from "../lib/i18n";
+import { AppSectionIcon, type AppSectionIconName } from "./AppSectionIcon";
 
 // ─── SVG Icons — use currentColor so theme CSS variables drive the color ─────
 
@@ -112,17 +112,6 @@ function FamilyIcon({ active }: { active: boolean }) {
   );
 }
 
-function NotesIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <rect x="4" y="3" width="16" height="18" rx="3" stroke="currentColor" strokeWidth="1.6" />
-      <line x1="8" y1="8" x2="16" y2="8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <line x1="8" y1="12" x2="16" y2="12" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-      <line x1="8" y1="16" x2="12" y2="16" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function KidsIcon({ active }: { active: boolean }) {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
@@ -166,40 +155,22 @@ function TimelineIcon({ active }: { active: boolean }) {
   );
 }
 
-const MORE_LINKS: Array<{ href: string; Icon: (props: { active: boolean }) => JSX.Element; labelKey: TranslationKey }> = [
-  { href: "/timeline",      Icon: TimelineIcon, labelKey: "nav_timeline"   },
-  { href: "/library",       Icon: LibraryIcon,  labelKey: "nav_free_books" },
-  { href: "/bible-tracker", Icon: TrackerIcon,  labelKey: "nav_tracker"    },
-  { href: "/bible-plans",   Icon: PlansIcon,    labelKey: "nav_plans"      },
-  { href: "/kids-books",    Icon: KidsIcon,     labelKey: "nav_kids"       },
-  { href: "/videos",        Icon: VideosIcon,   labelKey: "nav_videos"     },
-  { href: "/give",          Icon: GiveIcon,     labelKey: "nav_give"       },
-  { href: "/fellowship",    Icon: GiveIcon,     labelKey: "nav_fellowship" },
+const MORE_LINKS: Array<{ href: string; iconName: AppSectionIconName; labelKey: TranslationKey }> = [
+  { href: "/timeline",      iconName: "timeline",   labelKey: "nav_timeline"   },
+  { href: "/library",       iconName: "library",    labelKey: "nav_free_books" },
+  { href: "/bible-tracker", iconName: "tracker",    labelKey: "nav_tracker"    },
+  { href: "/bible-plans",   iconName: "plans",      labelKey: "nav_plans"      },
+  { href: "/kids-books",    iconName: "kids",       labelKey: "nav_kids"       },
+  { href: "/videos",        iconName: "videos",     labelKey: "nav_videos"     },
+  { href: "/give",          iconName: "give",       labelKey: "nav_give"       },
+  { href: "/fellowship",    iconName: "fellowship", labelKey: "nav_fellowship" },
 ] as const;
 
-// Family Worship nav tab icon — cross/hearth style
-function FamilyWorshipIcon({ active }: { active: boolean }) {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-      <path
-        d="M12 21C12 21 4 15.5 4 9.5a4 4 0 018 0 4 4 0 018 0C20 15.5 12 21 12 21z"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinejoin="round"
-        fill={active ? "currentColor" : "none"}
-        fillOpacity={active ? 0.18 : 0}
-      />
-      <line x1="12" y1="5" x2="12" y2="1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-      <line x1="10" y1="3" x2="14" y2="3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  );
-}
-
-function TabIcon({ href, active }: { href: string; active: boolean }) {
-  if (href === "/")               return <HomeIcon active={active} />;
-  if (href === "/lexicon")        return <BibleIcon active={active} />;
-  if (href === "/notes")          return <NotesIcon active={active} />;
-  if (href === "/family-worship") return <FamilyWorshipIcon active={active} />;
+function TabIcon({ href, active, isWhiteNoir }: { href: string; active: boolean; isWhiteNoir: boolean }) {
+  if (href === "/")               return <AppSectionIcon name="home" active={active} size={22} />;
+  if (href === "/lexicon")        return <AppSectionIcon name="bible" active={active} size={22} />;
+  if (href === "/notes")          return <AppSectionIcon name="notes" active={active} size={22} />;
+  if (href === "/family-worship") return <AppSectionIcon name="worship" active={active} size={22} />;
   return null;
 }
 
@@ -207,15 +178,14 @@ function TabIcon({ href, active }: { href: string; active: boolean }) {
 
 export function BottomNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { t } = useLanguage();
   const [hiddenForReader, setHiddenForReader] = useState(false);
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
 
-  // Read data-theme from DOM synchronously so first paint is correct (no flash).
-  // The early script in <head> sets data-theme before React runs, so this is reliable.
-  const [isWhiteNoir, setIsWhiteNoir] = useState<boolean>(() => {
-    if (typeof window === "undefined") return false;
-    return document.documentElement.getAttribute("data-theme") === "white-noir";
-  });
+  // Deterministic initial value that matches SSR — a lazy DOM read here causes
+  // a hydration mismatch (React keeps stale server styles). Synced on mount below.
+  const [isWhiteNoir, setIsWhiteNoir] = useState<boolean>(false);
 
   useEffect(() => {
     // Sync on mount (in case SSR/hydration mismatch)
@@ -249,8 +219,29 @@ export function BottomNav() {
     return () => observer.disconnect();
   }, []);
 
-  const youActive = MORE_LINKS.some((l) => pathname.startsWith(l.href)) ||
-    pathname === "/more";
+  useEffect(() => {
+    setPendingHref(null);
+  }, [pathname]);
+
+  useEffect(() => {
+    for (const { href } of PRIMARY_TABS) router.prefetch(href);
+    router.prefetch("/more");
+  }, [router]);
+
+  const goTo = (href: string) => {
+    if (href === pathname) return;
+    setPendingHref(href);
+    router.push(href);
+  };
+
+  const isTabActive = (href: string) =>
+    pendingHref !== null
+      ? pendingHref === href
+      : href === "/" ? pathname === "/" : pathname.startsWith(href);
+
+  const youActive = pendingHref !== null
+    ? pendingHref === "/more" || MORE_LINKS.some((l) => pendingHref === l.href)
+    : MORE_LINKS.some((l) => pathname.startsWith(l.href)) || pathname === "/more";
 
   if (hiddenForReader) return null;
   if (pathname.startsWith("/auth")) return null;
@@ -283,35 +274,37 @@ export function BottomNav() {
       >
 
         {PRIMARY_TABS.map(({ href, labelKey }) => {
-          const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+          const active = isTabActive(href);
           return (
-            <Link
+            <button
               key={href}
-              href={href}
+              type="button"
+              onClick={() => goTo(href)}
               data-active={active ? "true" : undefined}
               className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
               style={{ color: active ? fgActive : fgInactive }}
             >
-              <TabIcon href={href} active={active} />
+              <TabIcon href={href} active={active} isWhiteNoir={isWhiteNoir} />
               <span className="text-[10px] font-bold tracking-wide leading-none">
                 {t(labelKey)}
               </span>
-            </Link>
+            </button>
           );
         })}
 
         {/* Extras — links to /more page */}
-        <Link
-          href="/more"
+        <button
+          type="button"
+          onClick={() => goTo("/more")}
           data-active={youActive ? "true" : undefined}
           className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
           style={{ color: youActive ? fgActive : fgInactive }}
         >
-          <YouIcon active={youActive} />
+          <AppSectionIcon name="extras" active={youActive} size={24} />
           <span className="text-[10px] font-bold tracking-wide leading-none">
             {t("nav_extras")}
           </span>
-        </Link>
+        </button>
 
       </div>
     </nav>

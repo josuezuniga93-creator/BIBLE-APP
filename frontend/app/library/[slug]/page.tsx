@@ -17,6 +17,7 @@ import { isAnySaved } from "../../lib/collections";
 import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
 import { BracketHighlightReader } from "../../components/BracketHighlightReader";
+import { AppReader } from "../../components/AppReader";
 
 // ─── Inline markdown → HTML ───────────────────────────────────────────────────
 function renderInline(text: string): string {
@@ -267,6 +268,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── In-chapter pagination ─────────────────────────────────────────────────
   const chapterContent = chapter?.content ?? "";
+  const paginatedChapterContent = lang === "es" && translatedChapter ? translatedChapter : chapterContent;
   const pageStorageKey = `axiom-page-${slug}-${currentChapter}`;
   const {
     pages,
@@ -278,7 +280,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     isFirstPage,
     isLastPage,
   } = usePagination({
-    content: chapterContent,
+    content: paginatedChapterContent,
     fontSize,
     storageKey: pageStorageKey,
     rawText: true,   // Gutenberg / hard-wrapped plain text — normalize soft wraps
@@ -409,6 +411,14 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     return () => window.removeEventListener("keydown", onKey);
   });
 
+  useEffect(() => {
+    if (!presentationMode) return;
+    document.documentElement.setAttribute("data-app-reader-open", "true");
+    return () => {
+      document.documentElement.removeAttribute("data-app-reader-open");
+    };
+  }, [presentationMode]);
+
   // ── Loading ─────────────────────────────────────────────────────────────────
   if (loading) {
     return (
@@ -427,8 +437,6 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
       </div>
     );
   }
-
-  const progressPct = book.chapter_count > 0 ? Math.round((currentChapter / book.chapter_count) * 100) : 0;
 
   // ── Presentation Mode ───────────────────────────────────────────────────────
   if (presentationMode) {
@@ -487,224 +495,53 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // ── Full-screen reading overlay ─────────────────────────────────────────────
   if (!showDetail) {
     return (
-      <div className="ryc-reader-bg fixed inset-0 z-[200] flex flex-col" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
-
-        {/* Study Tools style top bar */}
-        <div
-          className="flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
-          style={{ backgroundColor: th.pageBg, borderBottom: `1px solid ${th.border}` }}
-        >
-          <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
-            <h1
-              className="text-lg leading-tight font-black line-clamp-2"
-              style={{ color: th.textPrimary }}
-            >
-              {bookTitle(book, lang)}
-            </h1>
-            <p className="mt-1 text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: th.accent }}>
-              {lang === "es" ? "Libro gratis" : "Free Book"}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowDetail(true)}
-            className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
-            style={{ color: th.textMuted, background: "rgba(255,255,255,0.07)", border: `1px solid ${th.borderLight}` }}
-            aria-label={lang === "es" ? "Volver" : "Back"}
+      <AppReader
+        title={bookTitle(book, lang)}
+        eyebrow={lang === "es" ? "Libro gratis" : "Free Book"}
+        sectionLabel={`${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}
+        sectionTitle={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : (lang === "es" ? "Cargando..." : "Loading...")}
+        showSectionTitle={isFirstPage}
+        context={`book-${slug}-${currentChapter}`}
+        text={pages[currentPage - 1] ?? ""}
+        reference={`${bookTitle(book, lang)} ${currentChapter}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
+        fontSizeClass={FONT_SIZES[fontSize]}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pagePercent={pagePercent}
+        progressPercent={bookPercent}
+        targetHighlightId={urlHlid ?? undefined}
+        isLoading={chapterLoading}
+        loadingLabel={lang === "es" ? "Cargando capítulo" : "Loading chapter"}
+        translationStatus={lang === "es" && (translating || translatedChapter) ? (
+          <div
+            className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
+            style={{
+              backgroundColor: isLight ? "rgba(0,0,0,0.04)" : "rgba(201,169,97,0.08)",
+              border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.18)",
+              color: th.textMuted,
+            }}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-        <div ref={contentRef} style={{ flex: "1 1 0", minHeight: 0, overflowY: "auto" }}>
-          <main className="px-7 pt-5 pb-8 max-w-lg mx-auto">
-            <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: th.accent }}>
-              {lang === "es" ? "Capítulo" : "Chapter"} {currentChapter}
-              {totalPages > 1 && (
-                <span style={{ color: th.textVeryMuted, fontWeight: "normal", letterSpacing: "0.05em" }}>
-                  {" "}· p. {currentPage}/{totalPages}
-                </span>
-              )}
-            </p>
-            {/* Show title only on first page */}
-            {isFirstPage && (
-              <h2
-                className="text-2xl font-black mb-8 leading-tight"
-                style={{ color: th.textPrimary }}
-                dangerouslySetInnerHTML={{ __html: chapter ? renderInline(bookSectionTitle(slug, chapter.chapter_title, lang)) : (lang === "es" ? "Cargando…" : "Loading…") }}
-              />
-            )}
-            {/* Spanish translation status bar */}
-            {lang === "es" && (translating || translatedChapter) && (
-              <div className="flex items-center gap-2 mb-4 px-3 py-2 rounded-xl text-xs"
-                style={{ backgroundColor: "rgba(201,169,97,0.08)", border: "1px solid rgba(201,169,97,0.18)", color: th.textMuted }}>
-                {translating ? (
-                  <>
-                    <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
-                    <span>Traduciendo al español… {translateProgress}%</span>
-                  </>
-                ) : (
-                  <>
-                    <span>🌐</span>
-                    <span>Traducido al español automáticamente</span>
-                  </>
-                )}
-              </div>
-            )}
-            {chapterLoading ? (
-              <div className="flex justify-center py-20">
-                <div className="w-6 h-6 rounded-full border-2 animate-spin"
-                  style={{ borderColor: th.borderMed, borderTopColor: th.accent }} />
-              </div>
+            {translating ? (
+              <>
+                <div className="w-3 h-3 rounded-full border border-current border-t-transparent animate-spin flex-shrink-0" />
+                <span>Traduciendo al español... {translateProgress}%</span>
+              </>
             ) : (
-              <div
-                key={`${currentChapter}-${currentPage}`}
-                style={{ animation: "axiomPageIn 0.18s ease-out" }}
-              >
-                <style>{`@keyframes axiomPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
-                <BracketHighlightReader
-                  context={`book-${slug}-${currentChapter}`}
-                  text={lang === "es" && translatedChapter ? translatedChapter : pages[currentPage - 1] ?? ""}
-                  title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
-                  reference={`${bookTitle(book, lang)} ${currentChapter}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
-                  textColor={th.textContent}
-                  fontSizeClass={FONT_SIZES[fontSize]}
-                  scrollRef={contentRef}
-                  targetHighlightId={urlHlid ?? undefined}
-                />
-              </div>
+              <span>Traducido al español automáticamente</span>
             )}
-            <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
-              {lang === "es" ? "Texto de dominio público • Gratis para leer, compartir y distribuir" : "Public domain text • Free to read, share, and distribute"}
-            </p>
-          </main>
-        </div>
-
-        {/* Bottom bar — page-then-chapter nav */}
-        <div
-          className="flex-shrink-0 px-5 py-3"
-          style={{ backgroundColor: th.pageBg, borderTop: `1px solid ${th.border}` }}
-        >
-          <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: th.textMuted }}>
-            <span>{lang === "es" ? "Página" : "Page"} {currentPage} {lang === "es" ? "de" : "of"} {totalPages}</span>
-            <span>{bookPercent}% {lang === "es" ? "completo" : "complete"}</span>
           </div>
-          <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ backgroundColor: th.progressTrack }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${bookPercent}%`, background: th.progressBar }} />
-          </div>
-          <div className="flex items-center justify-between gap-3">
-            {/* ← Prev: prev page first, then prev chapter */}
-            <button
-              disabled={isFirstPage && !chapter?.has_prev}
-              onClick={() => { if (!goPrevPage()) goPrev(); }}
-              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
-              style={{
-                backgroundColor: (!isFirstPage || chapter?.has_prev) ? th.prevBtnBg : "transparent",
-                color: (!isFirstPage || chapter?.has_prev) ? th.addLibText : th.textVeryMuted,
-                border: `1px solid ${th.prevBtnBorder}`,
-                cursor: (!isFirstPage || chapter?.has_prev) ? "pointer" : "not-allowed",
-              }}
-            >
-              {lang === "es" ? "← Ant." : "← Prev"}
-            </button>
-
-            <div className="min-w-[62px] text-center">
-              <p className="text-[10px] font-black" style={{ color: th.accent }}>{pagePercent}%</p>
-              <p className="text-[9px]" style={{ color: th.textVeryMuted }}>{lang === "es" ? "página" : "page"}</p>
-            </div>
-
-            {/* Next →: next page first, then next chapter */}
-            <button
-              disabled={isLastPage && !chapter?.has_next}
-              onClick={() => { if (!goNextPage()) goNext(); }}
-              className="flex flex-1 items-center justify-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all min-h-[44px]"
-              style={{
-                background: (!isLastPage || chapter?.has_next) ? th.nextBtnGradient : "transparent",
-                color: (!isLastPage || chapter?.has_next) ? "white" : th.textVeryMuted,
-                cursor: (!isLastPage || chapter?.has_next) ? "pointer" : "not-allowed",
-              }}
-            >
-              {lang === "es" ? "Sig. →" : "Next →"}
-            </button>
-          </div>
-        </div>
-
-        {/* TOC Drawer */}
-        {showToc && (
-          <div className="fixed inset-0 z-40 flex" onClick={() => setShowToc(false)}>
-            <div className="absolute inset-0 bg-black/60" />
-            <div
-              className="relative w-full max-w-xs ml-0 mr-auto h-full flex flex-col overflow-y-auto shadow-2xl"
-              style={{ backgroundColor: th.drawerBg, borderRight: `1px solid ${th.borderMed}` }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.borderMed}` }}>
-                <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Índice" : "Table of Contents"}</p>
-                <button onClick={() => setShowToc(false)} className="transition-colors text-lg" style={{ color: th.textVeryMuted }}>✕</button>
-              </div>
-              <div className="p-3 space-y-0.5">
-                {book.chapters.map((ch) => (
-                  <button
-                    key={ch.number}
-                    onClick={() => { setCurrentChapter(ch.number); setShowToc(false); }}
-                    className="w-full text-left px-3 py-2.5 rounded-lg text-xs transition-colors min-h-[40px]"
-                    style={{
-                      backgroundColor: ch.number === currentChapter ? th.tocActiveBg : "transparent",
-                      color: ch.number === currentChapter ? th.tocActiveText : th.tocInactiveText,
-                      fontWeight: ch.number === currentChapter ? "bold" : "normal",
-                    }}
-                  >
-                    {ch.number}. {bookSectionTitle(slug, ch.title, lang)}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
+        ) : null}
+        footer={(
+          <p className="text-center text-[10px] mt-8" style={{ color: th.footerText }}>
+            {lang === "es" ? "Texto de dominio público. Gratis para leer, compartir y distribuir." : "Public domain text. Free to read, share, and distribute."}
+          </p>
         )}
-
-        {/* Settings panel */}
-        {showSettings && (
-          <div className="fixed inset-0 z-40 flex items-start justify-center pt-16 px-4" onClick={() => setShowSettings(false)}>
-            <div className="absolute inset-0 bg-black/50" />
-            <div
-              className="relative rounded-2xl px-5 pt-5 pb-6 w-full max-w-sm"
-              style={{ backgroundColor: th.drawerBg, border: `1px solid ${th.borderMed}` }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p className="text-xs font-black uppercase tracking-widest mb-4 px-1" style={{ color: th.textMuted }}>{lang === "es" ? "Ajustes de Lectura" : "Display Settings"}</p>
-              <div className="mb-5">
-                <p className="text-xs font-bold mb-3" style={{ color: th.textMuted }}>{lang === "es" ? "Tamaño del Texto" : "Text Size"}</p>
-                <div className="flex gap-2">
-                  {(["sm", "md", "lg", "xl"] as FontSize[]).map((fs) => (
-                    <button
-                      key={fs}
-                      onClick={() => setFontSize(fs)}
-                      className="flex-1 py-2.5 rounded-xl text-xs font-bold transition-all"
-                      style={{
-                        backgroundColor: fontSize === fs ? th.settingsBtnActiveBg : th.settingsBtnInactiveBg,
-                        border: `1px solid ${fontSize === fs ? th.settingsBtnActiveBorder : th.settingsBtnInactiveBorder}`,
-                        color: fontSize === fs ? th.settingsBtnActiveText : th.settingsBtnInactiveText,
-                      }}
-                    >
-                      {lang === "es" ? ({ sm: "Pequeño", md: "Mediano", lg: "Grande", xl: "Muy Grande" } as Record<FontSize, string>)[fs] : FONT_SIZE_LABELS[fs]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <button
-                onClick={() => { setShowSettings(false); setPresentationMode(true); }}
-                className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
-                style={{ backgroundColor: th.presentBtnBg, border: `1px solid ${th.presentBtnBorder}`, color: th.presentBtnText }}
-              >
-                {lang === "es" ? "⛶ Modo Presentación / Domingo" : "⛶ Presentation / Sunday Mode"}
-              </button>
-            </div>
-          </div>
-        )}
-
-      </div>
+        previousDisabled={isFirstPage && !chapter?.has_prev}
+        nextDisabled={isLastPage && !chapter?.has_next}
+        onPrevious={() => { if (!goPrevPage()) goPrev(); }}
+        onNext={() => { if (!goNextPage()) goNext(); }}
+        onClose={() => setShowDetail(true)}
+      />
     );
   }
 

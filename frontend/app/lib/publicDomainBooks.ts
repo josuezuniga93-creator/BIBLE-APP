@@ -25,6 +25,8 @@ const LOCAL_BOOK_SLUGS = new Set([
   "knots-untied",
   "thoughts-for-young-men",
   "duties-of-parents",
+  "holiness-ryle",
+  "morning-evening-spurgeon",
 ]);
 
 const bookCache = new Map<string, PublicDomainBookData>();
