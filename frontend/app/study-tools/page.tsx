@@ -4,7 +4,12 @@ import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } 
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { AppReaderShell } from "../components/AppReader";
-import { mirrorStudyToolHighlight, removeMirroredStudyToolHighlight } from "../lib/unifiedHighlights";
+import {
+  deleteStudyToolHighlight,
+  getStudyToolHighlights,
+  saveStudyToolHighlight,
+  type UnifiedHenryHighlight,
+} from "../lib/unifiedHighlights";
 import {
   DICTIONARY_ENTRIES,
   findCompleteCommentaryByReference,
@@ -19,7 +24,6 @@ import {
 
 type ToolTab = "commentaries" | "dictionary";
 const COMMENTARY_PAGE_LIMIT = 1100;
-const HENRY_HIGHLIGHTS_KEY = "tulip-matthew-henry-highlights";
 const STUDY_CONTINUE_KEY = "tulip-study-tools-continue-reading";
 
 type HenryHighlightColor = "gold" | "blue" | "rose" | "green";
@@ -122,16 +126,19 @@ function findPageForSavedHighlight(text: string, highlightText: string, limit: n
 
 function loadHenryHighlights(): HenryHighlight[] {
   if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(HENRY_HIGHLIGHTS_KEY) ?? "[]") as HenryHighlight[];
-  } catch {
-    return [];
-  }
-}
-
-function saveHenryHighlights(highlights: HenryHighlight[]) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(HENRY_HIGHLIGHTS_KEY, JSON.stringify(highlights));
+  return getStudyToolHighlights().map((highlight) => ({
+    id: highlight.id,
+    text: highlight.text,
+    color: (highlight.color ?? "gold") as HenryHighlightColor,
+    createdAt: highlight.createdAt ?? Date.now(),
+    reference: highlight.reference,
+    sectionTitle: highlight.sectionTitle,
+    book: highlight.book,
+    bookName: highlight.bookName,
+    chapter: highlight.chapter,
+    verse: highlight.verse,
+    source: highlight.source,
+  }));
 }
 
 function loadContinueReading(): ContinueReadingItem[] {
@@ -498,7 +505,6 @@ export default function StudyToolsPage() {
   const persistHighlights = useCallback((next: HenryHighlight[]) => {
     const sorted = [...next].sort((a, b) => b.createdAt - a.createdAt);
     setHighlights(sorted);
-    saveHenryHighlights(sorted);
   }, []);
 
   function addHighlightForSelection(color: HenryHighlightColor) {
@@ -518,13 +524,13 @@ export default function StudyToolsPage() {
       source: reader.source,
     };
     persistHighlights([newItem, ...highlights]);
-    mirrorStudyToolHighlight(newItem);
+    saveStudyToolHighlight(newItem as UnifiedHenryHighlight);
     setSelection(null);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
-    removeMirroredStudyToolHighlight(id);
+    deleteStudyToolHighlight(id);
   }
 
   function clearLongPressTimer() {
@@ -615,6 +621,10 @@ export default function StudyToolsPage() {
     setSelection(null);
     activeHandle.current = null;
     clearLongPressTimer();
+  }
+
+  function openUnifiedHighlights() {
+    if (typeof window !== "undefined") window.location.href = "/highlights";
   }
 
   async function openHighlightInReader(highlight: HenryHighlight) {
@@ -772,7 +782,7 @@ export default function StudyToolsPage() {
         <>
           {/* Reader controls panel — slides up on single tap */}
           <div
-            className="fixed left-0 right-0 z-[69] px-5"
+            className="fixed left-0 right-0 z-[230] px-5"
             style={{
               bottom: 0,
               paddingTop: 16,
@@ -819,7 +829,7 @@ export default function StudyToolsPage() {
                 </div>
                 <div className="w-px h-8 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)" }} />
                 <button
-                  onClick={() => { setShowHighlightPocket(true); setShowReaderControls(false); }}
+                  onClick={() => { openUnifiedHighlights(); setShowReaderControls(false); }}
                   className="h-11 px-4 rounded-2xl flex items-center justify-center gap-2 text-sm font-black active:scale-95 flex-shrink-0"
                   style={isLight
                     ? { background: "rgba(0,0,0,0.06)", color: "#0a0a0a", border: "1px solid rgba(0,0,0,0.12)" }
@@ -838,7 +848,7 @@ export default function StudyToolsPage() {
             </div>
           </div>
           <div
-            className="fixed left-0 right-0 z-[70] px-5"
+            className="fixed left-0 right-0 z-[240] px-5"
             style={{
               bottom: 0,
               paddingTop: 14,
@@ -918,7 +928,8 @@ export default function StudyToolsPage() {
             contentRef={readerScrollRef}
             contentOnScroll={refreshHighlightGeometry}
             contentClassName={`max-w-lg mx-auto w-full flex-1 min-h-0 px-7 pt-2 flex flex-col ${isLargeFont ? 'overflow-y-auto' : 'overflow-hidden'}`}
-            zIndexClassName="z-50"
+            contentStyle={{ backgroundColor: isLight ? "#ffffff" : "#0b101d" }}
+            zIndexClassName="z-[220]"
           >
               <div className="mb-2">
                 {reader.requestedVerse && (
@@ -1113,7 +1124,7 @@ export default function StudyToolsPage() {
       )}
 
       {showHighlightPocket && (
-        <div className="fixed inset-0 z-[65]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "#ffffff" }}>
+        <div className="fixed inset-0 z-[250]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "#ffffff" }}>
           <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
             <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
               <div>
@@ -1334,6 +1345,7 @@ export default function StudyToolsPage() {
         </div>
       )}
 
+      {!reader && (
       <main className="max-w-lg mx-auto px-5 pt-7 pb-32">
         <header className="mb-4">
           <p className="text-[11px] font-black uppercase tracking-[0.26em]" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
@@ -1606,7 +1618,7 @@ export default function StudyToolsPage() {
 
             {!hasReferenceQuery && (
               <button
-                onClick={() => setShowHighlightPocket(true)}
+                onClick={openUnifiedHighlights}
                 className="w-full rounded-[24px] px-5 py-4 text-left active:scale-[0.99]"
                 style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(201,169,97,0.10)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
               >
@@ -1680,6 +1692,7 @@ export default function StudyToolsPage() {
           </section>
         )}
       </main>
+      )}
     </div>
   );
 }

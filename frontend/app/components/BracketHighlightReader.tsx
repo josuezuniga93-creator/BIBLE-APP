@@ -3,8 +3,12 @@
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
-import { syncKey } from "../lib/cloudSync";
-import { mirrorReaderHighlight, removeMirroredReaderHighlight } from "../lib/unifiedHighlights";
+import {
+  deleteReaderHighlight,
+  getReaderHighlights,
+  saveReaderHighlight,
+  type UnifiedReaderHighlight,
+} from "../lib/unifiedHighlights";
 import CreateImageEditor from "./CreateImageEditor";
 
 type HighlightColor = "gold" | "blue" | "rose" | "green";
@@ -66,10 +70,6 @@ const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string;
 
 const ACTIVE_SELECTION_BG = "rgba(54,97,208,0.58)";
 
-function storageKey(context: string) {
-  return `tulip-reader-highlights:${context}`;
-}
-
 function normalizeText(value: string) {
   return value.replace(/\s+/g, " ").trim();
 }
@@ -81,23 +81,6 @@ function renderInlineText(value: string) {
     .replace(/\*(.+?)\*/g, "$1")
     .replace(/_([^_]+)_/g, "$1")
     .replace(/<[^>]+>/g, "");
-}
-
-function loadHighlights(context: string): ReaderHighlight[] {
-  if (typeof window === "undefined") return [];
-  try {
-    return JSON.parse(localStorage.getItem(storageKey(context)) ?? "[]") as ReaderHighlight[];
-  } catch {
-    return [];
-  }
-}
-
-function saveHighlights(context: string, highlights: ReaderHighlight[]) {
-  if (typeof window === "undefined") return;
-  const key = storageKey(context);
-  const value = JSON.stringify(highlights);
-  localStorage.setItem(key, value);
-  syncKey(key, value).catch(() => {});
 }
 
 function selectedRange(selection: BracketSelection | null) {
@@ -228,11 +211,19 @@ export function BracketHighlightReader({
   }, [targetHighlightId, highlights]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    setHighlights(loadHighlights(context));
+    setHighlights(getReaderHighlights(context).map((highlight) => ({
+      id: highlight.id,
+      text: highlight.text,
+      color: (highlight.color ?? "gold") as HighlightColor,
+      createdAt: highlight.createdAt ?? Date.now(),
+      context: highlight.context ?? context,
+      title: highlight.title ?? title,
+      reference: highlight.reference ?? reference,
+    })));
     setSelection(null);
     setPendingRemoveId(null);
     setHighlightSearchQuery("");
-  }, [context]);
+  }, [context, title, reference]);
 
   const parts = useMemo(() => splitTextByHighlights(text, highlights), [text, highlights]);
   const tokens = useMemo(() => tokenize(parts), [parts]);
@@ -273,7 +264,6 @@ export function BracketHighlightReader({
   const persistHighlights = useCallback((next: ReaderHighlight[]) => {
     const sorted = [...next].sort((a, b) => b.createdAt - a.createdAt);
     setHighlights(sorted);
-    saveHighlights(context, sorted);
   }, [context]);
 
   function clearLongPressTimer() {
@@ -311,13 +301,13 @@ export function BracketHighlightReader({
       reference,
     };
     persistHighlights([newHighlight, ...highlights]);
-    mirrorReaderHighlight(context, newHighlight);
+    saveReaderHighlight(context, newHighlight as UnifiedReaderHighlight);
     setSelection(null);
   }
 
   function removeHighlight(id: string) {
     persistHighlights(highlights.filter((highlight) => highlight.id !== id));
-    removeMirroredReaderHighlight(context, id);
+    deleteReaderHighlight(context, id);
     setPendingRemoveId(null);
   }
 
@@ -326,6 +316,10 @@ export function BracketHighlightReader({
     setPendingRemoveId(null);
     activeHandle.current = null;
     clearLongPressTimer();
+  }
+
+  function openUnifiedHighlights() {
+    if (typeof window !== "undefined") window.location.href = "/highlights";
   }
 
   async function copySelection() {
@@ -523,7 +517,7 @@ export function BracketHighlightReader({
                   {lang === "es" ? "Copiar" : "Copy"}
                 </button>
                 <button
-                  onClick={() => setShowPocket(true)}
+                  onClick={openUnifiedHighlights}
                   className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
                   style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
                 >
@@ -550,7 +544,7 @@ export function BracketHighlightReader({
       </div>
 
       <button
-        onClick={() => setShowPocket(true)}
+        onClick={openUnifiedHighlights}
         className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
         style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.14)", color: isLight ? "#0a0a0a" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
       >

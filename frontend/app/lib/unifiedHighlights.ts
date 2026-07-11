@@ -25,6 +25,7 @@ export type UnifiedHighlight = {
   openHref: string;
   groupKey: string;
   groupLabel: string;
+  meta?: Record<string, string | number | boolean | undefined>;
 };
 
 type StorageRow = {
@@ -33,7 +34,7 @@ type StorageRow = {
   updated_at?: string;
 };
 
-type ReaderHighlight = {
+export type UnifiedReaderHighlight = {
   id: string;
   text: string;
   color?: string;
@@ -43,7 +44,7 @@ type ReaderHighlight = {
   reference?: string;
 };
 
-type HenryHighlight = {
+export type UnifiedHenryHighlight = {
   id: string;
   text: string;
   color?: string;
@@ -135,7 +136,15 @@ export function removeMirroredUnifiedHighlight(id: string) {
   writeUnifiedMirror(next);
 }
 
-export function mirrorStudyToolHighlight(highlight: HenryHighlight) {
+function normalizeColorName(value?: string) {
+  return value ?? "gold";
+}
+
+function colorValue(value?: string) {
+  return COLOR_DOT[normalizeColorName(value)] ?? COLOR_DOT.gold;
+}
+
+export function mirrorStudyToolHighlight(highlight: UnifiedHenryHighlight) {
   mirrorUnifiedHighlight({
     id: `study-tools-${highlight.id}`,
     storageKey: HENRY_HIGHLIGHTS_KEY,
@@ -145,11 +154,21 @@ export function mirrorStudyToolHighlight(highlight: HenryHighlight) {
     subtitle: highlight.reference,
     reference: highlight.reference,
     text: highlight.text,
-    color: COLOR_DOT[highlight.color ?? "gold"] ?? COLOR_DOT.gold,
+    color: colorValue(highlight.color),
     createdAt: highlight.createdAt ?? Date.now(),
     openHref: `/study-tools?highlight=${encodeURIComponent(highlight.id)}`,
     groupKey: `study-${highlight.book}-${highlight.chapter}`,
     groupLabel: `${highlight.bookName} ${highlight.chapter}`,
+    meta: {
+      rawId: highlight.id,
+      colorName: normalizeColorName(highlight.color),
+      book: highlight.book,
+      bookName: highlight.bookName,
+      chapter: highlight.chapter,
+      verse: highlight.verse,
+      source: highlight.source,
+      sectionTitle: highlight.sectionTitle,
+    },
   });
 }
 
@@ -157,7 +176,7 @@ export function removeMirroredStudyToolHighlight(id: string) {
   removeMirroredUnifiedHighlight(`study-tools-${id}`);
 }
 
-export function mirrorReaderHighlight(context: string, highlight: ReaderHighlight) {
+export function mirrorReaderHighlight(context: string, highlight: UnifiedReaderHighlight) {
   if (context.startsWith("book-")) {
     const match = context.match(/^book-(.+)-(\d+)$/);
     if (!match) return;
@@ -173,11 +192,19 @@ export function mirrorReaderHighlight(context: string, highlight: ReaderHighligh
       subtitle: highlight.title,
       reference: highlight.reference ?? `${bookTitle} ${chapter}`,
       text: highlight.text,
-      color: COLOR_DOT[highlight.color ?? "gold"] ?? COLOR_DOT.gold,
+      color: colorValue(highlight.color),
       createdAt: highlight.createdAt ?? Date.now(),
       openHref: `/library/${encodeURIComponent(slug)}?chapter=${chapter}&hlid=${encodeURIComponent(highlight.id)}`,
       groupKey: `book-${slug}`,
       groupLabel: bookTitle,
+      meta: {
+        rawId: highlight.id,
+        colorName: normalizeColorName(highlight.color),
+        context,
+        slug,
+        chapter,
+        title: highlight.title,
+      },
     });
     return;
   }
@@ -196,11 +223,19 @@ export function mirrorReaderHighlight(context: string, highlight: ReaderHighligh
       subtitle: section?.title ?? highlight.title,
       reference: highlight.reference ?? doc.title,
       text: highlight.text,
-      color: COLOR_DOT[highlight.color ?? "gold"] ?? COLOR_DOT.gold,
+      color: colorValue(highlight.color),
       createdAt: highlight.createdAt ?? Date.now(),
       openHref: `/learn?doc=${encodeURIComponent(doc.id)}&section=${encodeURIComponent(sectionId)}&hlid=${encodeURIComponent(highlight.id)}`,
       groupKey: `learn-${doc.id}`,
       groupLabel: doc.title,
+      meta: {
+        rawId: highlight.id,
+        colorName: normalizeColorName(highlight.color),
+        context,
+        docId: doc.id,
+        sectionId,
+        title: section?.title ?? highlight.title,
+      },
     });
   }
 }
@@ -231,16 +266,154 @@ export function mirrorScriptureHighlight(input: {
     subtitle: "Bible highlight",
     reference: title,
     text: input.verseText,
-    color: COLOR_DOT[input.color] ?? COLOR_DOT.gold,
+    color: colorValue(input.color),
     createdAt: Date.now(),
     openHref: `/lexicon?book=${encodeURIComponent(input.bookName)}&chapter=${input.chapter}&select=${input.verseNum}`,
     groupKey: `scripture-${input.bookNum}-${input.chapter}`,
     groupLabel: `${input.bookName} ${input.chapter}`,
+    meta: {
+      colorName: normalizeColorName(input.color),
+      bookNum: input.bookNum,
+      bookName: input.bookName,
+      chapter: input.chapter,
+      verseNum: input.verseNum,
+    },
   });
 }
 
 export function removeMirroredScriptureHighlight(bookNum: number, chapter: number, verseNum: number) {
   removeMirroredUnifiedHighlight(`scripture-${bookNum}-${chapter}-${verseNum}`);
+}
+
+function rawIdFromUnified(highlight: UnifiedHighlight, prefix: string) {
+  const raw = highlight.meta?.rawId;
+  if (typeof raw === "string" && raw) return raw;
+  return highlight.id.replace(new RegExp(`^${prefix}-`), "");
+}
+
+function readerContextFromUnified(highlight: UnifiedHighlight) {
+  const context = highlight.meta?.context;
+  if (typeof context === "string" && context) return context;
+  if (highlight.source === "free-books") {
+    const slug = highlight.meta?.slug;
+    const chapter = highlight.meta?.chapter;
+    if (typeof slug === "string" && typeof chapter === "number") return `book-${slug}-${chapter}`;
+    const match = highlight.openHref.match(/\/library\/([^?]+)\?chapter=(\d+)/);
+    if (match) return `book-${decodeURIComponent(match[1])}-${Number(match[2])}`;
+  }
+  if (highlight.source === "historical-documents") {
+    const docId = highlight.meta?.docId;
+    const sectionId = highlight.meta?.sectionId;
+    if (typeof docId === "string" && typeof sectionId === "string") return `learn-${docId}-${sectionId}`;
+    const params = highlight.openHref.split("?")[1];
+    if (params) {
+      const search = new URLSearchParams(params);
+      const doc = search.get("doc");
+      const section = search.get("section");
+      if (doc && section) return `learn-${doc}-${section}`;
+    }
+  }
+  return "";
+}
+
+function toReaderHighlight(highlight: UnifiedHighlight): UnifiedReaderHighlight {
+  const prefix = highlight.source === "free-books" ? "free-books" : "historical-documents";
+  return {
+    id: rawIdFromUnified(highlight, prefix),
+    text: highlight.text,
+    color: typeof highlight.meta?.colorName === "string" ? highlight.meta.colorName : "gold",
+    createdAt: highlight.createdAt,
+    context: readerContextFromUnified(highlight),
+    title: typeof highlight.meta?.title === "string" ? highlight.meta.title : highlight.subtitle,
+    reference: highlight.reference,
+  };
+}
+
+function toHenryHighlight(highlight: UnifiedHighlight): UnifiedHenryHighlight {
+  const bookFromGroup = Number(highlight.groupKey.match(/^study-(\d+)-/)?.[1]);
+  const chapterFromGroup = Number(highlight.groupKey.match(/^study-\d+-(\d+)/)?.[1]);
+  const labelMatch = highlight.groupLabel.match(/^(.*)\s+(\d+)$/);
+  return {
+    id: rawIdFromUnified(highlight, "study-tools"),
+    text: highlight.text,
+    color: typeof highlight.meta?.colorName === "string" ? highlight.meta.colorName : "gold",
+    createdAt: highlight.createdAt,
+    reference: highlight.reference,
+    sectionTitle: typeof highlight.meta?.sectionTitle === "string" ? highlight.meta.sectionTitle : highlight.title,
+    book: typeof highlight.meta?.book === "number" ? highlight.meta.book : (Number.isFinite(bookFromGroup) ? bookFromGroup : 0),
+    bookName: typeof highlight.meta?.bookName === "string" ? highlight.meta.bookName : (labelMatch?.[1] ?? highlight.groupLabel),
+    chapter: typeof highlight.meta?.chapter === "number" ? highlight.meta.chapter : (Number.isFinite(chapterFromGroup) ? chapterFromGroup : Number(labelMatch?.[2] ?? 1)),
+    verse: typeof highlight.meta?.verse === "number" ? highlight.meta.verse : undefined,
+    source: typeof highlight.meta?.source === "string" ? highlight.meta.source : "complete",
+  };
+}
+
+export function getReaderHighlights(context: string): UnifiedReaderHighlight[] {
+  if (typeof window === "undefined") return [];
+  return collectUnifiedHighlights()
+    .filter((highlight) =>
+      (highlight.source === "free-books" || highlight.source === "historical-documents") &&
+      readerContextFromUnified(highlight) === context
+    )
+    .map(toReaderHighlight)
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
+export function saveReaderHighlight(context: string, highlight: UnifiedReaderHighlight) {
+  mirrorReaderHighlight(context, highlight);
+}
+
+export function deleteReaderHighlight(context: string, id: string) {
+  removeMirroredReaderHighlight(context, id);
+  const legacyKey = storageKeyForReaderContext(context);
+  const legacy = parseJson<UnifiedReaderHighlight[]>(localStorage.getItem(legacyKey), []);
+  const next = legacy.filter((highlight) => highlight.id !== id);
+  if (next.length === 0) {
+    localStorage.removeItem(legacyKey);
+    syncKey(legacyKey, null).catch(() => {});
+  } else {
+    const value = JSON.stringify(next);
+    localStorage.setItem(legacyKey, value);
+    syncKey(legacyKey, value).catch(() => {});
+  }
+}
+
+export function getStudyToolHighlights(): UnifiedHenryHighlight[] {
+  if (typeof window === "undefined") return [];
+  return collectUnifiedHighlights()
+    .filter((highlight) => highlight.source === "study-tools")
+    .map(toHenryHighlight)
+    .sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+}
+
+export function saveStudyToolHighlight(highlight: UnifiedHenryHighlight) {
+  mirrorStudyToolHighlight(highlight);
+}
+
+export function deleteStudyToolHighlight(id: string) {
+  removeMirroredStudyToolHighlight(id);
+  const legacy = parseJson<UnifiedHenryHighlight[]>(localStorage.getItem(HENRY_HIGHLIGHTS_KEY), []);
+  const value = JSON.stringify(legacy.filter((highlight) => highlight.id !== id));
+  localStorage.setItem(HENRY_HIGHLIGHTS_KEY, value);
+  syncKey(HENRY_HIGHLIGHTS_KEY, value).catch(() => {});
+}
+
+export function getScriptureVerseColors(bookNum: number, chapter: number): Record<number, string> {
+  if (typeof window === "undefined") return {};
+  const result: Record<number, string> = {};
+  collectUnifiedHighlights()
+    .filter((highlight) => highlight.source === "scripture")
+    .forEach((highlight) => {
+      const meta = highlight.meta ?? {};
+      const legacyMatch = highlight.id.match(/^scripture-(\d+)-(\d+)-(\d+)$/);
+      const itemBook = typeof meta.bookNum === "number" ? meta.bookNum : Number(legacyMatch?.[1]);
+      const itemChapter = typeof meta.chapter === "number" ? meta.chapter : Number(legacyMatch?.[2]);
+      const itemVerse = typeof meta.verseNum === "number" ? meta.verseNum : Number(legacyMatch?.[3]);
+      if (itemBook === bookNum && itemChapter === chapter && Number.isFinite(itemVerse)) {
+        result[itemVerse] = typeof meta.colorName === "string" ? meta.colorName : "gold";
+      }
+    });
+  return result;
 }
 
 export function deleteUnifiedHighlight(highlight: UnifiedHighlight) {
@@ -284,7 +457,7 @@ export function deleteUnifiedHighlight(highlight: UnifiedHighlight) {
 
   if (highlight.source === "study-tools") {
     const id = highlight.id.replace(/^study-tools-/, "");
-    const highlights = parseJson<HenryHighlight[]>(localStorage.getItem(HENRY_HIGHLIGHTS_KEY), []);
+    const highlights = parseJson<UnifiedHenryHighlight[]>(localStorage.getItem(HENRY_HIGHLIGHTS_KEY), []);
     const next = highlights.filter((item) => item.id !== id);
     const value = JSON.stringify(next);
     localStorage.setItem(HENRY_HIGHLIGHTS_KEY, value);
@@ -294,7 +467,7 @@ export function deleteUnifiedHighlight(highlight: UnifiedHighlight) {
 
   if (highlight.source === "free-books" || highlight.source === "historical-documents") {
     const id = highlight.id.replace(/^(free-books|historical-documents)-/, "");
-    const highlights = parseJson<ReaderHighlight[]>(localStorage.getItem(highlight.storageKey), []);
+    const highlights = parseJson<UnifiedReaderHighlight[]>(localStorage.getItem(highlight.storageKey), []);
     const next = highlights.filter((item) => item.id !== id);
     if (next.length === 0) {
       localStorage.removeItem(highlight.storageKey);
@@ -391,7 +564,7 @@ function parseScriptureHighlights(rows: Map<string, StorageRow>): UnifiedHighlig
 
 function parseStudyToolHighlights(rows: Map<string, StorageRow>): UnifiedHighlight[] {
   const row = rows.get(HENRY_HIGHLIGHTS_KEY);
-  const highlights = parseJson<HenryHighlight[]>(row?.value, []);
+  const highlights = parseJson<UnifiedHenryHighlight[]>(row?.value, []);
 
   return highlights.map((highlight) => ({
     id: `study-tools-${highlight.id}`,
@@ -421,7 +594,7 @@ function parseBookHighlights(rows: Map<string, StorageRow>): UnifiedHighlight[] 
     const slug = match[1];
     const chapter = Number(match[2]);
     const bookTitle = BOOK_TITLE_BY_SLUG.get(slug) ?? slug.replace(/-/g, " ");
-    const highlights = parseJson<ReaderHighlight[]>(row.value, []);
+    const highlights = parseJson<UnifiedReaderHighlight[]>(row.value, []);
 
     for (const highlight of highlights) {
       result.push({
@@ -455,7 +628,7 @@ function parseHistoricalHighlights(rows: Map<string, StorageRow>): UnifiedHighli
     if (!doc) continue;
     const sectionId = context.slice(`learn-${doc.id}-`.length);
     const section = doc.sections.find((candidate) => candidate.id === sectionId);
-    const highlights = parseJson<ReaderHighlight[]>(row.value, []);
+    const highlights = parseJson<UnifiedReaderHighlight[]>(row.value, []);
 
     for (const highlight of highlights) {
       result.push({
@@ -481,11 +654,22 @@ function parseHistoricalHighlights(rows: Map<string, StorageRow>): UnifiedHighli
 
 export function collectUnifiedHighlights(rows?: StorageRow[]): UnifiedHighlight[] {
   const merged = mergeRows(rows);
-  return dedupeHighlights([
+  const combined = dedupeHighlights([
     ...readUnifiedMirror(merged),
     ...parseScriptureHighlights(merged),
     ...parseStudyToolHighlights(merged),
     ...parseBookHighlights(merged),
     ...parseHistoricalHighlights(merged),
   ]).sort((a, b) => b.createdAt - a.createdAt);
+
+  if (typeof window !== "undefined" && !rows) {
+    const current = parseJson<UnifiedHighlight[]>(localStorage.getItem(UNIFIED_HIGHLIGHTS_KEY), []);
+    const currentIds = current.map((highlight) => highlight.id).sort().join("|");
+    const combinedIds = combined.map((highlight) => highlight.id).sort().join("|");
+    if (currentIds !== combinedIds) {
+      writeUnifiedMirror(combined);
+    }
+  }
+
+  return combined;
 }

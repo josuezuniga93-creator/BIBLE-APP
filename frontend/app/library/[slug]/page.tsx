@@ -18,6 +18,7 @@ import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/Generate
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
 import { BracketHighlightReader } from "../../components/BracketHighlightReader";
 import { AppReader } from "../../components/AppReader";
+import { getReaderHighlights } from "../../lib/unifiedHighlights";
 
 // ─── Inline markdown → HTML ───────────────────────────────────────────────────
 function renderInline(text: string): string {
@@ -301,19 +302,13 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // Jump to the page containing the target highlight
   useEffect(() => {
     if (!urlHlid || !pages.length || showDetail) return;
-    const key = `tulip-reader-highlights:book-${slug}-${currentChapter}`;
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return;
-      const hls = JSON.parse(raw) as Array<{ id: string; text: string }>;
-      const target = hls.find((h) => h.id === urlHlid);
-      if (!target) return;
-      const snippet = target.text.slice(0, 30);
-      const pageIdx = pages.findIndex((p) => p.includes(snippet));
-      if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
-        goToPage(pageIdx + 1);
-      }
-    } catch { /* ignore */ }
+    const target = getReaderHighlights(`book-${slug}-${currentChapter}`).find((highlight) => highlight.id === urlHlid);
+    if (!target) return;
+    const snippet = target.text.slice(0, 30);
+    const pageIdx = pages.findIndex((p) => p.includes(snippet));
+    if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
+      goToPage(pageIdx + 1);
+    }
   }, [urlHlid, pages, currentChapter, slug, showDetail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load book metadata

@@ -7,6 +7,7 @@ import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
 import { applyHighlightsToHtml, type Highlight } from "../lib/highlights";
 import { LEARN_DOCUMENTS as _LEARN_DOCS_FOR_HL } from "../lib/learnData";
+import { collectUnifiedHighlights, deleteUnifiedHighlight, getReaderHighlights, type UnifiedHighlight } from "../lib/unifiedHighlights";
 import { useTheme } from "../lib/useTheme";
 import { BookmarkModal } from "../components/BookmarkModal";
 import { isAnySaved } from "../lib/collections";
@@ -17,7 +18,6 @@ import { translateToSpanish } from "../lib/googleTranslate";
 import { t } from "../lib/i18n";
 import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
 import { AppReader } from "../components/AppReader";
-import { syncKey } from "../lib/cloudSync";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -154,10 +154,11 @@ const DOC_TYPES = [
 type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism" | "highlights";
 
 // ─── Historical doc highlights aggregation ────────────────────────────────────
-interface DocHighlight extends Highlight {
+interface DocHighlight extends UnifiedHighlight {
   docId: string;
   docTitle: string;
   sectionId: string;
+  rawId: string;
 }
 
 type HighlightTarget = {
@@ -168,25 +169,20 @@ type HighlightTarget = {
 
 function loadAllDocHighlights(): DocHighlight[] {
   if (typeof window === "undefined") return [];
-  const result: DocHighlight[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith("tulip-reader-highlights:learn-")) continue;
-    const suffix = key.slice("tulip-reader-highlights:".length); // "learn-{docId}-{sectionId}"
-    const m = suffix.match(/^learn-(.+?)-([\w-]+)$/);
-    if (!m) continue;
-    const docId = m[1];
-    const sectionId = m[2];
-    const doc = _LEARN_DOCS_FOR_HL.find((d) => d.id === docId);
-    try {
-      const raw = localStorage.getItem(key);
-      const hls = raw ? (JSON.parse(raw) as Highlight[]) : [];
-      for (const hl of hls) {
-        result.push({ ...hl, docId, docTitle: doc?.title ?? docId, sectionId });
-      }
-    } catch { /* skip */ }
-  }
-  return result.sort((a, b) => b.createdAt - a.createdAt);
+  return collectUnifiedHighlights()
+    .filter((highlight) => highlight.source === "historical-documents")
+    .map((highlight) => {
+      const params = highlight.openHref.split("?")[1];
+      const search = params ? new URLSearchParams(params) : new URLSearchParams();
+      const docId = typeof highlight.meta?.docId === "string" ? highlight.meta.docId : (search.get("doc") ?? "");
+      const sectionId = typeof highlight.meta?.sectionId === "string" ? highlight.meta.sectionId : (search.get("section") ?? "");
+      const rawId = typeof highlight.meta?.rawId === "string"
+        ? highlight.meta.rawId
+        : highlight.id.replace(/^historical-documents-/, "");
+      const doc = _LEARN_DOCS_FOR_HL.find((d) => d.id === docId);
+      return { ...highlight, docId, docTitle: doc?.title ?? highlight.title, sectionId, rawId };
+    })
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 // ─── Markdown renderer ────────────────────────────────────────────────────────
@@ -346,19 +342,13 @@ function SectionReader({
 
   useEffect(() => {
     if (!targetHighlightId || sectionPages.length === 0) return;
-    const key = `tulip-reader-highlights:learn-${doc.id}-${section.id}`;
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return;
-      const hls = JSON.parse(raw) as Array<{ id: string; text: string }>;
-      const target = hls.find((h) => h.id === targetHighlightId);
-      if (!target) return;
-      const snippet = target.text.slice(0, 30);
-      const pageIdx = sectionPages.findIndex((page) => page.includes(snippet));
-      if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
-        goToPage(pageIdx + 1);
-      }
-    } catch { /* ignore malformed highlight storage */ }
+    const target = getReaderHighlights(`learn-${doc.id}-${section.id}`).find((highlight) => highlight.id === targetHighlightId);
+    if (!target) return;
+    const snippet = target.text.slice(0, 30);
+    const pageIdx = sectionPages.findIndex((page) => page.includes(snippet));
+    if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
+      goToPage(pageIdx + 1);
+    }
   }, [targetHighlightId, sectionPages, currentPage, goToPage, doc.id, section.id]);
 
   const sectionIndex = sections.findIndex((s) => s.id === section.id);
@@ -1118,7 +1108,7 @@ function LearnPageInner() {
       {/* My Highlights Banner */}
       <div className="px-4 mb-6">
         <button
-          onClick={() => setShowHighlightPocket(true)}
+          onClick={() => { window.location.href = "/highlights"; }}
           className="w-full flex items-center gap-3.5 p-4 rounded-2xl active:scale-[0.99] transition-transform"
           style={{
             background: "rgba(201,169,97,0.07)",
@@ -1332,7 +1322,8 @@ function LearnPageInner() {
                     <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
                       {filteredDocHls.slice(0, 5).map((hl) => {
                         const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                        const dot = DOT[hl.color] ?? "#c9a961";
+                        const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
+                        const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
                         return (
                           <div
                             key={hl.id}
@@ -1350,7 +1341,7 @@ function LearnPageInner() {
                             </p>
                             <button
                               onClick={() => {
-                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.id });
+                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.rawId });
                                 setSelected(hl.docId);
                                 setShowHighlightPocket(false);
                               }}
@@ -1423,7 +1414,8 @@ function LearnPageInner() {
                                     <div className="space-y-2">
                                       {sections[secId].map((hl) => {
                                         const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                                        const dot = DOT[hl.color] ?? "#c9a961";
+                                        const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
+                                        const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
                                         return (
                                           <div
                                             key={hl.id}
@@ -1448,7 +1440,7 @@ function LearnPageInner() {
                                             </div>
                                             <button
                                               onClick={() => {
-                                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.id });
+                                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.rawId });
                                                 setSelected(hl.docId);
                                                 setShowHighlightPocket(false);
                                               }}
@@ -1501,14 +1493,7 @@ function LearnPageInner() {
                     onClick={() => {
                       const target = docHighlights.find(h => h.id === confirmRemoveId);
                       if (target) {
-                        const key = `tulip-reader-highlights:learn-${target.docId}-${target.sectionId}`;
-                        try {
-                          const raw = localStorage.getItem(key);
-                          const arr = raw ? (JSON.parse(raw) as Highlight[]) : [];
-                          const value = JSON.stringify(arr.filter(h => h.id !== confirmRemoveId));
-                          localStorage.setItem(key, value);
-                          syncKey(key, value).catch(() => {});
-                        } catch {}
+                        deleteUnifiedHighlight(target);
                         setDocHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
                       }
                       setConfirmRemoveId(null);

@@ -9,6 +9,7 @@ import {
 } from "../lib/collections";
 import { getBookmarks, removeBookmark as removeBookmarkById, type Bookmark } from "../lib/bookmarks";
 import type { Highlight, HLColor } from "../lib/highlights";
+import { collectUnifiedHighlights, deleteUnifiedHighlight, type UnifiedHighlight } from "../lib/unifiedHighlights";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
@@ -18,6 +19,7 @@ import { t } from "../lib/i18n";
 interface AggregatedHighlight extends Highlight {
   context: string;       // raw key suffix, e.g. "book-pilgrim-1"
   contextLabel: string;  // human-readable
+  unified: UnifiedHighlight;
 }
 
 type ColorNames = Record<HLColor, string>;
@@ -77,37 +79,59 @@ function highlightHref(context: string): string {
   return "/";
 }
 
+function unifiedContext(highlight: UnifiedHighlight): string {
+  if (highlight.source === "scripture") {
+    const match = highlight.id.match(/^scripture-(\d+)-(\d+)-(\d+)$/);
+    const group = highlight.groupLabel.toLowerCase().replace(/\s+/g, "-");
+    return match ? `bible-${group.replace(/-\d+$/, "")}-${match[2]}` : highlight.groupKey;
+  }
+  if (highlight.source === "free-books") {
+    const slug = typeof highlight.meta?.slug === "string"
+      ? highlight.meta.slug
+      : highlight.openHref.match(/\/library\/([^?]+)/)?.[1] ?? highlight.groupKey.replace(/^book-/, "");
+    const chapter = typeof highlight.meta?.chapter === "number"
+      ? highlight.meta.chapter
+      : Number(highlight.openHref.match(/[?&]chapter=(\d+)/)?.[1] ?? 1);
+    return `book-${decodeURIComponent(slug)}-${chapter}`;
+  }
+  if (highlight.source === "historical-documents") {
+    const docId = typeof highlight.meta?.docId === "string" ? highlight.meta.docId : highlight.groupKey.replace(/^learn-/, "");
+    const sectionId = typeof highlight.meta?.sectionId === "string" ? highlight.meta.sectionId : "";
+    return `learn-${docId}${sectionId ? `-${sectionId}` : ""}`;
+  }
+  return `study-${highlight.groupKey}`;
+}
+
+function highlightColorKey(highlight: UnifiedHighlight): HLColor {
+  const colorName = highlight.meta?.colorName;
+  if (colorName === "blue" || colorName === "green" || colorName === "rose" || colorName === "pink" || colorName === "red" || colorName === "purple" || colorName === "yellow" || colorName === "gold") {
+    return colorName === "green" ? "lime" : colorName === "rose" ? "pink" : colorName;
+  }
+  return "gold";
+}
+
 function isBibleHighlight(context: string) { return /^bible-/.test(context); }
 
 function loadAllHighlights(): AggregatedHighlight[] {
   if (typeof window === "undefined") return [];
-  const result: AggregatedHighlight[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith("axiom-hl-")) continue;
-    if (key === HL_NAMES_KEY) continue;
-    const context = key.replace("axiom-hl-", "");
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const items: Highlight[] = JSON.parse(raw);
-      items.forEach((hl) => result.push({ ...hl, context, contextLabel: makeContextLabel(context) }));
-    } catch { /* skip */ }
-  }
-  return result.sort((a, b) => b.createdAt - a.createdAt);
+  return collectUnifiedHighlights().map((highlight) => {
+    const context = unifiedContext(highlight);
+    return {
+      id: highlight.id,
+      text: highlight.text,
+      color: highlightColorKey(highlight),
+      createdAt: highlight.createdAt,
+      context,
+      contextLabel: highlight.groupLabel || makeContextLabel(context),
+      unified: highlight,
+    };
+  }).sort((a, b) => b.createdAt - a.createdAt);
 }
 
 function deleteHighlight(context: string, id: string) {
   if (typeof window === "undefined") return;
-  const key = `axiom-hl-${context}`;
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return;
-    const items: Highlight[] = JSON.parse(raw);
-    const next = items.filter((h) => h.id !== id);
-    if (next.length === 0) localStorage.removeItem(key);
-    else localStorage.setItem(key, JSON.stringify(next));
-  } catch { /* */ }
+  const target = loadAllHighlights().find((highlight) => highlight.id === id && highlight.context === context);
+  if (target) deleteUnifiedHighlight(target.unified);
 }
 
 // ─── Color config ─────────────────────────────────────────────────────────────

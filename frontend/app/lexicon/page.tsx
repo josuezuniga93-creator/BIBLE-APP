@@ -21,7 +21,11 @@ import { exportVerseAsQuoteImage, BG_OPTIONS } from "../lib/verseQuoteExport";
 import CreateImageEditor from "../components/CreateImageEditor";
 import { recordScriptureShareForBadges } from "../lib/badges";
 import BookmarkPopup from "../components/BookmarkPopup";
-import { mirrorScriptureHighlight, removeMirroredScriptureHighlight } from "../lib/unifiedHighlights";
+import {
+  getScriptureVerseColors,
+  mirrorScriptureHighlight,
+  removeMirroredScriptureHighlight,
+} from "../lib/unifiedHighlights";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -49,38 +53,17 @@ const SCRIPTURE_FONTS: { key: ScriptureFont; label: string; family: string; desc
 const SCRIPTURE_FONT_KEY = "ryc-scripture-font";
 const FONT_SIZE_KEY = "ryc-scripture-fontsize";
 
-const VERSE_COLOR_KEY  = (book: number, ch: number) => `ryc-vcolor-${book}-${ch}`;
 const CHAPTER_NOTE_KEY = (book: number, ch: number) => `ryc-chapter-note-${book}-${ch}`;
 const LAST_POSITION_KEY = "ryc-last-position";
-
-// ─── Bible highlight sync (Collections) ──────────────────────────────────────
-// Mirrors verse highlights into the shared axiom-hl-* format so Collections
-// can display them with full verse text, reference, and a link back to Scripture.
-const BIBLE_HL_KEY = (bookName: string, chapter: number) =>
-  `axiom-hl-bible-${bookName.toLowerCase().replace(/\s+/g, "-")}-${chapter}`;
 
 function saveBibleHighlight(
   bookName: string, bookNum: number, chapter: number,
   verseNum: number, verseText: string, color: HighlightColor,
 ) {
-  const key = BIBLE_HL_KEY(bookName, chapter);
-  let arr: { id: string; text: string; color: string; createdAt: number }[] = [];
-  try { arr = JSON.parse(localStorage.getItem(key) ?? "[]"); } catch { /* */ }
-  const id = `bible-${bookNum}-${chapter}-${verseNum}`;
-  const filtered = arr.filter((h) => h.id !== id);
-  filtered.push({ id, text: verseText, color, createdAt: Date.now() });
-  localStorage.setItem(key, JSON.stringify(filtered));
   mirrorScriptureHighlight({ bookName, bookNum, chapter, verseNum, verseText, color });
 }
 
-function removeBibleHighlight(bookName: string, bookNum: number, chapter: number, verseNum: number) {
-  const key = BIBLE_HL_KEY(bookName, chapter);
-  let arr: { id: string }[] = [];
-  try { arr = JSON.parse(localStorage.getItem(key) ?? "[]"); } catch { /* */ }
-  const id = `bible-${bookNum}-${chapter}-${verseNum}`;
-  const filtered = arr.filter((h) => h.id !== id);
-  if (filtered.length === 0) localStorage.removeItem(key);
-  else localStorage.setItem(key, JSON.stringify(filtered));
+function removeBibleHighlight(_bookName: string, bookNum: number, chapter: number, verseNum: number) {
   removeMirroredScriptureHighlight(bookNum, chapter, verseNum);
 }
 
@@ -742,22 +725,14 @@ function LexiconInner() {
   // ── Verse color highlights load/save ─────────────────────────────────────
   useEffect(() => {
     if (!selectedBook) return;
-    const saved = localStorage.getItem(VERSE_COLOR_KEY(selectedBook.num, selectedChapter));
-    try { setVerseColors(saved ? JSON.parse(saved) : {}); }
-    catch { setVerseColors({}); }
+    setVerseColors(getScriptureVerseColors(selectedBook.num, selectedChapter) as Record<number, HighlightColor>);
     setSelectedVerseNums([]);
     // tray auto-hides when selectedVerseNums goes to []
   }, [selectedBook, selectedChapter]);
 
-  useEffect(() => {
-    if (!selectedBook) return;
-    if (Object.keys(verseColors).length === 0) localStorage.removeItem(VERSE_COLOR_KEY(selectedBook.num, selectedChapter));
-    else localStorage.setItem(VERSE_COLOR_KEY(selectedBook.num, selectedChapter), JSON.stringify(verseColors));
-  }, [verseColors, selectedBook, selectedChapter]);
-
   const setVerseColor = useCallback((verseNum: number, color: HighlightColor) => {
     setVerseColors((prev) => ({ ...prev, [verseNum]: color }));
-    // Mirror to axiom-hl-* format for Collections sync
+    // Save through the unified highlights system so Profile, Collections, and Highlights stay in sync.
     const book = selectedBook;
     const verse = chapterData?.verses.find((v) => v.verse === verseNum);
     if (book && verse) {
@@ -771,7 +746,7 @@ function LexiconInner() {
       delete next[verseNum];
       return next;
     });
-    // Remove from axiom-hl-* format for Collections sync
+    // Remove through the unified highlights system so every highlight surface updates together.
     const book = selectedBook;
     if (book) removeBibleHighlight(book.name, book.num, selectedChapter, verseNum);
   }, [selectedBook, selectedChapter]);

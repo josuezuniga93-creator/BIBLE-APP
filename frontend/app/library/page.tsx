@@ -13,8 +13,7 @@ import { GeneratedBookCover, GeneratedCategoryMark, GeneratedMetaIcon } from "..
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
 import { bookTitle } from "../lib/spanishContent";
-import { loadHighlights, type Highlight } from "../lib/highlights";
-import { syncKey } from "../lib/cloudSync";
+import { collectUnifiedHighlights, deleteUnifiedHighlight, type UnifiedHighlight } from "../lib/unifiedHighlights";
 import { STATIC_BOOK_CATALOG as _CATALOG_FOR_SLUGS } from "../lib/bookCatalog";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
@@ -70,33 +69,32 @@ type ProgressEntry = {
 type LibTab = "books" | "reading" | "completed" | "highlights";
 
 // ─── Book highlights aggregation ──────────────────────────────────────────────
-interface BookHighlight extends Highlight {
+interface BookHighlight extends UnifiedHighlight {
   slug: string;
   bookTitle: string;
   chapter: number;
+  rawId: string;
 }
 
 function loadAllBookHighlights(): BookHighlight[] {
   if (typeof window === "undefined") return [];
-  const result: BookHighlight[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key?.startsWith("tulip-reader-highlights:book-")) continue;
-    const suffix = key.slice("tulip-reader-highlights:".length); // "book-{slug}-{chapter}"
-    const m = suffix.match(/^book-(.+)-(\d+)$/);
-    if (!m) continue;
-    const slug = m[1];
-    const chapter = parseInt(m[2], 10);
-    const entry = _CATALOG_FOR_SLUGS.find((b) => b.slug === slug);
-    try {
-      const raw = localStorage.getItem(key);
-      const hls = raw ? (JSON.parse(raw) as Highlight[]) : [];
-      for (const hl of hls) {
-        result.push({ ...hl, slug, bookTitle: entry?.title ?? slug, chapter });
-      }
-    } catch { /* skip */ }
-  }
-  return result.sort((a, b) => b.createdAt - a.createdAt);
+  return collectUnifiedHighlights()
+    .filter((highlight) => highlight.source === "free-books")
+    .map((highlight) => {
+      const hrefMatch = highlight.openHref.match(/\/library\/([^?]+)\?chapter=(\d+)/);
+      const slug = typeof highlight.meta?.slug === "string"
+        ? highlight.meta.slug
+        : hrefMatch ? decodeURIComponent(hrefMatch[1]) : "";
+      const chapter = typeof highlight.meta?.chapter === "number"
+        ? highlight.meta.chapter
+        : hrefMatch ? parseInt(hrefMatch[2], 10) : 1;
+      const rawId = typeof highlight.meta?.rawId === "string"
+        ? highlight.meta.rawId
+        : highlight.id.replace(/^free-books-/, "");
+      const entry = _CATALOG_FOR_SLUGS.find((b) => b.slug === slug);
+      return { ...highlight, slug, bookTitle: entry?.title ?? highlight.title, chapter, rawId };
+    })
+    .sort((a, b) => b.createdAt - a.createdAt);
 }
 
 type StudyContinueItem = {
@@ -518,7 +516,7 @@ export default function LibraryPage() {
       {/* ── Highlights Banner ────────────────────────────────────────────────── */}
       <div className="px-5 mb-6">
         <button
-          onClick={() => setShowHighlightPocket(true)}
+          onClick={() => { window.location.href = "/highlights"; }}
           className="w-full flex items-center gap-3.5 p-4 rounded-2xl active:scale-[0.99] transition-transform"
           style={{
             background: isGoldNavy ? "rgba(201,169,97,0.07)" : th.cardBg,
@@ -868,7 +866,8 @@ export default function LibraryPage() {
                   <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
                     {filteredHls.slice(0, 5).map((hl) => {
                       const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                      const dot = DOT[hl.color] ?? "#c9a961";
+                      const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
+                      const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
                       return (
                         <div
                           key={hl.id}
@@ -885,7 +884,7 @@ export default function LibraryPage() {
                             &ldquo;{hl.text.slice(0, 65)}{hl.text.length > 65 ? '…' : ''}&rdquo;
                           </p>
                           <Link
-                            href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.id}`}
+                            href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.rawId}`}
                             onClick={() => setShowHighlightPocket(false)}
                             className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
                             style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.28)" }}
@@ -957,7 +956,8 @@ export default function LibraryPage() {
                                 <div className="space-y-2">
                                   {chapters[chNum].map((hl) => {
                                     const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                                    const dot = DOT[hl.color] ?? "#c9a961";
+                                    const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
+                                    const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
                                     return (
                                       <div
                                         key={hl.id}
@@ -981,7 +981,7 @@ export default function LibraryPage() {
                                           </button>
                                         </div>
                                         <Link
-                                          href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.id}`}
+                                          href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.rawId}`}
                                           onClick={() => setShowHighlightPocket(false)}
                                           className="text-[10px] font-black px-3 py-1 rounded-full inline-block active:scale-95 transition-transform"
                                           style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.22)" }}
@@ -1031,14 +1031,7 @@ export default function LibraryPage() {
                   onClick={() => {
                     const target = bookHighlights.find(h => h.id === confirmRemoveId);
                     if (target) {
-                      const key = `tulip-reader-highlights:book-${target.slug}-${target.chapter}`;
-                      try {
-                        const raw = localStorage.getItem(key);
-                        const arr = raw ? (JSON.parse(raw) as Highlight[]) : [];
-                        const value = JSON.stringify(arr.filter(h => h.id !== confirmRemoveId));
-                        localStorage.setItem(key, value);
-                        syncKey(key, value).catch(() => {});
-                      } catch {}
+                      deleteUnifiedHighlight(target);
                       setBookHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
                     }
                     setConfirmRemoveId(null);

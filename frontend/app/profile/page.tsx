@@ -324,6 +324,7 @@ export default function ProfilePage() {
             key.startsWith("axiom-hl-bible-") ||
             key.startsWith("tulip-reader-highlights:") ||
             key === "tulip-matthew-henry-highlights" ||
+            key === "tulip-unified-highlights-v1" ||
             key === "tulip-church-analyses" ||
             key === "tulip_badges_earned_v1"
           ) {
