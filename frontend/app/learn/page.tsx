@@ -5,7 +5,6 @@ import { usePagination } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
-import { applyHighlightsToHtml, type Highlight } from "../lib/highlights";
 import { LEARN_DOCUMENTS as _LEARN_DOCS_FOR_HL } from "../lib/learnData";
 import { collectUnifiedHighlights, deleteUnifiedHighlight, getReaderHighlights, type UnifiedHighlight } from "../lib/unifiedHighlights";
 import { useTheme } from "../lib/useTheme";
@@ -183,53 +182,6 @@ function loadAllDocHighlights(): DocHighlight[] {
       return { ...highlight, docId, docTitle: doc?.title ?? highlight.title, sectionId, rawId };
     })
     .sort((a, b) => b.createdAt - a.createdAt);
-}
-
-// ─── Markdown renderer ────────────────────────────────────────────────────────
-function renderContent(
-  text: string,
-  textColor: string,
-  highlights: import("../lib/highlights").Highlight[] = [],
-  onHighlightClick?: (id: string, x: number, y: number) => void
-) {
-  const lines = text.split("\n");
-  const elements: JSX.Element[] = [];
-  let i = 0;
-  while (i < lines.length) {
-    const line = lines[i];
-    if (!line.trim()) { elements.push(<div key={i} className="h-3" />); i++; continue; }
-    if (line.startsWith("## ")) {
-      elements.push(
-        <h3 key={i} className="pt-5 pb-1 text-lg font-black" style={{ color: textColor }}>
-          {line.replace(/^##\s+/, "")}
-        </h3>
-      );
-      i++;
-      continue;
-    }
-    const inlined = line
-      .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/—/g, "—");
-    const withHL = applyHighlightsToHtml(inlined, highlights);
-    elements.push(
-      <p
-        key={i}
-        style={{ lineHeight: "1.85", color: textColor, fontSize: "15px", fontFamily: "Georgia, serif" }}
-        dangerouslySetInnerHTML={{ __html: withHL }}
-        onClick={(e) => {
-          const target = e.target as HTMLElement;
-          if (target.dataset.hlId && onHighlightClick) {
-            const rect = target.getBoundingClientRect();
-            onHighlightClick(target.dataset.hlId, rect.left + rect.width / 2, rect.top);
-          }
-        }}
-      />
-    );
-    i++;
-  }
-  return elements;
 }
 
 // ─── Section Reader ───────────────────────────────────────────────────────────

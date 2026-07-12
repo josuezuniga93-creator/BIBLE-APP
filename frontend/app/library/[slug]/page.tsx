@@ -10,79 +10,13 @@ import type { BookDetail, BookChapter } from "../../lib/types";
 import { getBookCoverImage } from "../../lib/bookCoverImages";
 import { useLanguage } from "../../lib/useLanguage";
 import { translateToSpanish } from "../../lib/googleTranslate";
-import { applyHighlightsToHtml, type Highlight } from "../../lib/highlights";
 import { useTheme, type Theme } from "../../lib/useTheme";
 import { BookmarkModal } from "../../components/BookmarkModal";
 import { isAnySaved } from "../../lib/collections";
 import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
-import { BracketHighlightReader } from "../../components/BracketHighlightReader";
 import { AppReader } from "../../components/AppReader";
 import { getReaderHighlights } from "../../lib/unifiedHighlights";
-
-// ─── Inline markdown → HTML ───────────────────────────────────────────────────
-function renderInline(text: string): string {
-  return text
-    .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/_([^_]+)_/g, "<em>$1</em>");
-}
-
-function renderChapterContent(
-  content: string | undefined,
-  fontSize: string,
-  highlights: Highlight[],
-  onHighlightClick: (id: string, x: number, y: number) => void,
-  presentationMode = false,
-  textColor = "rgba(255,255,255,0.82)",
-  headingColor = "rgba(255,255,255,0.5)"
-): React.ReactNode {
-  if (!content) return null;
-  // Content arriving here has already been through normalizeBookContent (via
-  // usePagination rawText:true), so each \n\n boundary is a real paragraph
-  // break and there are no soft-wrapped single-\n line breaks inside paragraphs.
-  const paragraphs = content.split(/\n\n+/);
-  return (
-    <div
-      className={`${fontSize}`}
-      style={{
-        fontFamily: "'Georgia', 'Times New Roman', serif",
-        color: textColor,
-        lineHeight: presentationMode ? "2" : "1.9",
-      }}
-      onClick={(e) => {
-        const target = e.target as HTMLElement;
-        if (target.dataset.hlId) {
-          const rect = target.getBoundingClientRect();
-          onHighlightClick(target.dataset.hlId, rect.left + rect.width / 2, rect.top);
-        }
-      }}
-    >
-      {paragraphs.map((para, i) => {
-        // Trim and collapse any residual whitespace within the line
-        const trimmed = para.trim().replace(/[ \t]+/g, " ");
-        if (!trimmed) return null;
-        const isChapterHeading =
-          trimmed.length < 80 && /^[A-Z][A-Z0-9\s\.\-—,:'"!?]+$/.test(trimmed);
-        const html = applyHighlightsToHtml(renderInline(trimmed), highlights);
-        return (
-          <p
-            key={i}
-            className={isChapterHeading ? "font-bold text-center tracking-[0.2em] text-sm" : ""}
-            style={{
-              ...(isChapterHeading ? { color: headingColor } : {}),
-              // Give real inter-paragraph spacing; headings get more breathing room
-              marginBottom: isChapterHeading ? "1.5em" : "1.25em",
-              marginTop: isChapterHeading ? "2em" : 0,
-            }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
-        );
-      })}
-    </div>
-  );
-}
 
 function DetailBookCover({ slug, title, author }: { slug: string; title: string; author: string }) {
   const imageSrc = getBookCoverImage(slug);
@@ -436,54 +370,29 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // ── Presentation Mode ───────────────────────────────────────────────────────
   if (presentationMode) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex flex-col"
-        style={{ backgroundColor: th.pageBg }}
-        onClick={() => setPresentationMode(false)}
-      >
-        <div className="absolute top-4 right-4 text-xs pointer-events-none" style={{ color: th.textVeryMuted }}>{lang === "es" ? "Presiona F o toca para salir" : "Press F or tap to exit"}</div>
-        <div className="px-8 pt-10 pb-4 flex-shrink-0 max-w-2xl mx-auto w-full" style={{ borderBottom: `1px solid ${th.borderLight}` }}>
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] mb-2" style={{ color: th.accentLight }}>
-            {bookTitle(book, lang)} · {lang === "es" ? "Cap." : "Ch."} {currentChapter}
-          </p>
-          <p className="text-xl md:text-2xl font-bold leading-snug" style={{ color: th.textPrimary }}
-            dangerouslySetInnerHTML={{ __html: chapter ? renderInline(bookSectionTitle(slug, chapter.chapter_title, lang)) : "" }} />
-        </div>
-        <div ref={contentRef} className="flex-1 overflow-y-auto px-8 py-6">
-          {chapterLoading ? (
-            <div className="flex justify-center py-16">
-              <div className="w-6 h-6 rounded-full border-2 animate-spin"
-                style={{ borderColor: th.borderMed, borderTopColor: th.accent }} />
-            </div>
-          ) : (
-            <div className="max-w-2xl mx-auto w-full">
-              <BracketHighlightReader
-                context={`book-${slug}-${currentChapter}`}
-                text={chapter?.content ?? ""}
-                title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
-                reference={`${bookTitle(book, lang)} ${currentChapter}`}
-                textColor={th.textContent}
-                fontSizeClass="text-xl md:text-2xl"
-                scrollRef={contentRef}
-                targetHighlightId={urlHlid ?? undefined}
-              />
-            </div>
-          )}
-        </div>
-        <div className="flex items-center justify-between px-8 py-5" style={{ borderTop: `1px solid ${th.borderLight}` }} onClick={(e) => e.stopPropagation()}>
-          <button disabled={!chapter?.has_prev} onClick={goPrev}
-            className="px-5 py-2.5 rounded-lg font-bold text-sm transition-colors"
-            style={{ backgroundColor: chapter?.has_prev ? th.prevBtnBg : "transparent", color: chapter?.has_prev ? th.addLibText : th.textVeryMuted, cursor: chapter?.has_prev ? "pointer" : "not-allowed" }}>
-            {lang === "es" ? "← Anterior" : "← Previous"}
-          </button>
-          <span style={{ color: th.textVeryMuted, fontSize: "14px" }}>{currentChapter} / {book.chapter_count}</span>
-          <button disabled={!chapter?.has_next} onClick={goNext}
-            className="px-5 py-2.5 rounded-lg font-bold text-sm transition-colors"
-            style={{ background: chapter?.has_next ? th.nextBtnGradient : "transparent", color: chapter?.has_next ? "white" : th.textVeryMuted, cursor: chapter?.has_next ? "pointer" : "not-allowed" }}>
-            {lang === "es" ? "Siguiente →" : "Next →"}
-          </button>
-        </div>
-      </div>
+      <AppReader
+        title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
+        eyebrow={`${bookTitle(book, lang)} · ${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}
+        sectionLabel={`${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}
+        sectionTitle={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : (lang === "es" ? "Cargando..." : "Loading...")}
+        showSectionTitle={false}
+        context={`book-${slug}-${currentChapter}`}
+        text={pages[currentPage - 1] ?? ""}
+        reference={`${bookTitle(book, lang)} ${currentChapter}${totalPages > 1 ? ` · ${lang === "es" ? "Página" : "Page"} ${currentPage}` : ""}`}
+        fontSizeClass="text-xl md:text-2xl"
+        currentPage={currentPage}
+        totalPages={totalPages}
+        pagePercent={pagePercent}
+        progressPercent={bookPercent}
+        targetHighlightId={urlHlid ?? undefined}
+        isLoading={chapterLoading}
+        loadingLabel={lang === "es" ? "Cargando capítulo" : "Loading chapter"}
+        previousDisabled={isFirstPage && !chapter?.has_prev}
+        nextDisabled={isLastPage && !chapter?.has_next}
+        onPrevious={() => { if (!goPrevPage()) goPrev(); }}
+        onNext={() => { if (!goNextPage()) goNext(); }}
+        onClose={() => setPresentationMode(false)}
+      />
     );
   }
 
