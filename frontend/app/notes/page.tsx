@@ -62,6 +62,35 @@ function SlidersIcon({ size = 18 }: { size?: number }) {
   );
 }
 
+function EditorToolButton({
+  label,
+  onClick,
+  children,
+  emphasized = false,
+}: {
+  label: string;
+  onClick: () => void;
+  children: React.ReactNode;
+  emphasized?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      className="flex min-h-12 min-w-[52px] flex-col items-center justify-center gap-1 rounded-2xl px-2 transition-transform active:scale-95"
+      style={{
+        color: emphasized ? "var(--fg)" : "var(--fg-lo)",
+        background: emphasized ? "var(--bg-2)" : "transparent",
+        border: emphasized ? "1px solid var(--border)" : "1px solid transparent",
+      }}
+    >
+      <span className="grid h-5 place-items-center">{children}</span>
+      <span className="max-w-[64px] truncate text-[9px] font-bold leading-none">{label}</span>
+    </button>
+  );
+}
+
 function DetailIcon({ name }: { name: "notes" | "bible" | "collections" | "church" | "study-tools" }) {
   return (
     <span
@@ -512,6 +541,27 @@ function PassagePicker({
 
 // ─── Note Editor (Full-Screen Immersive) ─────────────────────────────────────
 
+function prepareNoteForEditor(note: SermonNote): SermonNote {
+  const legacyRefs = note.notes
+    .split("\n")
+    .map((line) => line.trim().match(/^\[([^\]]+)\]$/)?.[1]?.trim())
+    .filter(Boolean) as string[];
+
+  const notes = note.notes
+    .split("\n")
+    .filter((line) => !/^\s*\[[^\]]+\]\s*$/.test(line))
+    .join("\n")
+    .replace(/_==([^=\n]+)==_/g, "$1")
+    .replace(/\*\*([^*\n]+)\*\*/g, "$1")
+    .replace(/==([^=\n]+)==/g, "$1");
+
+  return {
+    ...note,
+    notes,
+    scriptureRefs: [...new Set([...note.scriptureRefs, ...legacyRefs])],
+  };
+}
+
 function NoteEditorModal({
   initial,
   isNew,
@@ -525,7 +575,7 @@ function NoteEditorModal({
 }) {
   const { lang } = useLanguage();
   const { theme } = useTheme();
-  const [draft, setDraft] = useState<SermonNote>({ ...initial });
+  const [draft, setDraft] = useState<SermonNote>(() => prepareNoteForEditor(initial));
   const [detectedRefs, setDetectedRefs] = useState<string[]>([]);
   const [newRef, setNewRef] = useState("");
   const [showDetails, setShowDetails] = useState(false);
@@ -533,7 +583,6 @@ function NoteEditorModal({
   const [showScriptureInput, setShowScriptureInput] = useState(false);
   const [fullscreenWrite, setFullscreenWrite] = useState(false);
   const [isLandscapeWriting, setIsLandscapeWriting] = useState(false);
-  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const fullscreenBodyRef = useRef<HTMLTextAreaElement>(null);
@@ -558,15 +607,6 @@ function NoteEditorModal({
     update();
     mq.addEventListener?.("change", update);
     return () => mq.removeEventListener?.("change", update);
-  }, []);
-
-  useEffect(() => {
-    const viewport = window.visualViewport;
-    if (!viewport) return;
-    const update = () => setKeyboardOpen(window.innerHeight - viewport.height > 160);
-    update();
-    viewport.addEventListener("resize", update);
-    return () => viewport.removeEventListener("resize", update);
   }, []);
 
   // Auto-focus fullscreen textarea when opened
@@ -699,19 +739,28 @@ function NoteEditorModal({
 
   const insertScripture = () => {
     if (!scriptureInput.trim()) return;
-    const tag = `[${scriptureInput.trim()}]`;
-    const ta = bodyRef.current;
-    if (ta) {
-      const start = ta.selectionStart ?? draft.notes.length;
-      const newNotes = draft.notes.slice(0, start) + "\n" + tag + "\n" + draft.notes.slice(start);
-      patch({ notes: newNotes.trimStart() });
-      addRef(scriptureInput.trim());
-    } else {
-      patch({ notes: draft.notes + "\n" + tag });
-      addRef(scriptureInput.trim());
-    }
+    addRef(scriptureInput.trim());
     setScriptureInput("");
     setShowScriptureInput(false);
+    setTimeout(() => bodyRef.current?.focus(), 30);
+  };
+
+  const insertAtCursor = (text: string) => {
+    const ta = bodyRef.current;
+    const start = ta?.selectionStart ?? draft.notes.length;
+    const end = ta?.selectionEnd ?? start;
+    const needsLineBreak = start > 0 && draft.notes[start - 1] !== "\n";
+    const inserted = `${needsLineBreak ? "\n" : ""}${text}`;
+    const next = draft.notes.slice(0, start) + inserted + draft.notes.slice(end);
+    patch({ notes: next });
+    requestAnimationFrame(() => {
+      const editor = bodyRef.current;
+      if (!editor) return;
+      const caret = start + inserted.length;
+      editor.focus();
+      editor.setSelectionRange(caret, caret);
+      autoResize(editor);
+    });
   };
 
   const handleSave = () => onSave({ ...normalizeNotePassage(draft), updatedAt: new Date().toISOString() });
@@ -723,11 +772,6 @@ function NoteEditorModal({
       });
     } catch { return draft.date; }
   })();
-
-  // Inline scripture card detection from notes body
-  const scriptureCardRefs = draft.notes.split("\n")
-    .map((line) => { const m = line.match(/^\[(.+?)\]$/); return m ? m[1] : null; })
-    .filter(Boolean) as string[];
 
   // Fullscreen writing mode colors
   const writingModeActive = fullscreenWrite || isLandscapeWriting;
@@ -741,7 +785,7 @@ function NoteEditorModal({
       {/* ── Fullscreen Writing Overlay ── */}
       {writingModeActive && (
         <div
-          className="fixed inset-0 flex flex-col"
+          className="fixed inset-x-0 top-0 flex h-[100dvh] flex-col"
           style={{
             zIndex: 9999,
             background: fsBg,
@@ -819,7 +863,7 @@ function NoteEditorModal({
       )}
 
       {/* ── Main full-screen editor ── */}
-      <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "var(--bg)" }}>
+      <div className="fixed inset-x-0 top-0 z-50 flex h-[100dvh] flex-col" style={{ background: "var(--bg)" }}>
 
         {/* Top bar */}
         <div
@@ -964,23 +1008,6 @@ function NoteEditorModal({
               </button>
             </div>
 
-            {/* Inline scripture reference cards */}
-            {scriptureCardRefs.length > 0 && (
-              <div className="space-y-2 mt-3">
-                {scriptureCardRefs.map((ref) => (
-                  <div key={ref}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl"
-                    style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 25%, transparent)" }}>
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ color: "var(--accent)", flexShrink: 0 }}>
-                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span className="text-sm font-semibold" style={{ color: "var(--accent-text)", fontFamily: "Georgia, serif" }}>{ref}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
             {/* Auto-detected refs */}
             {detectedRefs.length > 0 && (
               <div className="mt-4 rounded-xl px-3.5 py-3" style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
@@ -994,6 +1021,22 @@ function NoteEditorModal({
                       style={{ background: "var(--accent)", color: "#fff", opacity: 0.85 }}>
                       + {ref}
                     </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {draft.scriptureRefs.filter(Boolean).length > 0 && (
+              <div className="mt-4 rounded-2xl p-3" style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
+                <p className="mb-2 text-[10px] font-black uppercase tracking-[0.16em]" style={{ color: "var(--fg-dim)" }}>
+                  {lang === "es" ? "Referencias guardadas" : "Saved references"}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {draft.scriptureRefs.filter(Boolean).map((ref) => (
+                    <span key={ref} className="inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold" style={{ background: isEditorLight ? "#e5e7eb" : "rgba(255,255,255,0.06)", color: "var(--fg-mid)" }}>
+                      {ref}
+                      <button type="button" onClick={() => removeRef(ref)} aria-label={`${lang === "es" ? "Eliminar" : "Remove"} ${ref}`} style={{ color: "var(--fg-dim)" }}>×</button>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -1063,7 +1106,7 @@ function NoteEditorModal({
               style={{ color: "var(--fg)" }} />
             <button onClick={insertScripture}
               className="px-3 py-1.5 rounded-xl text-xs font-bold text-white"
-              style={{ background: "var(--accent)" }}>{lang === "es" ? "Insertar" : "Insert"}</button>
+              style={{ background: isEditorLight ? "#111111" : "var(--accent)" }}>{lang === "es" ? "Guardar" : "Save"}</button>
             <button onClick={() => setShowScriptureInput(false)}
               className="px-2 py-1.5 rounded-xl text-xs font-semibold"
               style={{ color: "var(--fg-lo)" }}>✕</button>
@@ -1071,69 +1114,49 @@ function NoteEditorModal({
         )}
 
 
-        {/* Bottom toolbar */}
+        {/* Keyboard-safe editor dock: only actions that work in plain text. */}
         <div
-          className={`${keyboardOpen ? "hidden" : "flex"} flex-shrink-0 items-center justify-around px-2 safe-area-bottom`}
+          className="flex flex-shrink-0 items-center justify-around gap-1 px-2 pt-1.5 safe-area-bottom"
           style={{
-            background: "var(--nav-bg)",
+            background: "color-mix(in srgb, var(--nav-bg) 96%, transparent)",
             borderTop: "1px solid var(--border)",
-            minHeight: "56px",
-            paddingBottom: "env(safe-area-inset-bottom)",
+            minHeight: "62px",
+            paddingBottom: "max(6px, env(safe-area-inset-bottom))",
+            boxShadow: "0 -12px 32px rgba(0,0,0,0.08)",
+            backdropFilter: "blur(18px)",
           }}
+          aria-label={lang === "es" ? "Herramientas de la nota" : "Note tools"}
         >
-          {/* Bold */}
-          <button type="button" onClick={() => {
-            const ta = bodyRef.current; if (!ta) return;
-            const s = ta.selectionStart, e = ta.selectionEnd;
-            const sel = draft.notes.slice(s, e);
-            patch({ notes: draft.notes.slice(0, s) + (sel ? `**${sel}**` : "**bold**") + draft.notes.slice(e) });
-          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
-            <span className="text-base font-black leading-none">B</span>
-            <span className="text-[9px]">{lang === "es" ? "Negrita" : "Bold"}</span>
-          </button>
-
-          {/* Italic */}
-          <button type="button" onClick={() => {
-            const ta = bodyRef.current; if (!ta) return;
-            const s = ta.selectionStart, e = ta.selectionEnd;
-            const sel = draft.notes.slice(s, e);
-            patch({ notes: draft.notes.slice(0, s) + (sel ? `_${sel}_` : "_italic_") + draft.notes.slice(e) });
-          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
-            <span className="text-base italic font-bold leading-none">I</span>
-            <span className="text-[9px]">{lang === "es" ? "Cursiva" : "Italic"}</span>
-          </button>
-
-          {/* Highlight */}
-          <button type="button" onClick={() => {
-            const ta = bodyRef.current; if (!ta) return;
-            const s = ta.selectionStart, e = ta.selectionEnd;
-            const sel = draft.notes.slice(s, e);
-            patch({ notes: draft.notes.slice(0, s) + (sel ? `==${sel}==` : "==highlight==") + draft.notes.slice(e) });
-          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
-            <span className="text-base leading-none">H</span>
-            <span className="text-[9px]">Highlight</span>
-          </button>
-
-          {/* Scripture */}
-          <button type="button" onClick={() => setShowScriptureInput(true)}
-            className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50"
-            style={{ color: isEditorLight ? "#111111" : "var(--accent)" }}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <EditorToolButton label={lang === "es" ? "Viñeta" : "Bullet"} onClick={() => insertAtCursor("• ")}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="5" cy="7" r="1.5" fill="currentColor" /><circle cx="5" cy="12" r="1.5" fill="currentColor" /><circle cx="5" cy="17" r="1.5" fill="currentColor" />
+              <path d="M10 7h9M10 12h9M10 17h9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
-            <span className="text-[9px]">Scripture</span>
-          </button>
+          </EditorToolButton>
 
-          {/* Checklist */}
-          <button type="button" onClick={() => {
-            patch({ notes: draft.notes + (draft.notes.endsWith("\n") || !draft.notes ? "☐ " : "\n☐ ") });
-            setTimeout(() => bodyRef.current?.focus(), 30);
-          }} className="flex flex-col items-center gap-0.5 py-2 px-3 rounded-xl transition-opacity active:opacity-50" style={{ color: "var(--fg-lo)" }}>
-            <span className="text-base leading-none">☐</span>
-            <span className="text-[9px]">Checklist</span>
-          </button>
+          <EditorToolButton label={lang === "es" ? "Lista" : "Checklist"} onClick={() => insertAtCursor("☐ ")}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.8" /><rect x="3" y="15" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.8" />
+              <path d="M12 6.5h8M12 17.5h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </EditorToolButton>
 
+          <EditorToolButton label={lang === "es" ? "Biblia" : "Scripture"} onClick={() => setShowScriptureInput(true)} emphasized>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </EditorToolButton>
+
+          <EditorToolButton label={lang === "es" ? "Enfoque" : "Focus"} onClick={() => setFullscreenWrite(true)}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" aria-hidden="true">
+              <path d="M8 3H5a2 2 0 00-2 2v3M21 8V5a2 2 0 00-2-2h-3M3 16v3a2 2 0 002 2h3M16 21h3a2 2 0 002-2v-3" />
+            </svg>
+          </EditorToolButton>
+
+          <EditorToolButton label={lang === "es" ? "Detalles" : "Details"} onClick={() => setShowDetails(true)}>
+            <SlidersIcon size={19} />
+          </EditorToolButton>
         </div>
       </div>
 
