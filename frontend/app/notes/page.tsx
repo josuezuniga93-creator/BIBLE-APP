@@ -1831,8 +1831,6 @@ export default function NotesPage() {
                           <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
                         </div>
-                        <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black"
-                          style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>+</div>
                       </div>
                       <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>{t(lang, "notes_general_empty_title")}</h2>
                       <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>{t(lang, "notes_general_empty_sub")}</p>
@@ -1894,10 +1892,6 @@ export default function NotesPage() {
                       <line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
                       </svg>
-                    </div>
-                    <div className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-black"
-                      style={{ borderColor: "var(--bg)", background: "var(--accent)", color: "#08090f" }}>
-                      +
                     </div>
                   </div>
                   <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>

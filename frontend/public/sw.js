@@ -1,6 +1,6 @@
-// TULIP Bible App — Service Worker v6 (daily verse notifications)
+// Bible App — Service Worker v7 (daily verse notifications)
 
-const CACHE_NAME = 'tulip-v6';
+const CACHE_NAME = 'bible-v7';
 
 // ─── Daily verse pool ─────────────────────────────────────────────────────────
 const DAILY_VERSES = [
@@ -71,8 +71,8 @@ function showVerseNotification() {
   const verse = getTodaysVerse();
   self.registration.showNotification('📖 Daily Bible Verse', {
     body: `"${verse.text}" — ${verse.ref}`,
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icons/icon-192.png?v=7',
+    badge: '/icons/icon-192.png?v=7',
     tag: 'daily-verse',
     renotify: true,
     data: { url: '/' },
