@@ -28,19 +28,20 @@ const verseDisplay = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  title: "Tulip Bible",
+  title: "Bible",
+  applicationName: "Bible",
   description:
-    "Tulip Bible — Reformed study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
+    "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   openGraph: {
-    title: "Tulip Bible",
-    description: "Tulip Bible — Reformed study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
+    title: "Bible",
+    description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
     type: "website",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Tulip Bible",
+    title: "Bible",
   },
   icons: {
     icon: [

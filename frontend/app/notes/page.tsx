@@ -13,9 +13,13 @@ import {
   saveNotes,
   makeNote,
   detectScriptureRefs,
+  getNoteDisplayRef,
+  normalizeNotePassage,
   PRESET_TAGS,
 } from "../lib/notesData";
 import { AppSectionIcon } from "../components/AppSectionIcon";
+import { SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
+import { formatParsedPassage, parsePassageInput } from "../lib/passageParser";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -37,6 +41,17 @@ function refToHref(ref: string) {
 
 function NotesIcon({ className = "" }: { className?: string }) {
   return <AppSectionIcon name="notes" size={22} className={className} />;
+}
+
+function DetailIcon({ name }: { name: "notes" | "bible" | "collections" | "church" | "study-tools" }) {
+  return (
+    <span
+      className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+      style={{ background: "var(--bg-2)", color: "var(--fg-mid)", border: "1px solid var(--border)" }}
+    >
+      <AppSectionIcon name={name} size={18} />
+    </span>
+  );
 }
 
 // ─── Note color palette (keyed by Bible section) ─────────────────────────────
@@ -76,6 +91,22 @@ const TAG_COLORS: Record<string, string> = {
   "Holiness":    "bg-red-500/15 text-red-300 border-red-500/30",
   "Repentance":  "bg-rose-500/15 text-rose-300 border-rose-500/30",
 };
+
+const LIGHT_NOTE_TONE = {
+  bar: "from-black/55 via-black/12 to-transparent",
+  accent: "text-black",
+  pill: "bg-black/[0.045] border-black/[0.12] text-black/70",
+  dot: "bg-black",
+  ref: "text-black/70 bg-black/[0.045] hover:bg-black/[0.08] hover:text-black border-black/[0.10]",
+  points: "text-black/45 hover:text-black/70",
+  border: "border-black/[0.12]",
+  sideActive: "border-l-black bg-black/[0.055] text-black/80",
+  sideBadge: "bg-black/[0.07] text-black/50",
+};
+
+function getThemeNoteColor(bookNum: number, isLight: boolean) {
+  return isLight ? LIGHT_NOTE_TONE : getNoteColor(bookNum);
+}
 
 // ─── Confirm Modal ────────────────────────────────────────────────────────────
 
@@ -131,9 +162,10 @@ function NoteDetail({
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const isLight = theme === "white-noir";
-  const clr = getNoteColor(note.bookNum);
+  const clr = getThemeNoteColor(note.bookNum, isLight);
   const validPoints = note.mainPoints.filter(Boolean);
   const validRefs = note.scriptureRefs.filter(Boolean);
+  const noteRef = note.noteType === "general" ? note.passage : getNoteDisplayRef(note);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col overflow-y-auto" style={{ background: "var(--bg)" }}>
@@ -177,15 +209,15 @@ function NoteDetail({
           </div>
 
           {/* Passage + Tags */}
-          {(note.passage || note.tags.length > 0) && (
+          {(noteRef || note.tags.length > 0) && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
-              {note.passage && (
+              {noteRef && (
                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-semibold ${clr.pill}`}>
                   <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="opacity-60">
                     <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                     <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  {note.passage}
+                  {noteRef}
                 </span>
               )}
               {note.tags.map((tag) => {
@@ -280,7 +312,8 @@ function NoteCard({
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const isLight = theme === "white-noir";
-  const clr = getNoteColor(note.bookNum);
+  const clr = getThemeNoteColor(note.bookNum, isLight);
+  const noteRef = note.noteType === "general" ? note.passage : getNoteDisplayRef(note);
 
   return (
     <button
@@ -323,15 +356,15 @@ function NoteCard({
         </div>
 
         {/* Passage + Tags */}
-        {(note.passage || note.tags.length > 0) && (
+        {(noteRef || note.tags.length > 0) && (
           <div className="flex flex-wrap items-center gap-2">
-            {note.passage && (
+            {noteRef && (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-[11px] font-semibold ${clr.pill}`}>
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="opacity-60">
                   <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
-                {note.passage}
+                {noteRef}
               </span>
             )}
             {note.tags.map((tag) => {
@@ -359,6 +392,88 @@ function NoteCard({
   );
 }
 
+function PassagePicker({
+  value,
+  selectedBook,
+  chapter,
+  lang,
+  onPassageChange,
+  onBookChange,
+  onChapterChange,
+  compact = false,
+}: {
+  value: string;
+  selectedBook: typeof BIBLE_BOOKS[number];
+  chapter: number;
+  lang: "en" | "es";
+  onPassageChange: (value: string) => void;
+  onBookChange: (bookNum: number) => void;
+  onChapterChange: (chapter: number) => void;
+  compact?: boolean;
+}) {
+  const { theme } = useTheme();
+  const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
+  const isLight = activeTheme === "white-noir";
+  const maxChapter = selectedBook.chapters;
+
+  return (
+    <div
+      className={compact ? "space-y-2" : "rounded-2xl px-4 py-4"}
+      style={
+        compact
+          ? undefined
+          : { border: "1px solid var(--border)", background: "var(--bg-2)" }
+      }
+    >
+      <label className="block text-[10px] font-black uppercase tracking-widest mb-2" style={{ color: "var(--fg-dim)" }}>
+        {lang === "es" ? "Pasaje principal" : "Main Passage"}
+      </label>
+      <div className="flex items-center gap-2 rounded-2xl px-3 py-2.5" style={{ border: "1px solid var(--border)", background: isLight ? "#ffffff" : "rgba(255,255,255,0.035)" }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" style={{ color: "var(--fg-lo)", flexShrink: 0 }}>
+          <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <input
+          type="text"
+          value={value}
+          onChange={(e) => onPassageChange(e.target.value)}
+          placeholder={lang === "es" ? "Proverbios 4 o Juan 3:16" : "Proverbs 4 or John 3:16"}
+          className="flex-1 bg-transparent text-[15px] font-semibold focus:outline-none"
+          style={{ color: "var(--fg)", minWidth: 0 }}
+        />
+      </div>
+      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_96px] gap-2">
+        <select
+          value={selectedBook.num}
+          onChange={(e) => onBookChange(Number(e.target.value))}
+          className="rounded-2xl px-3 py-2.5 text-sm font-semibold outline-none [color-scheme:inherit]"
+          style={{ color: "var(--fg-mid)", border: "1px solid var(--border)", background: isLight ? "#ffffff" : "rgba(255,255,255,0.035)" }}
+        >
+          {BIBLE_BOOKS.map((book) => (
+            <option key={book.num} value={book.num}>{bibleBookName(book, lang)}</option>
+          ))}
+        </select>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={maxChapter}
+          value={chapter}
+          onChange={(e) => onChapterChange(Number(e.target.value) || 1)}
+          aria-label={lang === "es" ? "Capítulo" : "Chapter"}
+          className="rounded-2xl px-3 py-2.5 text-center text-sm font-black outline-none"
+          style={{ color: "var(--fg)", border: "1px solid var(--border)", background: isLight ? "#ffffff" : "rgba(255,255,255,0.035)" }}
+        />
+      </div>
+      <p className="mt-2 text-[11px] leading-relaxed" style={{ color: "var(--fg-dim)" }}>
+        {lang === "es"
+          ? "Escribe 1 para capítulo 1, 1:5 para capítulo 1 versículo 5, o Proverbios 4."
+          : "Type 1 for chapter 1, 1:5 for chapter 1 verse 5, or Proverbs 4."}
+      </p>
+    </div>
+  );
+}
+
 // ─── Note Editor (Full-Screen Immersive) ─────────────────────────────────────
 
 function NoteEditorModal({
@@ -378,10 +493,11 @@ function NoteEditorModal({
   const [detectedRefs, setDetectedRefs] = useState<string[]>([]);
   const [newRef, setNewRef] = useState("");
   const [showDetails, setShowDetails] = useState(false);
-  const [chapterText, setChapterText] = useState(String(initial.chapter));
   const [scriptureInput, setScriptureInput] = useState("");
   const [showScriptureInput, setShowScriptureInput] = useState(false);
   const [fullscreenWrite, setFullscreenWrite] = useState(false);
+  const [isLandscapeWriting, setIsLandscapeWriting] = useState(false);
+  const [keyboardWriteHintShown, setKeyboardWriteHintShown] = useState(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const fullscreenBodyRef = useRef<HTMLTextAreaElement>(null);
@@ -394,15 +510,23 @@ function NoteEditorModal({
 
   const patch = useCallback((p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p })), []);
 
-  // Auto-focus title on open
   useEffect(() => {
-    const id = setTimeout(() => titleRef.current?.focus(), 80);
-    return () => clearTimeout(id);
+    document.documentElement.setAttribute("data-app-reader-open", "true");
+    return () => document.documentElement.removeAttribute("data-app-reader-open");
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(orientation: landscape) and (max-height: 560px)");
+    const update = () => setIsLandscapeWriting(mq.matches);
+    update();
+    mq.addEventListener?.("change", update);
+    return () => mq.removeEventListener?.("change", update);
   }, []);
 
   // Auto-focus fullscreen textarea when opened
   useEffect(() => {
-    if (fullscreenWrite) {
+    if (fullscreenWrite || isLandscapeWriting) {
       const id = setTimeout(() => {
         const el = fullscreenBodyRef.current;
         if (el) {
@@ -412,7 +536,7 @@ function NoteEditorModal({
       }, 60);
       return () => clearTimeout(id);
     }
-  }, [fullscreenWrite]);
+  }, [fullscreenWrite, isLandscapeWriting]);
 
   // Auto-resize textareas
   const autoResize = (el: HTMLTextAreaElement | null) => {
@@ -442,7 +566,66 @@ function NoteEditorModal({
 
   const handleBookChange = (num: number) => {
     const book = BIBLE_BOOKS.find((b) => b.num === num);
-    if (book) { patch({ bookNum: book.num, bookName: book.name, chapter: 1 }); setChapterText("1"); }
+    if (!book) return;
+    const nextChapter = Math.max(1, Math.min(book.chapters, draft.chapter || 1));
+    const displayRef = formatParsedPassage({
+      bookName: book.name,
+      chapter: nextChapter,
+      verseStart: draft.verseStart,
+      verseEnd: draft.verseEnd,
+    });
+    patch({
+      bookNum: book.num,
+      bookName: book.name,
+      chapter: nextChapter,
+      displayRef,
+      passage: displayRef,
+    });
+  };
+
+  const handlePassageChange = (value: string) => {
+    const parsed = parsePassageInput(value, draft.bookNum);
+    if (parsed) {
+      const parsedBook = BIBLE_BOOKS.find((book) => book.num === parsed.bookNum);
+      const nextChapter = parsed.hasExplicitChapter
+        ? parsed.chapter
+        : Math.max(1, Math.min(parsedBook?.chapters ?? selectedBook.chapters, draft.chapter || 1));
+      const displayRef = parsed.hasExplicitChapter
+        ? parsed.displayRef
+        : formatParsedPassage({
+            bookName: parsed.bookName,
+            chapter: nextChapter,
+            verseStart: draft.verseStart,
+            verseEnd: draft.verseEnd,
+          });
+      patch({
+        passage: value,
+        bookNum: parsed.bookNum,
+        bookName: parsed.bookName,
+        chapter: nextChapter,
+        verseStart: parsed.hasExplicitChapter ? parsed.verseStart : draft.verseStart,
+        verseEnd: parsed.hasExplicitChapter ? parsed.verseEnd : draft.verseEnd,
+        displayRef,
+      });
+      return;
+    }
+    patch({ passage: value });
+  };
+
+  const handleChapterChange = (value: number) => {
+    const nextChapter = Math.max(1, Math.min(selectedBook.chapters, value || 1));
+    const displayRef = formatParsedPassage({
+      bookName: selectedBook.name,
+      chapter: nextChapter,
+      verseStart: draft.verseStart,
+      verseEnd: draft.verseEnd,
+    });
+    patch({
+      chapter: nextChapter,
+      bookName: selectedBook.name,
+      displayRef,
+      passage: displayRef,
+    });
   };
 
   const updatePoint = (i: number, val: string) => {
@@ -481,7 +664,7 @@ function NoteEditorModal({
     setShowScriptureInput(false);
   };
 
-  const handleSave = () => onSave({ ...draft, updatedAt: new Date().toISOString() });
+  const handleSave = () => onSave({ ...normalizeNotePassage(draft), updatedAt: new Date().toISOString() });
 
   const dateDisplay = (() => {
     try {
@@ -497,6 +680,7 @@ function NoteEditorModal({
     .filter(Boolean) as string[];
 
   // Fullscreen writing mode colors
+  const writingModeActive = fullscreenWrite || isLandscapeWriting;
   const fsBg = isEditorLight ? "#ffffff" : "#0e1018";
   const fsFg = isEditorLight ? "#1a1a1a" : "#e8e8e8";
   const fsBorder = isEditorLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.07)";
@@ -505,13 +689,13 @@ function NoteEditorModal({
   return (
     <>
       {/* ── Fullscreen Writing Overlay ── */}
-      {fullscreenWrite && (
+      {writingModeActive && (
         <div
           className="fixed inset-0 flex flex-col"
           style={{
             zIndex: 9999,
             background: fsBg,
-            opacity: fullscreenWrite ? 1 : 0,
+            opacity: writingModeActive ? 1 : 0,
             transition: "opacity 0.2s ease",
           }}
         >
@@ -546,20 +730,21 @@ function NoteEditorModal({
                 {t(lang, "notes_save")}
               </button>
 
-              {/* Close fullscreen */}
-              <button
-                type="button"
-                onClick={() => setFullscreenWrite(false)}
-                className="flex items-center justify-center w-8 h-8 rounded-lg transition-opacity active:opacity-50"
-                style={{ color: fsFgDim }}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M8 3v3a2 2 0 01-2 2H3"/>
-                  <path d="M21 8h-3a2 2 0 01-2-2V3"/>
-                  <path d="M3 16h3a2 2 0 012 2v3"/>
-                  <path d="M16 21v-3a2 2 0 012-2h3"/>
-                </svg>
-              </button>
+              {!isLandscapeWriting && (
+                <button
+                  type="button"
+                  onClick={() => setFullscreenWrite(false)}
+                  className="flex items-center justify-center w-8 h-8 rounded-lg transition-opacity active:opacity-50"
+                  style={{ color: fsFgDim }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 3v3a2 2 0 01-2 2H3"/>
+                    <path d="M21 8h-3a2 2 0 01-2-2V3"/>
+                    <path d="M3 16h3a2 2 0 012 2v3"/>
+                    <path d="M16 21v-3a2 2 0 012-2h3"/>
+                  </svg>
+                </button>
+              )}
             </div>
           </div>
 
@@ -616,7 +801,13 @@ function NoteEditorModal({
         </div>
 
         {/* Scrollable writing area */}
-        <div className="flex-1 overflow-y-auto pb-20 relative" style={{ background: "var(--bg)" }}>
+        <div
+          className="flex-1 overflow-y-auto relative"
+          style={{
+            background: "var(--bg)",
+            paddingBottom: "calc(92px + env(safe-area-inset-bottom))",
+          }}
+        >
           <div className="max-w-2xl mx-auto px-5 pt-6 pb-4">
 
             {/* Date */}
@@ -652,20 +843,53 @@ function NoteEditorModal({
             <div className="my-5" style={{ height: "1px", background: "var(--border)", opacity: 0.6 }} />
 
             {/* Body */}
-            <div className="relative">
+            <div
+              className="relative rounded-[28px] p-4"
+              style={{
+                background: isEditorLight ? "#f8f9fb" : "var(--bg-2)",
+                border: "1px solid var(--border)",
+                boxShadow: isEditorLight ? "0 18px 44px rgba(0,0,0,0.06)" : "0 18px 44px rgba(0,0,0,0.20)",
+              }}
+            >
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: "var(--fg-dim)" }}>
+                  {lang === "es" ? "Notas del sermón" : "Sermon notes"}
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setFullscreenWrite(true)}
+                  className="rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.14em] transition-opacity active:opacity-60"
+                  style={{
+                    background: isEditorLight ? "#ffffff" : "rgba(255,255,255,0.06)",
+                    border: "1px solid var(--border)",
+                    color: "var(--fg-mid)",
+                  }}
+                >
+                  {lang === "es" ? "Escritura limpia" : "Focus writing"}
+                </button>
+              </div>
               <textarea
                 ref={bodyRef}
                 value={draft.notes}
-                onChange={(e) => { patch({ notes: e.target.value }); autoResize(e.target); }}
-                onInput={(e) => autoResize(e.target as HTMLTextAreaElement)}
+                onChange={(e) => patch({ notes: e.target.value })}
+                onFocus={(e) => {
+                  setTimeout(() => e.currentTarget.scrollIntoView({ block: "center", behavior: "smooth" }), 80);
+                  if (!keyboardWriteHintShown && typeof window !== "undefined" && window.innerWidth < 760) {
+                    setKeyboardWriteHintShown(true);
+                    setFullscreenWrite(true);
+                  }
+                }}
                 placeholder={lang === "es" ? "Empieza a escribir tus notas…" : "Start writing your notes…"}
                 rows={12}
-                className="w-full resize-none bg-transparent border-none outline-none leading-relaxed"
+                className="w-full resize-none bg-transparent border-none outline-none leading-relaxed overflow-y-auto"
                 style={{
-                  fontSize: "15px",
+                  fontSize: "16px",
                   color: "var(--fg-mid)",
                   fontFamily: "Georgia, 'Times New Roman', serif",
-                  minHeight: "220px",
+                  height: "clamp(320px, 50dvh, 560px)",
+                  minHeight: "320px",
+                  paddingBottom: "96px",
+                  scrollPaddingBottom: "112px",
                   caretColor: "var(--accent)",
                 }}
               />
@@ -674,8 +898,12 @@ function NoteEditorModal({
                 type="button"
                 onClick={() => setFullscreenWrite(true)}
                 title="Fullscreen writing mode"
-                className="absolute bottom-2 right-0 flex items-center justify-center w-8 h-8 rounded-lg transition-opacity active:opacity-50"
-                style={{ opacity: 0.35 }}
+                className="absolute bottom-3 right-3 flex items-center justify-center w-8 h-8 rounded-xl transition-opacity active:opacity-50"
+                style={{
+                  opacity: 0.45,
+                  background: isEditorLight ? "#ffffff" : "rgba(255,255,255,0.06)",
+                  border: "1px solid var(--border)",
+                }}
                 onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.75"; }}
                 onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.opacity = "0.35"; }}
               >
@@ -725,40 +953,15 @@ function NoteEditorModal({
 
             {/* ── Bible Book & Passage (sermon notes only) ── */}
             {draft.noteType !== "general" && (
-              <div className="mt-8 flex items-center gap-2 rounded-2xl px-4 py-3"
-                style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}>
-                {/* Book dropdown */}
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" style={{ color: "var(--accent)", flexShrink: 0 }}>
-                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                <select
-                  value={draft.bookNum}
-                  onChange={(e) => handleBookChange(Number(e.target.value))}
-                  className="bg-transparent text-sm font-semibold focus:outline-none [color-scheme:inherit] flex-shrink-0"
-                  style={{ color: "var(--fg-mid)" }}
-                >
-                  <optgroup label={lang === "es" ? "— Antiguo Testamento —" : "— Old Testament —"}>
-                    {BIBLE_BOOKS.filter((b) => b.testament === "OT").map((b) => (
-                      <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>
-                    ))}
-                  </optgroup>
-                  <optgroup label={lang === "es" ? "— Nuevo Testamento —" : "— New Testament —"}>
-                    {BIBLE_BOOKS.filter((b) => b.testament === "NT").map((b) => (
-                      <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>
-                    ))}
-                  </optgroup>
-                </select>
-                {/* Divider */}
-                <span style={{ color: "var(--border)", fontSize: "18px", fontWeight: 100 }}>|</span>
-                {/* Passage — free text e.g. "3:16" or "1:1-18" */}
-                <input
-                  type="text"
+              <div className="mt-8">
+                <PassagePicker
                   value={draft.passage}
-                  onChange={(e) => patch({ passage: e.target.value })}
-                  placeholder={`e.g. ${draft.chapter}:1–12`}
-                  className="flex-1 bg-transparent text-sm focus:outline-none"
-                  style={{ color: "var(--fg-mid)", minWidth: 0 }}
+                  selectedBook={selectedBook}
+                  chapter={draft.chapter}
+                  lang={lang}
+                  onPassageChange={handlePassageChange}
+                  onBookChange={handleBookChange}
+                  onChapterChange={handleChapterChange}
                 />
               </div>
             )}
@@ -953,12 +1156,12 @@ function NoteEditorModal({
               </button>
             </div>
 
-            {/* 2-column grid of detail fields */}
-            <div className="grid grid-cols-2 gap-px p-px" style={{ background: "var(--border)" }}>
+            {/* Detail fields */}
+            <div className="grid grid-cols-1 gap-px p-px" style={{ background: "var(--border)" }}>
 
               {/* Sermon Title */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">🎙</span>
+                <DetailIcon name="notes" />
                 <div className="flex-1 min-w-0">
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
                     {lang === "es" ? "Título del sermón" : "Sermon Title"}
@@ -972,7 +1175,7 @@ function NoteEditorModal({
 
               {/* Speaker / Pastor */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">👤</span>
+                <DetailIcon name="church" />
                 <div className="flex-1 min-w-0">
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
                     {lang === "es" ? "Predicador / Pastor" : "Speaker / Pastor"}
@@ -984,42 +1187,26 @@ function NoteEditorModal({
                 </div>
               </div>
 
-              {/* Bible Book */}
+              {/* Bible Passage */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--fg-dim)", opacity: 0.5 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
-                  </svg>
-                </span>
+                <DetailIcon name="bible" />
                 <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
-                    {lang === "es" ? "Libro de la Biblia" : "Bible Book"}
-                  </label>
-                  <div className="flex gap-1.5 items-center">
-                    <select value={draft.bookNum} onChange={(e) => handleBookChange(Number(e.target.value))}
-                      className="flex-1 text-xs bg-transparent border-none outline-none [color-scheme:inherit] min-w-0"
-                      style={{ color: "var(--fg-mid)" }}>
-                      {BIBLE_BOOKS.map((b) => <option key={b.num} value={b.num}>{bibleBookName(b, lang)}</option>)}
-                    </select>
-                    <input type="text" inputMode="numeric" value={chapterText}
-                      onChange={(e) => setChapterText(e.target.value.replace(/\D/g, ""))}
-                      onBlur={() => {
-                        const num = Math.max(1, Math.min(selectedBook.chapters, Number(chapterText) || 1));
-                        setChapterText(String(num)); patch({ chapter: num });
-                      }}
-                      className="w-10 text-xs bg-transparent border-none outline-none text-center flex-shrink-0"
-                      style={{ color: "var(--fg-mid)" }} />
-                  </div>
-                  <input type="text" value={draft.passage} onChange={(e) => patch({ passage: e.target.value })}
-                    placeholder={lang === "es" ? `ej. ${bibleBookName(selectedBook, lang)} 3:16` : `e.g. ${selectedBook.name} 3:16`}
-                    className="w-full text-[11px] bg-transparent border-none outline-none mt-1"
-                    style={{ color: "var(--fg-lo)" }} />
+                  <PassagePicker
+                    value={draft.passage}
+                    selectedBook={selectedBook}
+                    chapter={draft.chapter}
+                    lang={lang}
+                    onPassageChange={handlePassageChange}
+                    onBookChange={handleBookChange}
+                    onChapterChange={handleChapterChange}
+                    compact
+                  />
                 </div>
               </div>
 
               {/* Scripture References */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">🔖</span>
+                <DetailIcon name="study-tools" />
                 <div className="flex-1 min-w-0">
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>
                     {lang === "es" ? "Referencias bíblicas" : "Scripture References"}
@@ -1048,7 +1235,7 @@ function NoteEditorModal({
 
               {/* Tags */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">🏷</span>
+                <DetailIcon name="collections" />
                 <div className="flex-1 min-w-0">
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>
                     {lang === "es" ? "Etiquetas" : "Tags"}
@@ -1067,37 +1254,9 @@ function NoteEditorModal({
                 </div>
               </div>
 
-              {/* Highlight Color */}
-              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">🎨</span>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1.5" style={{ color: "var(--fg-dim)" }}>Highlight Color</label>
-                  <div className="flex gap-2">
-                    {["#fde047","#86efac","#93c5fd","#f9a8d4"].map((c) => (
-                      <button key={c} type="button"
-                        className="w-6 h-6 rounded-full transition-transform active:scale-90 border-2"
-                        style={{ background: c, borderColor: "transparent" }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Category */}
-              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">📂</span>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Category</label>
-                  <input type="text" placeholder="Select category" className="w-full text-xs bg-transparent border-none outline-none" style={{ color: "var(--fg-mid)" }} />
-                </div>
-              </div>
-
               {/* Church Name */}
               <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="mt-0.5 flex-shrink-0" style={{ color: "var(--fg-dim)", opacity: 0.5 }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 2v3M10.5 3.5h3"/><path d="M4 9h16v12H4z"/><path d="M9 21v-5h6v5"/><path d="M6 9V7l6-4 6 4v2"/>
-                  </svg>
-                </span>
+                <DetailIcon name="church" />
                 <div className="flex-1 min-w-0">
                   <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Church Name</label>
                   <input type="text" value={draft.church ?? ""} onChange={(e) => patch({ church: e.target.value })}
@@ -1107,23 +1266,6 @@ function NoteEditorModal({
                 </div>
               </div>
 
-              {/* Attach Media */}
-              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">📎</span>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Attach Media</label>
-                  <p className="text-[11px]" style={{ color: "var(--fg-dim)" }}>Images, files, docs</p>
-                </div>
-              </div>
-
-              {/* Audio Recording */}
-              <div className="flex items-start gap-3 p-4" style={{ background: "var(--bg)" }}>
-                <span className="text-xl mt-0.5 flex-shrink-0">🎙</span>
-                <div className="flex-1 min-w-0">
-                  <label className="block text-[10px] font-black uppercase tracking-widest mb-1" style={{ color: "var(--fg-dim)" }}>Audio Recording</label>
-                  <p className="text-[11px]" style={{ color: "var(--fg-dim)" }}>Record sermon audio</p>
-                </div>
-              </div>
             </div>
 
             {/* Main Points (full width) */}
@@ -1197,8 +1339,15 @@ export default function NotesPage() {
   const [activeTab, setActiveTab] = useState<"sermon" | "general">("sermon");
 
   useEffect(() => {
-    setNotes(loadNotes());
+    const refreshNotes = () => setNotes(loadNotes());
+    refreshNotes();
     setMounted(true);
+    window.addEventListener(SYNC_COMPLETE_EVENT, refreshNotes);
+    window.addEventListener("storage", refreshNotes);
+    return () => {
+      window.removeEventListener(SYNC_COMPLETE_EVENT, refreshNotes);
+      window.removeEventListener("storage", refreshNotes);
+    };
   }, []);
 
   // ── Filtered + sorted notes ──────────────────────────────────────────────────
@@ -1220,7 +1369,7 @@ export default function NotesPage() {
         (note.pastor ?? "").toLowerCase().includes(q) ||
         (note.church ?? "").toLowerCase().includes(q) ||
         note.notes.toLowerCase().includes(q) ||
-        note.passage.toLowerCase().includes(q) ||
+        (note.noteType === "general" ? note.passage : getNoteDisplayRef(note)).toLowerCase().includes(q) ||
         note.bookName.toLowerCase().includes(q) ||
         note.tags.some((t) => t.toLowerCase().includes(q)) ||
         note.scriptureRefs.some((r) => r.toLowerCase().includes(q));
@@ -1298,20 +1447,21 @@ export default function NotesPage() {
   };
 
   const handleSaveNote = (note: SermonNote) => {
+    const noteToSave = normalizeNotePassage(note);
     setNotes((prev) => {
-      const exists = prev.some((n) => n.id === note.id);
+      const exists = prev.some((n) => n.id === noteToSave.id);
       const next = exists
-        ? prev.map((n) => (n.id === note.id ? note : n))
-        : [note, ...prev];
+        ? prev.map((n) => (n.id === noteToSave.id ? noteToSave : n))
+        : [noteToSave, ...prev];
       saveNotes(next);
       return next;
     });
     setEditorOpen(false);
     setEditingNote(null);
     // Navigate to the saved note's book/chapter (sermon notes only)
-    if (note.noteType !== "general") {
-      setSelectedBookNum(note.bookNum);
-      setExpandedChapters((prev) => new Set([...prev, note.chapter]));
+    if (noteToSave.noteType !== "general") {
+      setSelectedBookNum(noteToSave.bookNum);
+      setExpandedChapters((prev) => new Set([...prev, noteToSave.chapter]));
     }
   };
 
@@ -1558,7 +1708,7 @@ export default function NotesPage() {
                           const cnt = sorted.filter((n) => n.bookNum === book.num);
                           const chCnt = new Set(cnt.map((n) => n.chapter)).size;
                           const active = selectedBookNum === book.num;
-                          const sclr = getNoteColor(book.num);
+                          const sclr = getThemeNoteColor(book.num, isLight);
                           return (
                             <button
                               key={book.num}
@@ -1603,7 +1753,7 @@ export default function NotesPage() {
                           const cnt = sorted.filter((n) => n.bookNum === book.num);
                           const chCnt = new Set(cnt.map((n) => n.chapter)).size;
                           const active = selectedBookNum === book.num;
-                          const sclr = getNoteColor(book.num);
+                          const sclr = getThemeNoteColor(book.num, isLight);
                           return (
                             <button
                               key={book.num}
@@ -1778,7 +1928,7 @@ export default function NotesPage() {
                             {books.map((book) => {
                               const cnt = sorted.filter((n) => n.bookNum === book.num);
                               const chCnt = new Set(cnt.map((n) => n.chapter)).size;
-                              const bclr = getNoteColor(book.num);
+                              const bclr = getThemeNoteColor(book.num, isLight);
                               return (
                                 <button
                                   key={book.num}
@@ -1829,7 +1979,7 @@ export default function NotesPage() {
                       </p>
                       <div className="space-y-2">
                         {sorted.slice(0, 8).map((note) => {
-                          const nclr = getNoteColor(note.bookNum);
+                          const nclr = getThemeNoteColor(note.bookNum, isLight);
                           return (
                             <button
                               key={note.id}
@@ -1850,9 +2000,9 @@ export default function NotesPage() {
                                   {note.pastor && ` · ${note.pastor}`}
                                 </p>
                               </div>
-                              {note.passage && (
+                              {getNoteDisplayRef(note) && (
                                 <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 hidden sm:inline ${nclr.pill}`}>
-                                  {note.passage}
+                                  {getNoteDisplayRef(note)}
                                 </span>
                               )}
                             </button>
@@ -1909,7 +2059,7 @@ export default function NotesPage() {
 
                 {/* Chapter list */}
                 {(() => {
-                  const bookClr = getNoteColor(selectedBook.num);
+                  const bookClr = getThemeNoteColor(selectedBook.num, isLight);
                   return (
                     <div className="space-y-2.5">
                       {chaptersWithNotes.map((ch) => {

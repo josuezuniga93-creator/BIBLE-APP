@@ -3,6 +3,8 @@
 // Accent color for the Notes section: emerald green
 
 import { syncKey } from "./cloudSync";
+import { BIBLE_BOOKS } from "./bibleBooks";
+import { formatParsedPassage, parsePassageInput } from "./passageParser";
 
 export interface SermonNote {
   id: string;
@@ -10,6 +12,9 @@ export interface SermonNote {
   bookNum: number;       // matches BIBLE_BOOKS[].num
   bookName: string;
   chapter: number;
+  verseStart?: number;
+  verseEnd?: number;
+  displayRef?: string;
   title: string;         // sermon title
   date: string;          // ISO date "YYYY-MM-DD"
   pastor?: string;
@@ -69,6 +74,9 @@ export function makeNote(partial: Partial<SermonNote> = {}): SermonNote {
     bookNum: 40,
     bookName: "Matthew",
     chapter: 1,
+    verseStart: undefined,
+    verseEnd: undefined,
+    displayRef: "Matthew 1",
     title: "",
     date: now.slice(0, 10),
     pastor: "",
@@ -81,6 +89,52 @@ export function makeNote(partial: Partial<SermonNote> = {}): SermonNote {
     createdAt: now,
     updatedAt: now,
     ...partial,
+  };
+}
+
+export function getNoteDisplayRef(note: Pick<SermonNote, "bookName" | "chapter" | "verseStart" | "verseEnd" | "displayRef" | "passage">): string {
+  return note.displayRef || note.passage || formatParsedPassage(note);
+}
+
+export function normalizeNotePassage(note: SermonNote): SermonNote {
+  if (note.noteType === "general") return note;
+
+  const input = note.passage?.trim() || note.displayRef?.trim() || "";
+  const parsed = input ? parsePassageInput(input, note.bookNum) : null;
+
+  if (!parsed) {
+    const displayRef = formatParsedPassage(note);
+    return { ...note, displayRef, passage: note.passage || displayRef };
+  }
+
+  if (!parsed.hasExplicitChapter) {
+    const parsedBook = BIBLE_BOOKS.find((book) => book.num === parsed.bookNum);
+    const chapter = Math.max(1, Math.min(parsedBook?.chapters ?? note.chapter ?? 1, note.chapter || 1));
+    const displayRef = formatParsedPassage({
+      bookName: parsed.bookName,
+      chapter,
+      verseStart: note.verseStart,
+      verseEnd: note.verseEnd,
+    });
+    return {
+      ...note,
+      bookNum: parsed.bookNum,
+      bookName: parsed.bookName,
+      chapter,
+      displayRef,
+      passage: displayRef,
+    };
+  }
+
+  return {
+    ...note,
+    bookNum: parsed.bookNum,
+    bookName: parsed.bookName,
+    chapter: parsed.chapter,
+    verseStart: parsed.verseStart,
+    verseEnd: parsed.verseEnd,
+    displayRef: parsed.displayRef,
+    passage: parsed.displayRef,
   };
 }
 
