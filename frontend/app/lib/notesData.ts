@@ -68,7 +68,7 @@ export function saveNotes(notes: SermonNote[]): void {
 
 export function makeNote(partial: Partial<SermonNote> = {}): SermonNote {
   const now = new Date().toISOString();
-  return {
+  const note: SermonNote = {
     id: crypto.randomUUID(),
     noteType: "sermon",
     bookNum: 40,
@@ -90,6 +90,14 @@ export function makeNote(partial: Partial<SermonNote> = {}): SermonNote {
     updatedAt: now,
     ...partial,
   };
+
+  if (note.noteType !== "general" && partial.displayRef === undefined && partial.passage === undefined) {
+    const displayRef = formatParsedPassage(note);
+    note.displayRef = displayRef;
+    note.passage = displayRef;
+  }
+
+  return note;
 }
 
 export function getNoteDisplayRef(note: Pick<SermonNote, "bookName" | "chapter" | "verseStart" | "verseEnd" | "displayRef" | "passage">): string {
