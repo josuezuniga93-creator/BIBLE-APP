@@ -6,6 +6,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
+import { isLightTheme } from "../../lib/useTheme";
 import { Suspense } from "react";
 
 function GoogleIcon() {
@@ -66,10 +67,20 @@ function LoginContent() {
   const [isLight, setIsLight] = useState(false);
 
   useEffect(() => {
-    const fromDom = document.documentElement.getAttribute("data-theme");
-    const fromLS = typeof localStorage !== "undefined" ? localStorage.getItem("theme") : null;
-    const theme = fromDom || fromLS || "";
-    setIsLight(theme === "white-noir" || theme === "light");
+    const updateTheme = (nextTheme?: string | null) => {
+      const fromDom = nextTheme ?? document.documentElement.getAttribute("data-theme");
+      const fromLS = typeof localStorage !== "undefined" ? localStorage.getItem("ryc-theme") : null;
+      setIsLight(isLightTheme(fromDom || fromLS || "light"));
+    };
+
+    updateTheme();
+
+    const handleThemeChange = (event: Event) => {
+      updateTheme((event as CustomEvent<string>).detail);
+    };
+
+    window.addEventListener("ryc-theme-change", handleThemeChange);
+    return () => window.removeEventListener("ryc-theme-change", handleThemeChange);
   }, []);
 
   useEffect(() => {

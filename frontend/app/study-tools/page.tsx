@@ -1092,12 +1092,8 @@ export default function StudyToolsPage() {
       )}
 
       {!reader && (
-      <main className="max-w-lg mx-auto px-5 pt-7 pb-32">
-        <header className="mb-5">
-          <p className="text-[11px] font-black uppercase tracking-[0.26em]" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
-            {lang === "es" ? "Herramientas de estudio" : "Study Tools"}
-          </p>
-        </header>
+      <main className="max-w-lg mx-auto px-5 pt-5 pb-32">
+        <h1 className="sr-only">{lang === "es" ? "Herramientas de estudio" : "Study Tools"}</h1>
 
         <label className="block rounded-[24px] px-4 py-4 mb-5" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.16)" }}>
           <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>

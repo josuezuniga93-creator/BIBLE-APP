@@ -125,6 +125,18 @@ const TRANSLATION_GROUPS = [
 function getTranslationMeta(t: BibleTranslation) {
   return TRANSLATION_OPTIONS.find((option) => option.key === t) ?? TRANSLATION_OPTIONS[0];
 }
+function getTranslationGroupLabel(groupId: "en" | "es", lang: "en" | "es") {
+  if (lang === "es") return groupId === "en" ? "Inglés" : "Español";
+  return groupId === "en" ? "English" : "Spanish";
+}
+function getTranslationGroupCount(groupId: "en" | "es", count: number, lang: "en" | "es") {
+  if (lang === "es") {
+    const noun = groupId === "en" ? "versiones" : "traducciones";
+    return `${count} ${noun}`;
+  }
+  const noun = groupId === "en" ? "versions" : "translations";
+  return `${count} ${noun}`;
+}
 function getBookDisplayName(book: BookMeta | null, t: BibleTranslation): string {
   if (!book) return "";
   if (SPANISH_TRANSLATIONS.includes(t)) return ES_BOOK_NAMES[book.num] ?? book.name;
@@ -1209,9 +1221,9 @@ function LexiconInner() {
                         color: active ? (isLight ? "#ffffff" : "#0b0b0b") : (isLight ? "#656565" : "#b8b8b8"),
                       }}
                     >
-                      <span className="block text-[17px] font-semibold tracking-[-0.02em]">{group.label}</span>
+                      <span className="block text-[17px] font-semibold tracking-[-0.02em]">{getTranslationGroupLabel(group.id, lang)}</span>
                       <span className="block text-[11px] font-semibold opacity-60">
-                        {group.options.length} {group.id === "en" ? "versions" : "translations"}
+                        {getTranslationGroupCount(group.id, group.options.length, lang)}
                       </span>
                     </button>
                   );
