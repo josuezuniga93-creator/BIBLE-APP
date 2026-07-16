@@ -10,6 +10,11 @@ export function ThemeProvider() {
           (function() {
             try {
               var valid = ['gold-navy', 'white-noir'];
+              function normalize(v) {
+                if (v === 'dark') return 'gold-navy';
+                if (v === 'light') return 'white-noir';
+                return valid.indexOf(v) >= 0 ? v : 'white-noir';
+              }
               // If data-theme was already set correctly by the <head> script, don't overwrite it.
               var current = document.documentElement.getAttribute('data-theme');
               if (valid.indexOf(current) >= 0) return;
@@ -18,7 +23,7 @@ export function ThemeProvider() {
                 var m = document.cookie.match(/(?:^|;\\s*)ryc-theme=([^;]+)/);
                 if (m) saved = decodeURIComponent(m[1]);
               }
-              var theme = valid.includes(saved) ? saved : 'white-noir';
+              var theme = normalize(saved);
               localStorage.setItem('ryc-theme', theme);
               document.documentElement.setAttribute('data-theme', theme);
             } catch(e) {}

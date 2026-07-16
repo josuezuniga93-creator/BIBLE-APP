@@ -3,9 +3,15 @@
 import { useEffect, useState } from "react";
 
 export type Theme = "gold-navy" | "white-noir";
+export type ThemeAlias = "dark" | "light";
+export type ThemeInput = Theme | ThemeAlias | string | null | undefined;
 
 const THEME_KEY = "ryc-theme";
 const VALID_THEMES: Theme[] = ["gold-navy", "white-noir"];
+const THEME_ALIASES: Record<ThemeAlias, Theme> = {
+  dark: "gold-navy",
+  light: "white-noir",
+};
 
 export const THEMES: Record<Theme, { label: string; emoji: string; desc: string; preview: string[] }> = {
   "gold-navy": {
@@ -24,12 +30,29 @@ export const THEMES: Record<Theme, { label: string; emoji: string; desc: string;
 
 const COOKIE_KEY = "ryc-theme";
 
+export function normalizeTheme(value: ThemeInput): Theme {
+  if (value === "dark" || value === "light") return THEME_ALIASES[value];
+  if (value && VALID_THEMES.includes(value as Theme)) return value as Theme;
+  return "white-noir";
+}
+
+export function themeAlias(value: ThemeInput): ThemeAlias {
+  return normalizeTheme(value) === "white-noir" ? "light" : "dark";
+}
+
+export function isLightTheme(value: ThemeInput): boolean {
+  return normalizeTheme(value) === "white-noir";
+}
+
+export function isDarkTheme(value: ThemeInput): boolean {
+  return normalizeTheme(value) === "gold-navy";
+}
+
 function readThemeFromCookie(): Theme | null {
   try {
     const m = document.cookie.match(/(?:^|;\s*)ryc-theme=([^;]+)/);
     if (m) {
-      const val = decodeURIComponent(m[1]) as Theme;
-      if (VALID_THEMES.includes(val)) return val;
+      return normalizeTheme(decodeURIComponent(m[1]) as ThemeInput);
     }
   } catch {}
   return null;
@@ -38,7 +61,7 @@ function readThemeFromCookie(): Theme | null {
 function readThemeFromStorage(): Theme {
   try {
     const stored = localStorage.getItem(THEME_KEY);
-    if (stored && VALID_THEMES.includes(stored as Theme)) return stored as Theme;
+    if (stored) return normalizeTheme(stored as ThemeInput);
     // Fallback: read from cookie and restore to localStorage
     const fromCookie = readThemeFromCookie();
     if (fromCookie) {
@@ -54,8 +77,8 @@ function readThemeEarly(): Theme {
   // inline <head> script before React hydrates, so check it first.
   if (typeof window === "undefined") return "white-noir";
   try {
-    const fromHtml = document.documentElement.getAttribute("data-theme") as Theme;
-    if (fromHtml && VALID_THEMES.includes(fromHtml)) return fromHtml;
+    const fromHtml = document.documentElement.getAttribute("data-theme") as ThemeInput;
+    if (fromHtml) return normalizeTheme(fromHtml);
   } catch {}
   return readThemeFromStorage();
 }
@@ -78,14 +101,15 @@ export function useTheme() {
 
     // Re-apply whenever another component calls setTheme()
     function handleChange(e: Event) {
-      const t = (e as CustomEvent<Theme>).detail;
+      const t = normalizeTheme((e as CustomEvent<ThemeInput>).detail);
       setThemeState(t);
     }
     window.addEventListener("ryc-theme-change", handleChange);
     return () => window.removeEventListener("ryc-theme-change", handleChange);
   }, []);
 
-  function setTheme(t: Theme) {
+  function setTheme(themeInput: ThemeInput) {
+    const t = normalizeTheme(themeInput);
     setThemeState(t);
     localStorage.setItem(THEME_KEY, t);
     // Also persist to cookie so early script can restore after localStorage clear

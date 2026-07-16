@@ -2548,20 +2548,6 @@ html[data-theme="white-noir"] [style*="box-shadow"][style*="201, 169, 97"] {
   box-shadow: none !important;
 }
 
-html[data-theme="white-noir"] .study-tools-hero {
-  background: #f3f4f6 !important;
-  border-color: var(--border) !important;
-  box-shadow: 0 2px 12px rgba(10,10,10,0.06) !important;
-}
-html[data-theme="white-noir"] .study-tools-hero-copy,
-html[data-theme="white-noir"] .study-tools-hero-copy * {
-  color: #0a0a0a !important;
-}
-html[data-theme="white-noir"] .study-tools-hero-icon {
-  background: #e5e7eb !important;
-  border-color: rgba(10,10,10,0.12) !important;
-  color: #111111 !important;
-}
 html[data-theme="white-noir"] .study-tools-tabs {
   background: #f3f4f6 !important;
   border-color: var(--border) !important;

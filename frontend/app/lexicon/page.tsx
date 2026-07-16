@@ -718,6 +718,7 @@ function LexiconInner() {
   const [showBookPicker, setShowBookPicker] = useState(false);
   const [pickerView, setPickerView]         = useState<"books" | "chapters">("books");
   const [pickerBook, setPickerBook]         = useState<BookMeta | null>(null);
+  const [pickerBookSearch, setPickerBookSearch] = useState("");
   const noteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const verseRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -1014,9 +1015,14 @@ function LexiconInner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedBook, selectedChapter]);
 
-  const visibleBooks = books.filter((b) =>
-    testamentFilter === "ALL" ? true : b.testament === testamentFilter
-  );
+  const visibleBooks = books
+    .filter((b) => testamentFilter === "ALL" ? true : b.testament === testamentFilter)
+    .filter((b) => {
+      const q = pickerBookSearch.trim().toLowerCase();
+      if (!q) return true;
+      const localized = getBookDisplayName(b, translation).toLowerCase();
+      return b.name.toLowerCase().includes(q) || localized.includes(q);
+    });
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
     : [];
@@ -1140,46 +1146,56 @@ function LexiconInner() {
           <WakingUpHint />
         </div>
       )}
-      {/* ── Translation picker bottom sheet ── */}
+      {/* ── Translation picker full screen ── */}
       {showTranslationPicker && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-16 print:hidden" onClick={() => setShowTranslationPicker(false)}>
-          <div className="translation-picker-scrim absolute inset-0" />
+        <div
+          className="fixed inset-0 z-[90] print:hidden"
+          style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
+        >
           <div
-            className="translation-picker-panel relative w-full max-w-sm overflow-hidden rounded-[28px]"
-            style={{ maxHeight: "min(82vh, 680px)" }}
-            onClick={(e) => e.stopPropagation()}
+            className="h-full w-full max-w-xl mx-auto flex flex-col"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 22px)" }}
           >
-            <div className="translation-picker-header px-5 pb-4 pt-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="translation-picker-kicker">Bible Translation</p>
-                  <h2 className="translation-picker-title mt-1">Choose an edition</h2>
-                  <p className="translation-picker-subtitle mt-1">Text-only selector, grouped by language.</p>
-                </div>
+            <div className="px-7 pb-4 flex-shrink-0">
+              <div className="flex items-center gap-4">
                 <button
+                  type="button"
                   onClick={() => setShowTranslationPicker(false)}
-                  className="translation-picker-close"
-                  aria-label="Close translation picker"
+                  className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center transition-colors"
+                  style={{ color: isLight ? "#111111" : "#ffffff" }}
+                  aria-label={lang === "es" ? "Cerrar traducciones" : "Close translations"}
                 >
-                  Close
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
                 </button>
+                <h2 className="flex-1 text-[30px] font-semibold tracking-[-0.04em]">
+                  {lang === "es" ? "Traducciones" : "Translations"}
+                </h2>
               </div>
 
-              <div className="translation-picker-current mt-4">
-                <span className="translation-picker-current-abbr">{currentTranslation.abbr}</span>
+              <div
+                className="mt-4 rounded-[24px] p-4 flex items-center gap-4"
+                style={{
+                  background: isLight ? "#f2f3f5" : "#242424",
+                  border: isLight ? "1px solid #e4e5e7" : "1px solid rgba(255,255,255,0.08)",
+                }}
+              >
+                <span
+                  className="h-14 w-14 rounded-2xl flex items-center justify-center text-base font-black"
+                  style={{ background: isLight ? "#ffffff" : "#101010", border: isLight ? "1px solid #dadcdf" : "1px solid rgba(255,255,255,0.10)" }}
+                >
+                  {currentTranslation.abbr}
+                </span>
                 <div className="min-w-0 flex-1">
-                  <p className="translation-picker-current-label">Current selection</p>
-                  <p className="translation-picker-current-name truncate">{currentTranslation.name}</p>
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
+                    {lang === "es" ? "Selección actual" : "Current Selection"}
+                  </p>
+                  <p className="truncate text-[19px] font-semibold tracking-[-0.02em]">{currentTranslation.name}</p>
                 </div>
               </div>
-            </div>
 
-            <div className="translation-picker-scroll overflow-y-auto px-3 pb-3">
-              {/* ── Language selector — pill toggle ── */}
-              <div
-                className="flex p-1 mb-4 rounded-2xl"
-                style={{ background: "var(--tp-bg-soft)", border: "1px solid var(--tp-line)" }}
-              >
+              <div className="mt-4 grid grid-cols-2 gap-2">
                 {TRANSLATION_GROUPS.map((group) => {
                   const active = pickerCategory === group.id;
                   return (
@@ -1187,49 +1203,62 @@ function LexiconInner() {
                       key={group.id}
                       type="button"
                       onClick={() => setPickerCategory(group.id)}
-                      className="flex-1 flex flex-col items-center gap-0.5 py-3 rounded-xl transition-all"
+                      className="rounded-full py-3.5 text-center transition-colors"
                       style={{
-                        background: active ? "var(--tp-accent-bg)" : "transparent",
-                        border: active ? "1px solid color-mix(in srgb, var(--tp-accent) 35%, transparent)" : "1px solid transparent",
-                        color: active ? "var(--tp-accent-strong)" : "var(--tp-muted)",
+                        background: active ? (isLight ? "#0b0b0b" : "#ffffff") : (isLight ? "#f2f3f5" : "#242424"),
+                        color: active ? (isLight ? "#ffffff" : "#0b0b0b") : (isLight ? "#656565" : "#b8b8b8"),
                       }}
                     >
-                      <span style={{ fontWeight: 900, fontSize: "15px", letterSpacing: "-0.01em" }}>
-                        {group.label}
-                      </span>
-                      <span style={{ fontSize: "10px", fontWeight: 700, opacity: active ? 0.7 : 0.45 }}>
+                      <span className="block text-[17px] font-semibold tracking-[-0.02em]">{group.label}</span>
+                      <span className="block text-[11px] font-semibold opacity-60">
                         {group.options.length} {group.id === "en" ? "versions" : "translations"}
                       </span>
                     </button>
                   );
                 })}
               </div>
+            </div>
 
-              {/* ── Translations for selected language ── */}
-              <div className="space-y-1.5">
+            <div className="overflow-y-auto flex-1 px-7 pb-24">
+              <div className="flex flex-col">
                 {TRANSLATION_GROUPS.find((g) => g.id === pickerCategory)?.options.map((option) => {
                   const active = translation === option.key;
                   return (
                     <button
                       key={option.key}
+                      type="button"
                       onClick={() => selectTranslation(option.key)}
-                      className={`translation-picker-option ${active ? "is-selected" : ""}`}
+                      className="w-full py-4 flex items-center gap-4 text-left transition-opacity active:opacity-60"
                     >
-                      <span className="translation-picker-option-abbr">{option.abbr}</span>
+                      <span
+                        className="h-12 w-16 rounded-2xl flex items-center justify-center text-sm font-black flex-shrink-0"
+                        style={{
+                          background: isLight ? "#f2f3f5" : "#242424",
+                          border: isLight ? "1px solid #e4e5e7" : "1px solid rgba(255,255,255,0.08)",
+                          color: isLight ? "#111111" : "#f5f5f5",
+                        }}
+                      >
+                        {option.abbr}
+                      </span>
                       <span className="min-w-0 flex-1">
-                        <span className="translation-picker-option-name">{option.name}</span>
-                        <span className="translation-picker-option-detail">
+                        <span className="block text-[21px] leading-tight font-semibold tracking-[-0.03em]">{option.name}</span>
+                        <span className="block mt-1 text-sm font-medium" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
                           {option.note ? `${option.note} · ${option.detail}` : option.detail}
                         </span>
                       </span>
-                      {active && <span className="translation-picker-selected">✓</span>}
+                      {active && (
+                        <span
+                          className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
+                          style={{ background: isLight ? "#0b0b0b" : "#ffffff", color: isLight ? "#ffffff" : "#0b0b0b" }}
+                        >
+                          ✓
+                        </span>
+                      )}
                     </button>
                   );
                 })}
               </div>
             </div>
-
-            <div style={{ height: "max(env(safe-area-inset-bottom), 8px)" }} className="translation-picker-safe-area" />
           </div>
         </div>
       )}
@@ -1370,52 +1399,64 @@ function LexiconInner() {
 
       </header>
 
-      {/* ── Font picker sheet ── */}
+      {/* ── Font picker full screen ── */}
       {showFontPicker && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 print:hidden" onClick={() => setShowFontPicker(false)}>
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+        <div
+          className="fixed inset-0 z-[90] print:hidden"
+          style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
+        >
           <div
-            className="relative rounded-2xl px-5 pb-6 pt-5 w-full max-w-sm overflow-y-auto"
-            style={{
-              maxHeight: "80vh",
-              background: isLight ? "#ffffff" : "#1a1a1a",
-              border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)",
-              boxShadow: isLight ? "0 8px 40px rgba(0,0,0,0.15)" : undefined,
-            }}
-            onClick={(e) => e.stopPropagation()}
+            className="h-full w-full max-w-xl mx-auto flex flex-col"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 22px)" }}
           >
-            <p
-              className="text-xs font-black uppercase tracking-widest mb-4"
-              style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}
-            >
-              {lang === "es" ? "Fuente de Escritura" : "Scripture Font"}
-            </p>
-            <div className="space-y-2">
+            <div className="px-7 pb-4 flex-shrink-0">
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowFontPicker(false)}
+                  className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center transition-colors"
+                  style={{ color: isLight ? "#111111" : "#ffffff" }}
+                  aria-label={lang === "es" ? "Cerrar fuentes" : "Close fonts"}
+                >
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
+                    {lang === "es" ? "Lectura Bíblica" : "Scripture"}
+                  </p>
+                  <h2 className="text-[30px] font-semibold tracking-[-0.04em]">
+                    {lang === "es" ? "Fuentes" : "Fonts"}
+                  </h2>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto flex-1 px-7 pb-24">
               {SCRIPTURE_FONTS.map((f) => (
                 <button
                   key={f.key}
                   onClick={() => selectFont(f.key)}
-                  className="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
+                  className="w-full flex items-center justify-between gap-4 px-5 py-4 mb-3 rounded-[22px] text-left transition-opacity active:opacity-60"
                   style={{
                     background: scriptureFont === f.key
-                      ? (isLight ? "rgba(139,92,246,0.10)" : "rgba(139,92,246,0.10)")
-                      : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.03)"),
-                    border: scriptureFont === f.key
-                      ? "1px solid rgba(139,92,246,0.35)"
-                      : (isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)"),
+                      ? (isLight ? "#eeeeef" : "#ffffff")
+                      : (isLight ? "#f5f5f6" : "#242424"),
+                    border: isLight ? "1px solid #e1e2e4" : "1px solid rgba(255,255,255,0.08)",
+                    color: scriptureFont === f.key && !isLight ? "#0b0b0b" : "inherit",
                   }}
                 >
-                  <div className="text-left">
+                  <div className="min-w-0 flex-1">
                     <p
-                      className="text-sm font-semibold"
+                      className="text-[20px] leading-snug font-semibold tracking-[-0.02em]"
                       style={{
-                        color: scriptureFont === f.key ? "#7c3aed" : (isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.70)"),
                         fontFamily: f.family,
                       }}
                     >
                       {f.label} — {lang === "es" ? "En el principio era el Verbo" : "In the beginning was the Word"}
                     </p>
-                    <p className="text-[10px] mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.30)" }}>
+                    <p className="text-sm mt-1 font-medium" style={{ color: scriptureFont === f.key && !isLight ? "rgba(0,0,0,0.58)" : (isLight ? "#8a8a8a" : "#9a9a9a") }}>
                       {lang === "es"
                         ? ({
                             georgia: "Clásica y cálida",
@@ -1429,7 +1470,14 @@ function LexiconInner() {
                         : f.desc}
                     </p>
                   </div>
-                  {scriptureFont === f.key && <span className="text-violet-600 text-xs flex-shrink-0 ml-2">✓</span>}
+                  {scriptureFont === f.key && (
+                    <span
+                      className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
+                      style={{ background: isLight ? "#0b0b0b" : "#0b0b0b", color: "#ffffff" }}
+                    >
+                      ✓
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
@@ -1653,7 +1701,13 @@ function LexiconInner() {
 
             {/* Book + chapter — opens picker */}
             <button
-              onClick={() => { setPickerView("books"); setPickerBook(selectedBook); setShowBookPicker(true); }}
+              onClick={() => {
+                setPickerView("books");
+                setPickerBook(selectedBook);
+                setTestamentFilter("ALL");
+                setPickerBookSearch("");
+                setShowBookPicker(true);
+              }}
               className="flex-1 flex flex-col items-center justify-center gap-0.5 h-full rounded-xl hover:bg-white/[0.05] transition-colors">
               <span className="le-testament-label text-[10px] font-semibold text-white/25 tracking-widest uppercase leading-none">
                 {(translation === "rv1960" || translation === "lbla" || translation === "nvi" || translation === "ntv")
@@ -1679,44 +1733,107 @@ function LexiconInner() {
 
       {/* ── Book / Chapter picker sheet ── */}
       {showBookPicker && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center pt-12 px-4 print:hidden">
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setShowBookPicker(false)} />
-          <div className="relative bg-[#1a1a1a] rounded-2xl border border-white/[0.08] w-full max-w-sm flex flex-col" style={{ maxHeight: "82vh" }}>
+        <div
+          className="fixed inset-0 z-[90] print:hidden"
+          style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
+        >
+          <div
+            className="h-full w-full max-w-xl mx-auto flex flex-col"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 22px)" }}
+          >
 
             {/* Books view */}
             {pickerView === "books" && (
               <>
-                <div className="px-4 py-2 flex gap-2 flex-shrink-0">
-                  {(["ALL", "OT", "NT"] as const).map((tf) => (
-                    <button key={tf} onClick={() => setTestamentFilter(tf)}
-                      className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all ${
-                        testamentFilter === tf ? "bg-violet-600 text-white" : "bg-white/[0.06] text-white/40 hover:text-white/60"
-                      }`}>
-                      {tf === "ALL"
-                        ? (lang === "es" ? "Todos" : "All Books")
-                        : tf === "OT"
-                          ? (lang === "es" ? "Antiguo" : "Old Testament")
-                          : (lang === "es" ? "Nuevo" : "New Testament")}
+                <div className="px-7 pb-4 flex-shrink-0">
+                  <div className="flex items-center justify-between gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setShowBookPicker(false)}
+                      className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center transition-colors"
+                      style={{ color: isLight ? "#111111" : "#ffffff", background: "transparent" }}
+                      aria-label={lang === "es" ? "Cerrar libros" : "Close books"}
+                    >
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                        <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </button>
-                  ))}
+
+                    <h2 className="flex-1 text-[30px] font-semibold tracking-[-0.04em]">
+                      {lang === "es" ? "Libros" : "Books"}
+                    </h2>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const saved = loadLastPosition();
+                        const target = saved ? books.find((b) => b.name === saved.bookName) : selectedBook;
+                        if (!target) return;
+                        setPickerBook(target);
+                        setPickerView("chapters");
+                      }}
+                      className="h-11 w-11 rounded-full flex items-center justify-center transition-colors"
+                      style={{ color: isLight ? "#111111" : "#ffffff", background: "transparent" }}
+                      aria-label={lang === "es" ? "Última lectura" : "Recent reading"}
+                    >
+                      <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 8v5l3.2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        <path d="M4.4 10.2A8 8 0 1 1 5.7 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                        <path d="M4 6v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div
+                    className="mt-4 h-[58px] rounded-full flex items-center gap-4 px-5"
+                    style={{ background: isLight ? "#f2f3f5" : "#343232", color: isLight ? "#111111" : "#ffffff" }}
+                  >
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="flex-shrink-0" style={{ opacity: 0.78 }}>
+                      <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" strokeWidth="2.2" />
+                      <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                    </svg>
+                    <input
+                      type="search"
+                      value={pickerBookSearch}
+                      onChange={(e) => setPickerBookSearch(e.target.value)}
+                      placeholder={lang === "es" ? "Buscar" : "Search"}
+                      className="min-w-0 flex-1 bg-transparent outline-none font-medium placeholder:opacity-70"
+                      style={{ fontSize: "21px", color: "inherit" }}
+                    />
+                    {pickerBookSearch && (
+                      <button
+                        type="button"
+                        onClick={() => setPickerBookSearch("")}
+                        className="h-8 w-8 rounded-full flex items-center justify-center"
+                        style={{ background: isLight ? "#e5e7eb" : "rgba(255,255,255,0.08)", color: "inherit" }}
+                        aria-label={lang === "es" ? "Limpiar búsqueda" : "Clear search"}
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="overflow-y-auto flex-1 pb-10 px-4">
-                  <div className="grid grid-cols-2 gap-2 pt-1">
+
+                <div className="overflow-y-auto flex-1 px-9 pb-24">
+                  <div className="flex flex-col">
                     {visibleBooks.map((b) => (
-                      <button key={b.num}
+                      <button
+                        key={b.num}
                         onClick={() => { setPickerBook(b); setPickerView("chapters"); }}
-                        className={`px-4 py-3 rounded-xl text-left transition-colors ${
-                          selectedBook?.num === b.num
-                            ? "bg-violet-600/20 border border-violet-500/30 text-white"
-                            : "bg-white/[0.04] border border-white/[0.06] text-white/60 hover:bg-white/[0.08] hover:text-white/80"
-                        }`}>
-                        <p className="text-sm font-semibold truncate">{getBookDisplayName(b, translation)}</p>
-                        <p className="text-[10px] text-white/30 mt-0.5">
-                          {b.chapters} {lang === "es" ? "cap." : "ch."}
-                        </p>
+                        className="w-full text-left py-[13px] transition-opacity active:opacity-60"
+                        style={{ color: selectedBook?.num === b.num ? (isLight ? "#000000" : "#ffffff") : (isLight ? "#242424" : "#eeeeee") }}
+                      >
+                        <span className="block text-[26px] leading-tight font-normal tracking-[-0.03em]">
+                          {getBookDisplayName(b, translation)}
+                        </span>
                       </button>
                     ))}
                   </div>
+                  {visibleBooks.length === 0 && (
+                    <div className="py-16 text-center" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
+                      <p className="text-lg font-semibold">{lang === "es" ? "No se encontró ese libro." : "No book found."}</p>
+                    </div>
+                  )}
                 </div>
               </>
             )}
@@ -1724,22 +1841,27 @@ function LexiconInner() {
             {/* Chapters view */}
             {pickerView === "chapters" && pickerBook && (
               <>
-                <div className="px-4 py-3 flex items-center gap-3 flex-shrink-0 border-b border-white/[0.06]">
+                <div
+                  className="px-7 pb-4 flex items-center gap-3 flex-shrink-0"
+                  style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}
+                >
                   <button
                     onClick={() => setPickerView("books")}
-                    className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center transition-colors"
+                    style={{ color: isLight ? "#111111" : "#ffffff" }}
+                  >
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
-                  <div>
-                    <p className="text-white font-bold">{getBookDisplayName(pickerBook, translation)}</p>
-                    <p className="text-white/30 text-xs">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[28px] font-semibold tracking-[-0.04em]">{getBookDisplayName(pickerBook, translation)}</p>
+                    <p className="text-sm mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
                       {pickerBook.chapters} {lang === "es" ? "capítulos" : "chapters"}
                     </p>
                   </div>
                 </div>
-                <div className="overflow-y-auto flex-1 pb-10 p-4">
+                <div className="overflow-y-auto flex-1 px-7 pb-24 pt-5">
                   <div className="grid grid-cols-5 gap-2">
                     {Array.from({ length: pickerBook.chapters }, (_, i) => i + 1).map((ch) => (
                       <button key={ch}
@@ -1749,11 +1871,16 @@ function LexiconInner() {
                           setShowBookPicker(false);
                           setPickerView("books");
                         }}
-                        className={`aspect-square rounded-xl flex items-center justify-center text-sm font-bold transition-colors ${
-                          selectedBook?.num === pickerBook.num && selectedChapter === ch
-                            ? "bg-violet-600 text-white"
-                            : "bg-white/[0.05] text-white/50 hover:bg-white/[0.10] hover:text-white"
-                        }`}>
+                        className="aspect-square rounded-2xl flex items-center justify-center text-lg font-semibold transition-colors active:scale-95"
+                        style={{
+                          background: selectedBook?.num === pickerBook.num && selectedChapter === ch
+                            ? (isLight ? "#0b0b0b" : "#ffffff")
+                            : (isLight ? "#f2f3f5" : "#242424"),
+                          color: selectedBook?.num === pickerBook.num && selectedChapter === ch
+                            ? (isLight ? "#ffffff" : "#0b0b0b")
+                            : (isLight ? "#111111" : "#f2f2f2"),
+                        }}
+                      >
                         {ch}
                       </button>
                     ))}

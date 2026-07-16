@@ -19,6 +19,38 @@ function GoogleIcon() {
   );
 }
 
+function PrivacyConsent({ color, linkColor }: { color: string; linkColor: string }) {
+  return (
+    <p className="px-3 text-center text-[11px] font-semibold leading-relaxed" style={{ color }}>
+      By continuing, you agree with our{" "}
+      <a
+        href="https://getpsallo.theworshipinitiative.com/legal/privacy-policy"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline underline-offset-2"
+        style={{ color: linkColor }}
+      >
+        Privacy Policy
+      </a>
+    </p>
+  );
+}
+
+function LoginHelp({ color, linkColor }: { color: string; linkColor: string }) {
+  return (
+    <p className="text-center text-[12px] font-semibold leading-relaxed" style={{ color }}>
+      Trouble signing in?{" "}
+      <a
+        href="mailto:josuezuniga93@gmail.com?subject=Trouble%20signing%20in"
+        className="underline underline-offset-2"
+        style={{ color: linkColor }}
+      >
+        Get help
+      </a>
+    </p>
+  );
+}
+
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -197,6 +229,9 @@ function LoginContent() {
                 {message.text}
               </p>
             )}
+
+            <PrivacyConsent color={footerColor} linkColor={linkColor} />
+            <LoginHelp color={footerColor} linkColor={linkColor} />
           </div>
         </div>
       </div>
@@ -306,7 +341,13 @@ function LoginContent() {
               ? emailMode === "signup" ? "Creating account…" : "Signing in…"
               : emailMode === "signup" ? "Create Account" : "Sign In"}
           </button>
+
+          <PrivacyConsent color={footerColor} linkColor={linkColor} />
         </form>
+
+        <div className="mt-4">
+          <LoginHelp color={footerColor} linkColor={linkColor} />
+        </div>
 
         <p className="text-center text-sm mt-5" style={{ color: footerColor }}>
           {emailMode === "signin" ? "Don't have an account?" : "Already have an account?"}{" "}

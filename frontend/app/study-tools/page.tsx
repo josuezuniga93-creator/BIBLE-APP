@@ -1093,52 +1093,11 @@ export default function StudyToolsPage() {
 
       {!reader && (
       <main className="max-w-lg mx-auto px-5 pt-7 pb-32">
-        <header className="mb-4">
+        <header className="mb-5">
           <p className="text-[11px] font-black uppercase tracking-[0.26em]" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>
             {lang === "es" ? "Herramientas de estudio" : "Study Tools"}
           </p>
         </header>
-
-        <section
-          className="study-tools-hero relative overflow-hidden rounded-[28px] p-6 mb-5 border"
-          style={isLight
-            ? {
-                background: "linear-gradient(135deg, rgba(0,0,0,0.05), #f7f7f7 48%, #ffffff)",
-                borderColor: "rgba(0,0,0,0.10)",
-                boxShadow: "0 22px 60px rgba(0,0,0,0.06)",
-              }
-            : {
-                background: "linear-gradient(135deg, rgba(201,169,97,0.20), rgba(22,30,46,0.96) 48%, rgba(10,15,27,0.98))",
-                borderColor: "rgba(201,169,97,0.20)",
-                boxShadow: "0 22px 60px rgba(0,0,0,0.25)",
-              }}
-        >
-          <div
-            className="absolute -right-8 -top-8 w-36 h-36 rounded-full"
-            style={{ background: isLight ? "radial-gradient(circle, rgba(0,0,0,0.06), transparent 68%)" : "radial-gradient(circle, rgba(201,169,97,0.20), transparent 68%)" }}
-          />
-          <div className="study-tools-hero-copy relative z-10 max-w-[78%]">
-            <p className="text-[10px] uppercase tracking-[0.24em] font-black" style={{ color: isLight ? "#0a0a0a" : "#d7bd78" }}>
-              {lang === "es" ? "Comentario y diccionario" : "Commentary & Dictionary"}
-            </p>
-            <h1 className="mt-3 text-[31px] leading-[0.98] font-black tracking-tight">
-              {lang === "es" ? "Estudia el texto con claridad." : "Study the text with clarity."}
-            </h1>
-            <p className="mt-3 text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
-              {lang === "es"
-                ? "Busca un versiculo para leer Matthew Henry, o cambia al diccionario para explorar palabras biblicas."
-                : "Search a verse for Matthew Henry, or switch to the dictionary to explore Bible words."}
-            </p>
-          </div>
-          <div
-            className="study-tools-hero-icon absolute right-5 bottom-5 w-16 h-16 rounded-[22px] flex items-center justify-center"
-            style={isLight
-              ? { background: "rgba(0,0,0,0.06)", color: "#0a0a0a", border: "1px solid rgba(0,0,0,0.12)" }
-              : { background: "rgba(201,169,97,0.16)", color: "#d7bd78", border: "1px solid rgba(201,169,97,0.20)" }}
-          >
-            <BookIcon />
-          </div>
-        </section>
 
         <label className="block rounded-[24px] px-4 py-4 mb-5" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.16)" }}>
           <span className="text-[10px] uppercase tracking-[0.2em] font-black" style={{ color: isLight ? "#0a0a0a" : "#c9a961" }}>

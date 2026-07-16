@@ -72,7 +72,7 @@ export default function RootLayout({
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');if(!t){var m=document.cookie.match(/(?:^|;\\s*)ryc-theme=([^;]+)/);if(m)t=decodeURIComponent(m[1]);}var valid=['gold-navy','white-noir'];document.documentElement.setAttribute('data-theme',valid.indexOf(t)>=0?t:'white-noir');}catch(e){}})();`,
+            __html: `(function(){try{var t=localStorage.getItem('ryc-theme');if(!t){var m=document.cookie.match(/(?:^|;\\s*)ryc-theme=([^;]+)/);if(m)t=decodeURIComponent(m[1]);}function normalize(v){if(v==='dark')return'gold-navy';if(v==='light')return'white-noir';return(v==='gold-navy'||v==='white-noir')?v:'white-noir';}document.documentElement.setAttribute('data-theme',normalize(t));}catch(e){}})();`,
           }}
         />
       </head>
