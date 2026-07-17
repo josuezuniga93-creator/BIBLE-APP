@@ -28,14 +28,37 @@ const verseDisplay = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://tulip-bible-app.vercel.app"),
   title: "Bible",
   applicationName: "Bible",
   description:
     "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
+  keywords: [
+    "Bible",
+    "Bible study",
+    "Matthew Henry Commentary",
+    "Strong's Concordance",
+    "family worship",
+    "Reformed theology",
+    "Christian books",
+  ],
+  authors: [{ name: "Tulip Bible App" }],
+  creator: "Tulip Bible App",
+  publisher: "Tulip Bible App",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "Bible",
     description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
+    url: "/",
+    siteName: "Tulip Bible App",
     type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Bible",
+    description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   },
   manifest: "/manifest.json",
   appleWebApp: {

@@ -72,7 +72,7 @@ export default function PrivacyPage() {
           </button>
           <div>
             <p className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: fgFaint }}>
-              Tulip Bible
+              Tulip Bible App
             </p>
             <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>
               Privacy Policy
@@ -83,7 +83,7 @@ export default function PrivacyPage() {
         <p className="text-xs mb-6" style={{ color: fgFaint }}>Last updated: July 2026</p>
 
         <p className="text-sm leading-relaxed mb-8" style={{ color: fgMuted }}>
-          Tulip Bible is a free Reformed study app. We built it to serve the church, not to profit from your data. This policy explains plainly what we do and don't do with your information.
+          Tulip Bible App is a free Reformed study app. We built it to serve the church, not to profit from your data. This policy explains plainly what we do and don't do with your information.
         </p>
 
         <div className="space-y-3">
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
         </div>
 
         <p className="text-xs text-center mt-10" style={{ color: fgFaint }}>
-          Tulip Bible · josuezuniga93@gmail.com
+          Tulip Bible App · josuezuniga93@gmail.com
         </p>
 
       </div>

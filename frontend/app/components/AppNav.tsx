@@ -30,7 +30,7 @@ export function AppNav() {
           href="/"
           className="flex items-center gap-2 text-sm font-bold text-white/80 hover:text-white transition-colors flex-shrink-0"
         >
-          <span className="hidden sm:block text-sm font-bold text-white/80">TULIP Bible App</span>
+          <span className="hidden sm:block text-sm font-bold text-white/80">Tulip Bible App</span>
         </Link>
 
         {/* Desktop nav */}

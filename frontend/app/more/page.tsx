@@ -436,8 +436,8 @@ export default function MorePage() {
           <button
             onClick={async () => {
               const data = {
-                title: "TULIP Bible App",
-                text: "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Free & Reformed.",
+                title: "Tulip Bible App",
+                text: "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Free forever.",
                 url: "https://tulip-bible-app.vercel.app",
               };
               try {

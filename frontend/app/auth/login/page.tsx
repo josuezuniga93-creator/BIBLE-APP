@@ -185,7 +185,7 @@ function LoginContent() {
             </svg>
           </button>
           <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: brandLabel }}>
-            Tulip Bible
+            Tulip Bible App
           </p>
           <div className="w-9" />
         </div>
