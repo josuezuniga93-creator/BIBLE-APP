@@ -1127,8 +1127,9 @@ export default function StudyToolsPage() {
               onClick={() => setTab(item.key)}
               className="flex-1 h-11 rounded-full text-sm font-black transition-all"
               style={{
-                background: tab === item.key ? (isLight ? "#0a0a0a" : "#c9a961") : "transparent",
-                color: tab === item.key ? (isLight ? "#ffffff" : "#10131d") : (isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.52)"),
+                background: tab === item.key ? (isLight ? "#e5e7eb" : "#c9a961") : "transparent",
+                color: tab === item.key ? (isLight ? "#0a0a0a" : "#10131d") : (isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.52)"),
+                boxShadow: tab === item.key && isLight ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : "none",
               }}
             >
               {item.label}
@@ -1197,7 +1198,7 @@ export default function StudyToolsPage() {
                   <button
                     onClick={() => openReader(commentaryResult)}
                     className="mt-5 inline-flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-black"
-                    style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}
+                    style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#10131d", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "none" }}
                   >
                     {lang === "es" ? "Leer Comentario" : "Read Commentary"}
                     <span>→</span>
@@ -1239,7 +1240,7 @@ export default function StudyToolsPage() {
                   <div className="rounded-[28px] p-5 border" style={isLight
                     ? { background: "linear-gradient(145deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))", borderColor: "rgba(0,0,0,0.10)" }
                     : { background: "linear-gradient(145deg, rgba(201,169,97,0.10), rgba(255,255,255,0.04))", borderColor: "rgba(201,169,97,0.18)" }}>
-                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}>
+                    <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#10131d", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "none" }}>
                       <BookIcon />
                     </div>
                     <h3 className="text-xl font-black">
@@ -1333,7 +1334,7 @@ export default function StudyToolsPage() {
                       {highlights.length} {lang === "es" ? "explicaciones guardadas" : "saved explanations"}
                     </p>
                   </div>
-                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#10131d" }}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#10131d", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "none" }}>
                     <BookIcon />
                   </div>
                 </div>

@@ -44,8 +44,8 @@ export default function BookOfMonth() {
   const bACdim = isPN ? "rgba(167,139,250,0.70)" : isLE ? "rgba(10,10,10,0.55)" : "rgba(201,169,97,0.70)";
   const bACbg  = isPN ? "rgba(124,58,237,0.12)"  : isLE ? "#e5e7eb" : "rgba(201,169,97,0.12)";
   const bACbd  = isPN ? "rgba(124,58,237,0.22)"  : isLE ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.22)";
-  const bBtnBg = isPN ? "#7c3aed"                : isLE ? "#050505" : "rgba(201,169,97,1)";
-  const bBtnTx = isPN ? "#ede8ff"                : isLE ? "#ffffff" : "#08090f";
+  const bBtnBg = isPN ? "#7c3aed"                : isLE ? "#e5e7eb" : "rgba(201,169,97,1)";
+  const bBtnTx = isPN ? "#ede8ff"                : isLE ? "#0a0a0a" : "#08090f";
 
   return (
     <section className="mt-8 mb-6">

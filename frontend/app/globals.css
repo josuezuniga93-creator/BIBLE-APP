@@ -2548,8 +2548,10 @@ html[data-theme="white-noir"] .mem-badge-chip {
   border-color: rgba(17,17,17,0.18) !important;
 }
 html[data-theme="white-noir"] .mem-start-btn {
-  background: #111111 !important;
-  color: #ffffff !important;
+  background: #e5e7eb !important;
+  color: #0a0a0a !important;
+  border: 1px solid rgba(17,17,17,0.10) !important;
+  box-shadow: none !important;
 }
 html[data-theme="white-noir"] .mem-pinned-label {
   color: #111111 !important;
@@ -2592,12 +2594,19 @@ html[data-theme="light"] .kids-book-modal-info {
   opacity: 1 !important;
 }
 
-/* Preserve readable labels on true dark action controls. */
+/* Light mode controls should stay soft gray, never solid black boxes. */
 html[data-theme="white-noir"] .btn-primary,
 html[data-theme="white-noir"] button.bg-black,
 html[data-theme="white-noir"] a.bg-black {
-  background: #171717 !important;
-  color: #ffffff !important;
+  background: #e5e7eb !important;
+  color: #0a0a0a !important;
+  border-color: rgba(17,17,17,0.12) !important;
+  box-shadow: none !important;
+}
+html[data-theme="white-noir"] .btn-primary *,
+html[data-theme="white-noir"] button.bg-black *,
+html[data-theme="white-noir"] a.bg-black * {
+  color: #0a0a0a !important;
 }
 
 /* White Noir is intentionally monochrome. Convert legacy Gold Navy utilities
@@ -2626,9 +2635,10 @@ html[data-theme="white-noir"] [style*="background: #c9a961"],
 html[data-theme="white-noir"] [style*="background-color: #c9a961"],
 html[data-theme="white-noir"] [style*="linear-gradient"][style*="201, 169, 97"],
 html[data-theme="white-noir"] [style*="linear-gradient"][style*="#c9a961"] {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  color: #ffffff !important;
+  background: #e5e7eb !important;
+  background-color: #e5e7eb !important;
+  color: #0a0a0a !important;
+  border-color: rgba(17,17,17,0.12) !important;
   box-shadow: none !important;
 }
 
@@ -2705,26 +2715,48 @@ html[data-theme="white-noir"] article[style*="linear-gradient"][style*="201, 169
 }
 html[data-theme="white-noir"] button[style*="linear-gradient"][style*="201, 169, 97"],
 html[data-theme="white-noir"] a[style*="linear-gradient"][style*="201, 169, 97"] {
-  background: #050505 !important;
-  background-color: #050505 !important;
-  color: #ffffff !important;
+  background: #e5e7eb !important;
+  background-color: #e5e7eb !important;
+  color: #0a0a0a !important;
+  border-color: rgba(17,17,17,0.12) !important;
+  box-shadow: none !important;
 }
 html[data-theme="white-noir"] button[style*="linear-gradient"][style*="201, 169, 97"] *,
 html[data-theme="white-noir"] a[style*="linear-gradient"][style*="201, 169, 97"] * {
-  color: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
 html[data-theme="white-noir"] button[style*="background: rgb(5, 5, 5)"],
 html[data-theme="white-noir"] a[style*="background: rgb(5, 5, 5)"],
 html[data-theme="white-noir"] button[style*="background: #050505"],
-html[data-theme="white-noir"] a[style*="background: #050505"] {
-  color: #ffffff !important;
+html[data-theme="white-noir"] a[style*="background: #050505"],
+html[data-theme="white-noir"] button[style*="background: rgb(17, 17, 17)"],
+html[data-theme="white-noir"] a[style*="background: rgb(17, 17, 17)"],
+html[data-theme="white-noir"] button[style*="background: #111111"],
+html[data-theme="white-noir"] a[style*="background: #111111"],
+html[data-theme="white-noir"] button[style*="background: rgb(10, 10, 10)"],
+html[data-theme="white-noir"] a[style*="background: rgb(10, 10, 10)"],
+html[data-theme="white-noir"] button[style*="background: #0a0a0a"],
+html[data-theme="white-noir"] a[style*="background: #0a0a0a"] {
+  background: #e5e7eb !important;
+  background-color: #e5e7eb !important;
+  color: #0a0a0a !important;
+  border-color: rgba(17,17,17,0.12) !important;
+  box-shadow: none !important;
 }
 html[data-theme="white-noir"] button[style*="background: rgb(5, 5, 5)"] *,
 html[data-theme="white-noir"] a[style*="background: rgb(5, 5, 5)"] *,
 html[data-theme="white-noir"] button[style*="background: #050505"] *,
-html[data-theme="white-noir"] a[style*="background: #050505"] * {
-  color: #ffffff !important;
+html[data-theme="white-noir"] a[style*="background: #050505"] *,
+html[data-theme="white-noir"] button[style*="background: rgb(17, 17, 17)"] *,
+html[data-theme="white-noir"] a[style*="background: rgb(17, 17, 17)"] *,
+html[data-theme="white-noir"] button[style*="background: #111111"] *,
+html[data-theme="white-noir"] a[style*="background: #111111"] *,
+html[data-theme="white-noir"] button[style*="background: rgb(10, 10, 10)"] *,
+html[data-theme="white-noir"] a[style*="background: rgb(10, 10, 10)"] *,
+html[data-theme="white-noir"] button[style*="background: #0a0a0a"] *,
+html[data-theme="white-noir"] a[style*="background: #0a0a0a"] * {
+  color: #0a0a0a !important;
 }
 html[data-theme="white-noir"] .quote-week-media-card [style*="color: rgb(17, 17, 17)"],
 html[data-theme="white-noir"] .quote-week-media-card [style*="color: #111111"] {

@@ -1217,8 +1217,9 @@ function LexiconInner() {
                       onClick={() => setPickerCategory(group.id)}
                       className="rounded-full py-3.5 text-center transition-colors"
                       style={{
-                        background: active ? (isLight ? "#0b0b0b" : "#ffffff") : (isLight ? "#f2f3f5" : "#242424"),
-                        color: active ? (isLight ? "#ffffff" : "#0b0b0b") : (isLight ? "#656565" : "#b8b8b8"),
+                        background: active ? (isLight ? "#e5e7eb" : "#ffffff") : (isLight ? "#f2f3f5" : "#242424"),
+                        color: active ? (isLight ? "#0b0b0b" : "#0b0b0b") : (isLight ? "#656565" : "#b8b8b8"),
+                        boxShadow: active && isLight ? "inset 0 0 0 1px rgba(0,0,0,0.08)" : "none",
                       }}
                     >
                       <span className="block text-[17px] font-semibold tracking-[-0.02em]">{getTranslationGroupLabel(group.id, lang)}</span>
@@ -1261,7 +1262,7 @@ function LexiconInner() {
                       {active && (
                         <span
                           className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
-                          style={{ background: isLight ? "#0b0b0b" : "#ffffff", color: isLight ? "#ffffff" : "#0b0b0b" }}
+                          style={{ background: isLight ? "#e5e7eb" : "#ffffff", color: "#0b0b0b", border: isLight ? "1px solid #d1d5db" : "none" }}
                         >
                           ✓
                         </span>
@@ -1453,7 +1454,7 @@ function LexiconInner() {
                   className="w-full flex items-center justify-between gap-4 px-5 py-4 mb-3 rounded-[22px] text-left transition-opacity active:opacity-60"
                   style={{
                     background: scriptureFont === f.key
-                      ? (isLight ? "#eeeeef" : "#ffffff")
+                      ? (isLight ? "#e5e7eb" : "#ffffff")
                       : (isLight ? "#f5f5f6" : "#242424"),
                     border: isLight ? "1px solid #e1e2e4" : "1px solid rgba(255,255,255,0.08)",
                     color: scriptureFont === f.key && !isLight ? "#0b0b0b" : "inherit",
@@ -1485,7 +1486,7 @@ function LexiconInner() {
                   {scriptureFont === f.key && (
                     <span
                       className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
-                      style={{ background: isLight ? "#0b0b0b" : "#0b0b0b", color: "#ffffff" }}
+                      style={{ background: isLight ? "#e5e7eb" : "#0b0b0b", color: isLight ? "#0b0b0b" : "#ffffff", border: isLight ? "1px solid #d1d5db" : "none" }}
                     >
                       ✓
                     </span>
@@ -1886,11 +1887,14 @@ function LexiconInner() {
                         className="aspect-square rounded-2xl flex items-center justify-center text-lg font-semibold transition-colors active:scale-95"
                         style={{
                           background: selectedBook?.num === pickerBook.num && selectedChapter === ch
-                            ? (isLight ? "#0b0b0b" : "#ffffff")
+                            ? (isLight ? "#e5e7eb" : "#ffffff")
                             : (isLight ? "#f2f3f5" : "#242424"),
                           color: selectedBook?.num === pickerBook.num && selectedChapter === ch
-                            ? (isLight ? "#ffffff" : "#0b0b0b")
+                            ? "#0b0b0b"
                             : (isLight ? "#111111" : "#f2f2f2"),
+                          border: selectedBook?.num === pickerBook.num && selectedChapter === ch && isLight
+                            ? "1px solid #d1d5db"
+                            : "1px solid transparent",
                         }}
                       >
                         {ch}

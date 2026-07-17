@@ -652,7 +652,7 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold hover:opacity-90 transition-colors"
-              style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#1a0e2e" }}
+              style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#1a0e2e", border: isLight ? "1px solid rgba(17,17,17,0.12)" : "none" }}
             >
               {book.buyLabel ?? "Buy"}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none">

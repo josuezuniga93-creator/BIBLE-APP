@@ -1180,13 +1180,13 @@ export default function Home() {
     ? "rgba(124,58,237,0.16)"
     : "rgba(201,169,97,0.14)";
   const videoCtaBg = isLightElegant
-    ? "#050505"
+    ? "#e5e7eb"
     : isLightPink
     ? "#be185d"
     : isPremiumNeon
     ? "#7c3aed"
     : "#c9a961";
-  const videoCtaText = isLightElegant || isLightPink || isPremiumNeon ? "#ffffff" : "#08090f";
+  const videoCtaText = isLightElegant ? "#0a0a0a" : isLightPink || isPremiumNeon ? "#ffffff" : "#08090f";
 
   // Background gradient baked into root div — never a separate child element.
   // Gold-navy uses a flat colour here; the lamp image div handles the top glow.
@@ -1798,9 +1798,9 @@ export default function Home() {
                   <span
                     className="rounded-full px-4 py-3 text-[12px] font-black"
                     style={{
-                      background: isLightElegant ? "#050505" : "rgba(255,255,255,0.10)",
-                      color: isLightElegant ? "#ffffff" : videoPrimary,
-                      border: `1px solid ${isLightElegant ? "#050505" : "rgba(255,255,255,0.12)"}`,
+                      background: isLightElegant ? "#e5e7eb" : "rgba(255,255,255,0.10)",
+                      color: isLightElegant ? "#0a0a0a" : videoPrimary,
+                      border: `1px solid ${isLightElegant ? "#d1d5db" : "rgba(255,255,255,0.12)"}`,
                     }}
                   >
                     {lang === "es" ? "Explorar videos" : "Explore videos"}
@@ -1898,7 +1898,7 @@ export default function Home() {
                 <Link
                   href="/auth/login"
                   className="flex-1 text-center rounded-2xl py-3 text-sm font-bold"
-                  style={{ background: isLightElegant ? "#111111" : themeAC, color: isLightElegant ? "#ffffff" : isPremiumNeon ? "#0a0514" : "#1a0e2e" }}
+                  style={{ background: isLightElegant ? "#e5e7eb" : themeAC, color: isLightElegant ? "#0a0a0a" : isPremiumNeon ? "#0a0514" : "#1a0e2e" }}
                 >
                   Sign In Free
                 </Link>
