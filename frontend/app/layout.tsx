@@ -103,8 +103,8 @@ export default function RootLayout({
         <ThemeProvider />
         <BackgroundCloudSync />
         <AppNav />
-        {/* md:pt-14 = top nav height (hidden on mobile); pb-36 on mobile = bottom nav height */}
-        <div className="layout-children md:pt-14 pb-36 md:pb-0">{children}</div>
+        {/* Phone/tablet keeps the floating bottom nav; desktop gets a dedicated sidebar shell. */}
+        <div className="layout-children pb-36 lg:pb-0 lg:pl-72">{children}</div>
         <BadgeRuntime />
         <BottomNav />
         {/* Service Worker registration */}

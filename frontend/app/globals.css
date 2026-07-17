@@ -44,6 +44,107 @@ body {
   color: var(--fg);
 }
 
+/* ── Desktop-only app shell ──────────────────────────────────────────────── */
+.desktop-app-sidebar {
+  background:
+    radial-gradient(circle at 25% 0%, color-mix(in srgb, var(--accent) 9%, transparent), transparent 34%),
+    color-mix(in srgb, var(--nav-bg) 96%, var(--bg));
+  border-color: var(--nav-border);
+  box-shadow: 24px 0 70px rgba(0, 0, 0, 0.22);
+  backdrop-filter: blur(20px);
+}
+
+.desktop-brand-card {
+  color: var(--fg);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 14%, transparent), transparent 62%),
+    color-mix(in srgb, var(--bg-2) 78%, transparent);
+  border: 1px solid var(--border);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.14);
+}
+
+.desktop-brand-card p {
+  color: var(--fg-mid);
+}
+
+.desktop-brand-card p:first-child {
+  color: var(--accent-text);
+}
+
+.desktop-nav-section {
+  color: var(--fg-dim);
+}
+
+.desktop-nav-link {
+  color: var(--fg-mid);
+}
+
+.desktop-nav-link:hover {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--bg-2) 74%, transparent);
+}
+
+.desktop-nav-link[data-active="true"] {
+  color: var(--fg);
+  background: color-mix(in srgb, var(--accent-soft) 68%, var(--bg-2));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.desktop-nav-icon {
+  color: inherit;
+  background: color-mix(in srgb, var(--bg-3) 62%, transparent);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.desktop-nav-link[data-active="true"] .desktop-nav-icon {
+  background: var(--accent);
+  color: color-mix(in srgb, var(--bg) 85%, #000);
+  box-shadow: none;
+}
+
+.desktop-nav-subtitle {
+  color: var(--fg-dim);
+}
+
+.desktop-nav-link[data-active="true"] .desktop-nav-subtitle {
+  color: var(--fg-mid);
+}
+
+.desktop-sidebar-footer {
+  color: var(--fg-mid);
+  background: color-mix(in srgb, var(--bg-2) 72%, transparent);
+  border: 1px solid var(--border);
+}
+
+.desktop-sidebar-footer p:first-child {
+  color: var(--accent-text);
+}
+
+html[data-theme="white-noir"] .desktop-app-sidebar {
+  background: #ffffff;
+  box-shadow: 22px 0 50px rgba(17, 17, 17, 0.06);
+}
+
+html[data-theme="white-noir"] .desktop-brand-card {
+  background: #f3f4f6;
+  box-shadow: none;
+}
+
+html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] {
+  background: #111111;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] .desktop-nav-icon {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] .desktop-nav-subtitle {
+  color: rgba(255, 255, 255, 0.62);
+}
+
 /* White Noir — high-contrast daylight theme. */
 html[data-theme="white-noir"] {
   color-scheme: light;

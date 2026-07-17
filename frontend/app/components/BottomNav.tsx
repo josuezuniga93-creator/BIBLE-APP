@@ -260,7 +260,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="mobile-nav-floating md:hidden fixed bottom-0 left-0 right-0 z-50"
+      className="mobile-nav-floating lg:hidden fixed bottom-0 left-0 right-0 z-50"
       style={{
         backgroundColor: "transparent",
         borderColor: "transparent",

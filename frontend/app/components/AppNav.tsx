@@ -1,97 +1,113 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../lib/useLanguage";
 import { AppSectionIcon, type AppSectionIconName } from "./AppSectionIcon";
 
-export function AppNav() {
+type DesktopNavLink = {
+  href: string;
+  label: string;
+  icon: AppSectionIconName;
+  title: string;
+};
+
+function DesktopLink({ link }: { link: DesktopNavLink }) {
   const pathname = usePathname();
-  const [menuOpen, setMenuOpen] = useState(false);
+  const active = link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+
+  return (
+    <Link
+      href={link.href}
+      title={link.title}
+      data-active={active ? "true" : undefined}
+      className="desktop-nav-link group flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition-all"
+    >
+      <span className="desktop-nav-icon flex h-10 w-10 items-center justify-center rounded-xl transition-all">
+        <AppSectionIcon name={link.icon} size={22} active={active} />
+      </span>
+      <span className="min-w-0">
+        <span className="block truncate leading-tight">{link.label}</span>
+        <span className="desktop-nav-subtitle mt-0.5 block truncate text-[11px] font-semibold leading-tight">
+          {link.title}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+export function AppNav() {
   const { t } = useLanguage();
 
-  const NAV_LINKS: Array<{ href: string; label: string; icon: AppSectionIconName; title: string }> = [
-    { href: "/lexicon",        label: t("nav_scripture"),  icon: "bible",      title: t("title_scripture") },
-    { href: "/learn",          label: t("nav_learn"),      icon: "historical", title: t("title_learn") },
-    { href: "/library",        label: t("nav_free_books"), icon: "library",    title: t("title_free_books") },
-    { href: "/family-worship", label: t("nav_family"),     icon: "worship",    title: t("title_family") },
-    { href: "/bible-tracker",  label: t("nav_tracker"),    icon: "tracker",    title: t("title_tracker") },
-    { href: "/bible-plans",    label: t("nav_plans"),      icon: "plans",      title: t("title_plans") },
-    { href: "/notes",          label: t("nav_notes"),      icon: "notes",      title: t("title_notes") },
-    { href: "/kids-books",     label: t("nav_kids"),       icon: "kids",       title: t("title_kids") },
+  const studyLinks: DesktopNavLink[] = [
+    { href: "/",                label: t("nav_home"),       icon: "home",        title: "Today" },
+    { href: "/lexicon",         label: t("nav_scripture"),  icon: "bible",       title: t("title_scripture") },
+    { href: "/study-tools",     label: "Study Tools",       icon: "study-tools", title: "Commentary & dictionary" },
+    { href: "/notes",           label: t("nav_notes"),      icon: "notes",       title: t("title_notes") },
+    { href: "/family-worship",  label: t("nav_worship"),    icon: "worship",     title: t("title_family") },
+  ];
+
+  const libraryLinks: DesktopNavLink[] = [
+    { href: "/library",         label: t("nav_free_books"), icon: "library",     title: t("title_free_books") },
+    { href: "/learn",           label: "Historical Docs",   icon: "historical",  title: t("title_learn") },
+    { href: "/kids-books",      label: t("nav_kids"),       icon: "kids",        title: t("title_kids") },
+    { href: "/videos",          label: t("nav_videos"),     icon: "videos",      title: "Video library" },
+  ];
+
+  const growthLinks: DesktopNavLink[] = [
+    { href: "/bible-tracker",   label: t("nav_tracker"),    icon: "tracker",     title: t("title_tracker") },
+    { href: "/bible-plans",     label: t("nav_plans"),      icon: "plans",       title: t("title_plans") },
+    { href: "/church-directory", label: "Churches",          icon: "church",      title: "Find a church" },
+    { href: "/more",            label: t("nav_extras"),     icon: "extras",      title: "More tools" },
   ];
 
   return (
-    <nav className="top-app-nav hidden md:block fixed top-0 left-0 right-0 z-40 backdrop-blur-md border-b" style={{ backgroundColor: "var(--nav-bg)", borderColor: "var(--nav-border)" }}>
-      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link
-          href="/"
-          className="flex items-center gap-2 text-sm font-bold text-white/80 hover:text-white transition-colors flex-shrink-0"
-        >
-          <span className="hidden sm:block text-sm font-bold text-white/80">Tulip Bible App</span>
+    <aside className="desktop-app-sidebar fixed inset-y-0 left-0 z-40 hidden w-[18rem] border-r lg:flex">
+      <div className="flex h-full w-full flex-col px-5 py-6">
+        <Link href="/" className="desktop-brand-card mb-7 block rounded-3xl p-4 transition-all">
+          <p className="text-[10px] font-black uppercase tracking-[0.24em]">Tulip Bible App</p>
+          <h1 className="mt-2 text-2xl font-black tracking-tight">Bible</h1>
+          <p className="mt-1 text-xs font-semibold leading-relaxed">
+            Scripture, notes, books, and worship in one focused study space.
+          </p>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden md:flex items-center gap-1">
-          {NAV_LINKS.map((link) => {
-            const active = pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                title={link.title}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 ${
-                  active
-                    ? "bg-violet-600/20 text-violet-300 border border-violet-500/30"
-                    : "text-white/40 hover:text-white/70 hover:bg-white/[0.05]"
-                }`}
-              >
-                <AppSectionIcon name={link.icon} size={16} active={active} />
-                {link.label}
-              </Link>
-            );
-          })}
-        </div>
+        <nav className="min-h-0 flex-1 space-y-6 overflow-y-auto pr-1">
+          <section>
+            <p className="desktop-nav-section mb-2 px-2 text-[10px] font-black uppercase tracking-[0.24em]">
+              Study
+            </p>
+            <div className="space-y-1.5">
+              {studyLinks.map((link) => <DesktopLink key={link.href} link={link} />)}
+            </div>
+          </section>
 
-        {/* Right side: hamburger (desktop only) */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Mobile hamburger — hidden on mobile (BottomNav handles mobile navigation) */}
-          <button
-            className="hidden md:flex w-9 h-9 items-center justify-center rounded-lg text-white/50 hover:text-white/80 hover:bg-white/[0.07] transition-colors"
-            onClick={() => setMenuOpen((v) => !v)}
-            aria-label="Toggle menu"
-          >
-            {menuOpen ? "✕" : "☰"}
-          </button>
+          <section>
+            <p className="desktop-nav-section mb-2 px-2 text-[10px] font-black uppercase tracking-[0.24em]">
+              Library
+            </p>
+            <div className="space-y-1.5">
+              {libraryLinks.map((link) => <DesktopLink key={link.href} link={link} />)}
+            </div>
+          </section>
+
+          <section>
+            <p className="desktop-nav-section mb-2 px-2 text-[10px] font-black uppercase tracking-[0.24em]">
+              Growth
+            </p>
+            <div className="space-y-1.5">
+              {growthLinks.map((link) => <DesktopLink key={link.href} link={link} />)}
+            </div>
+          </section>
+        </nav>
+
+        <div className="desktop-sidebar-footer mt-6 rounded-3xl p-4">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Launch Preview</p>
+          <p className="mt-2 text-xs font-semibold leading-relaxed">
+            Desktop uses a separate layout. Phone and installed app views stay unchanged.
+          </p>
         </div>
       </div>
-
-      {/* Mobile menu — only shown on medium+ screens (mobile uses BottomNav) */}
-      {menuOpen && (
-        <div className="hidden md:block border-t border-white/[0.06] bg-[#0f0f0f]/95 px-4 py-3 space-y-1">
-          {NAV_LINKS.map((link) => {
-            const active = pathname.startsWith(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-3 rounded-lg text-sm font-semibold transition-all min-h-[44px] ${
-                  active
-                    ? "bg-violet-600/20 text-violet-300"
-                    : "text-white/50 hover:text-white/80 hover:bg-white/[0.05]"
-                }`}
-              >
-                <span className="w-5 flex justify-center"><AppSectionIcon name={link.icon} size={18} active={active} /></span>
-                {link.label}
-                <span className="text-xs text-white/25 ml-auto">{link.title}</span>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </nav>
+    </aside>
   );
 }
