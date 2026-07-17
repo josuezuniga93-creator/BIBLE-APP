@@ -1698,7 +1698,7 @@ function LexiconInner() {
 
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
-        <div className="fixed left-0 right-0 z-40 px-4 print:hidden"
+        <div className="scripture-reader-bar fixed left-0 right-0 z-40 px-4 print:hidden"
           style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)" }}>
           <div className="le-chapter-nav bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/[0.08] flex items-center h-14 px-2 gap-1">
 

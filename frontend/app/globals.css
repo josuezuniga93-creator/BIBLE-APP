@@ -130,19 +130,44 @@ html[data-theme="white-noir"] .desktop-brand-card {
   box-shadow: none;
 }
 
+html[data-theme="white-noir"] .desktop-nav-link {
+  color: #4b5563;
+}
+
+html[data-theme="white-noir"] .desktop-nav-link:hover {
+  color: #050505;
+  background: #f3f4f6;
+}
+
 html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] {
-  background: #111111;
-  color: #ffffff;
-  box-shadow: none;
+  background: #eef0f3;
+  color: #050505;
+  box-shadow: inset 0 0 0 1px rgba(5, 5, 5, 0.08);
 }
 
 html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] .desktop-nav-icon {
-  background: rgba(255, 255, 255, 0.14);
-  color: #ffffff;
+  background: #ffffff;
+  color: #050505;
+  box-shadow: inset 0 0 0 1px rgba(5, 5, 5, 0.10);
 }
 
 html[data-theme="white-noir"] .desktop-nav-link[data-active="true"] .desktop-nav-subtitle {
-  color: rgba(255, 255, 255, 0.62);
+  color: rgba(5, 5, 5, 0.50);
+}
+
+@media (min-width: 1024px) {
+  .scripture-reader-bar {
+    left: 18rem !important;
+    right: 2rem !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  .scripture-reader-bar .le-chapter-nav {
+    max-width: 70rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 /* White Noir — high-contrast daylight theme. */
