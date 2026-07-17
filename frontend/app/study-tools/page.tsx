@@ -4,6 +4,7 @@ import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } 
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { AppReader } from "../components/AppReader";
+import { AppSectionIcon } from "../components/AppSectionIcon";
 import type { ReaderHighlightAdapter } from "../components/BracketHighlightReader";
 import {
   deleteStudyToolHighlight,
@@ -251,15 +252,6 @@ function selectedRange(selection: BracketSelection | null) {
 function readingPercent(page: number, pageCount?: number) {
   if (!pageCount || pageCount <= 0) return 0;
   return Math.min(100, Math.max(1, Math.round(((page + 1) / pageCount) * 100)));
-}
-
-function BookIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-      <path d="M5 4.5h6.5A3.5 3.5 0 0115 8v12a3.5 3.5 0 00-3.5-3.5H5V4.5z" stroke="currentColor" strokeWidth="1.7" />
-      <path d="M19 4.5h-4A3.5 3.5 0 0011.5 8v12a3.5 3.5 0 013.5-3.5h4V4.5z" stroke="currentColor" strokeWidth="1.7" />
-    </svg>
-  );
 }
 
 function DictionaryIcon() {
@@ -1241,7 +1233,7 @@ export default function StudyToolsPage() {
                     ? { background: "linear-gradient(145deg, rgba(0,0,0,0.04), rgba(0,0,0,0.02))", borderColor: "rgba(0,0,0,0.10)" }
                     : { background: "linear-gradient(145deg, rgba(201,169,97,0.10), rgba(255,255,255,0.04))", borderColor: "rgba(201,169,97,0.18)" }}>
                     <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4" style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#10131d", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "none" }}>
-                      <BookIcon />
+                      <AppSectionIcon name="study-tools" size={24} />
                     </div>
                     <h3 className="text-xl font-black">
                       {lang === "es" ? "Busca una referencia para empezar" : "Search a reference to begin"}
@@ -1335,7 +1327,7 @@ export default function StudyToolsPage() {
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: isLight ? "#e5e7eb" : "#c9a961", color: isLight ? "#0a0a0a" : "#10131d", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "none" }}>
-                    <BookIcon />
+                    <AppSectionIcon name="study-tools" size={24} />
                   </div>
                 </div>
               </button>
