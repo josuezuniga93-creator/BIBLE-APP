@@ -17,6 +17,7 @@ import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/Generate
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
 import { AppReader } from "../../components/AppReader";
 import { getReaderHighlights } from "../../lib/unifiedHighlights";
+import { UiIcon } from "../../components/UiIcon";
 
 function DetailBookCover({ slug, title, author }: { slug: string; title: string; author: string }) {
   const imageSrc = getBookCoverImage(slug);
@@ -518,7 +519,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               </h1>
               <p className="text-sm font-semibold mb-2" style={{ color: th.accent }}>{book.author}</p>
               <div className="flex items-center gap-1 mb-3">
-                <span style={{ color: "#c9a961" }}>★</span>
+                <UiIcon name="star" size={13} style={{ color: "#c9a961" }} />
                 <span className="text-xs font-bold" style={{ color: th.textMuted }}>4.8</span>
                 <span className="text-xs" style={{ color: th.textVeryMuted }}>(Reformed Classic)</span>
               </div>
@@ -533,7 +534,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               </div>
               {/* Free badge */}
               <div className="flex items-center gap-1.5">
-                <span style={{ color: "#34d399", fontSize: "12px" }}>✓</span>
+                <UiIcon name="check" size={12} style={{ color: "#34d399" }} strokeWidth={3} />
                 <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
                 <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
               </div>
@@ -611,7 +612,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           >
             <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: `1px solid ${th.borderMed}` }}>
               <p className="text-sm font-bold" style={{ color: th.textMuted }}>{lang === "es" ? "Índice" : "Table of Contents"}</p>
-              <button onClick={() => setShowToc(false)} className="transition-colors text-lg" style={{ color: th.textVeryMuted }}>✕</button>
+              <button onClick={() => setShowToc(false)} className="transition-colors" style={{ color: th.textVeryMuted }} aria-label={lang === "es" ? "Cerrar" : "Close"}>
+                <UiIcon name="close" size={19} />
+              </button>
             </div>
             <div className="p-3 space-y-0.5">
               {book.chapters.map((ch) => (
@@ -667,7 +670,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
               className="w-full py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2"
               style={{ backgroundColor: th.presentBtnBg, border: `1px solid ${th.presentBtnBorder}`, color: th.presentBtnText }}
             >
-              {lang === "es" ? "⛶ Modo Presentación / Domingo" : "⛶ Presentation / Sunday Mode"}
+              {lang === "es" ? "Modo Presentación / Domingo" : "Presentation / Sunday Mode"}
             </button>
           </div>
         </div>

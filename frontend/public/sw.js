@@ -69,7 +69,7 @@ function scheduleNext8amNotification() {
 
 function showVerseNotification() {
   const verse = getTodaysVerse();
-  self.registration.showNotification('📖 Daily Bible Verse', {
+  self.registration.showNotification('Daily Bible Verse', {
     body: `"${verse.text}" — ${verse.ref}`,
     icon: '/icons/icon-192.png?v=7',
     badge: '/icons/icon-192.png?v=7',

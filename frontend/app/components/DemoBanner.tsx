@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { T } from "../lib/translations";
+import { UiIcon } from "./UiIcon";
 
 export function DemoBanner({ t }: { t: T }) {
   const [showSetup, setShowSetup] = useState(false);
@@ -9,7 +10,9 @@ export function DemoBanner({ t }: { t: T }) {
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/8 overflow-hidden">
       <div className="flex items-start gap-3 px-4 py-3">
-        <span className="text-amber-400 text-lg mt-0.5 flex-shrink-0">🔬</span>
+        <span className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/25 text-amber-400 mt-0.5 flex items-center justify-center flex-shrink-0">
+          <UiIcon name="sparkle" size={16} />
+        </span>
         <div className="flex-1 min-w-0">
           <p className="text-amber-300 text-sm font-bold">{t.demoTitle}</p>
           <p className="text-amber-200/60 text-xs leading-relaxed mt-0.5">{t.demoBody}</p>

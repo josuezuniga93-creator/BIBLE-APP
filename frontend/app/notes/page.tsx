@@ -17,6 +17,7 @@ import {
   normalizeNotePassage,
 } from "../lib/notesData";
 import { AppSectionIcon } from "../components/AppSectionIcon";
+import { UiIcon } from "../components/UiIcon";
 import { SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
 import { formatParsedPassage, parsePassageInput } from "../lib/passageParser";
 
@@ -229,7 +230,7 @@ function NoteDetail({
                 className="flex h-10 w-10 items-center justify-center rounded-xl text-sm transition-all hover:bg-red-500/10 hover:text-red-500"
                 style={{ color: "var(--fg-dim)", border: "1px solid var(--border)" }}
               >
-                ✕
+                ×
               </button>
             </div>
           </div>
@@ -382,7 +383,7 @@ function NoteCard({
               className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-red-500/10 hover:text-red-400/70 transition-all text-xs"
               style={{ color: "var(--fg-dim)", border: isLight ? "1px solid rgba(0,0,0,0.1)" : "1px solid rgba(255,255,255,0.07)" }}
             >
-              ✕
+              ×
             </button>
           </div>
         </div>
@@ -1024,7 +1025,7 @@ function NoteEditorModal({
             {detectedRefs.length > 0 && (
               <div className="mt-4 rounded-xl px-3.5 py-3" style={{ background: "var(--accent-soft)", border: "1px solid color-mix(in srgb, var(--accent) 30%, transparent)" }}>
                 <p className="text-[11px] font-bold mb-2" style={{ color: "var(--accent-text)" }}>
-                  ✦ {lang === "es" ? "Referencias detectadas — toca para agregar" : "References detected — tap to add"}
+                  Note: {lang === "es" ? "Referencias detectadas — toca para agregar" : "References detected — tap to add"}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {detectedRefs.map((ref) => (
@@ -1047,7 +1048,9 @@ function NoteEditorModal({
                   {draft.scriptureRefs.filter(Boolean).map((ref) => (
                     <span key={ref} className="inline-flex min-h-9 items-center gap-2 rounded-xl px-3 text-[12px] font-bold" style={{ background: isEditorLight ? "#e5e7eb" : "rgba(255,255,255,0.06)", color: "var(--fg-mid)" }}>
                       {ref}
-                      <button type="button" onClick={() => removeRef(ref)} aria-label={`${lang === "es" ? "Eliminar" : "Remove"} ${ref}`} style={{ color: "var(--fg-dim)" }}>×</button>
+                      <button type="button" onClick={() => removeRef(ref)} aria-label={`${lang === "es" ? "Eliminar" : "Remove"} ${ref}`} style={{ color: "var(--fg-dim)" }}>
+                        <UiIcon name="close" size={13} />
+                      </button>
                     </span>
                   ))}
                 </div>
@@ -1090,7 +1093,9 @@ function NoteEditorModal({
               style={{ background: isEditorLight ? "#111111" : "var(--accent)" }}>{lang === "es" ? "Guardar" : "Save"}</button>
             <button onClick={() => setShowScriptureInput(false)}
               className="px-2 py-1.5 rounded-xl text-xs font-semibold"
-              style={{ color: "var(--fg-lo)" }}>✕</button>
+              style={{ color: "var(--fg-lo)" }} aria-label={lang === "es" ? "Cerrar detalles" : "Close details"}>
+              <UiIcon name="close" size={16} />
+            </button>
           </div>
         )}
 
@@ -1115,7 +1120,7 @@ function NoteEditorModal({
             </svg>
           </EditorToolButton>
 
-          <EditorToolButton label={lang === "es" ? "Lista" : "Checklist"} onClick={() => insertAtCursor("☐ ")}>
+          <EditorToolButton label={lang === "es" ? "Lista" : "Checklist"} onClick={() => insertAtCursor("- [ ] ")}>
             <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <rect x="3" y="4" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.8" /><rect x="3" y="15" width="5" height="5" rx="1" stroke="currentColor" strokeWidth="1.8" />
               <path d="M12 6.5h8M12 17.5h8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />

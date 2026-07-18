@@ -702,7 +702,7 @@ export default function VideoSubmitPage() {
                   border: videoMode === mode ? "none" : "1px solid rgba(255,255,255,0.10)",
                 }}
               >
-                {mode === "file" ? "📎 Attach File" : "🔗 Share Link"}
+                {mode === "file" ? "Attach File" : "Share Link"}
               </button>
             ))}
           </div>

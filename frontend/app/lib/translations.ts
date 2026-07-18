@@ -105,7 +105,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     textareaPlaceholder:
       "Paste the sermon transcript, teaching notes, or any Christian content here…",
     charsMin: (n, min) => `${n} / ${min} chars minimum`,
-    charsReady: (n) => `${n.toLocaleString()} chars ✓`,
+    charsReady: (n) => `${n.toLocaleString()} chars `,
     charsToGo: (n) => `${n} more to go`,
     youtubeLabel: "YouTube Sermon URL",
     youtubePlaceholder: "https://www.youtube.com/watch?v=…",
@@ -135,7 +135,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     scriptureLabel: "Scripture",
     historicFaithLabel: "Historic Faith",
     theologianNoteLabel: "Theologian Note",
-    redFlagsHeader: "⚠ Red Flags",
+    redFlagsHeader: "Warning: Red Flags",
     recommendationsHeader: "→ Recommended Resources",
     resetBtn: "← Analyze Another Sermon",
     footerDisclaimer:
@@ -212,7 +212,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     textareaPlaceholder:
       "Pega aquí la transcripción del sermón, notas de enseñanza o cualquier contenido cristiano…",
     charsMin: (n, min) => `${n} / ${min} caracteres mínimo`,
-    charsReady: (n) => `${n.toLocaleString()} caracteres ✓`,
+    charsReady: (n) => `${n.toLocaleString()} caracteres `,
     charsToGo: (n) => `${n} más necesarios`,
     youtubeLabel: "URL del Sermón en YouTube",
     youtubePlaceholder: "https://www.youtube.com/watch?v=…",
@@ -242,7 +242,7 @@ export const TRANSLATIONS: Record<Lang, T> = {
     scriptureLabel: "Escritura",
     historicFaithLabel: "Fe Histórica",
     theologianNoteLabel: "Nota del Teólogo",
-    redFlagsHeader: "⚠ Señales de Alerta",
+    redFlagsHeader: "Warning: Señales de Alerta",
     recommendationsHeader: "→ Recursos Recomendados",
     resetBtn: "← Analizar Otro Sermón",
     footerDisclaimer:

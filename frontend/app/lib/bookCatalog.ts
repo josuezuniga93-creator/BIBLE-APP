@@ -11,7 +11,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1678,
     description:
       "The greatest allegory in the English language. Christian's journey from the City of Destruction to the Celestial City remains the most widely read Christian book after the Bible.",
-    cover_emoji: "📜",
+    cover_emoji: "file",
     tags: ["Allegory", "Puritan", "Classic"],
     pg_id: 131,
     coming_soon: false,
@@ -23,7 +23,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1666,
     description:
       "Bunyan's spiritual autobiography — a raw and searching account of his conversion, his struggles with doubt, and the grace of God that held him fast through years of spiritual darkness.",
-    cover_emoji: "✝️",
+    cover_emoji: "cross",
     tags: ["Autobiography", "Puritan", "Grace"],
     pg_id: 654,
     coming_soon: false,
@@ -35,7 +35,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 400,
     description:
       "The first great autobiography of the Western world. Augustine's honest account of his restless heart and his discovery that it finds rest only in God has spoken to every generation since.",
-    cover_emoji: "📖",
+    cover_emoji: "book",
     tags: ["Patristic", "Church Father", "Spiritual Memoir"],
     pg_id: 3296,
     coming_soon: false,
@@ -47,7 +47,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1418,
     description:
       "After the Bible, the most read Christian book in history. A call to interior devotion, humility, and the pursuit of Christ over all earthly knowledge and honour.",
-    cover_emoji: "🕊️",
+    cover_emoji: "dove",
     tags: ["Devotional", "Medieval", "Classic"],
     pg_id: 1653,
     coming_soon: false,
@@ -59,7 +59,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1536,
     description:
       "The masterwork of Reformed theology. Calvin's systematic exposition of Christian doctrine set the course of Protestant thought and remains indispensable for serious students of Scripture.",
-    cover_emoji: "📚",
+    cover_emoji: "library",
     tags: ["Theology", "Reformed", "Calvin", "Foundational"],
     pg_id: 45001,
     coming_soon: false,
@@ -71,7 +71,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1879,
     description:
       "Ryle's most celebrated work. Plain-spoken, searching, and practically wise — a thorough examination of what true holiness is, why it matters, and how it is pursued in ordinary Christian life.",
-    cover_emoji: "✨",
+    cover_emoji: "sparkle",
     tags: ["Victorian", "Sanctification", "Practical", "Reformed"],
     pg_id: null,
     coming_soon: false,
@@ -83,7 +83,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1865,
     description:
       "366 daily devotional readings — one for morning, one for evening — drawn from Spurgeon's inexhaustible treasury of gospel preaching. A companion for every day of the year.",
-    cover_emoji: "☀️",
+    cover_emoji: "sun",
     tags: ["Daily", "Devotional", "Spurgeon", "Victorian"],
     pg_id: null,
     coming_soon: false,
@@ -95,7 +95,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1741,
     description:
       "Edwards's famous sermon that sparked the Great Awakening, together with other sermons on the excellency of Christ, the reality of heaven, and the importance of seeking God now.",
-    cover_emoji: "⚡",
+    cover_emoji: "sparkle",
     tags: ["Sermons", "Great Awakening", "Edwards"],
     pg_id: 34632,
     coming_soon: false,
@@ -107,7 +107,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1656,
     description:
       "Owen's classic treatment of putting sin to death by the Spirit. Searching, pastoral, and deeply practical for believers fighting remaining sin.",
-    cover_emoji: "🔥",
+    cover_emoji: "flame",
     tags: ["Puritan", "Sanctification", "Theology", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -119,7 +119,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1525,
     description:
       "Luther's forceful reply to Erasmus on human inability, divine grace, and the freedom of God in salvation.",
-    cover_emoji: "⛓️",
+    cover_emoji: "link",
     tags: ["Reformation", "Theology", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -131,7 +131,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1746,
     description:
       "Edwards's careful guide to discerning true spiritual life from mere emotion, written in the wake of the Great Awakening.",
-    cover_emoji: "♥️",
+    cover_emoji: "heart",
     tags: ["Great Awakening", "Theology", "Spiritual Life", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -143,7 +143,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1647,
     description:
       "Owen's major work on definite atonement and the triumph of Christ's saving death for his people.",
-    cover_emoji: "✝️",
+    cover_emoji: "cross",
     tags: ["Puritan", "Atonement", "Reformed", "Theology"],
     pg_id: null,
     coming_soon: false,
@@ -155,7 +155,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1692,
     description:
       "Watson's warm, memorable exposition of the Westminster Shorter Catechism, rich in doctrine and practical application.",
-    cover_emoji: "📚",
+    cover_emoji: "library",
     tags: ["Puritan", "Catechism", "Theology", "Reformed"],
     pg_id: null,
     coming_soon: false,
@@ -167,7 +167,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1754,
     description:
       "Edwards's philosophical and theological argument on moral agency, necessity, and the will's bondage to the heart.",
-    cover_emoji: "⚖️",
+    cover_emoji: "scale",
     tags: ["Theology", "Philosophy", "Great Awakening", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -179,7 +179,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1835,
     description:
       "Hodge's substantial Reformed exposition of Romans, organized by chapter and verse ranges for easier study.",
-    cover_emoji: "🕮",
+    cover_emoji: "book",
     tags: ["Commentary", "Romans", "Reformed", "Theology"],
     pg_id: null,
     coming_soon: false,
@@ -191,7 +191,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1720,
     description:
       "Boston traces humanity in innocence, corruption, grace, and glory with the searching clarity of classic Reformed pastoral theology.",
-    cover_emoji: "🌿",
+    cover_emoji: "leaf",
     tags: ["Reformed", "Theology", "Classic", "Puritan"],
     pg_id: null,
     coming_soon: false,
@@ -203,7 +203,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1878,
     description:
       "Ryle's direct and pastoral essays on the lived reality of Christian discipleship, faith, repentance, prayer, and holiness.",
-    cover_emoji: "🕯️",
+    cover_emoji: "light",
     tags: ["Victorian", "Devotional", "Practical", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -215,7 +215,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1877,
     description:
       "Ryle's clear Protestant answers to disputed questions about salvation, Scripture, worship, sacraments, and the church.",
-    cover_emoji: "🪢",
+    cover_emoji: "knot",
     tags: ["Victorian", "Doctrine", "Practical", "Classic"],
     pg_id: null,
     coming_soon: false,
@@ -227,7 +227,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1865,
     description:
       "A short, urgent, and affectionate exhortation to young men on temptation, character, wisdom, and devotion to Christ.",
-    cover_emoji: "🧭",
+    cover_emoji: "compass",
     tags: ["Victorian", "Devotional", "Youth", "Practical"],
     pg_id: null,
     coming_soon: false,
@@ -239,7 +239,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1888,
     description:
       "Ryle's concise counsel on raising children with tenderness, discipline, Scripture, prayer, and eternal seriousness.",
-    cover_emoji: "🏠",
+    cover_emoji: "home",
     tags: ["Victorian", "Family", "Practical", "Devotional"],
     pg_id: null,
     coming_soon: false,
@@ -251,7 +251,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1886,
     description:
       "Spurgeon's clearest and most direct appeal to the unconverted. Written for ordinary people who want to know how to be saved, and saved now, by the free grace of God alone.",
-    cover_emoji: "🎁",
+    cover_emoji: "gift",
     tags: ["Spurgeon", "Grace", "Foundational"],
     pg_id: null,
     coming_soon: true,
@@ -263,7 +263,7 @@ export const STATIC_BOOK_CATALOG: BookCatalogEntry[] = [
     year: 1961,
     description:
       "A profound meditation on the attributes of God. Tozer contends that a right understanding of who God is lies at the heart of all genuine worship and Christian living.",
-    cover_emoji: "🌟",
+    cover_emoji: "star",
     tags: ["Theology", "Classic", "Practical"],
     pg_id: null,
     coming_soon: true,

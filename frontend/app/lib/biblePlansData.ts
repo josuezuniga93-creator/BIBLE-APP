@@ -114,7 +114,7 @@ export const BIBLE_PLANS: BiblePlan[] = [
     totalDays: 365,
     chaptersPerDay: "varies",
     testament: "FULL",
-    icon: "📅",
+    icon: "calendar",
     chapters: buildCanonicalOrder(),
   },
   {
@@ -125,7 +125,7 @@ export const BIBLE_PLANS: BiblePlan[] = [
     totalDays: 365,
     chaptersPerDay: "varies",
     testament: "FULL",
-    icon: "⏳",
+    icon: "timer",
     chapters: buildChronologicalOrder(),
   },
   {
@@ -136,7 +136,7 @@ export const BIBLE_PLANS: BiblePlan[] = [
     totalDays: 365,
     chaptersPerDay: "varies",
     testament: "FULL",
-    icon: "✝️",
+    icon: "cross",
     chapters: buildNTFirstOrder(),
   },
   {
@@ -147,7 +147,7 @@ export const BIBLE_PLANS: BiblePlan[] = [
     totalDays: 90,
     chaptersPerDay: 3,
     testament: "NT",
-    icon: "⚡",
+    icon: "sparkle",
     chapters: buildNTOnly(),
   },
   {
@@ -158,7 +158,7 @@ export const BIBLE_PLANS: BiblePlan[] = [
     totalDays: 181,
     chaptersPerDay: 1,
     testament: "OT",
-    icon: "🎵",
+    icon: "music",
     chapters: buildPsalmsProverbs(),
   },
 ];

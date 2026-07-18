@@ -18,6 +18,7 @@ import {
   type StreakData,
 } from "../lib/streakData";
 import { useLanguage } from "../lib/useLanguage";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Church history verses (same data shape as the live home page) ─────────────
 interface HistoryVerse {
@@ -235,7 +236,7 @@ export default function PreviewHome() {
           <button
             onClick={() => setVideoOpen(false)}
             className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white/70"
-          >✕</button>
+          ><UiIcon name="close" size={18} /></button>
           <div className="flex-1 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <video src={featuredVideo.file} autoPlay controls playsInline className="w-full h-full object-contain"
               onError={(e) => {

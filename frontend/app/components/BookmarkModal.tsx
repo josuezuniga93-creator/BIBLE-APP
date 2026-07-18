@@ -9,6 +9,7 @@ import {
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
+import { UiIcon, collectionIconName } from "./UiIcon";
 
 // ─── Props ─────────────────────────────────────────────────────────────────────
 
@@ -30,7 +31,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
   const [checkedIds, setCheckedIds]   = useState<Set<string>>(new Set());
   const [showCreate, setShowCreate]   = useState(false);
   const [newName, setNewName]         = useState("");
-  const [newEmoji, setNewEmoji]       = useState("📖");
+  const [newEmoji, setNewEmoji]       = useState("book");
   const [newColor, setNewColor]       = useState(COLLECTION_COLORS[0]);
   const [toast, setToast]             = useState("");
 
@@ -78,7 +79,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
     setCollections(loadCollections());
     setShowCreate(false);
     setNewName("");
-    setNewEmoji("📖");
+    setNewEmoji("book");
     setNewColor(COLLECTION_COLORS[0]);
   }
 
@@ -147,7 +148,9 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   backgroundColor: "transparent",
                 }}
               >
-                <span className="text-xl flex-shrink-0">{col.emoji}</span>
+                <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl" style={{ backgroundColor: `${col.color}18`, color: col.color }}>
+                  <UiIcon name={collectionIconName(col.emoji)} size={18} />
+                </span>
                 <div className="flex-1 text-left">
                   <p
                     className="text-sm font-bold"
@@ -170,7 +173,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                     border: checked ? `2px solid ${col.color}` : light ? "2px solid rgba(0,0,0,0.18)" : "2px solid rgba(255,255,255,0.2)",
                   }}
                 >
-                  {checked && <span className="text-white text-[10px] font-black">✓</span>}
+                  {checked && <UiIcon name="check" size={12} className="text-white" strokeWidth={3} />}
                 </div>
               </button>
             );
@@ -182,19 +185,20 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               className="px-5 py-4 space-y-3"
               style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
             >
-              {/* Emoji row */}
+              {/* Icon row */}
               <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 {COLLECTION_EMOJIS.map((e) => (
                   <button
                     key={e}
                     onClick={() => setNewEmoji(e)}
-                    className="flex-shrink-0 w-9 h-9 rounded-xl text-lg flex items-center justify-center transition-all"
+                    className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all"
                     style={{
                       backgroundColor: newEmoji === e ? "rgba(0,0,0,0.10)" : "rgba(0,0,0,0.04)",
                       border: newEmoji === e ? "1px solid rgba(0,0,0,0.25)" : "1px solid transparent",
+                      color: newColor,
                     }}
                   >
-                    {e}
+                    <UiIcon name={collectionIconName(e)} size={17} />
                   </button>
                 ))}
               </div>

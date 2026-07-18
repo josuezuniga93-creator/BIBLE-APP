@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { getCategories, addCategory, saveBookmark } from "../lib/bookmarks";
 import { useTheme } from "../lib/useTheme";
+import { UiIcon } from "./UiIcon";
 
 interface Props {
   ref_: string;
@@ -58,7 +59,9 @@ export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Pr
           <span className="text-[13px] font-bold" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
             {lang === "es" ? "Guardar en categoría" : "Save to category"}
           </span>
-          <button onClick={onClose} className="text-[18px]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.4)" }}>×</button>
+          <button onClick={onClose} className="text-[18px]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.4)" }} aria-label="Close">
+            <UiIcon name="close" size={18} />
+          </button>
         </div>
 
         {/* Verse preview */}

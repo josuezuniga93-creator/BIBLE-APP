@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { UiIcon } from "./UiIcon";
 
 interface Props {
   x: number; // viewport center-x (used to position the bubble)
@@ -46,7 +47,7 @@ export function RemoveHighlightBubble({ x, y, onConfirm, onDismiss }: Props) {
         onClick={onDismiss}
         className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-white/10 text-white/30 hover:text-white/60 text-xs transition-colors"
       >
-        ✕
+        <UiIcon name="close" size={12} />
       </button>
     </div>
   );

@@ -10,6 +10,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "../lib/useTheme";
+import { UiIcon, collectionIconName } from "../components/UiIcon";
 
 interface KidsBook {
   id: string;
@@ -68,7 +69,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Systematic theology for families — 55 beautifully illustrated lessons covering God, creation, sin, salvation, and the Holy Spirit in language children actually understand.",
     section: "Children's Devotionals",
-    fallbackEmoji: "🏛",
+    fallbackEmoji: "landmark",
     publisher: "New Growth Press",
     pages: 240,
     readingLevel: "Family devotional",
@@ -84,7 +85,7 @@ const BOOKS: KidsBook[] = [
     description:
       "An alphabet-driven prayer primer that teaches children to pray using the words of Scripture — from Adoration to Zeal, every letter becomes a conversation with God.",
     section: "Children's Devotionals",
-    fallbackEmoji: "🙏",
+    fallbackEmoji: "prayer",
     publisher: "B&H Kids",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/0dckHV8q",
@@ -99,7 +100,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Goes beyond the surface narrative to show children the theological depth of every Old Testament story — ideal for family devotions or Sunday school.",
     section: "Children's Devotionals",
-    fallbackEmoji: "📜",
+    fallbackEmoji: "file",
     publisher: "Children Desiring God",
     readingLevel: "Family devotional",
     buyLink: "https://a.co/d/09V13jtx",
@@ -114,7 +115,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Explores the Gospels and Epistles with children, drawing out rich doctrinal truth from familiar stories and teaching them to read the Bible as one unified message.",
     section: "Children's Devotionals",
-    fallbackEmoji: "✝️",
+    fallbackEmoji: "cross",
     publisher: "Children Desiring God",
     readingLevel: "Family devotional",
     buyLink: "https://a.co/d/0bkiLqAm",
@@ -130,7 +131,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Sixty-six stories — one for every book of the Bible — each written to show how the entire Scripture points to the same Savior. Vivid illustrations by Don Clark.",
     section: "Children's Devotionals",
-    fallbackEmoji: "📖",
+    fallbackEmoji: "book",
     publisher: "Crossway",
     pages: 384,
     readingLevel: "Read-aloud",
@@ -148,7 +149,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A story for every day of the year — from Genesis to Revelation — written with clarity and warmth, showing how the whole Bible is one great story of redemption.",
     section: "Bible Stories",
-    fallbackEmoji: "📅",
+    fallbackEmoji: "calendar",
     publisher: "Christian Focus",
     pages: 384,
     readingLevel: "Read-aloud / Independent",
@@ -165,7 +166,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The beloved classic that shows every story in the Bible — from the very beginning to the very end — is really one story: a never-stopping, never-giving-up, unbreakable love story.",
     section: "Bible Stories",
-    fallbackEmoji: "✝️",
+    fallbackEmoji: "cross",
     publisher: "Zonderkidz",
     pages: 352,
     readingLevel: "Read-aloud",
@@ -183,7 +184,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A beautifully gentle board book that introduces toddlers to the concept of grace — that God loves us even when we mess up, and makes things right through Jesus.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "💛",
+    fallbackEmoji: "heart",
     publisher: "The Good Book Company",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/0b9uoHoe",
@@ -198,7 +199,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of George Whitefield — the open-air evangelist who preached to thousands in fields and streets. A vivid board book introduction to one of history's boldest gospel preachers.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "📢",
+    fallbackEmoji: "external",
     publisher: "Reformation Heritage Books",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/0hhnnRUP",
@@ -213,7 +214,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of Katharina Luther — the former nun who married Martin Luther and became the heart of the Reformation household. A beautiful board book about a woman of quiet faith and great courage.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "🌿",
+    fallbackEmoji: "leaf",
     publisher: "Reformation Heritage Books",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/08EjEWU2",
@@ -228,7 +229,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of Susannah Spurgeon — wife of Charles Spurgeon — who used her health struggles to start a book fund that sent thousands of Christian books to poor pastors across England.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "📚",
+    fallbackEmoji: "library",
     publisher: "Reformation Heritage Books",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/03a19H7B",
@@ -243,7 +244,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of Martyn Lloyd-Jones — the Welsh doctor who left medicine to become one of the 20th century's greatest preachers. A board book showing how God redirects even brilliant careers for His glory.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "🩺",
+    fallbackEmoji: "heart",
     publisher: "Reformation Heritage Books",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/0eZmYjGI",
@@ -258,7 +259,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Part of the 'Big Theology for Little Hearts' series — a beautifully illustrated board book introducing the youngest children to who the Holy Spirit is and what He does in the lives of believers.",
     section: "Toddler Books (Board Books)",
-    fallbackEmoji: "🕊️",
+    fallbackEmoji: "dove",
     publisher: "Big Theology for Little Hearts",
     readingLevel: "Board book",
     buyLink: "https://a.co/d/09TUzw6z",
@@ -275,7 +276,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Bunyan's timeless allegory reimagined for children with stunning new illustrations by Joe Sutphin — woodland animal characters guide young Christian through the journey from the City of Destruction to the Celestial City.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🏰",
+    fallbackEmoji: "church",
     publisher: "Moody Publishers",
     readingLevel: "Independent / Read-aloud",
     buyLink: "https://a.co/d/095kszww",
@@ -290,7 +291,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A charming picture book that introduces children to the Heidelberg Catechism through the story of young Sophie and a very theological cat.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🐱",
+    fallbackEmoji: "book",
     publisher: "10Publishing",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/06K7onjD",
@@ -305,7 +306,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A gospel allegory dressed as a fairy tale — a king battles a fearsome dragon in a story that echoes the great victory of Christ over sin and death.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🐉",
+    fallbackEmoji: "flame",
     publisher: "Christian Focus",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/025xBXql",
@@ -320,7 +321,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A beautifully illustrated picture book retelling the Parable of the Sower, helping children understand how God's Word takes root differently in different hearts.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🌱",
+    fallbackEmoji: "leaf",
     publisher: "The Good Book Company",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/07RQ6w23",
@@ -335,7 +336,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Calvin's Institutes made visual — a graphic adaptation of Chapters 1–5 of Book 1, covering the knowledge of God and knowledge of ourselves. Theology you can see.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🖼",
+    fallbackEmoji: "file",
     publisher: "REFTOONS",
     readingLevel: "Teen / Adult",
     buyLink: "https://www.reftoons.com/products/john-calvins-illustrated-institutes-1?srsltid=AfmBOooCZCkMdZssilbMKtIs4O8zaxvXq5lKu_6Dt1W7WGNpao_XxKiO",
@@ -351,7 +352,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A medieval knight receives a map from the King — an allegory about the Bible as our guide through life, beautifully illustrated for young readers.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🗺",
+    fallbackEmoji: "map",
     publisher: "Reformation Trust",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/0dFcRrpR",
@@ -367,7 +368,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Tiny creatures called Lightlings fear the darkness around them — a beautiful parable of the Fall and redemption, pointing children toward the true Light of the world.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "✨",
+    fallbackEmoji: "sparkle",
     publisher: "Reformation Trust",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/08qoL1M3",
@@ -383,7 +384,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Told from the perspective of the donkey on Palm Sunday — a humble, whimsical story that shows every creature has a role in glorifying the King of kings.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🫏",
+    fallbackEmoji: "book",
     publisher: "Reformation Trust",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/0gB2DFeI",
@@ -399,7 +400,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Based on Zechariah 3, a story about a filthy priest and a gracious King — a profound picture of justification told through a gentle, illustrated allegory.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "👘",
+    fallbackEmoji: "file",
     publisher: "Reformation Trust",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/0fpnHBLV",
@@ -414,7 +415,7 @@ const BOOKS: KidsBook[] = [
     description:
       "A nugget of gold in the hands of a skilled refiner — an illustrated story of sanctification, helping children understand how God uses trials to purify our hearts.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🥇",
+    fallbackEmoji: "star",
     publisher: "Christian Focus",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/020VcqcG",
@@ -429,7 +430,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The beloved story of David and Goliath retold with joyful illustrations — showing young children that God is bigger than any giant we face.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🪨",
+    fallbackEmoji: "landmark",
     publisher: "The Good Book Company",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/05y8crKR",
@@ -444,7 +445,7 @@ const BOOKS: KidsBook[] = [
     description:
       "Daniel faces a den of very hungry lions — a cheerful retelling of a fearless faith that God honors, perfect for the youngest readers.",
     section: "Children & Youth / Christian Picture Books",
-    fallbackEmoji: "🦁",
+    fallbackEmoji: "shield",
     publisher: "The Good Book Company",
     readingLevel: "Read-aloud",
     buyLink: "https://a.co/d/07p08ooz",
@@ -462,7 +463,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of England's nine-day queen who died for her Protestant faith at just sixteen — a biography of courage, conviction, and trust in God's sovereignty.",
     section: "Biographies for Young Readers",
-    fallbackEmoji: "👑",
+    fallbackEmoji: "star",
     publisher: "Reformation Heritage Books",
     readingLevel: "Independent",
     buyLink: "https://store.generations.org/products/lady-jane-grey?srsltid=AfmBOoqgNGLVO_ZNdhkAE3V2C4XS2fhfKU9RaXhehsaV3_uqXOCj2W4x",
@@ -478,7 +479,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The Prince of Preachers — from his conversion at fifteen to filling the Metropolitan Tabernacle, Spurgeon's life shows what God does with a heart fully surrendered.",
     section: "Biographies for Young Readers",
-    fallbackEmoji: "🎤",
+    fallbackEmoji: "mic",
     publisher: "Reformation Heritage Books",
     readingLevel: "Independent",
     buyLink: "https://store.generations.org/products/charles-haddon-spurgeon-1",
@@ -494,7 +495,7 @@ const BOOKS: KidsBook[] = [
     description:
       "The story of a shy scholar who became one of the most influential theologians in Christian history — Carr brings Calvin to life for a new generation of young readers.",
     section: "Biographies for Young Readers",
-    fallbackEmoji: "📜",
+    fallbackEmoji: "file",
     publisher: "Reformation Heritage Books",
     readingLevel: "Independent",
     buyLink: "https://a.co/d/07UFxJmY",
@@ -514,7 +515,7 @@ const EDITORS_PICK: KidsBook = {
   description:
     "A family devotional through the Westminster Shorter Catechism — 52 weeks of truth, each brought to life with a story, a key Scripture, and questions for little hearts. One of the most beloved theology-for-kids books ever written.",
   section: "editor",
-  fallbackEmoji: "📖",
+  fallbackEmoji: "book",
   publisher: "Crossway",
   pages: 224,
   readingLevel: "Family devotional",
@@ -569,7 +570,7 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
               className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
               style={{ background: isLight ? "#e8e8e8" : "linear-gradient(to bottom right, #1a1220, #0d0a14)" }}
             >
-              <span className="text-6xl mb-4">{book.fallbackEmoji ?? "📖"}</span>
+              <UiIcon name={collectionIconName(book.fallbackEmoji)} size={54} className="mb-4" />
               <p
                 className="text-xs font-semibold leading-snug"
                 style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.40)" }}
@@ -731,7 +732,7 @@ function BookModal({ book, onClose }: { book: KidsBook; onClose: () => void }) {
           ) : (
             <div className="w-40 h-56 flex flex-col items-center justify-center rounded-md"
               style={{ backgroundColor: "#e8e8e8" }}>
-              <span className="text-5xl mb-2">{book.fallbackEmoji ?? "📖"}</span>
+              <UiIcon name={collectionIconName(book.fallbackEmoji)} size={46} className="mb-2" />
             </div>
           )}
         </div>
@@ -844,7 +845,7 @@ function BookCard({ book, isLight }: { book: KidsBook; isLight: boolean }) {
               className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center"
               style={{ background: isLight ? "#e8e8e8" : "linear-gradient(to bottom right, #1a1220, #0d0a14)" }}
             >
-              <span className="text-5xl mb-3">{book.fallbackEmoji ?? "📖"}</span>
+              <UiIcon name={collectionIconName(book.fallbackEmoji)} size={46} className="mb-3" />
               <p
                 className="text-[11px] font-semibold leading-snug line-clamp-3"
                 style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}

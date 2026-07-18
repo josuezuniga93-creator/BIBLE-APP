@@ -220,7 +220,7 @@ function QueueCard({
           </span>
           {entry.isFeatured && (
             <span className="text-[9px] font-bold px-1.5 py-0.5 rounded" style={{ background: AC_BG, color: AC }}>
-              ★ Featured
+              Featured
             </span>
           )}
         </div>
@@ -303,22 +303,22 @@ function QueueCard({
           <div className="flex flex-wrap gap-2">
             {entry.approvalStatus === "pending" && (
               <>
-                <ActionBtn label="✓ Approve"          color="#10b981" onClick={() => onAction(entry.id, "approve")} />
-                <ActionBtn label="✕ Reject"           color="#ef4444" onClick={() => onAction(entry.id, "reject")} />
+                <ActionBtn label="Approve"          color="#10b981" onClick={() => onAction(entry.id, "approve")} />
+                <ActionBtn label="× Reject"           color="#ef4444" onClick={() => onAction(entry.id, "reject")} />
                 <ActionBtn label="⟳ Request Revision" color="#3b82f6" onClick={() => onAction(entry.id, "revision")} />
               </>
             )}
             {entry.approvalStatus === "approved" && entry.publicationStatus !== "published" && (
-              <ActionBtn label="📤 Mark Ready for Upload" color="#f59e0b" onClick={() => onAction(entry.id, "ready_for_upload")} />
+              <ActionBtn label="Mark Ready for Upload" color="#f59e0b" onClick={() => onAction(entry.id, "ready_for_upload")} />
             )}
             {entry.publicationStatus === "published" && !entry.isFeatured && (
-              <ActionBtn label="★ Feature on Home" color={AC} onClick={() => onAction(entry.id, "feature")} />
+              <ActionBtn label="Feature on Home" color={AC} onClick={() => onAction(entry.id, "feature")} />
             )}
             {entry.isFeatured && (
-              <ActionBtn label="★ Un-feature" color="rgba(255,255,255,0.40)" onClick={() => onAction(entry.id, "unfeature")} />
+              <ActionBtn label="Un-feature" color="rgba(255,255,255,0.40)" onClick={() => onAction(entry.id, "unfeature")} />
             )}
             {entry.publicationStatus === "published" && (
-              <ActionBtn label="✕ Remove Video" color="#ef4444" onClick={() => onAction(entry.id, "remove")} />
+              <ActionBtn label="× Remove Video" color="#ef4444" onClick={() => onAction(entry.id, "remove")} />
             )}
           </div>
         </div>

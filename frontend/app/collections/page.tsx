@@ -21,6 +21,7 @@ import {
 } from "../lib/unifiedHighlights";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
+import { UiIcon, collectionIconName } from "../components/UiIcon";
 
 type CollectionsTab = "highlights" | "collections" | "bookmarks";
 
@@ -395,7 +396,9 @@ function CollectionsPanel({
               }}
             >
               <div className="mb-4 flex items-center justify-between">
-                <span className="text-2xl">{collection.emoji}</span>
+                <span className="grid h-10 w-10 place-items-center rounded-2xl" style={{ background: isLight ? "#fff" : `${collection.color}20`, color: isLight ? "#111" : collection.color }}>
+                  <UiIcon name={collectionIconName(collection.emoji)} size={20} />
+                </span>
                 <span className="rounded-full px-2 py-0.5 text-[10px] font-black" style={{ background: isLight ? "#ffffff" : `${collection.color}22`, color: isLight ? "#111" : collection.color }}>
                   {collection.items.length}
                 </span>
@@ -473,8 +476,8 @@ function CollectionDetail({
           />
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
             {COLLECTION_EMOJIS.map((item) => (
-              <button key={item} type="button" onClick={() => setEmoji(item)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-2xl text-lg" style={{ background: emoji === item ? (isLight ? "#e8eaed" : "rgba(255,255,255,0.14)") : (isLight ? "#f5f6f7" : "rgba(255,255,255,0.06)") }}>
-                {item}
+              <button key={item} type="button" onClick={() => setEmoji(item)} className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-2xl" style={{ background: emoji === item ? (isLight ? "#e8eaed" : "rgba(255,255,255,0.14)") : (isLight ? "#f5f6f7" : "rgba(255,255,255,0.06)"), color }}>
+                <UiIcon name={collectionIconName(item)} size={18} />
               </button>
             ))}
           </div>

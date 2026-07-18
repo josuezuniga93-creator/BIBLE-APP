@@ -18,6 +18,7 @@ import QuoteOfWeek from "./components/QuoteOfWeek";
 import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
 import { OnboardingPopup } from "./components/OnboardingPopup";
+import { UiIcon } from "./components/UiIcon";
 import { getCloudUser } from "./lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
 
@@ -482,7 +483,7 @@ function VerseMemorizationWidget({
           {isMastered && (
             <span className="text-[9px] font-bold px-2 py-0.5 rounded-full"
               style={{ background: `${accentColor}22`, color: accentColor, border: `1px solid ${accentColor}44` }}>
-              ✓ {lang === "es" ? "Memorizado" : "Mastered"}
+              {lang === "es" ? "Memorizado" : "Mastered"}
             </span>
           )}
           {!inFull && (
@@ -777,7 +778,9 @@ function VerseMemorizationWidget({
           >
             <div className="flex items-center justify-between mb-5">
               <p className="text-[15px] font-bold text-white">{lang === "es" ? "Agregar mi versículo" : "Add My Verse"}</p>
-              <button onClick={() => setCustomMode(false)} className="text-white/40 hover:text-white/70">✕</button>
+              <button onClick={() => setCustomMode(false)} className="text-white/40 hover:text-white/70" aria-label="Close">
+                <UiIcon name="close" size={16} />
+              </button>
             </div>
             <label className="block text-[10px] font-bold tracking-widest uppercase text-white/35 mb-1.5">
               {lang === "es" ? "Referencia (ej. Juan 3:16)" : "Reference (e.g. John 3:16)"}
@@ -850,7 +853,7 @@ function VerseMemorizationWidget({
             {isMastered ? (
               <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
                 style={{ background: "rgba(16,185,129,0.15)", color: "#10b981", border: "1px solid rgba(16,185,129,0.30)" }}>
-                ✓ {lang === "es" ? "Memorizado" : "Mastered"}
+                {lang === "es" ? "Memorizado" : "Mastered"}
               </span>
             ) : (
               <span className="mem-badge-chip text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
@@ -1239,7 +1242,7 @@ export default function Home() {
           <button
             onClick={() => setVideoOpen(false)}
             className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-black/60 flex items-center justify-center text-white/70 hover:text-white hover:bg-black/80 transition-colors"
-          >✕</button>
+          ><UiIcon name="close" size={18} /></button>
           <div className="flex-1 relative flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
             <video
               src={featuredVideo.file}

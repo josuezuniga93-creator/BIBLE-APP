@@ -244,7 +244,7 @@ function PastGatheringCard({
                 onClick={() => setAddingFamily(false)}
                 className="px-2 py-1.5 rounded-lg text-xs text-[color:var(--fg,#fff)]/40 hover:text-[color:var(--fg,#fff)]/70"
               >
-                ✕
+                ×
               </button>
             </div>
           ) : (
@@ -726,7 +726,7 @@ export default function FellowshipPage() {
                     borderColor: form.reminder ? "var(--accent, #7c3aed)" : (isLight ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.2)"),
                     background: form.reminder ? "var(--accent, #7c3aed)" : "transparent",
                   }}>
-                    {form.reminder && <span className="text-white text-[10px]">✓</span>}
+                    {form.reminder && <span className="text-white text-[10px]">Done</span>}
                   </div>
                 </button>
               </div>

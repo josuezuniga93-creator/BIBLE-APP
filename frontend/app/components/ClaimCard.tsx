@@ -4,6 +4,7 @@ import type { Claim } from "../lib/types";
 import type { T } from "../lib/translations";
 import { CLAIM_STYLES } from "../lib/constants";
 import { ytLink } from "../lib/constants";
+import { UiIcon } from "./UiIcon";
 
 interface ClaimCardProps {
   claim: Claim;
@@ -37,13 +38,14 @@ export function ClaimCard({ claim, index, videoId, t }: ClaimCardProps) {
                   rel="noopener noreferrer"
                   className={`inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-xs font-semibold ${cs.text} bg-white/10 hover:bg-white/20 transition-colors`}
                 >
-                  ▶ {claim.timestamp}
+                  <UiIcon name="external" size={12} />
+                  {claim.timestamp}
                 </a>
               ) : (
                 <span
                   className={`inline-flex items-center gap-1 self-start px-2 py-0.5 rounded-full text-xs font-semibold ${cs.text} bg-white/10`}
                 >
-                  🕐 {claim.timestamp}
+                  {claim.timestamp}
                 </span>
               )
             )}

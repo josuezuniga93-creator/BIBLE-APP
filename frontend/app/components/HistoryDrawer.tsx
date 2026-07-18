@@ -5,6 +5,7 @@ import type { HistoryEntry, Analysis, OverallVerdict } from "../lib/types";
 import type { T } from "../lib/translations";
 import { TRANSLATIONS } from "../lib/translations";
 import { OVERALL_STYLES } from "../lib/constants";
+import { UiIcon } from "./UiIcon";
 
 interface HistoryDrawerProps {
   open: boolean;
@@ -98,7 +99,7 @@ export function HistoryDrawer({
             onClick={onClose}
             className="w-8 h-8 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors flex-shrink-0"
           >
-            ✕
+            <UiIcon name="close" size={16} />
           </button>
         </div>
 
@@ -145,10 +146,10 @@ export function HistoryDrawer({
                         <span className="text-[10px] text-white/25 flex-shrink-0">{dateStr}</span>
                       </div>
                       {entry.preacher && (
-                        <p className="text-xs text-white/50 mb-1">🎤 {entry.preacher}</p>
+                        <p className="text-xs text-white/50 mb-1">Preacher: {entry.preacher}</p>
                       )}
-                      <p className="text-xs text-white/35 truncate leading-relaxed">
-                        {entry.inputType === "youtube" ? "▶ " : ""}
+                      <p className="text-xs text-white/35 truncate leading-relaxed inline-flex items-center gap-1.5 max-w-full">
+                        {entry.inputType === "youtube" ? <UiIcon name="external" size={11} /> : null}
                         {entry.inputPreview}
                       </p>
                     </button>
@@ -197,7 +198,7 @@ export function HistoryDrawer({
                   >
                     <div className="px-4 py-3">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <p className="text-sm font-bold text-white/80">🎤 {group.name}</p>
+                        <p className="text-sm font-bold text-white/80">Preacher: {group.name}</p>
                         <span className="text-[10px] text-white/30 flex-shrink-0">
                           {t.sermonCount(group.entries.length)}
                         </span>
@@ -256,8 +257,8 @@ export function HistoryDrawer({
                             }}
                           >
                             <div className="flex items-center justify-between gap-2">
-                              <p className="text-xs text-white/45 truncate flex-1">
-                                {entry.inputType === "youtube" ? "▶ " : ""}
+                              <p className="text-xs text-white/45 truncate flex-1 inline-flex items-center gap-1.5">
+                                {entry.inputType === "youtube" ? <UiIcon name="external" size={11} /> : null}
                                 {entry.inputPreview}
                               </p>
                               <div className="flex items-center gap-2 flex-shrink-0">

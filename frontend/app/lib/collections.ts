@@ -12,7 +12,7 @@ export interface SavedItem {
 export interface Collection {
   id: string;
   name: string;
-  emoji: string;
+  emoji: string;        // legacy storage key; value is now an icon name
   color: string;        // hex, e.g. "#7c3aed"
   items: SavedItem[];
   createdAt: number;
@@ -112,7 +112,9 @@ export const COLLECTION_COLORS = [
   "#ea580c", // orange
 ];
 
-export const COLLECTION_EMOJIS = [
-  "📖", "✝️", "🙏", "⛪", "✨", "🌿", "📝", "❤️", "🔥", "⭐",
-  "🏛", "📜", "🕊️", "🌟", "🎯", "📌", "💡", "🌙", "☀️", "🗺️",
+export const COLLECTION_ICONS = [
+  "book", "cross", "prayer", "church", "sparkle", "leaf", "note", "heart", "flame", "star",
+  "landmark", "file", "dove", "target", "pin", "sun", "clock", "map",
 ];
+
+export const COLLECTION_EMOJIS = COLLECTION_ICONS;

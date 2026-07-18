@@ -119,7 +119,7 @@ function BookRow({
           <ProgressRing pct={pct} size={38} stroke={3.5} color={allRead ? "#10b981" : "#7c3aed"} />
           <div className="absolute inset-0 flex items-center justify-center">
             {allRead ? (
-              <span className="text-emerald-400 text-[10px] font-black">✓</span>
+              <span className="text-emerald-400 text-[10px] font-black">Done</span>
             ) : (
               <span className="text-white/50 text-[9px] font-bold">{pct}%</span>
             )}
@@ -227,7 +227,7 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
           <p className="text-white font-bold text-lg">{totalRead.toLocaleString()}</p>
           <p className="text-white/40 text-sm">{lang === "es" ? "de" : "of"} {TOTAL_CHAPTERS.toLocaleString()} {t("tracker_chapters_read")}</p>
           {pct === 100 && (
-            <p className="text-emerald-400 text-xs font-bold mt-0.5">{lang === "es" ? "🎉 ¡Has leído toda la Biblia!" : "🎉 You've read the entire Bible!"}</p>
+            <p className="text-emerald-400 text-xs font-bold mt-0.5">{lang === "es" ? "¡Has leído toda la Biblia!" : "You've read the entire Bible!"}</p>
           )}
         </div>
       </div>

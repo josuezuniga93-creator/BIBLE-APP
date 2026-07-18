@@ -26,6 +26,7 @@ import {
   mirrorScriptureHighlight,
   removeMirroredScriptureHighlight,
 } from "../lib/unifiedHighlights";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -203,8 +204,8 @@ function StrongsPanelContent({
           {entry.xlit && <p className="text-white/50 text-sm italic">{entry.xlit}</p>}
           {entry.pron && <p className="text-white/35 text-xs mt-0.5">/{entry.pron}/</p>}
         </div>
-        <button onClick={onClose} className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.07] transition-colors">
-          ✕
+        <button onClick={onClose} className="flex-shrink-0 w-7 h-7 rounded-lg flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.07] transition-colors" aria-label="Close">
+          <UiIcon name="close" size={14} />
         </button>
       </div>
 
@@ -1125,7 +1126,7 @@ function LexiconInner() {
       {booksError && (
         <div className="max-w-screen-xl mx-auto px-4 pt-6">
           <div className="rounded-2xl border border-red-500/30 bg-red-500/[0.07] px-5 py-4 flex items-start gap-3">
-            <span className="text-xl flex-shrink-0 mt-0.5">⚠️</span>
+            <UiIcon name="warning" size={20} className="flex-shrink-0 mt-0.5 text-red-300" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-red-300/90 mb-1">Couldn&apos;t connect to the Bible server</p>
               <p className="text-xs text-red-400/60 leading-relaxed mb-3">The backend may be sleeping or unreachable. This sometimes happens after a period of inactivity — try again in a moment.</p>
@@ -1264,7 +1265,7 @@ function LexiconInner() {
                           className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
                           style={{ background: isLight ? "#e5e7eb" : "#ffffff", color: "#0b0b0b", border: isLight ? "1px solid #d1d5db" : "none" }}
                         >
-                          ✓
+                          <UiIcon name="check" size={18} strokeWidth={3} />
                         </span>
                       )}
                     </button>
@@ -1363,7 +1364,7 @@ function LexiconInner() {
                   style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.055)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.38)", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)" }}
                   aria-label={lang === "es" ? "Cerrar búsqueda" : "Close search"}
                 >
-                  ✕
+                  <UiIcon name="close" size={14} />
                 </button>
               </div>
 
@@ -1488,7 +1489,7 @@ function LexiconInner() {
                       className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
                       style={{ background: isLight ? "#e5e7eb" : "#0b0b0b", color: isLight ? "#0b0b0b" : "#ffffff", border: isLight ? "1px solid #d1d5db" : "none" }}
                     >
-                      ✓
+                      <UiIcon name="check" size={18} strokeWidth={3} />
                     </span>
                   )}
                 </button>
@@ -1590,7 +1591,7 @@ function LexiconInner() {
 
               {chapterError && !loadingChapter && (
                 <div className="flex flex-col items-center justify-center py-20 gap-3 text-center px-4">
-                  <span className="text-3xl">⚠️</span>
+                  <UiIcon name="warning" size={30} className="text-red-300" />
                   <p className="text-white/50 text-sm">{chapterError}</p>
                   <button
                     onClick={() => { setChapterError(null); setLoadingChapter(true); fetchChapter(selectedBook!.num, selectedChapter, translation).then((d) => { setChapterData(d); setChapterError(null); }).catch((e) => setChapterError(e.message ?? "Failed to load")).finally(() => setLoadingChapter(false)); }}
@@ -1678,7 +1679,9 @@ function LexiconInner() {
                     Clear
                   </button>
                 )}
-                <button onClick={() => setShowNotes(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors text-sm">✕</button>
+                <button onClick={() => setShowNotes(false)} className="w-7 h-7 rounded-lg flex items-center justify-center text-white/30 hover:text-white/60 hover:bg-white/[0.07] transition-colors" aria-label={lang === "es" ? "Cerrar notas" : "Close notes"}>
+                  <UiIcon name="close" size={14} />
+                </button>
               </div>
             </div>
             <div className="p-4 overflow-y-auto flex-1">

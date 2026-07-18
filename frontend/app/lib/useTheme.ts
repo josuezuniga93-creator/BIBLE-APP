@@ -13,16 +13,16 @@ const THEME_ALIASES: Record<ThemeAlias, Theme> = {
   light: "white-noir",
 };
 
-export const THEMES: Record<Theme, { label: string; emoji: string; desc: string; preview: string[] }> = {
+export const THEMES: Record<Theme, { label: string; icon: string; desc: string; preview: string[] }> = {
   "gold-navy": {
     label: "Dark Mode",
-    emoji: "✨",
+    icon: "sparkle",
     desc: "Dark navy with warm amber gold accents",
     preview: ["#0e1018", "#c9a961", "#1a1d27", "#ffffff"],
   },
   "white-noir": {
     label: "Light Mode",
-    emoji: "◻️",
+    icon: "sun",
     desc: "Clean white with black ink — premium monochrome",
     preview: ["#ffffff", "#0a0a0a", "#f7f7f7", "#0a0a0a"],
   },

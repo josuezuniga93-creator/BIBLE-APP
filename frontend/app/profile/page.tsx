@@ -8,6 +8,7 @@ import { createClient } from "../lib/supabase/client";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import { BADGE_DEFINITIONS } from "../lib/badges";
 import { collectUnifiedHighlights } from "../lib/unifiedHighlights";
+import { UiIcon, type UiIconName } from "../components/UiIcon";
 import type { User } from "@supabase/supabase-js";
 import type { EarnedBadge } from "../lib/badges";
 
@@ -183,8 +184,8 @@ const FILTERS: { key: Filter; label: string }[] = [
 ];
 
 // ─── Activity Card ────────────────────────────────────────────────────────────
-const TYPE_ICON: Record<ActivityType, string> = {
-  highlight: "✦", note: "✎", bookmark: "◈", church: "✝", badge: "★",
+const TYPE_ICON: Record<ActivityType, UiIconName> = {
+  highlight: "sparkle", note: "note", bookmark: "book", church: "church", badge: "shield",
 };
 
 function ActivityCard({ item }: { item: ActivityItem }) {
@@ -230,7 +231,7 @@ function ActivityCard({ item }: { item: ActivityItem }) {
             className="w-9 h-9 rounded-full flex items-center justify-center text-sm flex-shrink-0 mt-0.5"
             style={{ background: AC_BG, color: AC }}
           >
-            {TYPE_ICON[item.type]}
+            <UiIcon name={TYPE_ICON[item.type]} size={17} />
           </div>
         )}
         <div className="flex-1 min-w-0">
@@ -526,7 +527,9 @@ export default function ProfilePage() {
                 <p className="text-2xl font-black text-white">{streak}</p>
                 <p className="text-xs text-white/40">Day Streak</p>
               </div>
-              <div className="text-2xl" style={{ color: AC }}>⚡</div>
+              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ color: AC, background: AC_BG }}>
+                <UiIcon name="sparkle" size={20} />
+              </div>
             </div>
           );
         })()}
@@ -563,7 +566,7 @@ export default function ProfilePage() {
                 className="text-xs font-black text-white/35"
                 aria-label="Clear search"
               >
-                ✕
+                <UiIcon name="close" size={14} />
               </button>
             )}
           </div>

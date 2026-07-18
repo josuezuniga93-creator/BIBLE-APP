@@ -10,6 +10,7 @@ import {
   type UnifiedReaderHighlight,
 } from "../lib/unifiedHighlights";
 import CreateImageEditor from "./CreateImageEditor";
+import { UiIcon } from "./UiIcon";
 
 type HighlightColor = "gold" | "blue" | "rose" | "green";
 
@@ -671,7 +672,9 @@ export function BracketHighlightReader({
                 </p>
                 <h2 className="text-[30px] leading-none font-black mt-1">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
               </div>
-              <button onClick={() => { setShowPocket(false); setPendingRemoveId(null); }} className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.6)" }}>✕</button>
+              <button onClick={() => { setShowPocket(false); setPendingRemoveId(null); }} className="w-11 h-11 rounded-full flex items-center justify-center" style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.6)" }} aria-label="Close">
+                <UiIcon name="close" size={18} />
+              </button>
             </div>
             <div className="px-5 pt-4 flex-shrink-0">
               <label className="flex items-center gap-3 rounded-[22px] px-4 py-3" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.055)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}>
@@ -688,7 +691,7 @@ export function BracketHighlightReader({
                 />
                 {highlightSearchQuery && (
                   <button onClick={() => setHighlightSearchQuery("")} className="text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }} aria-label={lang === "es" ? "Limpiar busqueda" : "Clear search"}>
-                    ✕
+                    ×
                   </button>
                 )}
               </label>
@@ -733,7 +736,7 @@ export function BracketHighlightReader({
                               <h4 className="text-sm font-black mt-1" style={{ color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.85)" }}>{highlight.title}</h4>
                             </div>
                             <button onClick={() => setPendingRemoveId(highlight.id)} className="text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }} aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}>
-                              ✕
+                              ×
                             </button>
                           </div>
                           <p className="mt-3 text-sm leading-6 line-clamp-5" style={{ color: isLight ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.64)" }}>"{highlight.text}"</p>
@@ -764,7 +767,7 @@ export function BracketHighlightReader({
                                 <div className="flex items-start justify-between gap-3 mb-2">
                                   <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: HIGHLIGHT_COLORS[highlight.color].dot }}>{highlight.reference}</p>
                                   <button onClick={() => setPendingRemoveId(highlight.id)} className="text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.30)" : "rgba(255,255,255,0.30)" }} aria-label={lang === "es" ? "Eliminar resaltado" : "Delete highlight"}>
-                                    ✕
+                                    ×
                                   </button>
                                 </div>
                                 <p className="text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>"{highlight.text}"</p>

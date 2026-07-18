@@ -49,28 +49,28 @@ export const OVERALL_STYLES: Record<
     border: "border-emerald-400",
     text: "text-emerald-300",
     glow: "shadow-emerald-500/20",
-    icon: "✓",
+    icon: "check",
   },
   MIXED: {
     bg: "bg-amber-500/15",
     border: "border-amber-400",
     text: "text-amber-300",
     glow: "shadow-amber-500/20",
-    icon: "⚡",
+    icon: "sparkle",
   },
   SERIOUS_CONCERNS: {
     bg: "bg-orange-500/15",
     border: "border-orange-400",
     text: "text-orange-300",
     glow: "shadow-orange-500/20",
-    icon: "⚠",
+    icon: "warning",
   },
   FALSE_TEACHING: {
     bg: "bg-red-500/15",
     border: "border-red-400",
     text: "text-red-300",
     glow: "shadow-red-500/20",
-    icon: "✗",
+    icon: "close",
   },
 };
 

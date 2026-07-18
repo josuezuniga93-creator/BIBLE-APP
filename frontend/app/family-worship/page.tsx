@@ -17,6 +17,7 @@ import {
   isDevotionalComplete,
 } from "../lib/devotionalProgress";
 import { localizeReference } from "../lib/spanishContent";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Theme ─────────────────────────────────────────────────────────────────────
 
@@ -472,7 +473,7 @@ function ConfettiOverlay() {
         />
       ))}
       <div className="fixed inset-0 flex items-center justify-center" style={{ pointerEvents: "none" }}>
-        <div className="animate-pop-in text-7xl">🎉</div>
+        <UiIcon name="sparkle" size={72} className="animate-pop-in text-current" />
       </div>
     </div>
   );
@@ -666,7 +667,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
         ))}
         {lang === "es" && translating && (
           <p className="mt-2 text-xs" style={{ color: tk.textFaint }}>
-            🌐 Traduciendo al español…
+            Traduciendo al español...
           </p>
         )}
       </div>
@@ -750,7 +751,10 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
       }}
     >
       <div className="px-5 pt-5 pb-4" style={{ borderBottom: `1px solid ${tk.divider}` }}>
-        <p style={{ ...LABEL_STYLE, color: tk.labelColor, marginBottom: 10 }}>🎵 {lang === "es" ? "Himno" : "Hymn"}</p>
+        <p className="flex items-center gap-2" style={{ ...LABEL_STYLE, color: tk.labelColor, marginBottom: 10 }}>
+          <UiIcon name="music" size={14} />
+          {lang === "es" ? "Himno" : "Hymn"}
+        </p>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <p style={{ fontSize: "1.1rem", fontWeight: 700, color: tk.textPrimary, lineHeight: 1.25 }}>
@@ -944,8 +948,12 @@ function PrayerCard() {
               </div>
               <p className="flex-1 text-sm leading-7" style={{ color: tk.textSecondary }}>{item.text}</p>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
-                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg text-xs active:scale-90 transition-all" style={{ color: tk.accentDim, backgroundColor: tk.buttonBg }} title="Edit">✏️</button>
-                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg text-xs active:scale-90 transition-all" style={{ color: tk.dangerText, backgroundColor: tk.dangerBg }} title="Remove">✕</button>
+                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: tk.accentDim, backgroundColor: tk.buttonBg }} title="Edit">
+                  <UiIcon name="edit" size={13} />
+                </button>
+                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: tk.dangerText, backgroundColor: tk.dangerBg }} title="Remove">
+                  <UiIcon name="close" size={13} />
+                </button>
               </div>
             </div>
           )
@@ -1032,7 +1040,7 @@ function CompletionCard({
             className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"
             style={{ backgroundColor: tk.buttonBg, border: `1px solid ${tk.accent}` }}
           >
-            ✅
+            <UiIcon name="check" size={28} strokeWidth={3} />
           </div>
           <p style={{ fontSize: "1.05rem", fontWeight: 700, color: tk.textPrimary }}>
             {t(lang, "family_completed_title")}
@@ -1060,7 +1068,7 @@ function CompletionCard({
         }}
       >
         <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: tk.buttonBg }}>
-          ✅
+          <UiIcon name="check" size={22} strokeWidth={3} />
         </div>
         <div>
           <p style={{ fontSize: "0.9rem", fontWeight: 700, color: tk.textPrimary }}>{t(lang, "family_completed_title")}</p>

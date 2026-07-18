@@ -15,6 +15,7 @@ import { t } from "../lib/i18n";
 import { bookTitle } from "../lib/spanishContent";
 import { collectUnifiedHighlights, deleteUnifiedHighlight, type UnifiedHighlight } from "../lib/unifiedHighlights";
 import { STATIC_BOOK_CATALOG as _CATALOG_FOR_SLUGS } from "../lib/bookCatalog";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -583,7 +584,7 @@ export default function LibraryPage() {
                   </p>
                   <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <span style={{ color: th.star, fontSize: "9px" }}>★</span>
+                    <UiIcon name="star" size={9} style={{ color: th.star }} />
                     <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
                   </div>
                 </Link>
@@ -632,7 +633,7 @@ export default function LibraryPage() {
                   </p>
                   <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <span style={{ color: th.star, fontSize: "9px" }}>★</span>
+                    <UiIcon name="star" size={9} style={{ color: th.star }} />
                     <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
                   </div>
                 </Link>
@@ -690,7 +691,7 @@ export default function LibraryPage() {
                   </p>
                   <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
                   <div className="flex items-center gap-0.5 mt-0.5">
-                    <span style={{ color: th.star, fontSize: "9px" }}>★</span>
+                    <UiIcon name="star" size={9} style={{ color: th.star }} />
                     <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
                   </div>
                 </Link>
@@ -804,7 +805,7 @@ export default function LibraryPage() {
               className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
               style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.4)" : undefined }}
             >
-              ✕
+              <UiIcon name="close" size={20} />
             </button>
           </div>
 
@@ -827,7 +828,7 @@ export default function LibraryPage() {
               />
               {hlSearch && (
                 <button onClick={() => setHlSearch("")} className="text-sm flex-shrink-0 leading-none" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                  ✕
+                  <UiIcon name="close" size={16} />
                 </button>
               )}
             </label>

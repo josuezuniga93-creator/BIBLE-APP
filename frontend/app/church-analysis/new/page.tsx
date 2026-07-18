@@ -320,7 +320,7 @@ export default function NewAnalysisPage() {
             .map((s, i) => (
               <div key={i} className="flex items-center gap-3 px-4 py-2 rounded-xl text-left" style={{ background: cardBg }}>
                 <span className="text-base flex-shrink-0">
-                  {s.status === "fetching" ? "⏳" : s.status === "done" ? "✅" : s.status === "error" ? "❌" : "⬜"}
+                  {s.status === "fetching" ? "Fetching" : s.status === "done" ? "Done" : s.status === "error" ? "Error" : "Waiting"}
                 </span>
                 <span className="text-xs truncate flex-1" style={{ color: mutedFg }}>
                   {s.title || `Sermon ${i + 1}`}
@@ -426,7 +426,7 @@ export default function NewAnalysisPage() {
                     )}
                     {sermon.status === "done" && (
                       <span className="text-[10px] text-green-400 font-semibold">
-                        {sermon.transcript && !sermon.title ? "✓ Manual" : "✓ Fetched"}
+                        {sermon.transcript && !sermon.title ? "Manual" : "Fetched"}
                       </span>
                     )}
                     {sermon.status === "fetching" && (
@@ -456,7 +456,7 @@ export default function NewAnalysisPage() {
                   {/* ── Auto-fetched title ───────────────────────────────── */}
                   {sermon.title && sermon.status === "done" && (
                     <p className="text-[11px] mt-2 truncate font-medium" style={{ color: "#c9a961" }}>
-                      📺 {sermon.title}
+                      Video: {sermon.title}
                     </p>
                   )}
 
@@ -464,7 +464,7 @@ export default function NewAnalysisPage() {
                   {sermon.status === "error" && !sermon.transcript && (
                     <div className="mt-2">
                       <p className="text-[11px] leading-snug mb-1.5" style={{ color: "#fbbf24" }}>
-                        ⚠️ Auto-fetch could not read this transcript. Paste it below to keep going.
+                        Warning: Auto-fetch could not read this transcript. Paste it below to keep going.
                       </p>
                       {sermon.error && (
                         <p className="text-[10px] leading-snug mb-2" style={{ color: "rgba(251,191,36,0.72)" }}>
@@ -505,7 +505,7 @@ export default function NewAnalysisPage() {
                           border: `1px solid ${(sermon.manualText ?? "").trim() ? "rgba(201,169,97,0.35)" : borderColor}`,
                         }}
                       >
-                        Use this transcript ✓
+                        Use this transcript
                       </button>
                     </div>
                   )}
@@ -513,7 +513,7 @@ export default function NewAnalysisPage() {
                   {/* ── Manually confirmed — show tick ───────────────────── */}
                   {sermon.status === "done" && sermon.transcript && !sermon.title && (
                     <p className="text-[11px] mt-2" style={{ color: "rgba(34,197,94,0.8)" }}>
-                      ✓ Transcript ready ({sermon.transcript.split(" ").length.toLocaleString()} words)
+                      Transcript ready ({sermon.transcript.split(" ").length.toLocaleString()} words)
                     </p>
                   )}
                 </div>

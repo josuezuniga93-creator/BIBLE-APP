@@ -10,6 +10,7 @@ import {
 } from "../lib/biblePlansData";
 import { useLanguage } from "../lib/useLanguage";
 import { bibleBookName, localizeReference, planDescription, planName } from "../lib/spanishContent";
+import { UiIcon, collectionIconName } from "../components/UiIcon";
 
 // ─── localStorage ─────────────────────────────────────────────────────────────
 
@@ -126,7 +127,9 @@ function PlanCard({
       }`}
     >
       <div className="flex items-start gap-3 mb-3">
-        <span className="text-2xl">{plan.icon}</span>
+        <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-white/[0.06] text-white/70">
+          <UiIcon name={collectionIconName(plan.icon)} size={20} />
+        </span>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-white font-bold text-base">{planName(plan, lang)}</h3>
@@ -256,7 +259,9 @@ function ActivePlanView({
       {/* Plan header */}
       <div className="rounded-2xl border border-violet-500/30 bg-violet-500/[0.05] p-5">
         <div className="flex items-start gap-3 mb-4">
-          <span className="text-2xl">{plan.icon}</span>
+          <span className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-xl bg-white/[0.06] text-white/70">
+            <UiIcon name={collectionIconName(plan.icon)} size={20} />
+          </span>
           <div>
             <h2 className="text-white font-bold text-lg">{planName(plan, lang)}</h2>
             <p className="text-white/40 text-xs mt-0.5">
@@ -318,7 +323,7 @@ function ActivePlanView({
                     aria-label={done ? (lang === "es" ? "Marcar no leído" : "Mark unread") : (lang === "es" ? "Marcar leído" : "Mark read")}
                   >
                     {done && (
-                      <span className="text-[10px] font-black leading-none">✓</span>
+                      <UiIcon name="check" size={12} strokeWidth={3} />
                     )}
                   </button>
 
@@ -361,7 +366,7 @@ function ActivePlanView({
         </div>
       ) : progress.daysElapsed >= progress.totalDays ? (
         <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/[0.06] p-5 text-center">
-          <p className="text-3xl mb-2">🎉</p>
+          <UiIcon name="sparkle" size={30} className="mx-auto mb-2 text-emerald-400" />
           <p className="text-emerald-400 font-bold text-base">{lang === "es" ? "¡Completaste este plan!" : "You completed this plan!"}</p>
           <p className="text-white/30 text-sm mt-1">{lang === "es" ? "La Palabra de Dios es lámpara a tus pies y lumbrera a tu camino." : "God's Word is a lamp to your feet and a light to your path."}</p>
         </div>
@@ -406,7 +411,7 @@ function ActivePlanView({
                                 : "border-white/20"
                             }`}
                           >
-                            {isCompleted(entry.day, r.label) && "✓"}
+                            {isCompleted(entry.day, r.label) && <UiIcon name="check" size={9} strokeWidth={3} />}
                           </span>
                         )}
                         {isToday ? (
@@ -579,7 +584,9 @@ export default function BiblePlansPage() {
                   className="w-full text-left rounded-xl border border-violet-500/25 bg-violet-500/[0.05] px-4 py-3 hover:bg-violet-500/[0.10] transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="text-lg">{plan.icon}</span>
+                    <span className="grid h-8 w-8 flex-shrink-0 place-items-center rounded-xl bg-white/[0.06] text-white/70">
+                      <UiIcon name={collectionIconName(plan.icon)} size={17} />
+                    </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-white/80 text-sm font-semibold">{planName(plan, lang)}</p>
                       <p className="text-white/30 text-xs">

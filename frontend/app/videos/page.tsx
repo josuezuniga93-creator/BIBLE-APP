@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
+import { UiIcon } from "../components/UiIcon";
 import type { FundamentalsCategory, VideoLanguage } from "../lib/videoTypes";
 
 // ─── Design constants (matches app-wide system) ────────────────────────────────
@@ -1351,7 +1352,9 @@ export default function VideosPage() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               {searchQuery && (
-                <button onClick={() => setSearchQuery("")} className={isLight ? "text-black/30 hover:text-black/60" : "text-white/30 hover:text-white/60"}>✕</button>
+                <button onClick={() => setSearchQuery("")} className={isLight ? "text-black/30 hover:text-black/60" : "text-white/30 hover:text-white/60"} aria-label="Clear search">
+                  <UiIcon name="close" size={16} />
+                </button>
               )}
             </div>
           </div>

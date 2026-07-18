@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -241,7 +242,7 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
         {sent ? (
           <div className="py-20 text-center space-y-4">
-            <div className="text-5xl">✉️</div>
+            <UiIcon name="mail" size={48} className="mx-auto text-white" />
             <p className="text-base font-bold text-white">{lang === "es" ? "¡Solicitud preparada!" : "Application sent!"}</p>
             <p className="text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
               {lang === "es"

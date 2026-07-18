@@ -556,7 +556,7 @@ function DocumentDetail({
           <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</h1>
           <p className="text-sm font-semibold mb-1" style={{ color: th.accent }}>{doc.origin}</p>
           <div className="flex items-center gap-1 mb-2">
-            <span style={{ color: th.star }}>★</span>
+            <span style={{ color: th.star }}>badge</span>
             <span className="text-xs font-bold" style={{ color: th.starText }}>4.8</span>
             <span className="text-xs" style={{ color: th.starFaint }}>{lang === "es" ? "(Histórico)" : "(Historic)"}</span>
           </div>
@@ -571,7 +571,7 @@ function DocumentDetail({
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <span style={{ color: "#34d399", fontSize: "12px" }}>✓</span>
+            <span style={{ color: "#34d399", fontSize: "12px" }}>Done</span>
             <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
             <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
           </div>
@@ -679,7 +679,7 @@ function DocumentDetail({
                   className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center active:scale-90 transition-transform"
                   onClick={(e) => { e.stopPropagation(); toggleSection(section.id); }}
                   style={{ backgroundColor: done ? th.sectionDoneBg : th.sectionPendingBg, border: done ? `1px solid ${th.sectionDoneBorder}` : `1px solid ${th.sectionPendingBorder}` }}>
-                  {done ? <span style={{ color: th.sectionDoneNum, fontSize: "11px", fontWeight: "bold" }}>✓</span>
+                  {done ? <span style={{ color: th.sectionDoneNum, fontSize: "11px", fontWeight: "bold" }}>Done</span>
                          : <span style={{ color: th.sectionPendingNum, fontSize: "11px" }}>{idx + 1}</span>}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -1212,7 +1212,7 @@ function LearnPageInner() {
                 className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
                 style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.4)" : undefined }}
               >
-                ✕
+                ×
               </button>
             </div>
 
@@ -1235,7 +1235,7 @@ function LearnPageInner() {
                 />
                 {hlSearch && (
                   <button onClick={() => setHlSearch("")} className="text-sm flex-shrink-0 leading-none" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                    ✕
+                    ×
                   </button>
                 )}
               </label>
