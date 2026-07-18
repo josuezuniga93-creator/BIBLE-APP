@@ -214,19 +214,13 @@ export function AppSectionIcon({ name, size = 22, active = false, className }: P
     case "study-tools":
       return (
         <svg {...common}>
-          <path
-            d="M4.25 5.35h5.35A3.4 3.4 0 0 1 13 8.75v10.9a3.4 3.4 0 0 0-3.4-2.35H4.25V5.35Z"
+          <circle
+            cx="10.9" cy="10.9" r="6.4"
             fill={softFill} fillOpacity={softOp}
-            stroke="currentColor" strokeWidth={sw} {...round}
+            stroke="currentColor" strokeWidth={sw}
           />
-          <path
-            d="M19.75 5.35H14.4A3.4 3.4 0 0 0 11 8.75v10.9a3.4 3.4 0 0 1 3.4-2.35h5.35V5.35Z"
-            fill={softFill} fillOpacity={softOp}
-            stroke="currentColor" strokeWidth={sw} {...round}
-          />
-          <path d="M8 9.25h2.1M8 12h2.1M15.1 9.25h1.9" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
-          <circle cx="16.25" cy="14.25" r="2.1" stroke="currentColor" strokeWidth={sw} />
-          <path d="m17.8 15.8 2.05 2.05" stroke="currentColor" strokeWidth={sw} {...round} />
+          <path d="m15.55 15.55 4.6 4.6" stroke="currentColor" strokeWidth={sw} {...round} />
+          <path d="M8.5 9.4h4.8M8.5 12.4h3.1" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
         </svg>
       );
 
