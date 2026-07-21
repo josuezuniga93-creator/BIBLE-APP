@@ -254,9 +254,9 @@ export function BadgeRuntime() {
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5">
-      <div className="absolute inset-0 bg-black/58 backdrop-blur-md" />
+      <div className="motion-fade-in absolute inset-0 bg-black/58 backdrop-blur-md" />
       <div
-        className="relative w-full max-w-[360px] overflow-hidden rounded-[2rem] p-6 text-center shadow-2xl"
+        className="motion-badge-enter relative w-full max-w-[360px] overflow-hidden rounded-[2rem] p-6 text-center shadow-2xl"
         style={{
           background: isLight ? "#ffffff" : "rgba(7,19,38,0.95)",
           border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(216,184,103,0.30)",
@@ -266,7 +266,7 @@ export function BadgeRuntime() {
         <button
           type="button"
           onClick={() => setActive(null)}
-          className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full"
+          className="motion-pressable absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full"
           style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.55)" }}
           aria-label={lang === "es" ? "Cerrar insignia" : "Close badge popup"}
         >
@@ -289,7 +289,7 @@ export function BadgeRuntime() {
             type="button"
             onClick={() => shareBadge(active, lang)}
             aria-label={lang === "es" ? "Compartir insignia" : "Share badge"}
-            className="grid place-items-center rounded-2xl px-4 py-3 active:scale-[0.98]"
+            className="motion-pressable grid place-items-center rounded-2xl px-4 py-3"
             style={{ background: isLight ? "#e5e7eb" : "#d8b867", color: isLight ? "#0a0a0a" : "#071326" }}
           >
             <ShareIcon className="h-5 w-5" />
@@ -297,7 +297,7 @@ export function BadgeRuntime() {
           <button
             type="button"
             onClick={() => setActive(null)}
-            className="rounded-2xl px-4 py-3 text-sm font-bold active:scale-[0.98]"
+            className="motion-pressable rounded-2xl px-4 py-3 text-sm font-bold"
             style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.12)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.80)" }}
           >
             {lang === "es" ? "Seguir" : "Keep Going"}

@@ -267,7 +267,7 @@ export function BottomNav() {
 
   return (
     <nav
-      className="mobile-nav-floating lg:hidden fixed bottom-0 left-0 right-0 z-50"
+      className="mobile-nav-floating motion-nav-enter lg:hidden fixed bottom-0 left-0 right-0 z-50"
       style={{
         backgroundColor: "transparent",
         borderColor: "transparent",
@@ -288,7 +288,7 @@ export function BottomNav() {
               type="button"
               onClick={() => goTo(href)}
               data-active={active ? "true" : undefined}
-              className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
+              className="nav-tab motion-pressable flex-1 flex flex-col items-center justify-center gap-[3px]"
               style={{ color: active ? fgActive : fgInactive }}
             >
               <TabIcon href={href} active={active} isWhiteNoir={isWhiteNoir} />
@@ -304,7 +304,7 @@ export function BottomNav() {
           type="button"
           onClick={() => goTo("/more")}
           data-active={youActive ? "true" : undefined}
-          className="nav-tab flex-1 flex flex-col items-center justify-center gap-[3px]"
+          className="nav-tab motion-pressable flex-1 flex flex-col items-center justify-center gap-[3px]"
           style={{ color: youActive ? fgActive : fgInactive }}
         >
           <AppSectionIcon name="extras" active={youActive} size={24} />

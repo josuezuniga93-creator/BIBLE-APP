@@ -87,7 +87,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 z-[400] bg-black/60 backdrop-blur-[2px]"
+        className="motion-fade-in fixed inset-0 z-[400] bg-black/60 backdrop-blur-[2px]"
         onClick={onClose}
       />
 
@@ -96,7 +96,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
         className="fixed inset-0 z-[401] flex items-start justify-center pt-16 px-4 pointer-events-none"
       >
       <div
-        className="w-full max-w-sm rounded-2xl overflow-hidden pointer-events-auto"
+        className="motion-sheet-enter w-full max-w-sm rounded-2xl overflow-hidden pointer-events-auto"
         style={{
           backgroundColor: "#ffffff",
           border: "1px solid rgba(0,0,0,0.10)",
@@ -191,7 +191,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   <button
                     key={e}
                     onClick={() => setNewEmoji(e)}
-                    className="flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                    className="motion-pressable flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
                     style={{
                       backgroundColor: newEmoji === e ? "rgba(0,0,0,0.10)" : "rgba(0,0,0,0.04)",
                       border: newEmoji === e ? "1px solid rgba(0,0,0,0.25)" : "1px solid transparent",
@@ -222,7 +222,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   <button
                     key={c}
                     onClick={() => setNewColor(c)}
-                    className="w-6 h-6 rounded-full flex-shrink-0 transition-transform active:scale-90"
+                    className="motion-pressable w-6 h-6 rounded-full flex-shrink-0"
                     style={{
                       backgroundColor: c,
                       outline: newColor === c ? "2px solid #0a0a0a" : "none",
@@ -235,7 +235,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowCreate(false); setNewName(""); }}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  className="motion-pressable flex-1 py-2.5 rounded-xl text-sm font-bold"
                   style={{
                     color: "rgba(0,0,0,0.45)",
                     border: "1px solid rgba(0,0,0,0.10)",
@@ -246,7 +246,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                 <button
                   onClick={handleCreate}
                   disabled={!newName.trim()}
-                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-opacity"
+                  className="motion-pressable flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
                   style={{ backgroundColor: newColor, opacity: newName.trim() ? 1 : 0.4 }}
                 >
                   {t(lang, "bm_create")}
@@ -259,7 +259,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           {!showCreate && (
             <button
               onClick={() => setShowCreate(true)}
-              className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition-colors"
+              className="motion-pressable w-full flex items-center gap-3 px-5 py-3.5 text-left"
               style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
             >
               <div
@@ -289,7 +289,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           >
             <button
               onClick={handleSave}
-              className="w-full py-3.5 rounded-2xl text-sm font-black transition-all active:scale-[0.98]"
+              className="motion-pressable w-full py-3.5 rounded-2xl text-sm font-black"
               style={{
                 background: "#e5e7eb",
                 color: "#0a0a0a",

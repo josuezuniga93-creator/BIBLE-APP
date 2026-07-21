@@ -161,9 +161,9 @@ export function AppReaderShell({
   }, []);
 
   return (
-    <div className={`fixed inset-0 ${zIndexClassName} flex flex-col`} style={{ backgroundColor: tone.pageBg, color: tone.textPrimary }}>
+    <div className={`fixed inset-0 ${zIndexClassName} app-reader-shell motion-app-reader-enter flex flex-col`} style={{ backgroundColor: tone.pageBg, color: tone.textPrimary }}>
       <div
-        className="flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
+        className="motion-top-sheet-enter flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
         style={{ backgroundColor: tone.pageBg, borderBottom: `1px solid ${tone.border}` }}
       >
         <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
@@ -178,7 +178,7 @@ export function AppReaderShell({
         </div>
         <button
           onClick={onClose}
-          className="w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center active:scale-95"
+          className="motion-pressable w-10 h-10 flex-shrink-0 rounded-full flex items-center justify-center"
           style={{ color: tone.textMuted, background: resolvedTheme === "white-noir" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)", border: `1px solid ${tone.border}` }}
           aria-label={lang === "es" ? "Volver" : "Back"}
         >
@@ -194,7 +194,7 @@ export function AppReaderShell({
 
       {showBottomControls && (
         <div
-          className="flex-shrink-0 px-5 py-3"
+          className="motion-sheet-enter flex-shrink-0 px-5 py-3"
           style={{ backgroundColor: tone.pageBg, borderTop: `1px solid ${tone.border}`, paddingBottom: "max(env(safe-area-inset-bottom), 14px)" }}
         >
           <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: tone.textMuted }}>
@@ -208,7 +208,7 @@ export function AppReaderShell({
             <button
               disabled={previousDisabled}
               onClick={onPrevious}
-              className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
+              className="motion-pressable h-11 rounded-2xl text-sm font-black disabled:opacity-30"
               style={{ background: previousDisabled ? "transparent" : tone.prevBg, border: `1px solid ${tone.prevBorder}`, color: previousDisabled ? tone.textFaint : tone.prevText }}
             >
               ← {lang === "es" ? "Anterior" : "Prev"}
@@ -216,7 +216,7 @@ export function AppReaderShell({
             <button
               disabled={nextDisabled && !finishLabel}
               onClick={onNext}
-              className="h-11 rounded-2xl text-sm font-black disabled:opacity-30 active:scale-95"
+              className="motion-pressable h-11 rounded-2xl text-sm font-black disabled:opacity-30"
               style={{ background: nextDisabled && !finishLabel ? "transparent" : tone.nextBg, color: nextDisabled && !finishLabel ? tone.textFaint : tone.nextText }}
             >
               {finishLabel ?? (lang === "es" ? "Siguiente" : "Next")} {!finishLabel ? "→" : ""}
@@ -315,8 +315,7 @@ export function AppReader({
               />
             </div>
           ) : (
-            <div key={`${context}-${currentPage}`} style={{ animation: "appReaderPageIn 0.18s ease-out" }}>
-              <style>{`@keyframes appReaderPageIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }`}</style>
+            <div key={`${context}-${currentPage}`} className="motion-page-enter">
               <BracketHighlightReader
                 context={context}
                 text={text}

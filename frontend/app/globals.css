@@ -21,6 +21,11 @@
   --nav-bg:      rgba(14,16,24,0.97);
   --nav-border:  rgba(255,255,255,0.07);
   --input-bg:    rgba(201,169,97,0.08);
+  --motion-fast: 140ms;
+  --motion-base: 220ms;
+  --motion-slow: 360ms;
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* ── Mobile safe-area support (notch, Dynamic Island, Android gesture bar) ── */
@@ -876,6 +881,85 @@ html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
 
 .spinner-outer {
   animation: spin-cw 1s linear infinite;
+}
+
+/* ── Shared motion language ──────────────────────────────────────────────── */
+@keyframes motionFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes motionSheetUp {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motionSheetDown {
+  from { opacity: 0; transform: translateY(-18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motionReaderIn {
+  from { opacity: 0; transform: translateY(10px) scale(0.992); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motionPageIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes motionBadgeIn {
+  0% { opacity: 0; transform: translateY(16px) scale(0.94); }
+  62% { opacity: 1; transform: translateY(-2px) scale(1.015); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes motionNavIn {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.motion-fade-in {
+  animation: motionFadeIn var(--motion-base) var(--ease-premium) both;
+}
+
+.motion-sheet-enter {
+  animation: motionSheetUp var(--motion-base) var(--ease-premium) both;
+}
+
+.motion-top-sheet-enter {
+  animation: motionSheetDown var(--motion-base) var(--ease-premium) both;
+}
+
+.motion-app-reader-enter {
+  animation: motionReaderIn var(--motion-base) var(--ease-premium) both;
+}
+
+.motion-page-enter {
+  animation: motionPageIn var(--motion-fast) var(--ease-premium) both;
+}
+
+.motion-badge-enter {
+  animation: motionBadgeIn 420ms var(--ease-premium) both;
+}
+
+.motion-nav-enter {
+  animation: motionNavIn var(--motion-slow) var(--ease-premium) both;
+}
+
+.motion-pressable {
+  transition:
+    transform var(--motion-fast) var(--ease-press),
+    opacity var(--motion-fast) var(--ease-press),
+    color var(--motion-fast) var(--ease-press),
+    background-color var(--motion-fast) var(--ease-press),
+    border-color var(--motion-fast) var(--ease-press),
+    box-shadow var(--motion-base) var(--ease-premium);
+}
+
+.motion-pressable:active {
+  transform: scale(0.975);
 }
 
 .spinner-inner {
@@ -3062,7 +3146,11 @@ html[data-theme="white-noir"] ::-webkit-scrollbar-thumb {
   position: relative;
   margin: 0.35rem 0.12rem;
   border-radius: 0.95rem;
-  transition: background-color 160ms ease, color 160ms ease;
+  transition:
+    transform var(--motion-fast) var(--ease-press),
+    background-color var(--motion-fast) var(--ease-press),
+    color var(--motion-fast) var(--ease-press),
+    box-shadow var(--motion-base) var(--ease-premium);
 }
 
 .mobile-nav-floating button.nav-tab {
@@ -3076,6 +3164,7 @@ html[data-theme="white-noir"] ::-webkit-scrollbar-thumb {
 
 .mobile-nav-floating .nav-tab[data-active="true"] {
   background: var(--accent-soft);
+  transform: translateY(-1px);
 }
 
 .mobile-nav-floating .nav-tab[data-active="true"]::after {
@@ -3137,6 +3226,17 @@ html[data-theme-mode="light"] .translation-picker-panel {
   --tp-accent-strong: #0a0a0a;
   --tp-accent-bg: #eef0f3;
   --tp-shadow: 0 24px 70px rgba(10, 10, 10, 0.14);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 html[data-theme-mode="light"] .translation-picker-option.is-selected,

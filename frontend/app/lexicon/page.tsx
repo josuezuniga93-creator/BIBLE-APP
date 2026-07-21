@@ -416,11 +416,11 @@ function VerseSelectionTray({
     <>
       {/* Top-down sheet */}
       <div
-        className="fixed left-0 right-0 top-0 print:hidden"
+        className={`${visible ? "motion-top-sheet-enter" : ""} fixed left-0 right-0 top-0 print:hidden`}
         style={{
           zIndex: 60,
           transform: visible ? "translateY(0)" : "translateY(-100%)",
-          transition: "transform 0.3s ease",
+          transition: "transform var(--motion-slow) var(--ease-premium)",
           background: "var(--bg)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
@@ -455,7 +455,7 @@ function VerseSelectionTray({
               key={key}
               onClick={() => { onSelect(key); onClearSelection(); }}
               title={val.label}
-              className="transition-all active:scale-95"
+              className="motion-pressable"
               style={{
                 width: 30,
                 height: 30,
@@ -475,7 +475,7 @@ function VerseSelectionTray({
           <div style={{ paddingLeft: 16, paddingRight: 16, paddingBottom: 4 }}>
             <button
               onClick={() => { onRemove(); onClearSelection(); }}
-              className="flex items-center justify-center gap-1.5 rounded-xl py-2 transition-all active:scale-95 text-[11px] font-semibold"
+              className="motion-pressable flex items-center justify-center gap-1.5 rounded-xl py-2 text-[11px] font-semibold"
               style={{
                 width: "100%",
                 background: "rgba(239,68,68,0.15)",
@@ -512,7 +512,7 @@ function VerseSelectionTray({
                   window.setTimeout(() => setCopied(false), 1400);
                 } catch {}
               }}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              className="motion-pressable flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold"
               style={{
                 background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
@@ -532,7 +532,7 @@ function VerseSelectionTray({
             {/* Create Image — opens full-screen editor */}
             <button
               onClick={() => { if (!selectedText) return; setShowImageEditor(true); }}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              className="motion-pressable flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold"
               style={{
                 background: isLight ? "#e5e7eb" : "rgba(201,169,97,1)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.4)",
@@ -548,7 +548,7 @@ function VerseSelectionTray({
             {/* Share */}
             <button
               onClick={handleShare}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              className="motion-pressable flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold"
               style={{
                 background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
@@ -569,7 +569,7 @@ function VerseSelectionTray({
             {/* Bookmark / Save */}
             <button
               onClick={handleBookmark}
-              className="flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold transition-all active:scale-[0.97]"
+              className="motion-pressable flex-shrink-0 flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-[12px] font-semibold"
               style={{
                 background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)",
                 border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.09)",
@@ -1162,7 +1162,7 @@ function LexiconInner() {
       {/* ── Translation picker full screen ── */}
       {showTranslationPicker && (
         <div
-          className="fixed inset-0 z-[90] print:hidden"
+          className="motion-page-enter fixed inset-0 z-[90] print:hidden"
           style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
         >
           <div
@@ -1416,7 +1416,7 @@ function LexiconInner() {
       {/* ── Font picker full screen ── */}
       {showFontPicker && (
         <div
-          className="fixed inset-0 z-[90] print:hidden"
+          className="motion-page-enter fixed inset-0 z-[90] print:hidden"
           style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
         >
           <div
