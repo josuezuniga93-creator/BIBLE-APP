@@ -249,11 +249,25 @@ export function BadgeRuntime() {
     setQueue(rest);
   }, [queue]);
 
+  useEffect(() => {
+    if (!active) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setActive(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [active]);
+
   if (!active) return null;
   const copy = badgeText(active, lang);
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center px-5">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center px-5"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="badge-earned-title"
+    >
       <div className="motion-fade-in absolute inset-0 bg-black/58 backdrop-blur-md" />
       <div
         className="motion-badge-enter relative w-full max-w-[360px] overflow-hidden rounded-[2rem] p-6 text-center shadow-2xl"
@@ -266,7 +280,7 @@ export function BadgeRuntime() {
         <button
           type="button"
           onClick={() => setActive(null)}
-          className="motion-pressable absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full"
+          className="motion-pressable tap-target ui-interactive absolute right-4 top-4 grid place-items-center rounded-full"
           style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.05)", color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.55)" }}
           aria-label={lang === "es" ? "Cerrar insignia" : "Close badge popup"}
         >
@@ -281,7 +295,7 @@ export function BadgeRuntime() {
           alt={copy.name}
           className="mx-auto mt-4 h-40 w-40 object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.35)]"
         />
-        <h2 className="mt-4 text-3xl font-black leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h2>
+        <h2 id="badge-earned-title" className="mt-4 text-3xl font-black leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h2>
         <p className="mx-auto mt-2 max-w-[260px] text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.68)" }}>{copy.reason}</p>
 
         <div className="mt-6 grid grid-cols-2 gap-3">
@@ -289,7 +303,7 @@ export function BadgeRuntime() {
             type="button"
             onClick={() => shareBadge(active, lang)}
             aria-label={lang === "es" ? "Compartir insignia" : "Share badge"}
-            className="motion-pressable grid place-items-center rounded-2xl px-4 py-3"
+            className="motion-pressable tap-target ui-interactive grid place-items-center rounded-2xl px-4 py-3"
             style={{ background: isLight ? "#e5e7eb" : "#d8b867", color: isLight ? "#0a0a0a" : "#071326" }}
           >
             <ShareIcon className="h-5 w-5" />
@@ -297,7 +311,7 @@ export function BadgeRuntime() {
           <button
             type="button"
             onClick={() => setActive(null)}
-            className="motion-pressable rounded-2xl px-4 py-3 text-sm font-bold"
+            className="motion-pressable tap-target ui-interactive rounded-2xl px-4 py-3 text-sm font-bold"
             style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.12)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)", color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.80)" }}
           >
             {lang === "es" ? "Seguir" : "Keep Going"}

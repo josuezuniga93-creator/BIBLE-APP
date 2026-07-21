@@ -47,6 +47,27 @@ body {
   padding: 0;
   background: var(--bg);
   color: var(--fg);
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeLegibility;
+}
+
+:where(a, button, input, textarea, select, [role="button"]):focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 54%, var(--fg));
+  outline-offset: 3px;
+}
+
+:where(button, [role="button"], a) {
+  touch-action: manipulation;
+}
+
+.tap-target {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.ui-interactive {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 /* ── Desktop-only app shell ──────────────────────────────────────────────── */

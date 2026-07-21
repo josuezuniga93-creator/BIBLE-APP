@@ -288,7 +288,9 @@ export function BottomNav() {
               type="button"
               onClick={() => goTo(href)}
               data-active={active ? "true" : undefined}
-              className="nav-tab motion-pressable flex-1 flex flex-col items-center justify-center gap-[3px]"
+              aria-current={active ? "page" : undefined}
+              aria-label={t(labelKey)}
+              className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[3px]"
               style={{ color: active ? fgActive : fgInactive }}
             >
               <TabIcon href={href} active={active} isWhiteNoir={isWhiteNoir} />
@@ -304,7 +306,9 @@ export function BottomNav() {
           type="button"
           onClick={() => goTo("/more")}
           data-active={youActive ? "true" : undefined}
-          className="nav-tab motion-pressable flex-1 flex flex-col items-center justify-center gap-[3px]"
+          aria-current={youActive ? "page" : undefined}
+          aria-label={t("nav_extras")}
+          className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[3px]"
           style={{ color: youActive ? fgActive : fgInactive }}
         >
           <AppSectionIcon name="extras" active={youActive} size={24} />

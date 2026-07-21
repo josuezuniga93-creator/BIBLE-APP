@@ -42,6 +42,14 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
     setCheckedIds(new Set(collectionsContaining(item.id)));
   }, [item.id]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
+
   function handleToggle(colId: string) {
     setCheckedIds((prev) => {
       const next = new Set(prev);
@@ -104,6 +112,9 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           display: "flex",
           flexDirection: "column",
         }}
+        role="dialog"
+        aria-modal="true"
+        aria-label={t(lang, "bm_save_to")}
         onClick={(e) => e.stopPropagation()}
       >
 
@@ -142,7 +153,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               <button
                 key={col.id}
                 onClick={() => handleToggle(col.id)}
-                className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors"
+                className="ui-interactive w-full flex items-center gap-3 px-5 py-3.5 transition-colors"
                 style={{
                   borderLeft: checked ? `3px solid ${col.color}` : "3px solid transparent",
                   backgroundColor: "transparent",
@@ -191,7 +202,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   <button
                     key={e}
                     onClick={() => setNewEmoji(e)}
-                    className="motion-pressable flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center"
+                    className="motion-pressable tap-target ui-interactive flex-shrink-0 rounded-xl flex items-center justify-center"
                     style={{
                       backgroundColor: newEmoji === e ? "rgba(0,0,0,0.10)" : "rgba(0,0,0,0.04)",
                       border: newEmoji === e ? "1px solid rgba(0,0,0,0.25)" : "1px solid transparent",
@@ -222,7 +233,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                   <button
                     key={c}
                     onClick={() => setNewColor(c)}
-                    className="motion-pressable w-6 h-6 rounded-full flex-shrink-0"
+                    className="motion-pressable ui-interactive w-6 h-6 rounded-full flex-shrink-0"
                     style={{
                       backgroundColor: c,
                       outline: newColor === c ? "2px solid #0a0a0a" : "none",
@@ -235,7 +246,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
               <div className="flex gap-2">
                 <button
                   onClick={() => { setShowCreate(false); setNewName(""); }}
-                  className="motion-pressable flex-1 py-2.5 rounded-xl text-sm font-bold"
+                  className="motion-pressable tap-target ui-interactive flex-1 py-2.5 rounded-xl text-sm font-bold"
                   style={{
                     color: "rgba(0,0,0,0.45)",
                     border: "1px solid rgba(0,0,0,0.10)",
@@ -246,7 +257,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
                 <button
                   onClick={handleCreate}
                   disabled={!newName.trim()}
-                  className="motion-pressable flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
+                  className="motion-pressable tap-target ui-interactive flex-1 py-2.5 rounded-xl text-sm font-bold text-white"
                   style={{ backgroundColor: newColor, opacity: newName.trim() ? 1 : 0.4 }}
                 >
                   {t(lang, "bm_create")}
@@ -259,7 +270,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           {!showCreate && (
             <button
               onClick={() => setShowCreate(true)}
-              className="motion-pressable w-full flex items-center gap-3 px-5 py-3.5 text-left"
+              className="motion-pressable ui-interactive w-full flex items-center gap-3 px-5 py-3.5 text-left"
               style={{ borderTop: "1px solid rgba(0,0,0,0.07)" }}
             >
               <div
@@ -289,7 +300,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
           >
             <button
               onClick={handleSave}
-              className="motion-pressable w-full py-3.5 rounded-2xl text-sm font-black"
+              className="motion-pressable tap-target ui-interactive w-full py-3.5 rounded-2xl text-sm font-black"
               style={{
                 background: "#e5e7eb",
                 color: "#0a0a0a",
