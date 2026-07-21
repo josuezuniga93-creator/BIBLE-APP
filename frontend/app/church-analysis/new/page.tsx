@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "../../lib/useTheme";
+import { isLightTheme, useTheme } from "../../lib/useTheme";
 import { useLanguage } from "../../lib/useLanguage";
 import type { ChurchAnalysis, SermonRecord } from "../page";
 
@@ -123,7 +123,7 @@ export default function NewAnalysisPage() {
   const router = useRouter();
   const { theme } = useTheme();
   const { lang } = useLanguage();
-  const isLight = false;
+  const isLight = isLightTheme(theme);
 
   const [churchName, setChurchName] = useState("");
   const [denomination, setDenomination] = useState("");
@@ -138,12 +138,16 @@ export default function NewAnalysisPage() {
   const [phase, setPhase] = useState<"form" | "fetching" | "analyzing">("form");
 
   // ── Theme ────────────────────────────────────────────────────────────────────
-  const bg = isLight ? "#f5f0e8" : "#0f0f0f";
-  const fg = isLight ? "#1c1409" : "#ffffff";
-  const cardBg = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)";
-  const inputBg = isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.06)";
+  const bg = isLight ? "#ffffff" : "#0f0f0f";
+  const fg = isLight ? "#0a0a0a" : "#ffffff";
+  const cardBg = isLight ? "#f3f4f6" : "rgba(255,255,255,0.04)";
+  const inputBg = isLight ? "#eef0f3" : "rgba(255,255,255,0.06)";
   const borderColor = isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)";
-  const mutedFg = isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.38)";
+  const mutedFg = isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.38)";
+  const accent = isLight ? "#0a0a0a" : "#c9a961";
+  const accentSoftBg = isLight ? "#eef0f3" : "rgba(201,169,97,0.08)";
+  const actionBg = isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)";
+  const actionFg = isLight ? "#0a0a0a" : "#0e1018";
 
   // ── Sermon field helpers ──────────────────────────────────────────────────────
   function updateSermon(idx: number, patch: Partial<SermonField>) {
@@ -304,7 +308,7 @@ export default function NewAnalysisPage() {
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ background: bg }}>
         <div
           className="w-16 h-16 rounded-full border-4 border-t-transparent animate-spin mb-6"
-          style={{ borderColor: "rgba(201,169,97,0.3)", borderTopColor: "#c9a961" }}
+          style={{ borderColor: isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.3)", borderTopColor: accent }}
         />
         <p className="font-bold text-lg mb-2" style={{ color: fg }}>
           {phase === "fetching" ? "Fetching Transcripts…" : "Analyzing Sermons…"}
@@ -349,7 +353,7 @@ export default function NewAnalysisPage() {
             </svg>
           </button>
           <div>
-            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: "rgba(201,169,97,0.75)" }}>New Analysis</p>
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(201,169,97,0.75)" }}>New Analysis</p>
             <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>Church Analysis</h1>
           </div>
         </div>
@@ -420,7 +424,7 @@ export default function NewAnalysisPage() {
                       Sermon {idx + 1}
                     </span>
                     {idx < 4 && (
-                      <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase" style={{ background: "rgba(201,169,97,0.15)", color: "#c9a961" }}>
+                      <span className="text-[9px] px-1.5 py-0.5 rounded-md font-bold uppercase" style={{ background: accentSoftBg, color: accent }}>
                         Required
                       </span>
                     )}
@@ -430,7 +434,7 @@ export default function NewAnalysisPage() {
                       </span>
                     )}
                     {sermon.status === "fetching" && (
-                      <span className="text-[10px] font-semibold" style={{ color: "#c9a961" }}>Fetching…</span>
+                      <span className="text-[10px] font-semibold" style={{ color: accent }}>Fetching…</span>
                     )}
                     {sermons.length > 4 && (
                       <button
@@ -455,7 +459,7 @@ export default function NewAnalysisPage() {
 
                   {/* ── Auto-fetched title ───────────────────────────────── */}
                   {sermon.title && sermon.status === "done" && (
-                    <p className="text-[11px] mt-2 truncate font-medium" style={{ color: "#c9a961" }}>
+                    <p className="text-[11px] mt-2 truncate font-medium" style={{ color: accent }}>
                       Video: {sermon.title}
                     </p>
                   )}
@@ -474,7 +478,7 @@ export default function NewAnalysisPage() {
                       <button
                         onClick={() => updateSermon(idx, { manualOpen: !sermon.manualOpen })}
                         className="text-[11px] font-semibold underline underline-offset-2 active:opacity-60"
-                        style={{ color: "#c9a961" }}
+                        style={{ color: accent }}
                       >
                         {sermon.manualOpen ? "Hide manual paste ↑" : "Paste transcript manually →"}
                       </button>
@@ -500,9 +504,9 @@ export default function NewAnalysisPage() {
                         disabled={!(sermon.manualText ?? "").trim()}
                         className="mt-2 w-full py-2 rounded-lg text-sm font-bold active:scale-[0.98] transition-transform"
                         style={{
-                          background: (sermon.manualText ?? "").trim() ? "rgba(201,169,97,0.20)" : "rgba(255,255,255,0.05)",
-                          color: (sermon.manualText ?? "").trim() ? "#c9a961" : mutedFg,
-                          border: `1px solid ${(sermon.manualText ?? "").trim() ? "rgba(201,169,97,0.35)" : borderColor}`,
+                          background: (sermon.manualText ?? "").trim() ? accentSoftBg : inputBg,
+                          color: (sermon.manualText ?? "").trim() ? accent : mutedFg,
+                          border: `1px solid ${(sermon.manualText ?? "").trim() ? (isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.35)") : borderColor}`,
                         }}
                       >
                         Use this transcript
@@ -524,7 +528,7 @@ export default function NewAnalysisPage() {
           <button
             onClick={addSermon}
             className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold active:scale-[0.98] transition-transform"
-            style={{ borderColor: "rgba(201,169,97,0.35)", color: "#c9a961", background: "rgba(201,169,97,0.06)" }}
+            style={{ borderColor: isLight ? "rgba(10,10,10,0.12)" : "rgba(201,169,97,0.35)", color: accent, background: accentSoftBg }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M12 5v14M5 12h14"/>
@@ -534,7 +538,7 @@ export default function NewAnalysisPage() {
         </section>
 
         {/* ── Info box ──────────────────────────────────────────────────── */}
-        <div className="px-4 py-3 rounded-xl mb-6 text-xs leading-relaxed space-y-1.5" style={{ background: "rgba(201,169,97,0.08)", color: "rgba(201,169,97,0.80)" }}>
+        <div className="px-4 py-3 rounded-xl mb-6 text-xs leading-relaxed space-y-1.5" style={{ background: accentSoftBg, color: mutedFg, border: `1px solid ${borderColor}` }}>
           <p><strong>How it works:</strong> Paste YouTube URLs — the app fetches the transcripts automatically, then Claude analyzes them. Takes 20–40 seconds.</p>
           <p><strong>Tip:</strong> If automatic fetch is blocked, open YouTube, tap <strong>⋯ → Show transcript</strong>, copy the text, and paste it manually.</p>
         </div>
@@ -545,9 +549,9 @@ export default function NewAnalysisPage() {
           disabled={analyzing}
           className="w-full flex items-center justify-center gap-2.5 py-4 rounded-2xl font-bold text-[15px] active:scale-[0.98] transition-transform"
           style={{
-            background: "linear-gradient(135deg, #d9b970, #c9a961)",
-            color: "#0e1018",
-            boxShadow: "0 4px 20px rgba(201,169,97,0.30)",
+            background: actionBg,
+            color: actionFg,
+            boxShadow: isLight ? "none" : "0 4px 20px rgba(201,169,97,0.30)",
             opacity: analyzing ? 0.6 : 1,
           }}
         >

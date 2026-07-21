@@ -3147,6 +3147,57 @@ html[data-theme-mode="light"] .translation-picker-section.is-open .translation-p
   color: #0a0a0a !important;
 }
 
+html[data-theme-mode="light"] .bible-tracker-page {
+  background: #ffffff !important;
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page .bg-\[\#0f0f0f\] {
+  background: #ffffff !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="bg-white/"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="bg-white\\["] {
+  background-color: #f3f4f6 !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="border-white/"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="border-white\\["] {
+  border-color: rgba(10, 10, 10, 0.10) !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="text-white"] {
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="text-violet"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="text-amber"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="text-emerald"] {
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="bg-violet"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="bg-amber"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="bg-emerald"] {
+  background-color: #eef0f3 !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page [class*="border-violet"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="border-amber"],
+html[data-theme-mode="light"] .bible-tracker-page [class*="border-emerald"] {
+  border-color: rgba(10, 10, 10, 0.10) !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page input {
+  background: #f3f4f6 !important;
+  border-color: rgba(10, 10, 10, 0.10) !important;
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .bible-tracker-page input::placeholder {
+  color: rgba(10, 10, 10, 0.34) !important;
+}
+
 html[data-theme-mode="light"] .ryc-reader-bg,
 html[data-theme-mode="light"] .app-reader-shell,
 html[data-theme-mode="light"] .app-reader-page {

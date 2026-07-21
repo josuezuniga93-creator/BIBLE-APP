@@ -348,14 +348,14 @@ export default function BibleTrackerPage() {
 
   if (!mounted) {
     return (
-      <div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center">
+      <div className="bible-tracker-page min-h-screen bg-[#0f0f0f] flex items-center justify-center">
         <div className="w-8 h-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f]">
+    <div className="bible-tracker-page min-h-screen bg-[#0f0f0f]">
       {/* Hero */}
       <div className="max-w-2xl mx-auto px-4 pt-12 pb-6">
         <div className="mb-2">

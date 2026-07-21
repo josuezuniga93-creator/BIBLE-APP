@@ -94,11 +94,15 @@ export default function ChurchAnalysisPage() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(updated)); } catch { /**/ }
   }
 
-  const bg = isLight ? "#f5f0e8" : "#0f0f0f";
-  const fg = isLight ? "#1c1409" : "#ffffff";
-  const cardBg = isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)";
+  const bg = isLight ? "#ffffff" : "#0f0f0f";
+  const fg = isLight ? "#0a0a0a" : "#ffffff";
+  const cardBg = isLight ? "#f3f4f6" : "rgba(255,255,255,0.04)";
   const borderColor = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)";
-  const mutedFg = isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.38)";
+  const mutedFg = isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.38)";
+  const accent = isLight ? "#0a0a0a" : "#c9a961";
+  const actionBg = isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)";
+  const actionFg = isLight ? "#0a0a0a" : "#0e1018";
+  const actionShadow = isLight ? "none" : "0 4px 20px rgba(201,169,97,0.30)";
 
   return (
     <div className="min-h-screen" style={{ background: bg, color: fg }}>
@@ -107,7 +111,7 @@ export default function ChurchAnalysisPage() {
         {/* ── Header ──────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between mb-1">
           <div>
-            <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-1" style={{ color: "rgba(201,169,97,0.75)" }}>
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase mb-1" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(201,169,97,0.75)" }}>
               Discernment Tool
             </p>
             <h1 className="text-2xl font-bold" style={{ color: fg }}>Church Analysis</h1>
@@ -117,7 +121,7 @@ export default function ChurchAnalysisPage() {
           </div>
           <div
             className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "linear-gradient(135deg, #d9b970, #c9a961)", boxShadow: "0 4px 16px rgba(201,169,97,0.28)" }}
+            style={{ background: isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)", color: accent, boxShadow: isLight ? "none" : "0 4px 16px rgba(201,169,97,0.28)" }}
           >
             <ChurchAnalysisIcon size={20} />
           </div>
@@ -128,9 +132,9 @@ export default function ChurchAnalysisPage() {
           <div
             className="w-full flex items-center justify-center gap-2.5 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
             style={{
-              background: "linear-gradient(135deg, #d9b970, #c9a961)",
-              color: "#0e1018",
-              boxShadow: "0 4px 20px rgba(201,169,97,0.30)",
+              background: actionBg,
+              color: actionFg,
+              boxShadow: actionShadow,
             }}
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
@@ -146,7 +150,7 @@ export default function ChurchAnalysisPage() {
             className="flex flex-col items-center justify-center py-16 rounded-2xl border text-center"
             style={{ borderColor, background: cardBg }}
           >
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: "rgba(201,169,97,0.10)" }}>
+            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-4" style={{ background: isLight ? "#eef0f3" : "rgba(201,169,97,0.10)", color: accent }}>
               <ChurchAnalysisIcon size={26} />
             </div>
             <p className="font-semibold text-sm mb-1" style={{ color: fg }}>No analyses yet</p>

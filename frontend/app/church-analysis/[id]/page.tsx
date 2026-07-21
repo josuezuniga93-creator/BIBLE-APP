@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useLanguage } from "../../lib/useLanguage";
+import { isLightTheme, useTheme } from "../../lib/useTheme";
 import type { ChurchAnalysis } from "../page";
 
 // ─── Verdict helpers ──────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ function formatInline(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code style="background:rgba(201,169,97,0.15);padding:1px 4px;border-radius:4px;font-size:11px">$1</code>');
+    .replace(/`(.*?)`/g, '<code style="background:rgba(128,128,128,0.15);padding:1px 4px;border-radius:4px;font-size:11px">$1</code>');
 }
 
 function getSeverity(lines: string[]): { label: string; color: string; bg: string; border: string } {
@@ -120,7 +121,16 @@ function getRecColor(rec: string): string {
 
 // ─── Structured analysis renderer ─────────────────────────────────────────────
 
-function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: string, borderColor: string) {
+function renderAnalysis(
+  text: string,
+  fg: string,
+  mutedFg: string,
+  cardBg: string,
+  borderColor: string,
+  accent: string,
+  accentSoftBg: string,
+  isLight: boolean
+) {
   const blocks = text.split(/\n---+\n/);
   const elements: React.ReactNode[] = [];
   let key = 0;
@@ -139,7 +149,7 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
       const items = lines.filter(l => l.startsWith("- ")).map(l => l.slice(2));
       elements.push(
         <div key={key++} className="rounded-2xl border p-4 mb-1" style={{ borderColor, background: cardBg }}>
-          <p className="text-[10px] font-black uppercase tracking-[0.20em] mb-3" style={{ color: "#c9a961" }}>Church Information</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.20em] mb-3" style={{ color: accent }}>Church Information</p>
           <div className="space-y-2">
             {items.map((item, i) => {
               const colonIdx = item.indexOf(":");
@@ -185,7 +195,7 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
           {/* Evidence blockquote(s) */}
           {evidenceLines.length > 0 && (
             <div className="mx-4 mb-3 rounded-xl p-3"
-              style={{ background: "rgba(201,169,97,0.09)", borderLeft: "2px solid #c9a961" }}>
+              style={{ background: accentSoftBg, borderLeft: `2px solid ${accent}` }}>
               {evidenceLines.map((ev, i) => (
                 <p key={i} className="text-[12px] italic leading-relaxed" style={{ color: fg }}
                   dangerouslySetInnerHTML={{ __html: formatInline(ev.replace(/^>\s+/, "")) }} />
@@ -377,7 +387,7 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
     if (/^# (?!#)/.test(firstLine)) {
       const title = firstLine.replace(/^#\s+/, "");
       if (title.toUpperCase().startsWith("CHURCH ANALYSIS")) continue;
-      const sColor = getSectionColor(title);
+      const sColor = isLight ? "#0a0a0a" : getSectionColor(title);
       elements.push(
         <div key={key++} className="flex items-center gap-3 mt-6 mb-3">
           <div className="h-px flex-1 rounded" style={{ background: sColor + "40" }} />
@@ -391,7 +401,7 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
       // Render any content after the heading in this block
       const rest = lines.slice(lines.indexOf(firstLine) + 1).join("\n").trim();
       if (rest) {
-        elements.push(<div key={key++}>{renderFallback(rest, fg, mutedFg, borderColor)}</div>);
+        elements.push(<div key={key++}>{renderFallback(rest, fg, mutedFg, borderColor, accent, accentSoftBg)}</div>);
       }
       continue;
     }
@@ -409,15 +419,15 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
                 style={{
                   borderColor,
                   background: ri === 0
-                    ? "rgba(201,169,97,0.12)"
+                    ? accentSoftBg
                     : ri % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent",
                 }}>
                 <div className="flex-1 px-4 py-2.5 text-[12px] font-semibold"
-                  style={{ color: ri === 0 ? "#c9a961" : fg }}>
+                  style={{ color: ri === 0 ? accent : fg }}>
                   {cells[0]}
                 </div>
                 <div className="flex-1 px-4 py-2.5 text-[12px] font-semibold text-right"
-                  style={{ color: ri === 0 ? "#c9a961" : tableResultColor(cells[1] ?? "") }}
+                  style={{ color: ri === 0 ? accent : tableResultColor(cells[1] ?? "") }}
                   dangerouslySetInnerHTML={{ __html: ri === 0 ? (cells[1] ?? "") : formatInline(cells[1] ?? "") }} />
               </div>
             ))}
@@ -428,19 +438,26 @@ function renderAnalysis(text: string, fg: string, mutedFg: string, cardBg: strin
     }
 
     // ── Fallback: generic line-by-line ───────────────────────────────────────
-    elements.push(<div key={key++}>{renderFallback(block, fg, mutedFg, borderColor)}</div>);
+    elements.push(<div key={key++}>{renderFallback(block, fg, mutedFg, borderColor, accent, accentSoftBg)}</div>);
   }
 
   return <div className="space-y-1">{elements}</div>;
 }
 
-function renderFallback(text: string, fg: string, mutedFg: string, borderColor: string): React.ReactNode {
+function renderFallback(
+  text: string,
+  fg: string,
+  mutedFg: string,
+  borderColor: string,
+  accent: string,
+  accentSoftBg: string
+): React.ReactNode {
   return text.split("\n").map((line, i) => {
     if (!line.trim()) return <div key={i} className="h-1" />;
     if (line.startsWith("- ") || line.startsWith("* ")) {
       return (
         <div key={i} className="flex gap-2.5 mb-1.5">
-          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2" style={{ background: "#c9a961" }} />
+          <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full mt-2" style={{ background: accent }} />
           <p className="text-[13px] leading-relaxed flex-1" style={{ color: fg }}
             dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^[-*]\s+/, "")) }} />
         </div>
@@ -449,7 +466,7 @@ function renderFallback(text: string, fg: string, mutedFg: string, borderColor: 
     if (line.startsWith("> ")) {
       return (
         <div key={i} className="my-2 pl-3 border-l-2 py-2 rounded-r-lg"
-          style={{ borderColor: "#c9a961", background: "rgba(201,169,97,0.07)" }}>
+          style={{ borderColor: accent, background: accentSoftBg }}>
           <p className="text-[12px] italic leading-relaxed" style={{ color: fg }}
             dangerouslySetInnerHTML={{ __html: formatInline(line.replace(/^>\s+/, "")) }} />
         </div>
@@ -463,7 +480,7 @@ function renderFallback(text: string, fg: string, mutedFg: string, borderColor: 
       return (
         <div key={i} className="flex gap-3 mb-2">
           <span className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-black mt-0.5"
-            style={{ background: "rgba(201,169,97,0.20)", color: "#c9a961" }}>
+            style={{ background: accentSoftBg, color: accent }}>
             {numMatch[1]}
           </span>
           <p className="text-[13px] leading-relaxed flex-1" style={{ color: fg }}
@@ -503,6 +520,7 @@ export default function AnalysisDetailPage() {
   const router = useRouter();
   const params = useParams<{ id: string }>();
   const { lang } = useLanguage();
+  const { theme } = useTheme();
   const [analysis, setAnalysis] = useState<ChurchAnalysis | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [toast, setToast] = useState("");
@@ -510,11 +528,16 @@ export default function AnalysisDetailPage() {
   const [showEs, setShowEs] = useState(false);
   const [loadingEs, setLoadingEs] = useState(false);
 
-  const bg = "#0f0f0f";
-  const fg = "#ffffff";
-  const cardBg = "rgba(255,255,255,0.04)";
-  const borderColor = "rgba(255,255,255,0.08)";
-  const mutedFg = "rgba(255,255,255,0.38)";
+  const isLight = isLightTheme(theme);
+  const bg = isLight ? "#ffffff" : "#0f0f0f";
+  const fg = isLight ? "#0a0a0a" : "#ffffff";
+  const cardBg = isLight ? "#f3f4f6" : "rgba(255,255,255,0.04)";
+  const borderColor = isLight ? "rgba(10,10,10,0.10)" : "rgba(255,255,255,0.08)";
+  const mutedFg = isLight ? "rgba(10,10,10,0.55)" : "rgba(255,255,255,0.38)";
+  const accent = isLight ? "#0a0a0a" : "#c9a961";
+  const accentSoftBg = isLight ? "#eef0f3" : "rgba(201,169,97,0.09)";
+  const actionBg = isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)";
+  const actionFg = isLight ? "#0a0a0a" : "#0e1018";
 
   useEffect(() => {
     try {
@@ -613,7 +636,7 @@ export default function AnalysisDetailPage() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ background: bg }}>
         <p className="text-lg font-bold mb-2" style={{ color: fg }}>Analysis not found</p>
-        <button onClick={() => router.push("/church-analysis")} className="text-sm mt-3" style={{ color: "#c9a961" }}>
+        <button onClick={() => router.push("/church-analysis")} className="text-sm mt-3" style={{ color: accent }}>
           ← Back to list
         </button>
       </div>
@@ -624,7 +647,7 @@ export default function AnalysisDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
         <div className="w-8 h-8 rounded-full border-4 animate-spin"
-          style={{ borderColor: "rgba(201,169,97,0.3)", borderTopColor: "#c9a961" }} />
+          style={{ borderColor: isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.3)", borderTopColor: accent }} />
       </div>
     );
   }
@@ -687,7 +710,7 @@ export default function AnalysisDetailPage() {
 
         {/* ── Print-only header (hidden on screen) ─────────────────────────── */}
         <div className="print-only" style={{ marginBottom: 8 }}>
-          <div style={{ fontSize: 10, color: "#c9a961", fontWeight: 900, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
+          <div style={{ fontSize: 10, color: accent, fontWeight: 900, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
             Church Analysis — Tulip Bible App
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{analysis.churchName}</h1>
@@ -702,7 +725,7 @@ export default function AnalysisDetailPage() {
           <button
             onClick={() => router.push("/church-analysis")}
             className="no-print flex items-center gap-2 mb-5 active:opacity-60 transition-opacity"
-            style={{ color: "#c9a961" }}
+            style={{ color: accent }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <path d="M15 18l-6-6 6-6"/>
@@ -714,7 +737,7 @@ export default function AnalysisDetailPage() {
           <div className="no-print rounded-2xl border px-4 py-4 mb-4" style={{ borderColor, background: cardBg }}>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-1" style={{ color: "rgba(201,169,97,0.75)" }}>
+                <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-1" style={{ color: isLight ? "rgba(10,10,10,0.42)" : "rgba(201,169,97,0.75)" }}>
                   Church Analysis
                 </p>
                 <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>
@@ -750,9 +773,9 @@ export default function AnalysisDetailPage() {
             disabled={loadingEs}
             className="no-print w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform mb-3"
             style={{
-              background: showEs ? "rgba(201,169,97,0.15)" : "rgba(255,255,255,0.04)",
-              color: showEs ? "#c9a961" : mutedFg,
-              border: `1px solid ${showEs ? "rgba(201,169,97,0.35)" : borderColor}`,
+              background: showEs ? accentSoftBg : cardBg,
+              color: showEs ? accent : mutedFg,
+              border: `1px solid ${showEs ? (isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.35)") : borderColor}`,
               opacity: loadingEs ? 0.6 : 1,
             }}
           >
@@ -766,9 +789,9 @@ export default function AnalysisDetailPage() {
               onClick={handleDownload}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform"
               style={{
-                background: "rgba(201,169,97,0.12)",
-                color: "#c9a961",
-                border: "1px solid rgba(201,169,97,0.30)",
+                background: accentSoftBg,
+                color: accent,
+                border: `1px solid ${borderColor}`,
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -783,9 +806,9 @@ export default function AnalysisDetailPage() {
               onClick={handleShare}
               className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform"
               style={{
-                background: "linear-gradient(135deg, #d9b970, #c9a961)",
-                color: "#0e1018",
-                boxShadow: "0 3px 14px rgba(201,169,97,0.28)",
+                background: actionBg,
+                color: actionFg,
+                boxShadow: isLight ? "none" : "0 3px 14px rgba(201,169,97,0.28)",
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -819,12 +842,12 @@ export default function AnalysisDetailPage() {
 
           {/* ── Analysis result ───────────────────────────────────────────────── */}
           <div className="rounded-2xl border px-4 py-4" style={{ borderColor, background: cardBg }}>
-            <p className="no-print text-[10px] font-black uppercase tracking-[0.20em] mb-4" style={{ color: "rgba(201,169,97,0.75)" }}>
+            <p className="no-print text-[10px] font-black uppercase tracking-[0.20em] mb-4" style={{ color: isLight ? "rgba(10,10,10,0.42)" : "rgba(201,169,97,0.75)" }}>
               {showEs ? "Análisis Completo" : "Full Analysis"}
             </p>
             {renderAnalysis(
               showEs && analysis.resultEs ? analysis.resultEs : analysis.result,
-              fg, mutedFg, cardBg, borderColor
+              fg, mutedFg, cardBg, borderColor, accent, accentSoftBg, isLight
             )}
           </div>
 
@@ -838,8 +861,8 @@ export default function AnalysisDetailPage() {
         <div
           className="no-print fixed bottom-24 left-1/2 -translate-x-1/2 px-4 py-2.5 rounded-full text-sm font-semibold shadow-lg transition-all duration-300 pointer-events-none whitespace-nowrap"
           style={{
-            background: "#c9a961",
-            color: "#0e1018",
+            background: actionBg,
+            color: actionFg,
             opacity: toastVisible ? 1 : 0,
             transform: `translateX(-50%) translateY(${toastVisible ? "0" : "8px"})`,
             zIndex: 9999,
