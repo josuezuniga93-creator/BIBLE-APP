@@ -732,6 +732,7 @@ function LexiconInner() {
   const [pickerView, setPickerView]         = useState<"books" | "chapters">("books");
   const [pickerBook, setPickerBook]         = useState<BookMeta | null>(null);
   const [pickerBookSearch, setPickerBookSearch] = useState("");
+  const [pickerLastPosition, setPickerLastPosition] = useState<{ bookName: string; chapter: number } | null>(null);
   const noteTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const verseRefs = useRef<Record<number, HTMLDivElement | null>>({});
@@ -1036,9 +1037,15 @@ function LexiconInner() {
       const localized = getBookDisplayName(b, translation).toLowerCase();
       return b.name.toLowerCase().includes(q) || localized.includes(q);
     });
+  const pickerLastBook = pickerLastPosition ? books.find((b) => b.name === pickerLastPosition.bookName) : null;
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
     : [];
+
+  useEffect(() => {
+    if (!showBookPicker || pickerView !== "books") return;
+    setPickerLastPosition(loadLastPosition());
+  }, [showBookPicker, pickerView]);
 
   const goNext = () => {
     if (selectedBook && selectedChapter < selectedBook.chapters) {
@@ -1779,25 +1786,6 @@ function LexiconInner() {
                       {lang === "es" ? "Libros" : "Books"}
                     </h2>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const saved = loadLastPosition();
-                        const target = saved ? books.find((b) => b.name === saved.bookName) : selectedBook;
-                        if (!target) return;
-                        setPickerBook(target);
-                        setPickerView("chapters");
-                      }}
-                      className="h-11 w-11 rounded-full flex items-center justify-center transition-colors"
-                      style={{ color: isLight ? "#111111" : "#ffffff", background: "transparent" }}
-                      aria-label={lang === "es" ? "Última lectura" : "Recent reading"}
-                    >
-                      <svg width="25" height="25" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 8v5l3.2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <path d="M4.4 10.2A8 8 0 1 1 5.7 16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M4 6v4h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </button>
                   </div>
 
                   <div
@@ -1828,6 +1816,42 @@ function LexiconInner() {
                       </button>
                     )}
                   </div>
+
+                  {pickerLastBook && pickerLastPosition && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBook(pickerLastBook);
+                        setSelectedChapter(Math.max(1, Math.min(pickerLastPosition.chapter, pickerLastBook.chapters)));
+                        setShowBookPicker(false);
+                        setPickerBookSearch("");
+                      }}
+                      className="motion-pressable tap-target ui-interactive mt-3 w-full rounded-[22px] px-5 py-3 text-left"
+                      style={{
+                        background: isLight ? "#f2f3f5" : "rgba(255,255,255,0.07)",
+                        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
+                        color: isLight ? "#111111" : "#ffffff",
+                      }}
+                      aria-label={`${lang === "es" ? "Continuar" : "Continue"} ${getBookDisplayName(pickerLastBook, translation)} ${pickerLastPosition.chapter}`}
+                    >
+                      <span className="flex items-center justify-between gap-4">
+                        <span className="min-w-0">
+                          <span className="block text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.45)" }}>
+                            {lang === "es" ? "Continuar lectura" : "Continue reading"}
+                          </span>
+                          <span className="mt-1 block truncate text-base font-black">
+                            {getBookDisplayName(pickerLastBook, translation)} {pickerLastPosition.chapter}
+                          </span>
+                        </span>
+                        <span
+                          className="flex-shrink-0 rounded-full px-4 py-2 text-xs font-black uppercase tracking-[0.12em]"
+                          style={{ background: isLight ? "#ffffff" : "rgba(255,255,255,0.08)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.10)" }}
+                        >
+                          {lang === "es" ? "Abrir" : "Open"}
+                        </span>
+                      </span>
+                    </button>
+                  )}
                 </div>
 
                 <div className="overflow-y-auto flex-1 px-9 pb-24">
