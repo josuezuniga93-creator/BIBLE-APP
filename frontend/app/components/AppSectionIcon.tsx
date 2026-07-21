@@ -215,12 +215,12 @@ export function AppSectionIcon({ name, size = 22, active = false, className }: P
       return (
         <svg {...common}>
           <circle
-            cx="10.9" cy="10.9" r="6.4"
+            cx="10.45" cy="10.45" r="6.15"
             fill={softFill} fillOpacity={softOp}
             stroke="currentColor" strokeWidth={sw}
           />
-          <path d="m15.55 15.55 4.6 4.6" stroke="currentColor" strokeWidth={sw} {...round} />
-          <path d="M8.5 9.4h4.8M8.5 12.4h3.1" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
+          <path d="m14.95 14.95 5.2 5.2" stroke="currentColor" strokeWidth={sw} {...round} />
+          <path d="M8.2 9.35h4.45M8.2 12.1h2.95" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
         </svg>
       );
 

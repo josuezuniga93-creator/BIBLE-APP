@@ -7,7 +7,7 @@ import {
   type StreakData,
 } from "./lib/streakData";
 import { useLanguage } from "./lib/useLanguage";
-import { useTheme } from "./lib/useTheme";
+import { applyThemeAttributes, normalizeTheme, useTheme } from "./lib/useTheme";
 import { translateToSpanish } from "./lib/googleTranslate";
 import { localizeReference } from "./lib/spanishContent";
 
@@ -213,7 +213,7 @@ function GgArticleReader({
     (typeof window !== "undefined"
       ? document.documentElement.getAttribute("data-theme")
       : null) ?? theme;
-  const isLight = activeTheme === "white-noir";
+  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme-mode") : null) === "light" || activeTheme === "white-noir";
 
   const gg = {
     pageBg:       isLight ? "#ffffff"              : "#0a0b14",
@@ -995,13 +995,15 @@ export default function Home() {
       const domTheme = document.documentElement.getAttribute("data-theme");
       return domTheme === "gold-navy" || domTheme === "white-noir" ? domTheme : "white-noir";
     };
-    const authoritative = readAuthoritative();
+    const authoritative = normalizeTheme(readAuthoritative());
     setTheme(authoritative);
-    document.documentElement.setAttribute("data-theme", authoritative);
+    applyThemeAttributes(authoritative);
     const sync = (e?: Event) => {
       const detail = (e as CustomEvent)?.detail as string | undefined;
       const next = detail ?? document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
-      setTheme(next === "gold-navy" || next === "white-noir" ? next : "white-noir");
+      const normalized = normalizeTheme(next);
+      setTheme(normalized);
+      applyThemeAttributes(normalized);
     };
     window.addEventListener("ryc-theme-change", sync);
     return () => window.removeEventListener("ryc-theme-change", sync);

@@ -192,6 +192,50 @@ html[data-theme="white-noir"] {
   --input-bg: #f3f4f6;
 }
 
+/* Modern two-theme contract. Legacy names still exist for stored user prefs,
+   but new/shared UI should reason from data-theme-mode. */
+html[data-theme-mode="light"] {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --bg: #ffffff;
+  --bg-2: #f4f5f7;
+  --bg-3: #e8eaee;
+  --fg: #0a0a0a;
+  --fg-hi: rgba(10, 10, 10, 0.94);
+  --fg-mid: rgba(10, 10, 10, 0.66);
+  --fg-lo: rgba(10, 10, 10, 0.46);
+  --fg-dim: rgba(10, 10, 10, 0.28);
+  --border: rgba(10, 10, 10, 0.10);
+  --accent: #0a0a0a;
+  --accent-soft: #eef0f3;
+  --accent-text: #0a0a0a;
+  --nav-bg: rgba(255, 255, 255, 0.97);
+  --nav-border: rgba(10, 10, 10, 0.10);
+  --input-bg: #f3f4f6;
+}
+
+html[data-theme-mode="dark"] {
+  color-scheme: dark;
+  --background: #0e1018;
+  --foreground: #ffffff;
+  --bg: #0e1018;
+  --bg-2: rgba(201, 169, 97, 0.08);
+  --bg-3: rgba(201, 169, 97, 0.14);
+  --fg: #ffffff;
+  --fg-hi: rgba(255, 255, 255, 0.94);
+  --fg-mid: rgba(255, 255, 255, 0.60);
+  --fg-lo: rgba(255, 255, 255, 0.38);
+  --fg-dim: rgba(255, 255, 255, 0.20);
+  --border: rgba(255, 255, 255, 0.07);
+  --accent: #c9a961;
+  --accent-soft: rgba(201, 169, 97, 0.15);
+  --accent-text: #d4b878;
+  --nav-bg: rgba(14, 16, 24, 0.97);
+  --nav-border: rgba(255, 255, 255, 0.07);
+  --input-bg: rgba(201, 169, 97, 0.08);
+}
+
 /* Bible translation picker */
 .translation-picker-scrim {
   background: rgba(0, 0, 0, 0.66);
@@ -3045,6 +3089,69 @@ html[data-theme="white-noir"] ::-webkit-scrollbar-thumb {
   border-radius: 999px;
   background: var(--accent-text);
   box-shadow: 0 0 10px var(--accent);
+}
+
+/* Light mode guardrails — shared surfaces should stay white/light grey, not
+   black/gold. Badges keep their own artwork colors. */
+html[data-theme-mode="light"] body,
+html[data-theme-mode="light"] main,
+html[data-theme-mode="light"] .layout-children {
+  background-color: #ffffff !important;
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .mobile-nav-surface {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(10, 10, 10, 0.10) !important;
+  box-shadow: 0 12px 30px rgba(10, 10, 10, 0.08) !important;
+}
+
+html[data-theme-mode="light"] .mobile-nav-floating .nav-tab[data-active="true"],
+html[data-theme-mode="light"] .desktop-nav-link[data-active="true"] {
+  background: #eef0f3 !important;
+  color: #050505 !important;
+  box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.06) !important;
+}
+
+html[data-theme-mode="light"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
+  background: #bfc5cc !important;
+  box-shadow: none !important;
+}
+
+html[data-theme-mode="light"] .desktop-nav-link[data-active="true"] .desktop-nav-icon {
+  background: #ffffff !important;
+  color: #050505 !important;
+  box-shadow: inset 0 0 0 1px rgba(10, 10, 10, 0.10) !important;
+}
+
+html[data-theme-mode="light"] .translation-picker-panel {
+  --tp-bg: #ffffff;
+  --tp-bg-end: #ffffff;
+  --tp-bg-soft: #f3f4f6;
+  --tp-bg-hover: #eceef1;
+  --tp-line: rgba(10, 10, 10, 0.10);
+  --tp-fg: #0a0a0a;
+  --tp-muted: rgba(10, 10, 10, 0.56);
+  --tp-dim: rgba(10, 10, 10, 0.34);
+  --tp-accent: #0a0a0a;
+  --tp-accent-strong: #0a0a0a;
+  --tp-accent-bg: #eef0f3;
+  --tp-shadow: 0 24px 70px rgba(10, 10, 10, 0.14);
+}
+
+html[data-theme-mode="light"] .translation-picker-option.is-selected,
+html[data-theme-mode="light"] .translation-picker-section.is-open .translation-picker-section-head,
+html[data-theme-mode="light"] .translation-picker-section.is-open .translation-picker-category-arrow {
+  background: #eef0f3 !important;
+  border-color: rgba(10, 10, 10, 0.10) !important;
+  color: #0a0a0a !important;
+}
+
+html[data-theme-mode="light"] .ryc-reader-bg,
+html[data-theme-mode="light"] .app-reader-shell,
+html[data-theme-mode="light"] .app-reader-page {
+  background-color: #ffffff !important;
+  color: #0a0a0a !important;
 }
 
 /* ── Print / PDF export styles ──────────────────────────────────────────────── */

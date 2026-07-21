@@ -15,9 +15,13 @@ export function ThemeProvider() {
                 if (v === 'light') return 'white-noir';
                 return valid.indexOf(v) >= 0 ? v : 'white-noir';
               }
+              function mode(t) { return t === 'white-noir' ? 'light' : 'dark'; }
               // If data-theme was already set correctly by the <head> script, don't overwrite it.
               var current = document.documentElement.getAttribute('data-theme');
-              if (valid.indexOf(current) >= 0) return;
+              if (valid.indexOf(current) >= 0) {
+                document.documentElement.setAttribute('data-theme-mode', mode(current));
+                return;
+              }
               var saved = localStorage.getItem('ryc-theme');
               if (!saved) {
                 var m = document.cookie.match(/(?:^|;\\s*)ryc-theme=([^;]+)/);
@@ -26,6 +30,7 @@ export function ThemeProvider() {
               var theme = normalize(saved);
               localStorage.setItem('ryc-theme', theme);
               document.documentElement.setAttribute('data-theme', theme);
+              document.documentElement.setAttribute('data-theme-mode', mode(theme));
             } catch(e) {}
           })();
         `,

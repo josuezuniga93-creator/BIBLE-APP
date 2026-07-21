@@ -14,7 +14,11 @@ interface Props {
 
 export default function BookmarkPopup({ ref_, text, lang, onClose, onSaved }: Props) {
   const { theme } = useTheme();
-  const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
+  const isLight = typeof window !== "undefined"
+    ? document.documentElement.getAttribute("data-theme-mode") === "light" ||
+      document.documentElement.getAttribute("data-theme") === "white-noir" ||
+      theme === "white-noir"
+    : theme === "white-noir";
 
   const [categories, setCategories] = useState<string[]>([]);
   const [selected, setSelected] = useState<string>("");

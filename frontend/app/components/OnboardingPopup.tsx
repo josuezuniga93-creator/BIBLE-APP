@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { applyThemeAttributes } from "../lib/useTheme";
 
 type Step = 1 | 2 | 3;
 type Lang = "en" | "es";
@@ -53,7 +54,7 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
     try {
       localStorage.setItem("ryc-theme", next);
       document.cookie = `ryc-theme=${next};max-age=31536000;path=/;SameSite=Strict`;
-      document.documentElement.setAttribute("data-theme", next);
+      applyThemeAttributes(next);
       window.dispatchEvent(new CustomEvent("ryc-theme-change", { detail: next }));
     } catch { /**/ }
   }
@@ -67,7 +68,7 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
       // dark-theme styling on a light page (invisible labels).
       localStorage.setItem("ryc-theme", theme);
       document.cookie = `ryc-theme=${theme};max-age=31536000;path=/;SameSite=Strict`;
-      document.documentElement.setAttribute("data-theme", theme);
+      applyThemeAttributes(theme);
       window.dispatchEvent(new CustomEvent("ryc-theme-change", { detail: theme }));
     } catch { /**/ }
     setVisible(false);

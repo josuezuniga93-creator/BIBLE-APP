@@ -189,19 +189,26 @@ export function BottomNav() {
 
   useEffect(() => {
     // Sync on mount (in case SSR/hydration mismatch)
-    setIsWhiteNoir(document.documentElement.getAttribute("data-theme") === "white-noir");
+    setIsWhiteNoir(
+      document.documentElement.getAttribute("data-theme-mode") === "light" ||
+      document.documentElement.getAttribute("data-theme") === "white-noir"
+    );
 
     // Listen for live theme changes dispatched by useTheme's setTheme()
     const handleThemeChange = (e: Event) => {
-      setIsWhiteNoir((e as CustomEvent<string>).detail === "white-noir");
+      const detail = (e as CustomEvent<string>).detail;
+      setIsWhiteNoir(detail === "white-noir" || detail === "light");
     };
     window.addEventListener("ryc-theme-change", handleThemeChange);
 
     // Also observe data-theme attribute changes (covers edge cases)
     const observer = new MutationObserver(() => {
-      setIsWhiteNoir(document.documentElement.getAttribute("data-theme") === "white-noir");
+      setIsWhiteNoir(
+        document.documentElement.getAttribute("data-theme-mode") === "light" ||
+        document.documentElement.getAttribute("data-theme") === "white-noir"
+      );
     });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-theme-mode"] });
 
     return () => {
       window.removeEventListener("ryc-theme-change", handleThemeChange);

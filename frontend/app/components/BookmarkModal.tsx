@@ -26,7 +26,7 @@ export function BookmarkModal({ item, label, onClose }: BookmarkModalProps) {
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const activeTheme = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) ?? theme;
-  const light = activeTheme === "white-noir";
+  const light = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme-mode") : null) === "light" || activeTheme === "white-noir";
   const [collections, setCollections] = useState<Collection[]>([]);
   const [checkedIds, setCheckedIds]   = useState<Set<string>>(new Set());
   const [showCreate, setShowCreate]   = useState(false);

@@ -159,8 +159,9 @@ export default function MorePage() {
   const [isLightElegant, setIsLightElegant] = useState(false);
   useEffect(() => {
     const check = () => {
+      const mode = document.documentElement.getAttribute("data-theme-mode");
       const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
-      setIsLightElegant(t === "white-noir");
+      setIsLightElegant(mode === "light" || t === "white-noir" || t === "light");
     };
     check();
     window.addEventListener("ryc-theme-change", check as EventListener);

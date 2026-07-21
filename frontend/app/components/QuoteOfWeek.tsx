@@ -25,8 +25,9 @@ export default function QuoteOfWeek() {
   const [isPremiumNeon,  setIsPremiumNeon]  = useState(false);
   useEffect(() => {
     const check = () => {
+      const mode = document.documentElement.getAttribute("data-theme-mode");
       const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
-      setIsLightElegant(t === "white-noir");
+      setIsLightElegant(mode === "light" || t === "white-noir" || t === "light");
       setIsPremiumNeon(t === "premium-neon");
     };
     check();

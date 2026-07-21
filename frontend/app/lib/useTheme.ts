@@ -40,6 +40,14 @@ export function themeAlias(value: ThemeInput): ThemeAlias {
   return normalizeTheme(value) === "white-noir" ? "light" : "dark";
 }
 
+export function applyThemeAttributes(value: ThemeInput) {
+  const theme = normalizeTheme(value);
+  const mode = themeAlias(theme);
+  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-theme-mode", mode);
+  return { theme, mode };
+}
+
 export function isLightTheme(value: ThemeInput): boolean {
   return normalizeTheme(value) === "white-noir";
 }
@@ -97,12 +105,13 @@ export function useTheme() {
     // Re-read on mount to ensure sync with storage (handles any edge cases)
     const active = readThemeEarly();
     setThemeState(active);
-    document.documentElement.setAttribute("data-theme", active);
+    applyThemeAttributes(active);
 
     // Re-apply whenever another component calls setTheme()
     function handleChange(e: Event) {
       const t = normalizeTheme((e as CustomEvent<ThemeInput>).detail);
       setThemeState(t);
+      applyThemeAttributes(t);
     }
     window.addEventListener("ryc-theme-change", handleChange);
     return () => window.removeEventListener("ryc-theme-change", handleChange);
@@ -114,7 +123,7 @@ export function useTheme() {
     localStorage.setItem(THEME_KEY, t);
     // Also persist to cookie so early script can restore after localStorage clear
     try { document.cookie = `${COOKIE_KEY}=${t};max-age=31536000;path=/;SameSite=Strict`; } catch {}
-    document.documentElement.setAttribute("data-theme", t);
+    applyThemeAttributes(t);
     window.dispatchEvent(new CustomEvent("ryc-theme-change", { detail: t }));
   }
 

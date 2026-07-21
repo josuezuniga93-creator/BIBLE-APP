@@ -21,8 +21,8 @@ ALTER TABLE user_sync_data ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users manage their own data"
   ON user_sync_data
   FOR ALL
-  USING  (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING  ((select auth.uid()) = user_id)
+  WITH CHECK ((select auth.uid()) = user_id);
 
 -- ── Index for fast user lookups ───────────────────────────────────────────────
 CREATE INDEX IF NOT EXISTS user_sync_data_user_id_idx ON user_sync_data (user_id);
