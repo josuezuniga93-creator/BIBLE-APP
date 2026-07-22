@@ -247,6 +247,53 @@ function getBookSearchScore(book: BookMeta, rawQuery: string, translation: Bible
   return best;
 }
 
+type ScriptureSearchTarget = {
+  book: BookMeta;
+  chapter: number;
+  verse: number | null;
+  score: number;
+};
+
+function splitScriptureSearchQuery(rawQuery: string) {
+  const trimmed = rawQuery.trim();
+  const spacedMatch = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+  const compactVerseMatch = !spacedMatch && trimmed.includes(":")
+    ? trimmed.match(/^(.+?)(\d+):(\d+)$/)
+    : null;
+  const match = spacedMatch ?? compactVerseMatch;
+
+  if (!match) {
+    return { bookQuery: trimmed, chapter: 1, verse: null };
+  }
+
+  return {
+    bookQuery: match[1].trim(),
+    chapter: parseInt(match[2], 10),
+    verse: match[3] ? parseInt(match[3], 10) : null,
+  };
+}
+
+function getScriptureSearchSuggestions(
+  rawQuery: string,
+  books: BookMeta[],
+  translation: BibleTranslation,
+  limit = 5,
+): ScriptureSearchTarget[] {
+  const parts = splitScriptureSearchQuery(rawQuery);
+  if (!parts.bookQuery) return [];
+
+  return books
+    .map((book) => ({
+      book,
+      chapter: Math.max(1, Math.min(Number.isFinite(parts.chapter) ? parts.chapter : 1, book.chapters)),
+      verse: parts.verse && parts.verse > 0 ? parts.verse : null,
+      score: getBookSearchScore(book, parts.bookQuery, translation),
+    }))
+    .filter(({ score }) => Number.isFinite(score))
+    .sort((a, b) => a.score - b.score || a.book.num - b.book.num)
+    .slice(0, limit);
+}
+
 function saveLastPosition(bookName: string, chapter: number) {
   try { localStorage.setItem(LAST_POSITION_KEY, JSON.stringify({ bookName, chapter })); } catch {}
 }
@@ -929,75 +976,20 @@ function LexiconInner() {
     if (searchParams.get("tab") === "search") setActiveTab("search");
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Navigation search handler (parse "Romans 3") ─────────────────────────
+  const openScriptureSearchTarget = useCallback((target: ScriptureSearchTarget) => {
+    setSelectedBook(target.book);
+    setSelectedChapter(target.chapter);
+    setPendingVerseJump(target.verse ? [target.verse] : []);
+    setActiveTab("reader");
+    setShowNavSearch(false);
+    setNavQuery("");
+  }, []);
+
+  // ── Navigation search handler (parse "Romans 3" / "Romans 3:23") ─────────
   const handleNavSearch = useCallback((q: string) => {
-    const trimmed = q.trim();
-    if (!trimmed || !books.length) return;
-    // Match: BookName Chapter[:Verse] — e.g. "Romans 3", "Hechos 1", "Juan 3:16"
-    const match = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
-    // If no chapter number found, treat the whole query as a book name and default to chapter 1
-    const rawBook = match ? match[1] : trimmed;
-    const chStr   = match ? match[2] : "1";
-    const verseStr = match?.[3];
-    const bookQuery = rawBook.toLowerCase().trim();
-    const ch = parseInt(chStr, 10);
-    const verseJump = verseStr ? parseInt(verseStr, 10) : null;
-
-    // Spanish → English name aliases
-    const ES_TO_EN: Record<string, string> = {
-      genesis: "genesis", exodo: "exodus", éxodo: "exodus", levitico: "leviticus",
-      levítico: "leviticus", numeros: "numbers", números: "numbers",
-      deuteronomio: "deuteronomy", josue: "joshua", josué: "joshua",
-      jueces: "judges", rut: "ruth", samuel: "samuel", reyes: "kings",
-      cronicas: "chronicles", crónicas: "chronicles", esdras: "ezra",
-      nehemias: "nehemiah", nehemías: "nehemiah", ester: "esther", job: "job",
-      salmos: "psalms", salmo: "psalms", proverbios: "proverbs",
-      eclesiastes: "ecclesiastes", eclesiastés: "ecclesiastes",
-      cantares: "song of solomon", cantar: "song of solomon",
-      isaias: "isaiah", isaías: "isaiah", jeremias: "jeremiah", jeremías: "jeremiah",
-      lamentaciones: "lamentations", ezequiel: "ezekiel", daniel: "daniel",
-      oseas: "hosea", joel: "joel", amos: "amos", amós: "amos",
-      abdias: "obadiah", abdías: "obadiah", jonas: "jonah", jonás: "jonah",
-      miqueas: "micah", nahum: "nahum", habacuc: "habakkuk", sofonias: "zephaniah",
-      sofonías: "zephaniah", hageo: "haggai", zacarias: "zechariah",
-      zacarías: "zechariah", malaquias: "malachi", malaquías: "malachi",
-      mateo: "matthew", marcos: "mark", lucas: "luke", juan: "john",
-      hechos: "acts", romanos: "romans", corintios: "corinthians",
-      galatas: "galatians", gálatas: "galatians", efesios: "ephesians",
-      filipenses: "philippians", colosenses: "colossians", tesalonicenses: "thessalonians",
-      timoteo: "timothy", tito: "titus", filemon: "philemon", filemón: "philemon",
-      hebreos: "hebrews", santiago: "james", pedro: "peter",
-      judas: "jude", apocalipsis: "revelation",
-    };
-
-    // Normalize: strip leading number (e.g. "1 corintios" → prefix "1 " + "corintios")
-    const numPrefixMatch = bookQuery.match(/^(\d)\s*(.+)$/);
-    let resolvedQuery = bookQuery;
-    if (numPrefixMatch) {
-      const [, num, rest] = numPrefixMatch;
-      const enBase = ES_TO_EN[rest] ?? rest;
-      resolvedQuery = `${num} ${enBase}`;
-    } else {
-      resolvedQuery = ES_TO_EN[bookQuery] ?? bookQuery;
-    }
-
-    const found = books.find(
-      (b) => {
-        const bLow = b.name.toLowerCase();
-        const bNoSpace = bLow.replace(/\s+/g, "");
-        const qNoSpace = resolvedQuery.replace(/\s+/g, "");
-        return bLow === resolvedQuery || bLow.startsWith(resolvedQuery) || bNoSpace.startsWith(qNoSpace);
-      }
-    );
-    if (found) {
-      setSelectedBook(found);
-      setSelectedChapter(Math.max(1, Math.min(ch, found.chapters)));
-      setPendingVerseJump(verseJump && verseJump > 0 ? [verseJump] : []);
-      setActiveTab("reader");
-      setShowNavSearch(false);
-      setNavQuery("");
-    }
-  }, [books]);
+    const target = getScriptureSearchSuggestions(q, books, translation, 1)[0];
+    if (target) openScriptureSearchTarget(target);
+  }, [books, openScriptureSearchTarget, translation]);
 
   useEffect(() => {
     if (pendingVerseJump.length === 0 || !chapterData) return;
@@ -1145,6 +1137,7 @@ function LexiconInner() {
   const pickerUsingSuggestions = Boolean(pickerQuery);
   const visibleBooks = pickerUsingSuggestions ? suggestedBookMatches : filteredPickerBooks;
   const pickerLastBook = pickerLastPosition ? books.find((b) => b.name === pickerLastPosition.bookName) : null;
+  const navSearchSuggestions = getScriptureSearchSuggestions(navQuery, books, translation);
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
     : [];
@@ -1508,22 +1501,77 @@ function LexiconInner() {
                   style={{ fontSize: "16px", color: isLight ? "#0a0a0a" : "#ffffff" }}
                   className="min-w-0 flex-1 bg-transparent text-[15px] placeholder:text-black/30 focus:outline-none"
                 />
-                <button
-                  type="submit"
-                  className="rounded-xl px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
-                  style={{
-                    background: isLight ? "#e5e7eb" : "linear-gradient(135deg, #d8bc78, #c9a961)",
+	                <button
+	                  type="submit"
+	                  className="rounded-xl px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
+	                  style={{
+	                    background: isLight ? "#e5e7eb" : "linear-gradient(135deg, #d8bc78, #c9a961)",
                     color: "#08090f",
                     boxShadow: isLight ? "none" : "0 8px 20px rgba(201,169,97,0.18)",
                   }}
                 >
-                  {lang === "es" ? "Ir" : "Go"}
-                </button>
-              </div>
+	                  {lang === "es" ? "Ir" : "Go"}
+	                </button>
+	              </div>
 
-            </form>
-          </div>
-        )}
+	              {navQuery.trim() && navSearchSuggestions.length > 0 && (
+	                <div className="mt-3 space-y-2">
+	                  <p
+	                    className="px-1 text-[9px] font-black uppercase tracking-[0.18em]"
+	                    style={{ color: isLight ? "rgba(0,0,0,0.44)" : "rgba(201,169,97,0.72)" }}
+	                  >
+	                    {lang === "es" ? "Sugerencias" : "Suggestions"}
+	                  </p>
+	                  <div className="grid gap-2">
+	                    {navSearchSuggestions.map((suggestion) => {
+	                      const bookLabel = getBookDisplayName(suggestion.book, translation);
+	                      const referenceLabel = suggestion.verse
+	                        ? `${bookLabel} ${suggestion.chapter}:${suggestion.verse}`
+	                        : `${bookLabel} ${suggestion.chapter}`;
+	                      return (
+	                        <button
+	                          key={`${suggestion.book.num}-${suggestion.chapter}-${suggestion.verse ?? 0}`}
+	                          type="button"
+	                          onClick={() => openScriptureSearchTarget(suggestion)}
+	                          className="w-full rounded-2xl border px-3.5 py-3 text-left transition-transform active:scale-[0.99]"
+	                          style={{
+	                            background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
+	                            borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.09)",
+	                            boxShadow: isLight ? "0 8px 18px rgba(0,0,0,0.05)" : "none",
+	                          }}
+	                        >
+	                          <span className="flex items-center gap-3">
+	                            <span
+	                              className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
+	                              style={{ background: isLight ? "#f1f2f4" : "rgba(201,169,97,0.12)", color: isLight ? "#111111" : "rgba(201,169,97,0.94)" }}
+	                            >
+	                              <UiIcon name="book" size={17} />
+	                            </span>
+	                            <span className="min-w-0 flex-1">
+	                              <span className="block truncate text-[15px] font-black" style={{ color: isLight ? "#0b0b0b" : "#ffffff" }}>
+	                                {referenceLabel}
+	                              </span>
+	                              <span className="block truncate text-[11px] font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.42)" }}>
+	                                {lang === "es" ? "Abrir en la Biblia" : "Open in Scripture"}
+	                              </span>
+	                            </span>
+	                            <span
+	                              className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
+	                              style={{ background: isLight ? "#f1f2f4" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}
+	                            >
+	                              <UiIcon name="chevron-right" size={15} />
+	                            </span>
+	                          </span>
+	                        </button>
+	                      );
+	                    })}
+	                  </div>
+	                </div>
+	              )}
+
+	            </form>
+	          </div>
+	        )}
 
       </header>
 
