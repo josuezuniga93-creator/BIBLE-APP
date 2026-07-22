@@ -1134,11 +1134,6 @@ function LexiconInner() {
 
   const pickerQuery = pickerBookSearch.trim();
   const filteredPickerBooks = books.filter((b) => testamentFilter === "ALL" ? true : b.testament === testamentFilter);
-  const exactBookMatches = filteredPickerBooks.filter((b) => {
-    if (!pickerQuery) return true;
-    const query = normalizeBookQuery(pickerQuery);
-    return getBookSearchTerms(b, translation).some((term) => term.includes(query) || term.startsWith(query));
-  });
   const suggestedBookMatches = pickerQuery
     ? filteredPickerBooks
         .map((book) => ({ book, score: getBookSearchScore(book, pickerQuery, translation) }))
@@ -1147,8 +1142,8 @@ function LexiconInner() {
         .slice(0, 6)
         .map(({ book }) => book)
     : [];
-  const pickerUsingSuggestions = Boolean(pickerQuery && exactBookMatches.length === 0 && suggestedBookMatches.length > 0);
-  const visibleBooks = pickerUsingSuggestions ? suggestedBookMatches : exactBookMatches;
+  const pickerUsingSuggestions = Boolean(pickerQuery);
+  const visibleBooks = pickerUsingSuggestions ? suggestedBookMatches : filteredPickerBooks;
   const pickerLastBook = pickerLastPosition ? books.find((b) => b.name === pickerLastPosition.bookName) : null;
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
@@ -1976,7 +1971,7 @@ function LexiconInner() {
                         {lang === "es" ? "Sugerencias" : "Suggestions"}
                       </p>
                       <p className="mt-1 text-sm" style={{ color: isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.55)" }}>
-                        {lang === "es" ? "Quizás quisiste decir:" : "Maybe you meant:"}
+                        {lang === "es" ? "Libros cercanos a lo que escribes." : "Closest books to what you are typing."}
                       </p>
                     </div>
                   )}
@@ -1991,6 +1986,11 @@ function LexiconInner() {
                         <span className="block text-[26px] leading-tight font-normal tracking-[-0.03em]">
                           {getBookDisplayName(b, translation)}
                         </span>
+                        {pickerUsingSuggestions && (
+                          <span className="mt-1 block text-sm font-medium" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.42)" }}>
+                            {b.chapters} {lang === "es" ? "capítulos" : "chapters"} · {b.testament === "OT" ? (lang === "es" ? "Antiguo Testamento" : "Old Testament") : (lang === "es" ? "Nuevo Testamento" : "New Testament")}
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
