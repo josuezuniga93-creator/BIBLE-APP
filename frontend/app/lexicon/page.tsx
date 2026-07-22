@@ -144,6 +144,109 @@ function getBookDisplayName(book: BookMeta | null, t: BibleTranslation): string 
   return book.name;
 }
 
+const BOOK_SEARCH_ALIASES: Record<number, string[]> = {
+  19: ["Psalm", "Ps", "Psa"],
+  22: ["Song of Songs", "Canticles", "Cantares", "Song"],
+  43: ["Jn"],
+  46: ["First Corinthians", "1 Cor", "I Corinthians"],
+  47: ["Second Corinthians", "2 Cor", "II Corinthians"],
+  52: ["First Thessalonians", "1 Thess", "I Thessalonians"],
+  53: ["Second Thessalonians", "2 Thess", "II Thessalonians"],
+  54: ["First Timothy", "1 Tim", "I Timothy"],
+  55: ["Second Timothy", "2 Tim", "II Timothy"],
+  60: ["First Peter", "1 Pet", "I Peter"],
+  61: ["Second Peter", "2 Pet", "II Peter"],
+  62: ["First John", "1 Jn", "I John"],
+  63: ["Second John", "2 Jn", "II John"],
+  64: ["Third John", "3 Jn", "III John"],
+  66: ["Revelations", "Apocalypse"],
+};
+
+function normalizeBookQuery(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\bfirst\b/g, "1")
+    .replace(/\bsecond\b/g, "2")
+    .replace(/\bthird\b/g, "3")
+    .replace(/\bi\b/g, "1")
+    .replace(/\bii\b/g, "2")
+    .replace(/\biii\b/g, "3")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+
+function boundedEditDistance(a: string, b: string, maxDistance = 3) {
+  if (Math.abs(a.length - b.length) > maxDistance) return maxDistance + 1;
+  const previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const current = Array.from({ length: b.length + 1 }, () => 0);
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i;
+    let rowBest = current[0];
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      current[j] = Math.min(
+        previous[j] + 1,
+        current[j - 1] + 1,
+        previous[j - 1] + cost,
+      );
+      rowBest = Math.min(rowBest, current[j]);
+    }
+    if (rowBest > maxDistance) return maxDistance + 1;
+    for (let j = 0; j <= b.length; j += 1) previous[j] = current[j];
+  }
+  return previous[b.length];
+}
+
+function getBookSearchTerms(book: BookMeta, translation: BibleTranslation) {
+  const spanishName = ES_BOOK_NAMES[book.num];
+  const terms = new Set<string>([
+    book.name,
+    book.abbr,
+    spanishName,
+    ...(BOOK_SEARCH_ALIASES[book.num] ?? []),
+  ].filter(Boolean) as string[]);
+
+  const leadingNumber = book.name.match(/^([123])\s(.+)$/);
+  if (leadingNumber) {
+    const [, number, rest] = leadingNumber;
+    const words: Record<string, string> = { "1": "First", "2": "Second", "3": "Third" };
+    const romans: Record<string, string> = { "1": "I", "2": "II", "3": "III" };
+    terms.add(`${words[number]} ${rest}`);
+    terms.add(`${romans[number]} ${rest}`);
+  }
+
+  if (SPANISH_TRANSLATIONS.includes(translation) && spanishName) terms.add(spanishName);
+  return [...terms].map(normalizeBookQuery).filter(Boolean);
+}
+
+function getBookSearchScore(book: BookMeta, rawQuery: string, translation: BibleTranslation) {
+  const query = normalizeBookQuery(rawQuery);
+  if (!query) return book.num;
+
+  let best = Number.POSITIVE_INFINITY;
+  for (const term of getBookSearchTerms(book, translation)) {
+    if (term === query) best = Math.min(best, 0);
+    else if (term.startsWith(query)) best = Math.min(best, 2 + term.length - query.length);
+    else if (term.includes(query)) best = Math.min(best, 10 + term.indexOf(query));
+
+    if (query.length >= 3) {
+      const fullDistance = boundedEditDistance(query, term, 3);
+      const prefixDistance = boundedEditDistance(query, term.slice(0, Math.min(term.length, query.length)), 3);
+      const typoDistance = Math.min(fullDistance, prefixDistance);
+      const allowed = query.length <= 4 ? 2 : 3;
+      if (typoDistance <= allowed) {
+        best = Math.min(best, 24 + typoDistance * 6 + Math.abs(term.length - query.length));
+      }
+    }
+  }
+
+  return best;
+}
+
 function saveLastPosition(bookName: string, chapter: number) {
   try { localStorage.setItem(LAST_POSITION_KEY, JSON.stringify({ bookName, chapter })); } catch {}
 }
@@ -1029,14 +1132,23 @@ function LexiconInner() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedBook, selectedChapter]);
 
-  const visibleBooks = books
-    .filter((b) => testamentFilter === "ALL" ? true : b.testament === testamentFilter)
-    .filter((b) => {
-      const q = pickerBookSearch.trim().toLowerCase();
-      if (!q) return true;
-      const localized = getBookDisplayName(b, translation).toLowerCase();
-      return b.name.toLowerCase().includes(q) || localized.includes(q);
-    });
+  const pickerQuery = pickerBookSearch.trim();
+  const filteredPickerBooks = books.filter((b) => testamentFilter === "ALL" ? true : b.testament === testamentFilter);
+  const exactBookMatches = filteredPickerBooks.filter((b) => {
+    if (!pickerQuery) return true;
+    const query = normalizeBookQuery(pickerQuery);
+    return getBookSearchTerms(b, translation).some((term) => term.includes(query) || term.startsWith(query));
+  });
+  const suggestedBookMatches = pickerQuery
+    ? filteredPickerBooks
+        .map((book) => ({ book, score: getBookSearchScore(book, pickerQuery, translation) }))
+        .filter(({ score }) => Number.isFinite(score))
+        .sort((a, b) => a.score - b.score || a.book.num - b.book.num)
+        .slice(0, 6)
+        .map(({ book }) => book)
+    : [];
+  const pickerUsingSuggestions = Boolean(pickerQuery && exactBookMatches.length === 0 && suggestedBookMatches.length > 0);
+  const visibleBooks = pickerUsingSuggestions ? suggestedBookMatches : exactBookMatches;
   const pickerLastBook = pickerLastPosition ? books.find((b) => b.name === pickerLastPosition.bookName) : null;
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
@@ -1855,6 +1967,19 @@ function LexiconInner() {
                 </div>
 
                 <div className="overflow-y-auto flex-1 px-9 pb-24">
+                  {pickerUsingSuggestions && (
+                    <div className="pb-3 pt-1">
+                      <p
+                        className="text-[11px] font-black uppercase tracking-[0.2em]"
+                        style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(255,255,255,0.48)" }}
+                      >
+                        {lang === "es" ? "Sugerencias" : "Suggestions"}
+                      </p>
+                      <p className="mt-1 text-sm" style={{ color: isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.55)" }}>
+                        {lang === "es" ? "Quizás quisiste decir:" : "Maybe you meant:"}
+                      </p>
+                    </div>
+                  )}
                   <div className="flex flex-col">
                     {visibleBooks.map((b) => (
                       <button
@@ -1872,6 +1997,9 @@ function LexiconInner() {
                   {visibleBooks.length === 0 && (
                     <div className="py-16 text-center" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
                       <p className="text-lg font-semibold">{lang === "es" ? "No se encontró ese libro." : "No book found."}</p>
+                      <p className="mx-auto mt-2 max-w-xs text-sm">
+                        {lang === "es" ? "Prueba una abreviatura como Rom, Jn o Sal." : "Try an abbreviation like Rom, Jn, or Ps."}
+                      </p>
                     </div>
                   )}
                 </div>
