@@ -2194,13 +2194,23 @@ function LexiconInner() {
                             title={isSelected ? "Selected. Tap another verse to add it." : color ? "Tap to change or remove highlight" : "Tap to select this verse"}
                           >
                             <span
-                              className="text-[11px] font-black align-super mr-[3px] ml-[3px] select-none"
+                              className="font-black align-super select-none"
                               style={colorCfg ? {
                                 backgroundColor: `rgba(0,0,0,0.25)`,
-                                borderRadius: "3px",
-                                padding: "0 3px",
+                                borderRadius: "0.22em",
+                                padding: "0 0.18em",
+                                marginLeft: "0.12em",
+                                marginRight: "0.18em",
                                 color: "rgba(255,255,255,0.9)",
-                              } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : (isLight ? "rgba(0,0,0,0.28)" : "rgba(167,139,250,0.5)") }}
+                                fontSize: "clamp(12px, 0.46em, 24px)",
+                                lineHeight: 1,
+                              } : {
+                                color: theme === "gold-navy" ? "rgba(201,169,97,0.72)" : (isLight ? "rgba(0,0,0,0.48)" : "rgba(201,169,97,0.68)"),
+                                marginLeft: "0.08em",
+                                marginRight: "0.18em",
+                                fontSize: "clamp(12px, 0.46em, 24px)",
+                                lineHeight: 1,
+                              }}
                             >
                               {verse.verse}
                             </span>
