@@ -67,16 +67,59 @@ const FONT_SIZE_LABELS: Record<FontSize, string> = {
   "6xl": "215%",
 };
 
-type ScriptureFont = "georgia" | "palatino" | "modern" | "typewriter" | "baskerville" | "garamond" | "charter";
-const SCRIPTURE_FONTS: { key: ScriptureFont; label: string; family: string; desc: string }[] = [
-  { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif",                          desc: "Classic & warm" },
-  { key: "baskerville", label: "Baskerville", family: "Baskerville, 'Baskerville Old Face', 'Book Antiqua', serif",  desc: "Sharp & elegant" },
-  { key: "garamond",    label: "Garamond",    family: "Garamond, 'EB Garamond', 'Cormorant Garamond', Georgia, serif", desc: "Old-world literary" },
-  { key: "charter",     label: "Charter",     family: "Charter, 'Bitstream Charter', Georgia, serif",                 desc: "Premium readable" },
-  { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', 'Book Antiqua', Palatino, serif",         desc: "Calligraphic" },
-  { key: "modern",      label: "Modern",      family: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",    desc: "Clean sans-serif" },
-  { key: "typewriter",  label: "Typewriter",  family: "'Courier New', Courier, 'Lucida Console', monospace",          desc: "Vintage & faithful" },
+type ScriptureFont =
+  | "georgia"
+  | "playfair"
+  | "cormorant"
+  | "baskerville"
+  | "garamond"
+  | "charter"
+  | "palatino"
+  | "slab"
+  | "access"
+  | "modern"
+  | "typewriter";
+
+type ScriptureFontCategory = "classic" | "literary" | "clear" | "special";
+const SCRIPTURE_FONTS: {
+  key: ScriptureFont;
+  label: string;
+  family: string;
+  desc: string;
+  category: ScriptureFontCategory;
+  mood: string;
+}[] = [
+  { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif",                                      desc: "Classic & warm",           category: "classic",  mood: "Traditional" },
+  { key: "charter",     label: "Charter",     family: "Charter, 'Bitstream Charter', 'Iowan Old Style', Georgia, serif",           desc: "Calm long-form reading",    category: "classic",  mood: "Readable" },
+  { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif",             desc: "Wide & graceful",           category: "classic",  mood: "Open" },
+  { key: "playfair",    label: "Playfair",    family: "var(--font-playfair), 'Playfair Display', Georgia, serif",                  desc: "Elegant display serif",     category: "literary", mood: "Formal" },
+  { key: "cormorant",   label: "Cormorant",   family: "var(--font-verse-display), 'Cormorant Garamond', Georgia, serif",           desc: "Devotional & poetic",       category: "literary", mood: "Graceful" },
+  { key: "garamond",    label: "Garamond",    family: "Garamond, 'EB Garamond', 'Cormorant Garamond', Georgia, serif",             desc: "Old-world literary",        category: "literary", mood: "Classic" },
+  { key: "baskerville", label: "Baskerville", family: "Baskerville, 'Libre Baskerville', 'Baskerville Old Face', Georgia, serif",   desc: "Sharp & elegant",           category: "literary", mood: "Crisp" },
+  { key: "slab",        label: "Slab Reader", family: "'Roboto Slab', Rockwell, 'Courier New', Georgia, serif",                    desc: "Strong printed page",       category: "clear",    mood: "Bold" },
+  { key: "access",      label: "Clear Read",  family: "'Atkinson Hyperlegible', 'Arial', 'Helvetica Neue', sans-serif",            desc: "Large-print friendly",      category: "clear",    mood: "Accessible" },
+  { key: "modern",      label: "Modern Sans", family: "var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", desc: "Clean sans-serif",        category: "clear",    mood: "Modern" },
+  { key: "typewriter",  label: "Typewriter",  family: "'Courier Prime', 'Courier New', Courier, 'Lucida Console', monospace",      desc: "Manuscript study feel",     category: "special",  mood: "Study" },
 ];
+const SCRIPTURE_FONT_GROUPS: { key: ScriptureFontCategory; en: string; es: string }[] = [
+  { key: "classic", en: "Classic Reading", es: "Lectura clasica" },
+  { key: "literary", en: "Literary & Elegant", es: "Literaria y elegante" },
+  { key: "clear", en: "Clear & Large Print", es: "Clara y letra grande" },
+  { key: "special", en: "Study Style", es: "Estilo de estudio" },
+];
+const SCRIPTURE_FONT_ES_COPY: Record<ScriptureFont, string> = {
+  georgia: "Clasica y calida",
+  charter: "Comoda para lectura larga",
+  palatino: "Amplia y elegante",
+  playfair: "Serif formal y refinada",
+  cormorant: "Devocional y poetica",
+  garamond: "Literaria clasica",
+  baskerville: "Nitida y elegante",
+  slab: "Pagina impresa fuerte",
+  access: "Amigable para letra grande",
+  modern: "Limpia y moderna",
+  typewriter: "Estilo manuscrito de estudio",
+};
 const SCRIPTURE_FONT_KEY = "ryc-scripture-font";
 const FONT_SIZE_KEY = "ryc-scripture-fontsize";
 
@@ -1738,162 +1781,219 @@ function LexiconInner() {
       {showFontPicker && (
         <div
           className="motion-page-enter fixed inset-0 z-[90] print:hidden"
-          style={{ background: isLight ? "#ffffff" : "#101010", color: isLight ? "#0a0a0a" : "#f5f5f5" }}
+          style={{
+            background: isLight ? "#ffffff" : "#090a10",
+            color: isLight ? "#0a0a0a" : "#f5f5f5",
+          }}
         >
           <div
-            className="h-full w-full max-w-xl mx-auto flex flex-col"
-            style={{ paddingTop: "max(env(safe-area-inset-top), 22px)" }}
+            className="h-full w-full max-w-2xl mx-auto flex flex-col"
+            style={{ paddingTop: "max(env(safe-area-inset-top), 14px)" }}
           >
-            <div className="px-7 pb-4 flex-shrink-0">
-              <div className="flex items-center gap-4">
+            <div className="px-5 sm:px-8 pb-3 flex-shrink-0">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={() => setShowFontPicker(false)}
-                  className="h-11 w-11 -ml-2 rounded-full flex items-center justify-center transition-colors"
-                  style={{ color: isLight ? "#111111" : "#ffffff" }}
+                  className="h-10 w-10 -ml-1 rounded-full flex items-center justify-center transition-transform active:scale-95"
+                  style={{
+                    background: isLight ? "#f1f2f4" : "rgba(255,255,255,0.07)",
+                    border: isLight ? "1px solid #e0e2e5" : "1px solid rgba(255,255,255,0.10)",
+                    color: isLight ? "#111111" : "#ffffff",
+                  }}
                   aria-label={lang === "es" ? "Cerrar fuentes" : "Close fonts"}
                 >
-                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
-                    {lang === "es" ? "Lectura Bíblica" : "Scripture"}
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: isLight ? "#888d94" : "#8d929c" }}>
+                    {lang === "es" ? "Lectura biblica" : "Scripture Reading"}
                   </p>
-                  <h2 className="text-[30px] font-semibold tracking-[-0.04em]">
-                    {lang === "es" ? "Lectura" : "Reading"}
+                  <h2 className="text-[24px] font-semibold tracking-[-0.04em] leading-tight">
+                    {lang === "es" ? "Fuente y tamano" : "Font & Size"}
                   </h2>
                 </div>
               </div>
 
+            </div>
+
+            <div className="overflow-y-auto flex-1 px-5 sm:px-8 pb-24">
               <div
-                className="mt-5 rounded-[28px] border p-4 shadow-sm"
+                className="mb-5 overflow-hidden rounded-[24px] border shadow-sm"
                 style={{
-                  background: isLight ? "#f6f7f8" : "#1b1c20",
-                  borderColor: isLight ? "#e1e2e4" : "rgba(255,255,255,0.08)",
+                  background: isLight ? "#f4f5f7" : "#11131b",
+                  borderColor: isLight ? "#e1e3e7" : "rgba(255,255,255,0.08)",
                 }}
               >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
-                      {lang === "es" ? "Tamaño del texto" : "Text Size"}
-                    </p>
-                    <p className="mt-1 text-[24px] font-black tracking-[-0.04em]">
-                      {FONT_SIZE_LABELS[fontSize]}
-                    </p>
-                  </div>
-                  <div
-                    className="flex items-center rounded-full border p-1"
-                    style={{
-                      background: isLight ? "#ffffff" : "#101010",
-                      borderColor: isLight ? "#d9dbdf" : "rgba(255,255,255,0.10)",
-                    }}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => changeFontSize(-1)}
-                      disabled={!canDecreaseFont}
-                      className="h-11 w-12 rounded-2xl text-[13px] font-black transition-opacity disabled:opacity-35"
-                      style={{ color: isLight ? "#111111" : "#ffffff" }}
-                    >
-                      A-
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => changeFontSize(1)}
-                      disabled={!canIncreaseFont}
-                      className="h-11 w-12 rounded-2xl text-base font-black transition-opacity disabled:opacity-35"
+                <div
+                  className="px-4 py-3"
+                  style={{
+                    background: isLight
+                      ? "linear-gradient(180deg, #ffffff 0%, #f7f8fa 100%)"
+                      : "linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025))",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8f97" : "#8f949f" }}>
+                        {lang === "es" ? "Vista previa" : "Preview"}
+                      </p>
+                      <p
+                        className="mt-1 truncate text-[21px] leading-tight tracking-[-0.02em]"
+                        style={{
+                          color: isLight ? "#101114" : "#f6f3ee",
+                          fontFamily: activeFontFamily,
+                        }}
+                      >
+                        {lang === "es" ? "En el principio era el Verbo" : "In the beginning was the Word"}
+                      </p>
+                    </div>
+                    <div
+                      className="rounded-2xl px-3 py-2 text-[17px] font-black"
                       style={{
-                        background: isLight ? "#e5e7eb" : "rgba(255,255,255,0.10)",
+                        background: isLight ? "#eef0f3" : "rgba(255,255,255,0.07)",
                         color: isLight ? "#111111" : "#ffffff",
                       }}
                     >
-                      A+
-                    </button>
+                      {FONT_SIZE_LABELS[fontSize]}
+                    </div>
                   </div>
                 </div>
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {FONT_SIZES.map((size) => {
-                    const active = size === fontSize;
-                    return (
+
+                <div className="p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8f97" : "#8f949f" }}>
+                        {lang === "es" ? "Tamano" : "Text Size"}
+                      </p>
+                      <p className="mt-1 text-sm font-semibold" style={{ color: isLight ? "#4b5563" : "rgba(255,255,255,0.62)" }}>
+                        {lang === "es" ? "Guardado automaticamente" : "Saved automatically"}
+                      </p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
                       <button
-                        key={size}
                         type="button"
-                        onClick={() => setReaderFontSize(size)}
-                        className="rounded-2xl border px-3 py-3 text-left transition-transform active:scale-[0.98]"
+                        onClick={() => changeFontSize(-1)}
+                        disabled={!canDecreaseFont}
+                        className="h-10 w-14 rounded-2xl text-[14px] font-black transition-opacity active:scale-95 disabled:opacity-35"
                         style={{
-                          background: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#ffffff" : "rgba(255,255,255,0.05)"),
-                          borderColor: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#e0e2e5" : "rgba(255,255,255,0.08)"),
-                          color: active ? (isLight ? "#ffffff" : "#111111") : (isLight ? "#111111" : "#f4f4f4"),
+                          background: isLight ? "#ffffff" : "rgba(255,255,255,0.06)",
+                          border: isLight ? "1px solid #d9dce1" : "1px solid rgba(255,255,255,0.10)",
+                          color: isLight ? "#111111" : "#ffffff",
                         }}
                       >
-                        <span className="block text-[15px] font-black leading-none">{FONT_SIZE_LABELS[size]}</span>
-                        <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.12em] opacity-55">
-                          {size === "base" ? (lang === "es" ? "Normal" : "Default") : size.toUpperCase()}
-                        </span>
+                        A-
                       </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-3 text-sm leading-relaxed" style={{ color: isLight ? "#6f7378" : "#a0a0a0" }}>
-                  {lang === "es"
-                    ? "El tamaño se guarda para que la Biblia vuelva a abrir con la misma lectura cómoda."
-                    : "Your reading size is saved so Scripture reopens at the same comfortable scale."}
-                </p>
-              </div>
-            </div>
-
-            <div className="overflow-y-auto flex-1 px-7 pb-24">
-              <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
-                {lang === "es" ? "Estilo de fuente" : "Font Style"}
-              </p>
-              {SCRIPTURE_FONTS.map((f) => (
-                <button
-                  key={f.key}
-                  onClick={() => selectFont(f.key)}
-                  className="w-full flex items-center justify-between gap-4 px-5 py-4 mb-3 rounded-[22px] text-left transition-opacity active:opacity-60"
-                  style={{
-                    background: scriptureFont === f.key
-                      ? (isLight ? "#e5e7eb" : "#ffffff")
-                      : (isLight ? "#f5f5f6" : "#242424"),
-                    border: isLight ? "1px solid #e1e2e4" : "1px solid rgba(255,255,255,0.08)",
-                    color: scriptureFont === f.key && !isLight ? "#0b0b0b" : "inherit",
-                  }}
-                >
-                  <div className="min-w-0 flex-1">
-                    <p
-                      className="text-[20px] leading-snug font-semibold tracking-[-0.02em]"
-                      style={{
-                        fontFamily: f.family,
-                      }}
-                    >
-                      {f.label} — {lang === "es" ? "En el principio era el Verbo" : "In the beginning was the Word"}
-                    </p>
-                    <p className="text-sm mt-1 font-medium" style={{ color: scriptureFont === f.key && !isLight ? "rgba(0,0,0,0.58)" : (isLight ? "#8a8a8a" : "#9a9a9a") }}>
-                      {lang === "es"
-                        ? ({
-                            georgia: "Clásica y cálida",
-                            baskerville: "Nítida y elegante",
-                            garamond: "Literaria clásica",
-                            charter: "Premium y legible",
-                            palatino: "Caligráfica",
-                            modern: "Limpia y moderna",
-                            typewriter: "Vintage y fiel",
-                          } as Record<ScriptureFont, string>)[f.key]
-                        : f.desc}
-                    </p>
+                      <button
+                        type="button"
+                        onClick={() => changeFontSize(1)}
+                        disabled={!canIncreaseFont}
+                        className="h-10 w-14 rounded-2xl text-base font-black transition-opacity active:scale-95 disabled:opacity-35"
+                        style={{
+                          background: isLight ? "#111111" : "#f3f4f6",
+                          border: isLight ? "1px solid #111111" : "1px solid #f3f4f6",
+                          color: isLight ? "#ffffff" : "#111111",
+                        }}
+                      >
+                        A+
+                      </button>
+                    </div>
                   </div>
-                  {scriptureFont === f.key && (
-                    <span
-                      className="h-9 w-9 rounded-full flex items-center justify-center text-lg font-black flex-shrink-0"
-                      style={{ background: isLight ? "#e5e7eb" : "#0b0b0b", color: isLight ? "#0b0b0b" : "#ffffff", border: isLight ? "1px solid #d1d5db" : "none" }}
-                    >
-                      <UiIcon name="check" size={18} strokeWidth={3} />
-                    </span>
-                  )}
-                </button>
-              ))}
+                  <div className="mt-3 flex gap-2 overflow-x-auto pb-1 no-scrollbar">
+                    {FONT_SIZES.map((size) => {
+                      const active = size === fontSize;
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setReaderFontSize(size)}
+                          className="min-w-[68px] rounded-[18px] border px-3 py-2.5 text-left transition-transform active:scale-[0.98]"
+                          style={{
+                            background: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#ffffff" : "rgba(255,255,255,0.05)"),
+                            borderColor: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#e0e2e5" : "rgba(255,255,255,0.08)"),
+                            color: active ? (isLight ? "#ffffff" : "#111111") : (isLight ? "#111111" : "#f4f4f4"),
+                          }}
+                        >
+                          <span className="block text-[14px] font-black leading-none">{FONT_SIZE_LABELS[size]}</span>
+                          <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.12em] opacity-55">
+                            {size === "base" ? (lang === "es" ? "Base" : "Base") : size.toUpperCase()}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {SCRIPTURE_FONT_GROUPS.map((group) => {
+                const fonts = SCRIPTURE_FONTS.filter((font) => font.category === group.key);
+                return (
+                  <section key={group.key} className="mb-6">
+                    <p className="mb-2 text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: isLight ? "#8a8f97" : "#8f949f" }}>
+                      {lang === "es" ? group.es : group.en}
+                    </p>
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                      {fonts.map((f) => {
+                        const active = scriptureFont === f.key;
+                        return (
+                          <button
+                            key={f.key}
+                            type="button"
+                            onClick={() => selectFont(f.key)}
+                            className="group relative overflow-hidden rounded-[26px] border p-5 text-left transition-transform active:scale-[0.985]"
+                            style={{
+                              background: active
+                                ? (isLight ? "#111111" : "#f4f5f7")
+                                : (isLight ? "#f5f6f8" : "rgba(255,255,255,0.045)"),
+                              borderColor: active
+                                ? (isLight ? "#111111" : "#f4f5f7")
+                                : (isLight ? "#e1e3e7" : "rgba(255,255,255,0.08)"),
+                              color: active ? (isLight ? "#ffffff" : "#111111") : "inherit",
+                              boxShadow: active
+                                ? (isLight ? "0 16px 34px rgba(0,0,0,0.12)" : "0 16px 34px rgba(0,0,0,0.34)")
+                                : "none",
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div>
+                                <p className="text-[16px] font-black tracking-[-0.02em]">{f.label}</p>
+                                <p className="mt-1 text-[11px] font-black uppercase tracking-[0.16em] opacity-55">{f.mood}</p>
+                              </div>
+                              <span
+                                className="h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0"
+                                style={{
+                                  background: active
+                                    ? (isLight ? "#ffffff" : "#111111")
+                                    : (isLight ? "#ffffff" : "rgba(255,255,255,0.07)"),
+                                  color: active
+                                    ? (isLight ? "#111111" : "#ffffff")
+                                    : (isLight ? "#9aa0a8" : "rgba(255,255,255,0.45)"),
+                                  border: active
+                                    ? "none"
+                                    : (isLight ? "1px solid #e2e4e8" : "1px solid rgba(255,255,255,0.08)"),
+                                }}
+                              >
+                                {active ? <UiIcon name="check" size={16} strokeWidth={3} /> : <span className="h-2 w-2 rounded-full bg-current opacity-45" />}
+                              </span>
+                            </div>
+                            <p
+                              className="mt-5 text-[25px] leading-snug tracking-[-0.025em]"
+                              style={{ fontFamily: f.family }}
+                            >
+                              {lang === "es" ? "La gracia sea con todos vosotros." : "Grace be with all who love our Lord."}
+                            </p>
+                            <p className="mt-3 text-[15px] font-semibold leading-relaxed opacity-62">
+                              {lang === "es" ? SCRIPTURE_FONT_ES_COPY[f.key] : f.desc}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+                );
+              })}
             </div>
           </div>
         </div>
