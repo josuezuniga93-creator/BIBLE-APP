@@ -1,58 +1,142 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { UiIcon, type UiIconName } from "./UiIcon";
 import { BG_OPTIONS, renderVerseToCanvas, type VerseQuoteOptions } from "../lib/verseQuoteExport";
+import { isLightTheme, useTheme } from "../lib/useTheme";
 
-// ─── Types & constants ────────────────────────────────────────────────────────
+type EditorTab = "presets" | "font" | "layout" | "color" | "background";
 
-type EditorTab = "font" | "typography" | "aspect" | "color" | "background";
-
-// Google Fonts URL — all creative fonts loaded in one request
 const GOOGLE_FONTS_URL =
-  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=EB+Garamond:ital@0;1&family=Lora:ital@0;1&family=Cinzel:wght@400;700&family=Dancing+Script:wght@600&family=Great+Vibes&family=Sacramento&family=Caveat:wght@600&family=Pacifico&family=Bebas+Neue&family=Montserrat:ital,wght@0,400;1,400&family=Raleway:ital,wght@0,400;1,400&family=Josefin+Sans:ital@0;1&family=Oswald:wght@400;600&family=Space+Mono:ital@0;1&family=Nunito:ital@0;1&family=Libre+Baskerville:ital@0;1&display=swap";
+  "https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Cormorant+Garamond:ital,wght@0,400;1,400&family=EB+Garamond:ital@0;1&family=Lora:ital@0;1&family=Cinzel:wght@400;700&family=Montserrat:ital,wght@0,400;1,400;0,700&family=Nunito:ital,wght@0,1;0,700&family=Libre+Baskerville:ital@0;1&display=swap";
 
 const EDITOR_FONTS = [
-  // ── Elegant Serif ──────────────────────────────────────────────
-  { key: "playfair",     label: "Playfair",        family: "'Playfair Display', Georgia, serif",         tag: "Elegant"    },
-  { key: "cormorant",    label: "Cormorant",        family: "'Cormorant Garamond', Georgia, serif",       tag: "Elegant"    },
-  { key: "lora",         label: "Lora",             family: "'Lora', Georgia, serif",                     tag: "Elegant"    },
-  { key: "ebgaramond",   label: "EB Garamond",      family: "'EB Garamond', Georgia, serif",              tag: "Classic"    },
-  { key: "baskerville",  label: "Baskerville",      family: "'Libre Baskerville', Baskerville, serif",    tag: "Classic"    },
-  { key: "palatino",     label: "Palatino",         family: "'Palatino Linotype', Palatino, serif",       tag: "Classic"    },
-  // ── Inscriptional / Display ─────────────────────────────────────
-  { key: "cinzel",       label: "Cinzel",           family: "'Cinzel', Georgia, serif",                   tag: "Inscribed"  },
-  { key: "oswald",       label: "Oswald",           family: "'Oswald', sans-serif",                       tag: "Bold"       },
-  { key: "bebas",        label: "Bebas Neue",       family: "'Bebas Neue', Impact, sans-serif",           tag: "Bold"       },
-  // ── Script / Handwriting ────────────────────────────────────────
-  { key: "dancing",      label: "Dancing Script",   family: "'Dancing Script', cursive",                  tag: "Script"     },
-  { key: "greatvibes",   label: "Great Vibes",      family: "'Great Vibes', cursive",                     tag: "Script"     },
-  { key: "sacramento",   label: "Sacramento",       family: "'Sacramento', cursive",                      tag: "Script"     },
-  { key: "caveat",       label: "Caveat",           family: "'Caveat', cursive",                          tag: "Handwritten"},
-  { key: "pacifico",     label: "Pacifico",         family: "'Pacifico', cursive",                        tag: "Casual"     },
-  // ── Modern Sans ─────────────────────────────────────────────────
-  { key: "montserrat",   label: "Montserrat",       family: "'Montserrat', sans-serif",                   tag: "Modern"     },
-  { key: "raleway",      label: "Raleway",          family: "'Raleway', sans-serif",                      tag: "Modern"     },
-  { key: "josefin",      label: "Josefin Sans",     family: "'Josefin Sans', sans-serif",                 tag: "Modern"     },
-  { key: "nunito",       label: "Nunito",           family: "'Nunito', sans-serif",                       tag: "Soft"       },
-  { key: "system",       label: "System",           family: "-apple-system, BlinkMacSystemFont, sans-serif", tag: "Minimal" },
-  // ── Mono ────────────────────────────────────────────────────────
-  { key: "spacemono",    label: "Space Mono",       family: "'Space Mono', monospace",                    tag: "Code"       },
-  { key: "typewriter",   label: "Typewriter",       family: "'Courier New', Courier, monospace",          tag: "Code"       },
+  { key: "georgia", label: "Georgia", family: "Georgia, 'Times New Roman', serif", tag: "Classic" },
+  { key: "playfair", label: "Playfair", family: "'Playfair Display', Georgia, serif", tag: "Elegant" },
+  { key: "cormorant", label: "Cormorant", family: "'Cormorant Garamond', Georgia, serif", tag: "Graceful" },
+  { key: "ebgaramond", label: "EB Garamond", family: "'EB Garamond', Georgia, serif", tag: "Literary" },
+  { key: "baskerville", label: "Baskerville", family: "'Libre Baskerville', Baskerville, serif", tag: "Premium" },
+  { key: "lora", label: "Lora", family: "'Lora', Georgia, serif", tag: "Warm" },
+  { key: "cinzel", label: "Cinzel", family: "'Cinzel', Georgia, serif", tag: "Inscribed" },
+  { key: "montserrat", label: "Montserrat", family: "'Montserrat', sans-serif", tag: "Modern" },
+  { key: "nunito", label: "Nunito", family: "'Nunito', sans-serif", tag: "Soft" },
+  { key: "system", label: "System", family: "-apple-system, BlinkMacSystemFont, sans-serif", tag: "Clean" },
 ];
 
-const TEXT_COLORS = [
-  "#ffffff", "#000000", "#d4b483", "#f0ede6",
-  "#aaaaaa", "#555555", "#87ceeb", "#b8f0b8",
+const TEXT_COLORS = ["#111111", "#ffffff", "#4b5563", "#f5f5f5", "#0f172a", "#e8dfc7"];
+
+type Preset = {
+  id: string;
+  label: string;
+  desc: string;
+  mode: "light" | "dark" | "photo";
+  fontKey: string;
+  textAlign: "left" | "center" | "right";
+  aspectRatio: "1:1" | "3:4";
+  textColor: string;
+  textOpacity: number;
+  bgSrc: string | null;
+  backgroundColor: string;
+  bgBrightness: number;
+  bgBlur: number;
+  showQuoteMark: boolean;
+  accentColor: string;
+};
+
+const PRESETS: Preset[] = [
+  {
+    id: "clean-light",
+    label: "Clean Light",
+    desc: "White card, black type",
+    mode: "light",
+    fontKey: "georgia",
+    textAlign: "left",
+    aspectRatio: "1:1",
+    textColor: "#111111",
+    textOpacity: 1,
+    bgSrc: null,
+    backgroundColor: "#f7f7f7",
+    bgBrightness: 100,
+    bgBlur: 0,
+    showQuoteMark: false,
+    accentColor: "#111111",
+  },
+  {
+    id: "classic-dark",
+    label: "Classic Dark",
+    desc: "Deep navy, warm accent",
+    mode: "dark",
+    fontKey: "baskerville",
+    textAlign: "center",
+    aspectRatio: "1:1",
+    textColor: "#ffffff",
+    textOpacity: 1,
+    bgSrc: null,
+    backgroundColor: "#08090f",
+    bgBrightness: 48,
+    bgBlur: 0,
+    showQuoteMark: false,
+    accentColor: "#c9a961",
+  },
+  {
+    id: "portrait",
+    label: "Portrait",
+    desc: "Tall social image",
+    mode: "photo",
+    fontKey: "playfair",
+    textAlign: "center",
+    aspectRatio: "3:4",
+    textColor: "#ffffff",
+    textOpacity: 1,
+    bgSrc: "/bg/bg1.png",
+    backgroundColor: "#08090f",
+    bgBrightness: 42,
+    bgBlur: 0,
+    showQuoteMark: false,
+    accentColor: "#c9a961",
+  },
+  {
+    id: "minimal",
+    label: "Minimal",
+    desc: "Quiet gray, centered",
+    mode: "light",
+    fontKey: "system",
+    textAlign: "center",
+    aspectRatio: "1:1",
+    textColor: "#0f172a",
+    textOpacity: 1,
+    bgSrc: null,
+    backgroundColor: "#eef0f3",
+    bgBrightness: 100,
+    bgBlur: 0,
+    showQuoteMark: false,
+    accentColor: "#111111",
+  },
+  {
+    id: "photo-quote",
+    label: "Photo Quote",
+    desc: "Image background, readable",
+    mode: "photo",
+    fontKey: "lora",
+    textAlign: "left",
+    aspectRatio: "1:1",
+    textColor: "#ffffff",
+    textOpacity: 1,
+    bgSrc: "/bg/bg2.png",
+    backgroundColor: "#08090f",
+    bgBrightness: 36,
+    bgBlur: 12,
+    showQuoteMark: false,
+    accentColor: "#c9a961",
+  },
 ];
 
 function autoFontSize(verseLen: number): number {
-  if (verseLen < 80)  return 52;
+  if (verseLen < 80) return 52;
   if (verseLen < 150) return 44;
   if (verseLen < 250) return 36;
   return 30;
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 interface CreateImageEditorProps {
   verseText: string;
@@ -62,41 +146,98 @@ interface CreateImageEditorProps {
 }
 
 export default function CreateImageEditor({ verseText, reference, lang, onClose }: CreateImageEditorProps) {
-  const previewRef   = useRef<HTMLCanvasElement>(null);
+  const { theme } = useTheme();
+  const isLight = isLightTheme(theme);
+  const previewRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const [tab,          setTab]          = useState<EditorTab>("background");
-  const [fontKey,      setFontKey]      = useState("georgia");
-  const [textAlign,    setTextAlign]    = useState<"left" | "center" | "right">("center");
-  const [lineHeight,   setLineHeight]   = useState(1.55);
-  const [letterSpacing,setLetterSpacing]= useState(0);
-  const [fontSize,     setFontSize]     = useState(() => autoFontSize(verseText.length));
-  const [aspectRatio,  setAspectRatio]  = useState<"1:1" | "3:4">("1:1");
-  const [textColor,    setTextColor]    = useState("#ffffff");
-  const [textOpacity,  setTextOpacity]  = useState(1);
-  const [bgSrc,        setBgSrc]        = useState<string | null>("/bg/bg1.png");
-  const [bgBrightness, setBgBrightness] = useState(50);
-  const [bgBlur,       setBgBlur]       = useState(0);
-  const [isExporting,  setIsExporting]  = useState(false);
+  const defaultPreset = isLight ? PRESETS[0] : PRESETS[1];
+  const [tab, setTab] = useState<EditorTab>("presets");
+  const [fontKey, setFontKey] = useState(defaultPreset.fontKey);
+  const [textAlign, setTextAlign] = useState<"left" | "center" | "right">(defaultPreset.textAlign);
+  const [lineHeight, setLineHeight] = useState(1.5);
+  const [letterSpacing, setLetterSpacing] = useState(0);
+  const [fontSize, setFontSize] = useState(() => autoFontSize(verseText.length));
+  const [aspectRatio, setAspectRatio] = useState<"1:1" | "3:4">(defaultPreset.aspectRatio);
+  const [textColor, setTextColor] = useState(defaultPreset.textColor);
+  const [textOpacity, setTextOpacity] = useState(defaultPreset.textOpacity);
+  const [bgSrc, setBgSrc] = useState<string | null>(defaultPreset.bgSrc);
+  const [backgroundColor, setBackgroundColor] = useState(defaultPreset.backgroundColor);
+  const [bgBrightness, setBgBrightness] = useState(defaultPreset.bgBrightness);
+  const [bgBlur, setBgBlur] = useState(defaultPreset.bgBlur);
+  const [showQuoteMark, setShowQuoteMark] = useState(defaultPreset.showQuoteMark);
+  const [accentColor, setAccentColor] = useState(defaultPreset.accentColor);
+  const [activePreset, setActivePreset] = useState(defaultPreset.id);
+  const [isExporting, setIsExporting] = useState(false);
 
-  const fontFamily = EDITOR_FONTS.find(f => f.key === fontKey)?.family ?? EDITOR_FONTS[0].family;
+  const palette = useMemo(() => {
+    if (isLight) {
+      return {
+        root: "#f5f6f8",
+        header: "rgba(255,255,255,0.94)",
+        stage: "#eceff3",
+        panel: "#ffffff",
+        panelAlt: "#f1f2f4",
+        text: "#090909",
+        muted: "#6b7280",
+        faint: "#9ca3af",
+        border: "#dedfe3",
+        active: "#111111",
+        activeText: "#ffffff",
+        shadow: "0 18px 42px rgba(15,23,42,0.14)",
+      };
+    }
+    return {
+      root: "#070910",
+      header: "rgba(10,12,18,0.94)",
+      stage: "#0d1018",
+      panel: "#12151d",
+      panelAlt: "#1b1f29",
+      text: "#ffffff",
+      muted: "rgba(255,255,255,0.64)",
+      faint: "rgba(255,255,255,0.36)",
+      border: "rgba(255,255,255,0.1)",
+      active: "#c9a961",
+      activeText: "#08090f",
+      shadow: "0 18px 42px rgba(0,0,0,0.38)",
+    };
+  }, [isLight]);
 
-  // ── Inject Google Fonts once on mount ────────────────────────────────────────
+  const fontFamily = EDITOR_FONTS.find((f) => f.key === fontKey)?.family ?? EDITOR_FONTS[0].family;
+
   useEffect(() => {
     const id = "tulip-editor-gfonts";
     if (!document.getElementById(id)) {
       const link = document.createElement("link");
-      link.id   = id;
-      link.rel  = "stylesheet";
+      link.id = id;
+      link.rel = "stylesheet";
       link.href = GOOGLE_FONTS_URL;
       document.head.appendChild(link);
     }
   }, []);
 
+  useEffect(() => {
+    const preset = isLight ? PRESETS[0] : PRESETS[1];
+    setFontKey(preset.fontKey);
+    setTextAlign(preset.textAlign);
+    setAspectRatio(preset.aspectRatio);
+    setTextColor(preset.textColor);
+    setTextOpacity(preset.textOpacity);
+    setBgSrc(preset.bgSrc);
+    setBackgroundColor(preset.backgroundColor);
+    setBgBrightness(preset.bgBrightness);
+    setBgBlur(preset.bgBlur);
+    setShowQuoteMark(preset.showQuoteMark);
+    setAccentColor(preset.accentColor);
+    setActivePreset(preset.id);
+  }, [isLight]);
+
   const buildOpts = useCallback((): VerseQuoteOptions => ({
-    verseText, reference,
+    verseText,
+    reference,
     logoSrc: "/tulip-logo.png",
     backgroundSrc: bgSrc,
+    backgroundColor,
     fontFamily,
     fontSize,
     textAlign,
@@ -107,21 +248,28 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
     aspectRatio,
     bgBrightness,
     bgBlur,
-  }), [verseText, reference, bgSrc, fontFamily, fontSize, textAlign, lineHeight, letterSpacing, textColor, textOpacity, aspectRatio, bgBrightness, bgBlur]);
+    showQuoteMark,
+    accentColor,
+    dividerColor: isLight ? "rgba(17,17,17,0.18)" : "rgba(255,255,255,0.22)",
+    brandColor: isLight ? "rgba(17,17,17,0.55)" : "rgba(255,255,255,0.42)",
+  }), [
+    verseText, reference, bgSrc, backgroundColor, fontFamily, fontSize, textAlign,
+    lineHeight, letterSpacing, textColor, textOpacity, aspectRatio, bgBrightness,
+    bgBlur, showQuoteMark, accentColor, isLight,
+  ]);
 
-  // ── Live preview ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    const canvas    = previewRef.current;
+    const canvas = previewRef.current;
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const W  = 1080;
-    const H  = aspectRatio === "3:4" ? 1440 : 1080;
-    const cW = Math.max(container.clientWidth,  100);
+    const W = 1080;
+    const H = aspectRatio === "3:4" ? 1440 : 1080;
+    const cW = Math.max(container.clientWidth, 100);
     const cH = Math.max(container.clientHeight, 100);
-    const scale = Math.min(cW / W, cH / H) * 0.92;
+    const scale = Math.min(cW / W, cH / H) * 0.94;
 
-    canvas.style.width  = `${W * scale}px`;
+    canvas.style.width = `${W * scale}px`;
     canvas.style.height = `${H * scale}px`;
 
     document.fonts.ready.then(() => {
@@ -129,333 +277,346 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
     });
   }, [buildOpts, aspectRatio]);
 
-  // ── Export ────────────────────────────────────────────────────────────────────
+  const applyPreset = (preset: Preset) => {
+    setFontKey(preset.fontKey);
+    setTextAlign(preset.textAlign);
+    setAspectRatio(preset.aspectRatio);
+    setTextColor(preset.textColor);
+    setTextOpacity(preset.textOpacity);
+    setBgSrc(preset.bgSrc);
+    setBackgroundColor(preset.backgroundColor);
+    setBgBrightness(preset.bgBrightness);
+    setBgBlur(preset.bgBlur);
+    setShowQuoteMark(preset.showQuoteMark);
+    setAccentColor(preset.accentColor);
+    setActivePreset(preset.id);
+  };
+
   const handleExport = async () => {
     setIsExporting(true);
     try {
       const H = aspectRatio === "3:4" ? 1440 : 1080;
       const exportCanvas = document.createElement("canvas");
-      exportCanvas.width = 1080; exportCanvas.height = H;
+      exportCanvas.width = 1080;
+      exportCanvas.height = H;
       await renderVerseToCanvas(exportCanvas, buildOpts());
 
       await new Promise<void>((resolve) => {
         exportCanvas.toBlob(async (blob) => {
-          if (!blob) { resolve(); return; }
+          if (!blob) {
+            resolve();
+            return;
+          }
           const safeName = reference.replace(/[^a-zA-Z0-9]/g, "-");
-          const file = new File([blob], `${safeName}-tulip.jpg`, { type: "image/jpeg" });
+          const file = new File([blob], `${safeName}-bible.jpg`, { type: "image/jpeg" });
           try {
             if (navigator.canShare?.({ files: [file] })) {
               await navigator.share({ files: [file], title: reference });
             } else {
               const url = URL.createObjectURL(blob);
-              const a = document.createElement("a"); a.href = url; a.download = file.name; a.click();
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = file.name;
+              a.click();
               URL.revokeObjectURL(url);
             }
-          } catch { /* cancelled */ }
+          } catch {}
           resolve();
-        }, "image/jpeg", 0.93);
+        }, "image/jpeg", 0.94);
       });
       onClose();
-    } finally { setIsExporting(false); }
+    } finally {
+      setIsExporting(false);
+    }
   };
 
-  // ─── Render ────────────────────────────────────────────────────────────────────
+  const backgroundChoices = [
+    { id: "solid-light", label: lang === "es" ? "Claro" : "Light", src: null, color: "#f7f7f7" },
+    { id: "solid-gray", label: lang === "es" ? "Gris" : "Gray", src: null, color: "#eef0f3" },
+    { id: "solid-dark", label: lang === "es" ? "Oscuro" : "Dark", src: null, color: "#08090f" },
+    ...BG_OPTIONS.filter((opt) => opt.src !== null).map((opt) => ({ id: opt.id, label: opt.label, src: opt.src, color: null })),
+  ];
+
   return (
     <div
       className="fixed inset-0 flex flex-col"
-      style={{ zIndex: 200, background: "#0a0a0a", paddingTop: "env(safe-area-inset-top, 0px)" }}
+      style={{ zIndex: 240, background: palette.root, paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
-      {/* ── Header ── */}
       <div
         className="flex items-center justify-between px-4 flex-shrink-0"
-        style={{ height: 56, borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+        style={{ height: 58, background: palette.header, borderBottom: `1px solid ${palette.border}`, backdropFilter: "blur(16px)" }}
       >
         <button
           onClick={onClose}
-          className="w-10 h-10 flex items-center justify-center rounded-xl transition-colors"
-          style={{ color: "rgba(255,255,255,0.5)" }}
+          aria-label={lang === "es" ? "Cerrar editor" : "Close editor"}
+          className="w-11 h-11 flex items-center justify-center rounded-2xl transition-all active:scale-95"
+          style={{ color: palette.text, background: palette.panelAlt, border: `1px solid ${palette.border}` }}
         >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M15 18l-6-6 6-6"/>
-          </svg>
+          <UiIcon name="close" size={19} />
         </button>
-        <p className="text-sm font-black" style={{ color: "rgba(255,255,255,0.8)" }}>
-          {lang === "es" ? "Crear Imagen" : "Create Image"}
-        </p>
+
+        <div className="min-w-0 text-center px-3">
+          <p style={{ color: palette.faint, fontSize: 10, fontWeight: 900, letterSpacing: "0.16em", textTransform: "uppercase" }}>
+            {lang === "es" ? "Crear imagen" : "Create Image"}
+          </p>
+          <p className="truncate" style={{ color: palette.text, fontSize: 14, fontWeight: 900 }}>
+            {reference}
+          </p>
+        </div>
+
         <button
           onClick={handleExport}
           disabled={isExporting}
-          className="px-4 py-2 rounded-xl text-sm font-black transition-all active:scale-95 disabled:opacity-40"
-          style={{ background: "#c9a961", color: "#08090f" }}
+          className="px-4 py-2.5 rounded-2xl text-sm font-black transition-all active:scale-95 disabled:opacity-45"
+          style={{ background: palette.active, color: palette.activeText, boxShadow: isLight ? "none" : "0 10px 24px rgba(201,169,97,0.16)" }}
         >
-          {isExporting ? "…" : (lang === "es" ? "Exportar" : "Export")}
+          {isExporting ? "..." : lang === "es" ? "Exportar" : "Export"}
         </button>
       </div>
 
-      {/* ── Preview ── */}
       <div
         ref={containerRef}
         className="flex-1 flex items-center justify-center overflow-hidden min-h-0"
-        style={{ padding: 12, background: "#0d0d0d" }}
+        style={{ padding: "14px 14px 10px", background: palette.stage }}
       >
         <canvas
           ref={previewRef}
-          className="rounded-2xl shadow-2xl"
-          style={{ display: "block", objectFit: "contain" }}
+          className="rounded-[28px]"
+          style={{ display: "block", objectFit: "contain", boxShadow: palette.shadow }}
         />
       </div>
 
-      {/* ── Tab panels ── */}
       <div
-        className="flex-shrink-0"
-        style={{ background: "#111113", borderTop: "1px solid rgba(255,255,255,0.06)" }}
+        className="flex-shrink-0 rounded-t-[30px] overflow-hidden"
+        style={{ background: palette.panel, borderTop: `1px solid ${palette.border}`, boxShadow: "0 -16px 44px rgba(0,0,0,0.12)" }}
       >
-        {/* FONT */}
-        {tab === "font" && (
-          <div style={{ maxHeight: 248, overflowY: "auto" }}>
-            {EDITOR_FONTS.map((f, i) => (
+        <div className="flex gap-2 px-4 pt-4 pb-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {(["presets", "font", "layout", "color", "background"] as EditorTab[]).map((item) => {
+            const active = tab === item;
+            const icon: Record<EditorTab, UiIconName> = {
+              presets: "sparkle",
+              font: "edit",
+              layout: "file",
+              color: "target",
+              background: "archive",
+            };
+            const label: Record<EditorTab, string> = {
+              presets: lang === "es" ? "Estilos" : "Styles",
+              font: lang === "es" ? "Fuente" : "Font",
+              layout: lang === "es" ? "Diseño" : "Layout",
+              color: lang === "es" ? "Color" : "Color",
+              background: lang === "es" ? "Fondo" : "Background",
+            };
+            return (
               <button
-                key={f.key}
-                onClick={() => setFontKey(f.key)}
-                className="w-full flex items-center justify-between px-5 transition-colors"
+                key={item}
+                onClick={() => setTab(item)}
+                className="flex items-center gap-2 rounded-2xl px-4 py-3 text-sm font-black transition-all active:scale-95"
                 style={{
-                  height: 56,
-                  background: fontKey === f.key ? "rgba(201,169,97,0.08)" : "transparent",
-                  borderBottom: i < EDITOR_FONTS.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                  background: active ? palette.active : palette.panelAlt,
+                  color: active ? palette.activeText : palette.muted,
+                  border: `1px solid ${active ? palette.active : palette.border}`,
                 }}
               >
-                <div className="flex flex-col items-start gap-0.5">
-                  <span style={{ fontFamily: f.family, fontSize: 17, color: fontKey === f.key ? "#c9a961" : "rgba(255,255,255,0.82)", lineHeight: 1.2 }}>
-                    {f.label}
-                  </span>
-                  <span style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "rgba(255,255,255,0.25)" }}>
-                    {f.tag}
-                  </span>
-                </div>
-                {fontKey === f.key && (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="2.5" strokeLinecap="round">
-                    <polyline points="20 6 9 17 4 12"/>
-                  </svg>
-                )}
+                <UiIcon name={icon[item]} size={16} />
+                <span>{label[item]}</span>
               </button>
-            ))}
-          </div>
-        )}
+            );
+          })}
+        </div>
 
-        {/* TYPOGRAPHY */}
-        {tab === "typography" && (
-          <div className="px-5 py-4" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Alignment */}
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                {lang === "es" ? "Alineación" : "Alignment"}
-              </span>
-              <div className="flex gap-1.5">
-                {(["left", "center", "right"] as const).map((a) => (
-                  <button key={a} onClick={() => setTextAlign(a)}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90"
-                    style={{ background: textAlign === a ? "rgba(201,169,97,0.2)" : "rgba(255,255,255,0.06)", border: `1px solid ${textAlign === a ? "rgba(201,169,97,0.4)" : "rgba(255,255,255,0.08)"}` }}>
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke={textAlign === a ? "#c9a961" : "rgba(255,255,255,0.4)"} strokeWidth="2" strokeLinecap="round">
-                      {a === "left"   && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></>}
-                      {a === "center" && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="6" y1="12" x2="18" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></>}
-                      {a === "right"  && <><line x1="3" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="6" y1="18" x2="21" y2="18"/></>}
-                    </svg>
+        <div className="px-4 pb-4" style={{ maxHeight: "min(320px, 38vh)", overflowY: "auto" }}>
+          {tab === "presets" && (
+            <div className="grid grid-cols-2 gap-3">
+              {PRESETS.map((preset) => {
+                const active = activePreset === preset.id;
+                const swatch = preset.bgSrc ? undefined : preset.backgroundColor;
+                return (
+                  <button
+                    key={preset.id}
+                    onClick={() => applyPreset(preset)}
+                    className="text-left rounded-3xl p-4 transition-all active:scale-[0.98]"
+                    style={{
+                      background: active ? (isLight ? "#111111" : "rgba(201,169,97,0.16)") : palette.panelAlt,
+                      color: active ? (isLight ? "#ffffff" : "#f4dfac") : palette.text,
+                      border: `1px solid ${active ? palette.active : palette.border}`,
+                    }}
+                  >
+                    <div className="mb-3 rounded-2xl overflow-hidden" style={{ height: 56, background: swatch ?? "#12151d", border: `1px solid ${palette.border}` }}>
+                      {preset.bgSrc && <img src={preset.bgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.72 }} />}
+                    </div>
+                    <p style={{ fontSize: 15, fontWeight: 950, lineHeight: 1.1 }}>{preset.label}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, opacity: 0.62, marginTop: 4 }}>{preset.desc}</p>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {tab === "font" && (
+            <div className="space-y-2">
+              {EDITOR_FONTS.map((font) => {
+                const active = fontKey === font.key;
+                return (
+                  <button
+                    key={font.key}
+                    onClick={() => setFontKey(font.key)}
+                    className="w-full flex items-center justify-between rounded-2xl px-4 py-3 transition-all active:scale-[0.99]"
+                    style={{ background: active ? palette.active : palette.panelAlt, color: active ? palette.activeText : palette.text, border: `1px solid ${active ? palette.active : palette.border}` }}
+                  >
+                    <span style={{ fontFamily: font.family, fontSize: 18, fontWeight: 700 }}>{font.label}</span>
+                    <span style={{ fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 900, opacity: 0.55 }}>{font.tag}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {tab === "layout" && (
+            <div className="space-y-4">
+              <SegmentLabel label={lang === "es" ? "Alineación" : "Alignment"} color={palette.faint} />
+              <div className="grid grid-cols-3 gap-2">
+                {(["left", "center", "right"] as const).map((align) => (
+                  <button
+                    key={align}
+                    onClick={() => setTextAlign(align)}
+                    className="rounded-2xl py-3 text-sm font-black capitalize transition-all active:scale-95"
+                    style={{ background: textAlign === align ? palette.active : palette.panelAlt, color: textAlign === align ? palette.activeText : palette.muted, border: `1px solid ${textAlign === align ? palette.active : palette.border}` }}
+                  >
+                    {lang === "es" ? (align === "left" ? "Izq." : align === "center" ? "Centro" : "Der.") : align}
                   </button>
                 ))}
               </div>
-            </div>
-            {/* Line height */}
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                {lang === "es" ? "Interlineado" : "Line Height"}
-              </span>
-              <div className="flex items-center gap-2.5">
-                <button onClick={() => setLineHeight(h => Math.max(1.0, parseFloat((h - 0.1).toFixed(1))))}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xl font-bold transition-all active:scale-90"
-                  style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>−</button>
-                <span style={{ width: 32, textAlign: "center", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{lineHeight.toFixed(1)}</span>
-                <button onClick={() => setLineHeight(h => Math.min(2.5, parseFloat((h + 0.1).toFixed(1))))}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xl font-bold transition-all active:scale-90"
-                  style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>+</button>
-              </div>
-            </div>
-            {/* Letter spacing */}
-            <div className="flex items-center justify-between">
-              <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                {lang === "es" ? "Espaciado" : "Letter Spacing"}
-              </span>
-              <div className="flex items-center gap-2.5">
-                <button onClick={() => setLetterSpacing(s => Math.max(-5, s - 1))}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xl font-bold transition-all active:scale-90"
-                  style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>−</button>
-                <span style={{ width: 32, textAlign: "center", fontSize: 14, fontWeight: 600, color: "rgba(255,255,255,0.75)" }}>{letterSpacing}</span>
-                <button onClick={() => setLetterSpacing(s => Math.min(20, s + 1))}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-xl font-bold transition-all active:scale-90"
-                  style={{ background: "rgba(255,255,255,0.08)", color: "rgba(255,255,255,0.6)" }}>+</button>
-              </div>
-            </div>
-            {/* Font size */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                  {lang === "es" ? "Tamaño" : "Font Size"}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{fontSize}px</span>
-              </div>
-              <input type="range" min="24" max="80" value={fontSize}
-                onChange={(e) => setFontSize(Number(e.target.value))}
-                className="w-full" style={{ accentColor: "#c9a961" }} />
-            </div>
-          </div>
-        )}
 
-        {/* ASPECT RATIO */}
-        {tab === "aspect" && (
-          <div className="flex items-center justify-center gap-10" style={{ padding: "20px 20px 28px" }}>
-            {(["1:1", "3:4"] as const).map((ratio) => {
-              const active = aspectRatio === ratio;
-              const w = ratio === "1:1" ? 72 : 54;
-              const h = ratio === "1:1" ? 72 : 96;
-              return (
-                <button key={ratio} onClick={() => setAspectRatio(ratio)}
-                  className="flex flex-col items-center gap-2.5 transition-all active:scale-95">
-                  <div className="rounded-xl flex items-center justify-center" style={{
-                    width: w, height: h,
-                    background: active ? "rgba(201,169,97,0.12)" : "rgba(255,255,255,0.06)",
-                    border: `2px solid ${active ? "#c9a961" : "rgba(255,255,255,0.12)"}`,
-                  }}>
-                    <span style={{ fontSize: 11, fontWeight: 900, color: active ? "#c9a961" : "rgba(255,255,255,0.4)" }}>{ratio}</span>
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: active ? "#c9a961" : "rgba(255,255,255,0.4)" }}>
+              <SegmentLabel label={lang === "es" ? "Formato" : "Format"} color={palette.faint} />
+              <div className="grid grid-cols-2 gap-2">
+                {(["1:1", "3:4"] as const).map((ratio) => (
+                  <button
+                    key={ratio}
+                    onClick={() => setAspectRatio(ratio)}
+                    className="rounded-2xl py-3 text-sm font-black transition-all active:scale-95"
+                    style={{ background: aspectRatio === ratio ? palette.active : palette.panelAlt, color: aspectRatio === ratio ? palette.activeText : palette.muted, border: `1px solid ${aspectRatio === ratio ? palette.active : palette.border}` }}
+                  >
                     {ratio === "1:1" ? (lang === "es" ? "Cuadrado" : "Square") : (lang === "es" ? "Retrato" : "Portrait")}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                  </button>
+                ))}
+              </div>
 
-        {/* COLOR */}
-        {tab === "color" && (
-          <div className="px-5 py-4" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div className="flex gap-3 flex-wrap">
-              {TEXT_COLORS.map((hex) => (
-                <button key={hex} onClick={() => setTextColor(hex)}
-                  className="w-10 h-10 rounded-full transition-all active:scale-90"
-                  style={{
-                    background: hex,
-                    border: textColor === hex ? "2.5px solid #c9a961" : "2px solid rgba(255,255,255,0.2)",
-                    outline: textColor === hex ? "2px solid rgba(201,169,97,0.4)" : "none",
-                    outlineOffset: 2,
-                  }} />
-              ))}
+              <RangeControl label={lang === "es" ? "Tamaño" : "Size"} value={fontSize} min={24} max={80} suffix="px" onChange={setFontSize} accent={palette.active} text={palette.text} muted={palette.faint} />
+              <RangeControl label={lang === "es" ? "Interlineado" : "Line height"} value={Math.round(lineHeight * 10)} min={10} max={24} display={(lineHeight).toFixed(1)} onChange={(v) => setLineHeight(v / 10)} accent={palette.active} text={palette.text} muted={palette.faint} />
+              <RangeControl label={lang === "es" ? "Espaciado" : "Letter spacing"} value={letterSpacing} min={-4} max={16} onChange={setLetterSpacing} accent={palette.active} text={palette.text} muted={palette.faint} />
             </div>
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                  {lang === "es" ? "Opacidad" : "Opacity"}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{Math.round(textOpacity * 100)}%</span>
-              </div>
-              <input type="range" min="0" max="100" value={Math.round(textOpacity * 100)}
-                onChange={(e) => setTextOpacity(Number(e.target.value) / 100)}
-                className="w-full" style={{ accentColor: "#c9a961" }} />
-            </div>
-          </div>
-        )}
+          )}
 
-        {/* BACKGROUND */}
-        {tab === "background" && (
-          <div className="px-5 py-4" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Image row */}
-            <div className="flex gap-2.5 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-              {BG_OPTIONS.filter(opt => opt.src !== null).map((opt) => (
-                <button key={opt.id} onClick={() => setBgSrc(opt.src)}
-                  className="flex-shrink-0 rounded-xl overflow-hidden transition-all active:scale-95 relative"
-                  style={{
-                    width: 52, height: 52,
-                    border: bgSrc === opt.src ? "2.5px solid #c9a961" : "2px solid rgba(255,255,255,0.12)",
-                  }}>
-                  {opt.src ? (
-                    <img src={opt.src} alt={opt.label} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                  ) : (
-                    <div style={{ width: "100%", height: "100%", background: "#08090f", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <span style={{ fontSize: 9, fontWeight: 900, textTransform: "uppercase", color: "rgba(255,255,255,0.4)" }}>{opt.label}</span>
-                    </div>
-                  )}
-                  {bgSrc === opt.src && (
-                    <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0.25)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="3" strokeLinecap="round">
-                        <polyline points="20 6 9 17 4 12"/>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-            {/* Brightness */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                  {lang === "es" ? "Brillo" : "Brightness"}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{bgBrightness}%</span>
+          {tab === "color" && (
+            <div className="space-y-4">
+              <SegmentLabel label={lang === "es" ? "Color de texto" : "Text color"} color={palette.faint} />
+              <div className="flex flex-wrap gap-3">
+                {TEXT_COLORS.map((hex) => (
+                  <button
+                    key={hex}
+                    onClick={() => setTextColor(hex)}
+                    aria-label={hex}
+                    className="h-11 w-11 rounded-full transition-all active:scale-90"
+                    style={{ background: hex, border: `2px solid ${textColor === hex ? palette.active : palette.border}`, boxShadow: textColor === hex ? `0 0 0 4px ${isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.16)"}` : "none" }}
+                  />
+                ))}
               </div>
-              <input type="range" min="0" max="100" value={bgBrightness}
-                onChange={(e) => setBgBrightness(Number(e.target.value))}
-                className="w-full" style={{ accentColor: "#c9a961" }} />
+              <RangeControl label={lang === "es" ? "Opacidad" : "Opacity"} value={Math.round(textOpacity * 100)} min={40} max={100} suffix="%" onChange={(v) => setTextOpacity(v / 100)} accent={palette.active} text={palette.text} muted={palette.faint} />
+              <button
+                onClick={() => setShowQuoteMark((value) => !value)}
+                className="w-full rounded-2xl px-4 py-3 text-left text-sm font-black"
+                style={{ background: showQuoteMark ? palette.active : palette.panelAlt, color: showQuoteMark ? palette.activeText : palette.text, border: `1px solid ${showQuoteMark ? palette.active : palette.border}` }}
+              >
+                {lang === "es" ? "Marca de cita decorativa" : "Decorative quote mark"}
+              </button>
             </div>
-            {/* Blur */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <span style={{ fontSize: 11, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.12em", color: "rgba(255,255,255,0.35)" }}>
-                  {lang === "es" ? "Difuminado" : "Blur"}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>{bgBlur}%</span>
+          )}
+
+          {tab === "background" && (
+            <div className="space-y-4">
+              <SegmentLabel label={lang === "es" ? "Fondos" : "Backgrounds"} color={palette.faint} />
+              <div className="flex gap-3 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
+                {backgroundChoices.map((option) => {
+                  const active = option.src ? bgSrc === option.src : bgSrc === null && backgroundColor === option.color;
+                  return (
+                    <button
+                      key={option.id}
+                      onClick={() => {
+                        setBgSrc(option.src);
+                        if (option.color) setBackgroundColor(option.color);
+                        if (option.color === "#08090f") setTextColor("#ffffff");
+                        if (option.color && option.color !== "#08090f") setTextColor("#111111");
+                      }}
+                      className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl transition-all active:scale-95"
+                      style={{ background: option.color ?? "#111827", border: `2px solid ${active ? palette.active : palette.border}` }}
+                    >
+                      {option.src && <img src={option.src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      {active && (
+                        <span className="absolute inset-0 flex items-center justify-center" style={{ color: option.color === "#f7f7f7" || option.color === "#eef0f3" ? "#111111" : "#ffffff", background: "rgba(0,0,0,0.06)" }}>
+                          <UiIcon name="check" size={18} strokeWidth={3} />
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
-              <input type="range" min="0" max="100" value={bgBlur}
-                onChange={(e) => setBgBlur(Number(e.target.value))}
-                className="w-full" style={{ accentColor: "#c9a961" }} />
+              <RangeControl label={lang === "es" ? "Brillo" : "Brightness"} value={bgBrightness} min={0} max={100} suffix="%" onChange={setBgBrightness} accent={palette.active} text={palette.text} muted={palette.faint} />
+              <RangeControl label={lang === "es" ? "Difuminado" : "Blur"} value={bgBlur} min={0} max={100} suffix="%" onChange={setBgBlur} accent={palette.active} text={palette.text} muted={palette.faint} />
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
 
-      {/* ── Tab bar ── */}
-      <div
-        className="flex-shrink-0 flex"
-        style={{
-          background: "#0e0e0e",
-          borderTop: "1px solid rgba(255,255,255,0.06)",
-          paddingBottom: "env(safe-area-inset-bottom, 0px)",
-        }}
-      >
-        {(["font", "typography", "aspect", "color", "background"] as EditorTab[]).map((t) => {
-          const ICONS: Record<EditorTab, string> = { font: "Tt", typography: "AA", aspect: "⊞", color: "◑", background: "≡" };
-          const active = tab === t;
-          return (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className="flex-1 flex flex-col items-center justify-center transition-colors"
-              style={{ height: 60 }}
-            >
-              <span style={{
-                fontSize: t === "aspect" ? 20 : t === "background" ? 22 : 18,
-                fontWeight: 900,
-                color: active ? "#c9a961" : "rgba(255,255,255,0.28)",
-                lineHeight: 1,
-                letterSpacing: t === "typography" ? "-0.02em" : "normal",
-              }}>
-                {ICONS[t]}
-              </span>
-              {active && (
-                <div style={{ width: 4, height: 4, borderRadius: "50%", background: "#c9a961", marginTop: 5 }} />
-              )}
-            </button>
-          );
-        })}
+function SegmentLabel({ label, color }: { label: string; color: string }) {
+  return (
+    <p style={{ color, fontSize: 10, fontWeight: 950, letterSpacing: "0.14em", textTransform: "uppercase" }}>
+      {label}
+    </p>
+  );
+}
+
+function RangeControl({
+  label,
+  value,
+  min,
+  max,
+  suffix = "",
+  display,
+  onChange,
+  accent,
+  text,
+  muted,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  suffix?: string;
+  display?: string;
+  onChange: (value: number) => void;
+  accent: string;
+  text: string;
+  muted: string;
+}) {
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <SegmentLabel label={label} color={muted} />
+        <span style={{ color: text, fontSize: 13, fontWeight: 850 }}>{display ?? value}{suffix}</span>
       </div>
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="w-full"
+        style={{ accentColor: accent }}
+      />
     </div>
   );
 }

@@ -214,13 +214,24 @@ export function AppSectionIcon({ name, size = 22, active = false, className }: P
     case "study-tools":
       return (
         <svg {...common}>
-          <circle
-            cx="10.45" cy="10.45" r="6.15"
+          <path
+            d="M4.2 5.55h5.35c1.45 0 2.45.45 3.05 1.25v10.45c-.7-.7-1.7-1.05-3.05-1.05H4.2V5.55Z"
             fill={softFill} fillOpacity={softOp}
-            stroke="currentColor" strokeWidth={sw}
+            stroke="currentColor" strokeWidth={sw} {...round}
           />
-          <path d="m14.95 14.95 5.2 5.2" stroke="currentColor" strokeWidth={sw} {...round} />
-          <path d="M8.2 9.35h4.45M8.2 12.1h2.95" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
+          <path
+            d="M19.8 5.55h-5.35c-1.45 0-2.45.45-3.05 1.25v10.45c.7-.7 1.7-1.05 3.05-1.05h1.6"
+            fill={softFill} fillOpacity={softOp}
+            stroke="currentColor" strokeWidth={sw} {...round}
+          />
+          <path d="M11.4 6.8v10.75" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
+          <path d="M7 8.85h2.35M7 11.45h2.35M14.35 8.85h2.45" stroke="currentColor" strokeWidth={sw2} opacity={loOp} {...round} />
+          <circle
+            cx="17.35" cy="17.35" r="2.25"
+            fill="none"
+            stroke="currentColor" strokeWidth={sw} {...round}
+          />
+          <path d="m19.05 19.05 1.65 1.65" stroke="currentColor" strokeWidth={sw} {...round} />
         </svg>
       );
 

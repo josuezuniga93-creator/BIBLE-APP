@@ -31,14 +31,40 @@ import { UiIcon } from "../components/UiIcon";
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 type BibleTranslation = "kjv" | "geneva" | "nkjv" | "esv" | "csb" | "nasb" | "niv" | "lsb" | "rv1960" | "ntv" | "nvi" | "lbla";
-type FontSize = "sm" | "base" | "lg" | "xl" | "2xl";
-const FONT_SIZES: FontSize[] = ["sm", "base", "lg", "xl", "2xl"];
+type FontSize = "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6xl";
+const FONT_SIZES: FontSize[] = ["sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"];
 const FONT_SIZE_CLASSES: Record<FontSize, string> = {
-  sm:   "text-sm",
-  base: "text-base",
-  lg:   "text-lg",
-  xl:   "text-xl",
-  "2xl":"text-2xl",
+  sm:   "text-base",
+  base: "text-lg",
+  lg:   "text-xl",
+  xl:   "text-2xl",
+  "2xl":"text-[30px]",
+  "3xl":"text-[34px]",
+  "4xl":"text-[38px]",
+  "5xl":"text-[42px]",
+  "6xl":"text-[46px]",
+};
+const FONT_SIZE_LEADING_CLASSES: Record<FontSize, string> = {
+  sm:   "leading-[1.82]",
+  base: "leading-[1.8]",
+  lg:   "leading-[1.76]",
+  xl:   "leading-[1.68]",
+  "2xl":"leading-[1.6]",
+  "3xl":"leading-[1.54]",
+  "4xl":"leading-[1.48]",
+  "5xl":"leading-[1.42]",
+  "6xl":"leading-[1.36]",
+};
+const FONT_SIZE_LABELS: Record<FontSize, string> = {
+  sm: "90%",
+  base: "100%",
+  lg: "115%",
+  xl: "130%",
+  "2xl": "145%",
+  "3xl": "160%",
+  "4xl": "175%",
+  "5xl": "195%",
+  "6xl": "215%",
 };
 
 type ScriptureFont = "georgia" | "palatino" | "modern" | "typewriter" | "baskerville" | "garamond" | "charter";
@@ -250,26 +276,47 @@ function getBookSearchScore(book: BookMeta, rawQuery: string, translation: Bible
 type ScriptureSearchTarget = {
   book: BookMeta;
   chapter: number;
-  verse: number | null;
+  verseStart: number | null;
+  verseEnd: number | null;
   score: number;
 };
 
+type FocusedVerseRange = {
+  bookNum: number;
+  chapter: number;
+  start: number;
+  end: number;
+};
+
+function verseNumsFromRange(start: number, end: number) {
+  const safeStart = Math.max(1, Math.min(start, end));
+  const safeEnd = Math.max(safeStart, Math.max(start, end));
+  return Array.from({ length: safeEnd - safeStart + 1 }, (_, i) => safeStart + i);
+}
+
 function splitScriptureSearchQuery(rawQuery: string) {
   const trimmed = rawQuery.trim();
-  const spacedMatch = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+))?$/);
+  const spacedMatch = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+)(?:\s*[-–—]\s*(\d+))?)?$/);
   const compactVerseMatch = !spacedMatch && trimmed.includes(":")
-    ? trimmed.match(/^(.+?)(\d+):(\d+)$/)
+    ? trimmed.match(/^(.+?)(\d+):(\d+)(?:\s*[-–—]\s*(\d+))?$/)
     : null;
   const match = spacedMatch ?? compactVerseMatch;
 
   if (!match) {
-    return { bookQuery: trimmed, chapter: 1, verse: null };
+    return { bookQuery: trimmed, chapter: 1, verseStart: null, verseEnd: null };
   }
+
+  const verseStart = match[3] ? parseInt(match[3], 10) : null;
+  const rawVerseEnd = match[4] ? parseInt(match[4], 10) : null;
+  const verseEnd = verseStart && rawVerseEnd
+    ? Math.max(verseStart, rawVerseEnd)
+    : verseStart;
 
   return {
     bookQuery: match[1].trim(),
     chapter: parseInt(match[2], 10),
-    verse: match[3] ? parseInt(match[3], 10) : null,
+    verseStart: verseStart && rawVerseEnd ? Math.min(verseStart, rawVerseEnd) : verseStart,
+    verseEnd,
   };
 }
 
@@ -286,7 +333,8 @@ function getScriptureSearchSuggestions(
     .map((book) => ({
       book,
       chapter: Math.max(1, Math.min(Number.isFinite(parts.chapter) ? parts.chapter : 1, book.chapters)),
-      verse: parts.verse && parts.verse > 0 ? parts.verse : null,
+      verseStart: parts.verseStart && parts.verseStart > 0 ? parts.verseStart : null,
+      verseEnd: parts.verseEnd && parts.verseEnd > 0 ? parts.verseEnd : null,
       score: getBookSearchScore(book, parts.bookQuery, translation),
     }))
     .filter(({ score }) => Number.isFinite(score))
@@ -842,7 +890,7 @@ function LexiconInner() {
   }, [lang]);
 
   const [fontSize, setFontSize]               = useState<FontSize>(() => {
-    try { const s = localStorage.getItem(FONT_SIZE_KEY) as FontSize; return FONT_SIZES.includes(s) ? s : "lg"; } catch { return "lg"; }
+    try { const s = localStorage.getItem(FONT_SIZE_KEY) as FontSize; return FONT_SIZES.includes(s) ? s : "base"; } catch { return "base"; }
   });
   const [scriptureFont, setScriptureFont]     = useState<ScriptureFont>(() => {
     try { const s = localStorage.getItem(SCRIPTURE_FONT_KEY) as ScriptureFont; return SCRIPTURE_FONTS.some(f => f.key === s) ? s : "georgia"; } catch { return "georgia"; }
@@ -853,7 +901,10 @@ function LexiconInner() {
   function selectFont(f: ScriptureFont) {
     setScriptureFont(f);
     try { localStorage.setItem(SCRIPTURE_FONT_KEY, f); } catch {}
-    setShowFontPicker(false);
+  }
+  function setReaderFontSize(next: FontSize) {
+    setFontSize(next);
+    try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {}
   }
   const activeFontFamily = SCRIPTURE_FONTS.find(f => f.key === scriptureFont)?.family ?? "'Georgia', serif";
 
@@ -864,7 +915,10 @@ function LexiconInner() {
   // Navigation search (type "Romans 3")
   const [showNavSearch, setShowNavSearch]   = useState(false);
   const [navQuery,      setNavQuery]        = useState("");
+  const scriptureToolbarRef = useRef<HTMLElement | null>(null);
+  const [scriptureToolbarHeight, setScriptureToolbarHeight] = useState(64);
   const [pendingVerseJump, setPendingVerseJump] = useState<number[]>([]);
+  const [focusedVerseRange, setFocusedVerseRange] = useState<FocusedVerseRange | null>(null);
 
   // Verse selection tray (tap-to-highlight whole verse)
   const [selectedVerseNums, setSelectedVerseNums] = useState<number[]>([]);
@@ -977,9 +1031,18 @@ function LexiconInner() {
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const openScriptureSearchTarget = useCallback((target: ScriptureSearchTarget) => {
+    const start = target.verseStart;
+    const end = target.verseEnd ?? target.verseStart;
     setSelectedBook(target.book);
     setSelectedChapter(target.chapter);
-    setPendingVerseJump(target.verse ? [target.verse] : []);
+    setFocusedVerseRange(start && end ? {
+      bookNum: target.book.num,
+      chapter: target.chapter,
+      start: Math.min(start, end),
+      end: Math.max(start, end),
+    } : null);
+    setPendingVerseJump([]);
+    setSelectedVerseNums([]);
     setActiveTab("reader");
     setShowNavSearch(false);
     setNavQuery("");
@@ -1113,10 +1176,18 @@ function LexiconInner() {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
       if (e.key === "f" || e.key === "F") setPresentationMode((v) => !v);
       if (e.key === "ArrowRight") {
-        if (selectedBook && selectedChapter < selectedBook.chapters) setSelectedChapter((c) => c + 1);
+        if (selectedBook && selectedChapter < selectedBook.chapters) {
+          setFocusedVerseRange(null);
+          setSelectedVerseNums([]);
+          setSelectedChapter((c) => c + 1);
+        }
       }
       if (e.key === "ArrowLeft") {
-        if (selectedChapter > 1) setSelectedChapter((c) => c - 1);
+        if (selectedChapter > 1) {
+          setFocusedVerseRange(null);
+          setSelectedVerseNums([]);
+          setSelectedChapter((c) => c - 1);
+        }
       }
       if (e.key === "Escape") setSelectedVerseNums([]);
     };
@@ -1138,6 +1209,16 @@ function LexiconInner() {
   const visibleBooks = pickerUsingSuggestions ? suggestedBookMatches : filteredPickerBooks;
   const pickerLastBook = pickerLastPosition ? books.find((b) => b.name === pickerLastPosition.bookName) : null;
   const navSearchSuggestions = getScriptureSearchSuggestions(navQuery, books, translation);
+  const activeFocusedRange =
+    focusedVerseRange &&
+    selectedBook &&
+    focusedVerseRange.bookNum === selectedBook.num &&
+    focusedVerseRange.chapter === selectedChapter
+      ? focusedVerseRange
+      : null;
+  const focusedReferenceLabel = activeFocusedRange && selectedBook
+    ? `${getBookDisplayName(selectedBook, translation)} ${selectedChapter}:${activeFocusedRange.start}${activeFocusedRange.end !== activeFocusedRange.start ? `-${activeFocusedRange.end}` : ""}`
+    : "";
   const chapterNums = selectedBook
     ? Array.from({ length: selectedBook.chapters }, (_, i) => i + 1)
     : [];
@@ -1148,6 +1229,8 @@ function LexiconInner() {
   }, [showBookPicker, pickerView]);
 
   const goNext = () => {
+    setFocusedVerseRange(null);
+    setSelectedVerseNums([]);
     if (selectedBook && selectedChapter < selectedBook.chapters) {
       setSelectedChapter((c) => c + 1);
     } else if (selectedBook && selectedBook.num < 66) {
@@ -1157,6 +1240,8 @@ function LexiconInner() {
   };
 
   const goPrev = () => {
+    setFocusedVerseRange(null);
+    setSelectedVerseNums([]);
     if (selectedChapter > 1) {
       setSelectedChapter((c) => c - 1);
     } else if (selectedBook && selectedBook.num > 1) {
@@ -1167,6 +1252,13 @@ function LexiconInner() {
 
   const highlightedVerseCount = Object.keys(verseColors).length;
   const currentTranslation = getTranslationMeta(translation);
+  const fontSizeIndex = Math.max(FONT_SIZES.indexOf(fontSize), 0);
+  const canDecreaseFont = fontSizeIndex > 0;
+  const canIncreaseFont = fontSizeIndex < FONT_SIZES.length - 1;
+  const changeFontSize = (direction: -1 | 1) => {
+    const next = FONT_SIZES[Math.max(0, Math.min(FONT_SIZES.length - 1, fontSizeIndex + direction))];
+    setReaderFontSize(next);
+  };
   const openTranslationPicker = () => {
     setPickerCategory(currentTranslation.group);
     setShowTranslationPicker(true);
@@ -1176,6 +1268,25 @@ function LexiconInner() {
     try { localStorage.setItem("ryc-translation", next); } catch {}
     setShowTranslationPicker(false);
   };
+
+  useEffect(() => {
+    const toolbar = scriptureToolbarRef.current;
+    if (!toolbar) return;
+
+    const updateToolbarHeight = () => {
+      setScriptureToolbarHeight(Math.ceil(toolbar.getBoundingClientRect().height));
+    };
+
+    updateToolbarHeight();
+    const observer = new ResizeObserver(updateToolbarHeight);
+    observer.observe(toolbar);
+    window.addEventListener("resize", updateToolbarHeight);
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", updateToolbarHeight);
+    };
+  }, [activeTab, showNavSearch]);
 
   // ── Presentation mode ─────────────────────────────────────────────────────
   if (presentationMode) {
@@ -1228,6 +1339,10 @@ function LexiconInner() {
   return (
     <div
       className="min-h-screen bg-[#0f0f0f] text-white"
+      style={{
+        background: isLight ? "#ffffff" : "#0b0d13",
+        color: isLight ? "#0a0a0a" : "#ffffff",
+      }}
     >
       {/* ── Books error banner ── */}
       {booksError && (
@@ -1384,84 +1499,99 @@ function LexiconInner() {
         </div>
       )}
 
-      {/* ── Minimal sticky header ── */}
-      <header className="sticky top-0 md:top-14 z-30 print:hidden backdrop-blur-sm"
-        style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.06)", background: isLight ? "rgba(249,250,251,0.95)" : "rgba(15,15,15,0.95)" }}>
-        <div className="max-w-screen-xl mx-auto px-4 min-h-12 py-1.5 flex items-center gap-1">
-
-          {/* Font size */}
-          <button
-            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.max(i - 1, 0)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {} }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-[11px]"
-            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}>
-            A-
-          </button>
-          <button
-            onClick={() => { const i = FONT_SIZES.indexOf(fontSize); const next = FONT_SIZES[Math.min(i + 1, FONT_SIZES.length - 1)]; setFontSize(next); try { localStorage.setItem(FONT_SIZE_KEY, next); } catch {}; }}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-sm"
-            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}>
-            A+
-          </button>
-
-          <div className="flex-1" />
-
-          {/* Font family picker */}
-          <button
-            onClick={() => setShowFontPicker((v) => !v)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center transition-colors font-bold text-[13px]"
-            style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.30)" }}
-            title={lang === "es" ? "Cambiar fuente bíblica" : "Change scripture font"}>
-            Ff
-          </button>
-
-          {/* Translation pill — opens picker */}
-          <button
-            onClick={openTranslationPicker}
-            className="ml-1 h-9 px-3 rounded-full text-[11px] font-bold transition-colors"
-            style={{ border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.12)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.58)" }}>
-            {currentTranslation.abbr}
-          </button>
-
-          {/* Navigation search — immediately to the right of translation */}
-          {activeTab === "reader" && (
+      {/* ── Scripture toolbar ── */}
+      <header
+        ref={scriptureToolbarRef}
+        className="fixed left-0 right-0 top-0 md:sticky md:top-14 z-50 print:hidden"
+        style={{
+          paddingTop: "env(safe-area-inset-top)",
+          borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.06)",
+          background: isLight ? "rgba(255,255,255,0.98)" : "rgba(9,10,16,0.98)",
+          boxShadow: isLight ? "0 10px 26px rgba(15,23,42,0.06)" : "0 14px 32px rgba(0,0,0,0.30)",
+        }}
+      >
+        <div className="relative max-w-screen-xl mx-auto px-4 py-2">
+          <div
+            className="flex items-center gap-2 rounded-[26px] border p-1.5"
+            style={{
+              background: isLight ? "#f4f5f6" : "rgba(255,255,255,0.055)",
+              borderColor: isLight ? "#e2e4e7" : "rgba(255,255,255,0.10)",
+              boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.85)" : "inset 0 1px 0 rgba(255,255,255,0.045)",
+            }}
+          >
             <button
-              onClick={() => setShowNavSearch((v) => !v)}
-              className="ml-1 h-9 px-3 rounded-full border text-[11px] font-bold transition-all flex items-center gap-1.5"
+              type="button"
+              onClick={() => setShowFontPicker((v) => !v)}
+              className="h-11 rounded-[20px] px-3.5 flex items-center gap-2 text-[13px] font-black transition-transform active:scale-95"
               style={{
-                background: showNavSearch ? (isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,0.15)") : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)"),
-                borderColor: showNavSearch ? (isLight ? "rgba(0,0,0,0.20)" : "rgba(201,169,97,0.4)") : (isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)"),
-                color: showNavSearch ? (isLight ? "#0a0a0a" : "rgba(201,169,97,1)") : (isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.58)"),
-                boxShadow: showNavSearch && !isLight ? "0 10px 28px rgba(201,169,97,0.12)" : "none",
+                background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
+                color: isLight ? "#111111" : "rgba(255,255,255,0.84)",
+                border: isLight ? "1px solid #d9dbdf" : "1px solid rgba(255,255,255,0.10)",
               }}
-              aria-label={lang === "es" ? "Buscar pasaje bíblico" : "Search Bible passage"}
+              title={lang === "es" ? "Texto y fuente bíblica" : "Text and scripture font"}
             >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
-                <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
-                <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/>
-              </svg>
-              <span>{lang === "es" ? "Buscar" : "Search"}</span>
+              <span className="text-[15px]">Aa</span>
+              <span className="hidden min-[360px]:inline text-[10px] font-black tracking-[0.08em] opacity-55">
+                {FONT_SIZE_LABELS[fontSize]}
+              </span>
             </button>
-          )}
-        </div>
 
-        {activeTab === "reader" && showNavSearch && (
-          <div className="max-w-screen-xl mx-auto px-4 pb-3">
+            <button
+              type="button"
+              onClick={openTranslationPicker}
+              className="h-11 rounded-[20px] px-4 text-[12px] font-black transition-transform active:scale-95"
+              style={{
+                background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
+                color: isLight ? "#111111" : "rgba(255,255,255,0.82)",
+                border: isLight ? "1px solid #d9dbdf" : "1px solid rgba(255,255,255,0.10)",
+              }}
+            >
+              {currentTranslation.abbr}
+            </button>
+
+            {activeTab === "reader" && (
+              <button
+                type="button"
+                onClick={() => setShowNavSearch((v) => !v)}
+                className="ml-auto h-11 rounded-[20px] px-4 border text-[12px] font-black transition-all flex items-center gap-2 active:scale-95"
+                style={{
+                  background: showNavSearch ? (isLight ? "#e7e9ec" : "rgba(255,255,255,0.12)") : (isLight ? "#ffffff" : "rgba(255,255,255,0.055)"),
+                  borderColor: showNavSearch ? (isLight ? "#ccd0d5" : "rgba(255,255,255,0.18)") : (isLight ? "#d9dbdf" : "rgba(255,255,255,0.10)"),
+                  color: isLight ? "#111111" : "rgba(255,255,255,0.86)",
+                  boxShadow: showNavSearch ? (isLight ? "0 8px 18px rgba(15,23,42,0.10)" : "0 10px 28px rgba(0,0,0,0.24)") : "none",
+                }}
+                aria-label={lang === "es" ? "Buscar pasaje bíblico" : "Search Bible passage"}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" className="flex-shrink-0">
+                  <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
+                  <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/>
+                </svg>
+                <span className="hidden min-[360px]:inline">{lang === "es" ? "Buscar" : "Search"}</span>
+              </button>
+            )}
+          </div>
+
+          {activeTab === "reader" && showNavSearch && (
+            <div
+              className="absolute left-4 right-4 top-full z-[65] mt-2"
+              style={{ maxHeight: "calc(100vh - 110px)", overflowY: "auto" }}
+            >
             <form
               onSubmit={(e) => { e.preventDefault(); handleNavSearch(navQuery); }}
-              className="rounded-2xl border p-3"
+              className="rounded-[28px] border p-3"
               style={{
-                background: isLight ? "#f3f4f6" : "radial-gradient(circle at 15% 0%, rgba(201,169,97,0.14), transparent 34%), linear-gradient(135deg, rgba(18,20,29,0.98), rgba(8,9,15,0.98))",
-                borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.24)",
-                boxShadow: isLight ? "0 4px 20px rgba(0,0,0,0.08)" : "0 18px 54px rgba(0,0,0,0.46), inset 0 1px 0 rgba(255,255,255,0.05)",
+                background: isLight ? "#f4f5f6" : "rgba(13,15,23,0.98)",
+                borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)",
+                boxShadow: isLight ? "0 18px 40px rgba(15,23,42,0.14)" : "0 20px 54px rgba(0,0,0,0.48), inset 0 1px 0 rgba(255,255,255,0.05)",
               }}
             >
               <div className="mb-2 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(201,169,97,0.78)" }}>
+                  <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.52)" }}>
                     {lang === "es" ? "Buscar Pasaje" : "Scripture Search"}
                   </p>
                   <p className="text-[11px] mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.34)" }}>
-                    {lang === "es" ? "Ve directo a un libro, capítulo o versículo" : "Jump straight to a book and chapter"}
+                    {lang === "es" ? "Ve directo a un libro, capítulo o versículos" : "Jump straight to a book, chapter, or verses"}
                   </p>
                 </div>
                 <button
@@ -1484,7 +1614,7 @@ function LexiconInner() {
               >
                 <div
                   className="h-8 w-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(201,169,97,0.92)" }}
+                  style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.76)" }}
                 >
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                     <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
@@ -1499,15 +1629,15 @@ function LexiconInner() {
                   onKeyDown={(e) => { if (e.key === "Escape") { setShowNavSearch(false); setNavQuery(""); } }}
                   placeholder={lang === "es" ? "Juan 3, Romanos 8, Hechos 1..." : "John 3, Romans 8, Acts 1..."}
                   style={{ fontSize: "16px", color: isLight ? "#0a0a0a" : "#ffffff" }}
-                  className="min-w-0 flex-1 bg-transparent text-[15px] placeholder:text-black/30 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[15px] focus:outline-none"
                 />
 	                <button
 	                  type="submit"
 	                  className="rounded-xl px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
 	                  style={{
-	                    background: isLight ? "#e5e7eb" : "linear-gradient(135deg, #d8bc78, #c9a961)",
+	                    background: isLight ? "#e5e7eb" : "#ffffff",
                     color: "#08090f",
-                    boxShadow: isLight ? "none" : "0 8px 20px rgba(201,169,97,0.18)",
+                    boxShadow: isLight ? "none" : "0 8px 20px rgba(0,0,0,0.18)",
                   }}
                 >
 	                  {lang === "es" ? "Ir" : "Go"}
@@ -1518,46 +1648,69 @@ function LexiconInner() {
 	                <div className="mt-3 space-y-2">
 	                  <p
 	                    className="px-1 text-[9px] font-black uppercase tracking-[0.18em]"
-	                    style={{ color: isLight ? "rgba(0,0,0,0.44)" : "rgba(201,169,97,0.72)" }}
+	                    style={{ color: isLight ? "rgba(0,0,0,0.44)" : "rgba(255,255,255,0.50)" }}
 	                  >
 	                    {lang === "es" ? "Sugerencias" : "Suggestions"}
 	                  </p>
 	                  <div className="grid gap-2">
 	                    {navSearchSuggestions.map((suggestion) => {
 	                      const bookLabel = getBookDisplayName(suggestion.book, translation);
-	                      const referenceLabel = suggestion.verse
-	                        ? `${bookLabel} ${suggestion.chapter}:${suggestion.verse}`
+                        const hasVerseTarget = suggestion.verseStart != null;
+                        const verseSuffix = hasVerseTarget
+                          ? `${suggestion.verseStart}${suggestion.verseEnd && suggestion.verseEnd !== suggestion.verseStart ? `-${suggestion.verseEnd}` : ""}`
+                          : "";
+	                      const chapterLabel = hasVerseTarget
+	                        ? `${lang === "es" ? "Cap." : "Ch."} ${suggestion.chapter}:${verseSuffix}`
+	                        : `${lang === "es" ? "Cap." : "Ch."} ${suggestion.chapter}`;
+	                      const referenceLabel = hasVerseTarget
+	                        ? `${bookLabel} ${suggestion.chapter}:${verseSuffix}`
 	                        : `${bookLabel} ${suggestion.chapter}`;
 	                      return (
 	                        <button
-	                          key={`${suggestion.book.num}-${suggestion.chapter}-${suggestion.verse ?? 0}`}
+	                          key={`${suggestion.book.num}-${suggestion.chapter}-${suggestion.verseStart ?? 0}-${suggestion.verseEnd ?? 0}`}
 	                          type="button"
 	                          onClick={() => openScriptureSearchTarget(suggestion)}
-	                          className="w-full rounded-2xl border px-3.5 py-3 text-left transition-transform active:scale-[0.99]"
+	                          className="group w-full rounded-[22px] border px-4 py-3.5 text-left transition-transform active:scale-[0.99]"
 	                          style={{
-	                            background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
-	                            borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.09)",
-	                            boxShadow: isLight ? "0 8px 18px rgba(0,0,0,0.05)" : "none",
+	                            background: isLight ? "linear-gradient(180deg, #ffffff 0%, #f7f7f8 100%)" : "rgba(255,255,255,0.055)",
+	                            borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.09)",
+	                            boxShadow: isLight ? "0 10px 22px rgba(15,23,42,0.055)" : "none",
 	                          }}
 	                        >
-	                          <span className="flex items-center gap-3">
-	                            <span
-	                              className="h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0"
-	                              style={{ background: isLight ? "#f1f2f4" : "rgba(201,169,97,0.12)", color: isLight ? "#111111" : "rgba(201,169,97,0.94)" }}
-	                            >
-	                              <UiIcon name="book" size={17} />
-	                            </span>
+	                          <span className="flex items-center gap-3.5">
 	                            <span className="min-w-0 flex-1">
-	                              <span className="block truncate text-[15px] font-black" style={{ color: isLight ? "#0b0b0b" : "#ffffff" }}>
-	                                {referenceLabel}
+	                              <span className="flex items-baseline gap-2">
+	                                <span className="block truncate text-[18px] font-black leading-tight" style={{ color: isLight ? "#090909" : "#ffffff" }}>
+	                                  {referenceLabel}
+	                                </span>
+	                                <span
+	                                  className="hidden min-[380px]:inline-flex rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.12em]"
+	                                  style={{
+	                                    background: isLight ? "#eceef1" : "rgba(255,255,255,0.08)",
+	                                    color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.56)",
+	                                  }}
+	                                >
+	                                  {suggestion.book.num <= 39 ? (lang === "es" ? "AT" : "OT") : (lang === "es" ? "NT" : "NT")}
+	                                </span>
 	                              </span>
-	                              <span className="block truncate text-[11px] font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.42)" }}>
-	                                {lang === "es" ? "Abrir en la Biblia" : "Open in Scripture"}
+	                              <span className="mt-1 block truncate text-[12px] font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.42)" }}>
+	                                {hasVerseTarget
+                                    ? (lang === "es" ? "Abrir solo este pasaje" : "Open this passage only")
+                                    : (lang === "es" ? "Abrir capítulo completo" : "Open whole chapter")}
 	                              </span>
 	                            </span>
 	                            <span
-	                              className="h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0"
-	                              style={{ background: isLight ? "#f1f2f4" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}
+	                              className="hidden sm:inline-flex rounded-full px-3 py-1.5 text-[11px] font-black"
+	                              style={{
+	                                background: isLight ? "#eceef1" : "rgba(255,255,255,0.08)",
+	                                color: isLight ? "#111111" : "rgba(255,255,255,0.78)",
+	                              }}
+	                            >
+	                              {chapterLabel}
+	                            </span>
+	                            <span
+	                              className="h-9 w-9 rounded-full flex items-center justify-center flex-shrink-0 transition-transform group-active:translate-x-0.5"
+	                              style={{ background: isLight ? "#eceef1" : "rgba(255,255,255,0.06)", color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.72)" }}
 	                            >
 	                              <UiIcon name="chevron-right" size={15} />
 	                            </span>
@@ -1572,8 +1725,14 @@ function LexiconInner() {
 	            </form>
 	          </div>
 	        )}
+        </div>
 
       </header>
+      <div
+        className="md:hidden print:hidden"
+        style={{ height: scriptureToolbarHeight }}
+        aria-hidden="true"
+      />
 
       {/* ── Font picker full screen ── */}
       {showFontPicker && (
@@ -1603,13 +1762,92 @@ function LexiconInner() {
                     {lang === "es" ? "Lectura Bíblica" : "Scripture"}
                   </p>
                   <h2 className="text-[30px] font-semibold tracking-[-0.04em]">
-                    {lang === "es" ? "Fuentes" : "Fonts"}
+                    {lang === "es" ? "Lectura" : "Reading"}
                   </h2>
                 </div>
+              </div>
+
+              <div
+                className="mt-5 rounded-[28px] border p-4 shadow-sm"
+                style={{
+                  background: isLight ? "#f6f7f8" : "#1b1c20",
+                  borderColor: isLight ? "#e1e2e4" : "rgba(255,255,255,0.08)",
+                }}
+              >
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
+                      {lang === "es" ? "Tamaño del texto" : "Text Size"}
+                    </p>
+                    <p className="mt-1 text-[24px] font-black tracking-[-0.04em]">
+                      {FONT_SIZE_LABELS[fontSize]}
+                    </p>
+                  </div>
+                  <div
+                    className="flex items-center rounded-full border p-1"
+                    style={{
+                      background: isLight ? "#ffffff" : "#101010",
+                      borderColor: isLight ? "#d9dbdf" : "rgba(255,255,255,0.10)",
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => changeFontSize(-1)}
+                      disabled={!canDecreaseFont}
+                      className="h-11 w-12 rounded-2xl text-[13px] font-black transition-opacity disabled:opacity-35"
+                      style={{ color: isLight ? "#111111" : "#ffffff" }}
+                    >
+                      A-
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => changeFontSize(1)}
+                      disabled={!canIncreaseFont}
+                      className="h-11 w-12 rounded-2xl text-base font-black transition-opacity disabled:opacity-35"
+                      style={{
+                        background: isLight ? "#e5e7eb" : "rgba(255,255,255,0.10)",
+                        color: isLight ? "#111111" : "#ffffff",
+                      }}
+                    >
+                      A+
+                    </button>
+                  </div>
+                </div>
+                <div className="mt-4 grid grid-cols-3 gap-2">
+                  {FONT_SIZES.map((size) => {
+                    const active = size === fontSize;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setReaderFontSize(size)}
+                        className="rounded-2xl border px-3 py-3 text-left transition-transform active:scale-[0.98]"
+                        style={{
+                          background: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#ffffff" : "rgba(255,255,255,0.05)"),
+                          borderColor: active ? (isLight ? "#101010" : "#f5f5f5") : (isLight ? "#e0e2e5" : "rgba(255,255,255,0.08)"),
+                          color: active ? (isLight ? "#ffffff" : "#111111") : (isLight ? "#111111" : "#f4f4f4"),
+                        }}
+                      >
+                        <span className="block text-[15px] font-black leading-none">{FONT_SIZE_LABELS[size]}</span>
+                        <span className="mt-1 block text-[10px] font-bold uppercase tracking-[0.12em] opacity-55">
+                          {size === "base" ? (lang === "es" ? "Normal" : "Default") : size.toUpperCase()}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-3 text-sm leading-relaxed" style={{ color: isLight ? "#6f7378" : "#a0a0a0" }}>
+                  {lang === "es"
+                    ? "El tamaño se guarda para que la Biblia vuelva a abrir con la misma lectura cómoda."
+                    : "Your reading size is saved so Scripture reopens at the same comfortable scale."}
+                </p>
               </div>
             </div>
 
             <div className="overflow-y-auto flex-1 px-7 pb-24">
+              <p className="mb-3 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "#8a8a8a" : "#9a9a9a" }}>
+                {lang === "es" ? "Estilo de fuente" : "Font Style"}
+              </p>
               {SCRIPTURE_FONTS.map((f) => (
                 <button
                   key={f.key}
@@ -1721,9 +1959,22 @@ function LexiconInner() {
           {/* Chapter hero */}
           {selectedBook && (
             <div className="text-center mb-10">
-              <p className="pn-book-name text-sm text-white/25 font-semibold tracking-widest uppercase mb-2">{getBookDisplayName(selectedBook, translation)}</p>
-              <p className="pn-chapter-num text-8xl font-black text-white leading-none mb-3">{selectedChapter}</p>
-              <p className="pn-chapter-subtitle text-[11px] text-white/20 tracking-wide">
+              <p
+                className="pn-book-name text-sm font-semibold tracking-widest uppercase mb-2"
+                style={{ color: isLight ? "rgba(0,0,0,0.32)" : "rgba(255,255,255,0.25)" }}
+              >
+                {getBookDisplayName(selectedBook, translation)}
+              </p>
+              <p
+                className="pn-chapter-num text-8xl font-black leading-none mb-3"
+                style={{ color: isLight ? "#050505" : "#ffffff" }}
+              >
+                {selectedChapter}
+              </p>
+              <p
+                className="pn-chapter-subtitle text-[11px] tracking-wide"
+                style={{ color: isLight ? "rgba(0,0,0,0.28)" : "rgba(255,255,255,0.20)" }}
+              >
                 {TRANSLATION_OPTIONS.find((option) => option.key === translation)?.name ?? "King James Version"}
               </p>
               {highlightedVerseCount > 0 && (
@@ -1764,59 +2015,104 @@ function LexiconInner() {
                 </div>
               )}
 
-              {chapterData && (
-                <div
-                  className={`leading-loose ${FONT_SIZE_CLASSES[fontSize]}`}
-                  style={{ fontFamily: activeFontFamily }}
-                  translate="no"
-                >
-                  {chapterData.verses.map((verse) => {
-                    const color = verseColors[verse.verse];
-                    const colorCfg = color ? HIGHLIGHT_COLORS[color] : null;
-                    const isSelected = selectedVerseNums.includes(verse.verse);
-                    return (
-                      <span
-                        key={verse.verse}
-                        ref={(el) => { if (el) verseRefs.current[verse.verse] = el as unknown as HTMLDivElement; }}
-                        className="relative inline cursor-pointer"
+              {chapterData && (() => {
+                const visibleVerses = activeFocusedRange
+                  ? chapterData.verses.filter((verse) => verse.verse >= activeFocusedRange.start && verse.verse <= activeFocusedRange.end)
+                  : chapterData.verses;
+
+                return (
+                  <>
+                    {activeFocusedRange && (
+                      <div
+                        className="mb-7 rounded-[24px] border p-4 flex items-center gap-3"
                         style={{
-                          ...(colorCfg ? {
-                            backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,
-                            color: colorCfg.textColor,
-                          } : {}),
-                          ...(isSelected ? {
-                            textDecorationLine: "underline",
-                            textDecorationStyle: "dotted",
-                            textDecorationColor: colorCfg ? colorCfg.dot : (isLight ? "rgba(0,0,0,0.35)" : "rgba(201,169,97,0.95)"),
-                            textUnderlineOffset: "5px",
-                            textDecorationThickness: "2px",
-                          } : {}),
-                          borderRadius: "4px",
-                          padding: "2px 4px",
-                          boxDecorationBreak: "clone",
-                          WebkitBoxDecorationBreak: "clone",
+                          background: isLight ? "#f4f5f6" : "rgba(255,255,255,0.055)",
+                          borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.09)",
                         }}
-                        onClick={(e) => handleVerseClick(verse.verse, e)}
-                        title={isSelected ? "Selected. Tap another verse to add it." : color ? "Tap to change or remove highlight" : "Tap to select this verse"}
                       >
-                        <span
-                          className="text-[11px] font-black align-super mr-[3px] ml-[3px] select-none"
-                          style={colorCfg ? {
-                            backgroundColor: `rgba(0,0,0,0.25)`,
-                            borderRadius: "3px",
-                            padding: "0 3px",
-                            color: "rgba(255,255,255,0.9)",
-                          } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : (isLight ? "rgba(0,0,0,0.28)" : "rgba(167,139,250,0.5)") }}
+                        <div className="min-w-0 flex-1">
+                          <p
+                            className="text-[10px] font-black uppercase tracking-[0.18em]"
+                            style={{ color: isLight ? "rgba(0,0,0,0.46)" : "rgba(255,255,255,0.50)" }}
+                          >
+                            {lang === "es" ? "Pasaje seleccionado" : "Selected Passage"}
+                          </p>
+                          <p className="mt-1 truncate text-[18px] font-black tracking-[-0.02em]" style={{ color: isLight ? "#080808" : "#ffffff" }}>
+                            {focusedReferenceLabel}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFocusedVerseRange(null);
+                            setSelectedVerseNums([]);
+                            window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 30);
+                          }}
+                          className="rounded-full px-4 py-2 text-[12px] font-black active:scale-95 transition-transform"
+                          style={{
+                            background: isLight ? "#e5e7eb" : "rgba(255,255,255,0.08)",
+                            color: isLight ? "#111111" : "#ffffff",
+                          }}
                         >
-                          {verse.verse}
-                        </span>
-                        {verse.text}
-                        {" "}
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
+                          {lang === "es" ? "Leer capítulo" : "Read chapter"}
+                        </button>
+                      </div>
+                    )}
+
+                    <div
+                      className={`${FONT_SIZE_CLASSES[fontSize]} ${FONT_SIZE_LEADING_CLASSES[fontSize]}`}
+                      style={{ fontFamily: activeFontFamily }}
+                      translate="no"
+                    >
+                      {visibleVerses.map((verse) => {
+                        const color = verseColors[verse.verse];
+                        const colorCfg = color ? HIGHLIGHT_COLORS[color] : null;
+                        const isSelected = selectedVerseNums.includes(verse.verse);
+                        return (
+                          <span
+                            key={verse.verse}
+                            ref={(el) => { if (el) verseRefs.current[verse.verse] = el as unknown as HTMLDivElement; }}
+                            className="relative inline cursor-pointer"
+                            style={{
+                              ...(colorCfg ? {
+                                backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,
+                                color: colorCfg.textColor,
+                              } : {}),
+                              ...(isSelected ? {
+                                textDecorationLine: "underline",
+                                textDecorationStyle: "dotted",
+                                textDecorationColor: colorCfg ? colorCfg.dot : (isLight ? "rgba(0,0,0,0.35)" : "rgba(201,169,97,0.95)"),
+                                textUnderlineOffset: "5px",
+                                textDecorationThickness: "2px",
+                              } : {}),
+                              borderRadius: "4px",
+                              padding: "2px 4px",
+                              boxDecorationBreak: "clone",
+                              WebkitBoxDecorationBreak: "clone",
+                            }}
+                            onClick={(e) => handleVerseClick(verse.verse, e)}
+                            title={isSelected ? "Selected. Tap another verse to add it." : color ? "Tap to change or remove highlight" : "Tap to select this verse"}
+                          >
+                            <span
+                              className="text-[11px] font-black align-super mr-[3px] ml-[3px] select-none"
+                              style={colorCfg ? {
+                                backgroundColor: `rgba(0,0,0,0.25)`,
+                                borderRadius: "3px",
+                                padding: "0 3px",
+                                color: "rgba(255,255,255,0.9)",
+                              } : { color: theme === "gold-navy" ? "rgba(201,169,97,0.55)" : (isLight ? "rgba(0,0,0,0.28)" : "rgba(167,139,250,0.5)") }}
+                            >
+                              {verse.verse}
+                            </span>
+                            {verse.text}
+                            {" "}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </>
+                );
+              })()}
 
             </div>
           </div>
@@ -1866,13 +2162,25 @@ function LexiconInner() {
       {activeTab === "reader" && (
         <div className="scripture-reader-bar fixed left-0 right-0 z-40 px-4 print:hidden"
           style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)" }}>
-          <div className="le-chapter-nav bg-[#1c1c1e]/95 backdrop-blur-md rounded-2xl shadow-2xl border border-white/[0.08] flex items-center h-14 px-2 gap-1">
+          <div
+            className="le-chapter-nav rounded-[28px] shadow-2xl border grid grid-cols-[54px_1fr_54px] items-center gap-2 p-1.5"
+            style={{
+              background: isLight ? "rgba(246,247,248,0.98)" : "rgba(19,20,24,0.96)",
+              borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)",
+              boxShadow: isLight ? "0 16px 32px rgba(15,23,42,0.12)" : "0 18px 42px rgba(0,0,0,0.45)",
+            }}
+          >
 
             {/* Prev chapter */}
             <button
               onClick={goPrev}
-              className="le-nav-arrow w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              className="le-nav-arrow h-[52px] w-[52px] rounded-[22px] flex items-center justify-center transition-transform active:scale-95"
+              style={{
+                background: isLight ? "#ffffff" : "rgba(255,255,255,0.06)",
+                color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)",
+                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.05)",
+              }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
@@ -1886,22 +2194,49 @@ function LexiconInner() {
                 setPickerBookSearch("");
                 setShowBookPicker(true);
               }}
-              className="flex-1 flex flex-col items-center justify-center gap-0.5 h-full rounded-xl hover:bg-white/[0.05] transition-colors">
-              <span className="le-testament-label text-[10px] font-semibold text-white/25 tracking-widest uppercase leading-none">
-                {(translation === "rv1960" || translation === "lbla" || translation === "nvi" || translation === "ntv")
-                  ? (selectedBook?.testament === "OT" ? "Antiguo Testamento" : "Nuevo Testamento")
-                  : (selectedBook?.testament === "OT" ? "Old Testament" : "New Testament")}
+              className="min-w-0 h-[52px] rounded-[22px] border flex items-center justify-between gap-3 px-4 transition-transform active:scale-[0.99]"
+              style={{
+                background: isLight ? "#ffffff" : "rgba(255,255,255,0.045)",
+                borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)",
+              }}
+            >
+              <span className="min-w-0 flex-1 text-left">
+                <span
+                  className="le-testament-label block text-[9px] font-black tracking-[0.18em] uppercase leading-none"
+                  style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.36)" }}
+                >
+                  {(translation === "rv1960" || translation === "lbla" || translation === "nvi" || translation === "ntv")
+                    ? (selectedBook?.testament === "OT" ? "Antiguo Testamento" : "Nuevo Testamento")
+                    : (selectedBook?.testament === "OT" ? "Old Testament" : "New Testament")}
+                </span>
+                <span
+                  className="mt-1 block truncate text-[17px] font-black leading-none tracking-[-0.02em]"
+                  style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
+                >
+                  {getBookDisplayName(selectedBook, translation)}
+                </span>
               </span>
-              <span className="text-white font-bold text-sm leading-none mt-1">
-                {getBookDisplayName(selectedBook, translation)} · {selectedChapter}
+              <span
+                className="h-10 min-w-10 px-3 rounded-[18px] flex items-center justify-center text-[18px] font-black"
+                style={{
+                  background: isLight ? "#f0f1f3" : "rgba(255,255,255,0.08)",
+                  color: isLight ? "#111111" : "#f4f4f4",
+                }}
+              >
+                {selectedChapter}
               </span>
             </button>
 
             {/* Next chapter */}
             <button
               onClick={goNext}
-              className="le-nav-arrow w-11 h-11 rounded-xl flex items-center justify-center text-white/40 hover:text-white hover:bg-white/[0.08] transition-colors flex-shrink-0">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              className="le-nav-arrow h-[52px] w-[52px] rounded-[22px] flex items-center justify-center transition-transform active:scale-95"
+              style={{
+                background: isLight ? "#ffffff" : "rgba(255,255,255,0.06)",
+                color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)",
+                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.05)",
+              }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </button>
@@ -2084,6 +2419,8 @@ function LexiconInner() {
                         onClick={() => {
                           setSelectedBook(pickerBook);
                           setSelectedChapter(ch);
+                          setFocusedVerseRange(null);
+                          setSelectedVerseNums([]);
                           setShowBookPicker(false);
                           setPickerView("books");
                         }}

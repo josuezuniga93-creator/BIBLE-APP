@@ -3,6 +3,7 @@ export interface VerseQuoteOptions {
   reference: string;
   logoSrc?: string;
   backgroundSrc?: string | null;
+  backgroundColor?: string;
   blurBackground?: boolean; // legacy — maps to bgBlur:60
   // Typography
   fontFamily?: string;
@@ -17,6 +18,11 @@ export interface VerseQuoteOptions {
   // Background
   bgBrightness?: number;      // 0–100, default 50
   bgBlur?: number;            // 0–100, default 0
+  showQuoteMark?: boolean;
+  accentColor?: string;
+  dividerColor?: string;
+  brandColor?: string;
+  brandText?: string;
 }
 
 // All available background options (null = default dark)
@@ -42,9 +48,8 @@ export async function renderVerseToCanvas(
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const GOLD     = "rgba(201,169,97,1)";
-  const GOLD_DIM = "rgba(201,169,97,0.25)";
-  const BG_DARK  = "#08090f";
+  const ACCENT   = opts.accentColor ?? "rgba(201,169,97,1)";
+  const BG_DARK  = opts.backgroundColor ?? "#08090f";
 
   const textColor    = opts.textColor       ?? "#ffffff";
   const textOpacity  = opts.textOpacity     ?? 1;
@@ -86,11 +91,13 @@ export async function renderVerseToCanvas(
   }
 
   // ── 2. Opening quote mark ────────────────────────────────────────────────────
-  ctx.fillStyle  = GOLD_DIM;
-  ctx.font       = `bold 120px ${fontFamily}`;
-  ctx.textAlign  = "left";
-  (ctx as any).letterSpacing = "0px";
-  ctx.fillText("“", 72, 220);
+  if (opts.showQuoteMark) {
+    ctx.fillStyle  = hexToRgba(ACCENT, 0.24);
+    ctx.font       = `bold 120px ${fontFamily}`;
+    ctx.textAlign  = "left";
+    (ctx as any).letterSpacing = "0px";
+    ctx.fillText("“", 72, 220);
+  }
 
   // ── 6. Verse text ─────────────────────────────────────────────────────────────
   const autoSize   = getVerseFont(opts.verseText.length);
@@ -103,10 +110,10 @@ export async function renderVerseToCanvas(
   ctx.textAlign   = align;
   (ctx as any).letterSpacing = `${lsPx}px`;
 
-  const textX  = align === "left" ? 100 : align === "right" ? WIDTH - 100 : WIDTH / 2;
-  const lines  = wrapText(ctx, opts.verseText, WIDTH - 200);
+  const textX  = align === "left" ? 108 : align === "right" ? WIDTH - 108 : WIDTH / 2;
+  const lines  = wrapText(ctx, opts.verseText, WIDTH - 216);
   const totalH = lines.length * lineHeight;
-  let y = HEIGHT / 2 - totalH / 2;
+  let y = Math.max(190, HEIGHT / 2 - totalH / 2);
   for (const line of lines) {
     ctx.fillText(line, textX, y);
     y += lineHeight;
@@ -116,10 +123,10 @@ export async function renderVerseToCanvas(
   (ctx as any).letterSpacing = "0px";
 
   // ── 7. Reference ────────────────────────────────────────────────────────────
-  const refY = Math.max(y + 50, HEIGHT * 0.73);
+  const refY = Math.max(y + 48, HEIGHT * 0.72);
 
   // Short divider line
-  ctx.strokeStyle = `rgba(255,255,255,0.25)`;
+  ctx.strokeStyle = opts.dividerColor ?? `rgba(255,255,255,0.25)`;
   ctx.lineWidth   = 1;
   ctx.beginPath();
   ctx.moveTo(WIDTH / 2 - 48, refY - 18);
@@ -136,15 +143,39 @@ export async function renderVerseToCanvas(
   ctx.globalAlpha = 1;
   (ctx as any).letterSpacing = "0px";
 
-  // ── 8. Branding — centered, premium ─────────────────────────────────────────
-  const brandY = HEIGHT - 60;
+  // ── 8. Branding ─────────────────────────────────────────────────────────────
+  const brandText = opts.brandText ?? "Tulip Bible App";
+  const brandColor = opts.brandColor ?? "rgba(255,255,255,0.34)";
+  const brandY = HEIGHT - 64;
+  const brandFont = "500 22px -apple-system, BlinkMacSystemFont, sans-serif";
+  ctx.font = brandFont;
+  (ctx as any).letterSpacing = "2.5px";
+  const textWidth = ctx.measureText(brandText).width;
+  const logoSize = 34;
+  const gap = 14;
+  const totalWidth = textWidth + (opts.logoSrc ? logoSize + gap : 0);
+  let startX = WIDTH / 2 - totalWidth / 2;
 
-  // Domain centered
-  ctx.fillStyle  = "rgba(255,255,255,0.28)";
-  ctx.font       = "400 18px sans-serif";
-  ctx.textAlign  = "center";
-  (ctx as any).letterSpacing = "3px";
-  ctx.fillText("Tulip Bible App", WIDTH / 2, brandY);
+  if (opts.logoSrc) {
+    try {
+      const logo = new Image();
+      logo.crossOrigin = "anonymous";
+      logo.src = opts.logoSrc;
+      await new Promise<void>((res) => { logo.onload = () => res(); logo.onerror = () => res(); });
+      if (logo.complete && logo.naturalWidth > 0) {
+        ctx.save();
+        roundedRect(ctx, startX, brandY - logoSize + 7, logoSize, logoSize, 7);
+        ctx.clip();
+        ctx.drawImage(logo, startX, brandY - logoSize + 7, logoSize, logoSize);
+        ctx.restore();
+        startX += logoSize + gap;
+      }
+    } catch {}
+  }
+
+  ctx.fillStyle  = brandColor;
+  ctx.textAlign  = "left";
+  ctx.fillText(brandText, startX, brandY);
   (ctx as any).letterSpacing = "0px";
 }
 
@@ -202,4 +233,25 @@ function wrapText(ctx: CanvasRenderingContext2D, text: string, maxWidth: number)
   }
   if (line) lines.push(line);
   return lines;
+}
+
+function hexToRgba(color: string, alpha: number): string {
+  if (color.startsWith("rgba") || color.startsWith("rgb")) return color;
+  const hex = color.replace("#", "");
+  if (hex.length !== 6) return `rgba(201,169,97,${alpha})`;
+  const r = parseInt(hex.slice(0, 2), 16);
+  const g = parseInt(hex.slice(2, 4), 16);
+  const b = parseInt(hex.slice(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function roundedRect(ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) {
+  const r = Math.min(radius, width / 2, height / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + width, y, x + width, y + height, r);
+  ctx.arcTo(x + width, y + height, x, y + height, r);
+  ctx.arcTo(x, y + height, x, y, r);
+  ctx.arcTo(x, y, x + width, y, r);
+  ctx.closePath();
 }
