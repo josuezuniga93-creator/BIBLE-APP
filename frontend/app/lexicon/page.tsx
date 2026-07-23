@@ -2194,36 +2194,25 @@ function LexiconInner() {
                 setPickerBookSearch("");
                 setShowBookPicker(true);
               }}
-              className="min-w-0 h-[52px] rounded-[22px] border flex items-center justify-between gap-3 px-4 transition-transform active:scale-[0.99]"
+              className="min-w-0 h-[52px] rounded-[22px] border flex items-center justify-center px-4 transition-transform active:scale-[0.99]"
               style={{
                 background: isLight ? "#ffffff" : "rgba(255,255,255,0.045)",
                 borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)",
               }}
             >
-              <span className="min-w-0 flex-1 text-left">
+              <span className="min-w-0 flex items-baseline justify-center gap-2 text-center">
                 <span
-                  className="le-testament-label block text-[9px] font-black tracking-[0.18em] uppercase leading-none"
-                  style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.36)" }}
-                >
-                  {(translation === "rv1960" || translation === "lbla" || translation === "nvi" || translation === "ntv")
-                    ? (selectedBook?.testament === "OT" ? "Antiguo Testamento" : "Nuevo Testamento")
-                    : (selectedBook?.testament === "OT" ? "Old Testament" : "New Testament")}
-                </span>
-                <span
-                  className="mt-1 block truncate text-[17px] font-black leading-none tracking-[-0.02em]"
+                  className="min-w-0 truncate text-[18px] font-black leading-none tracking-[-0.02em]"
                   style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}
                 >
                   {getBookDisplayName(selectedBook, translation)}
                 </span>
-              </span>
-              <span
-                className="h-10 min-w-10 px-3 rounded-[18px] flex items-center justify-center text-[18px] font-black"
-                style={{
-                  background: isLight ? "#f0f1f3" : "rgba(255,255,255,0.08)",
-                  color: isLight ? "#111111" : "#f4f4f4",
-                }}
-              >
-                {selectedChapter}
+                <span
+                  className="shrink-0 text-[18px] font-black leading-none"
+                  style={{ color: isLight ? "#111111" : "#f4f4f4" }}
+                >
+                  {selectedChapter}
+                </span>
               </span>
             </button>
 
