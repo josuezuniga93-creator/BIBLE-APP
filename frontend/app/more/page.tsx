@@ -1,467 +1,679 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
-import { useTheme, type Theme } from "../lib/useTheme";
-import { t } from "../lib/i18n";
-import { getCloudUser, pullFromCloud, pushToCloud } from "../lib/cloudSync";
+import { isLightTheme, useTheme, type Theme } from "../lib/useTheme";
+import { t, type Lang } from "../lib/i18n";
+import { getCloudUser, pullFromCloud } from "../lib/cloudSync";
 import type { User } from "@supabase/supabase-js";
-import { AppSectionIcon } from "../components/AppSectionIcon";
+import { AppSectionIcon, type AppSectionIconName } from "../components/AppSectionIcon";
 
-// ─── App tile icon components ─────────────────────────────────────────────────
+type TileDef = {
+  href: string;
+  icon: AppSectionIconName;
+  labelKey:
+    | "more_tile_plans"
+    | "more_tile_tracker"
+    | "more_tile_books"
+    | "more_tile_history"
+    | "more_tile_kids"
+    | "more_tile_videos"
+    | "more_tile_study_tools"
+    | "more_tile_collections"
+    | "more_tile_fellowship"
+    | "more_tile_church"
+    | "more_tile_give"
+    | "more_tile_rebuttal";
+  sub: Record<Lang, string>;
+};
 
-function PlansAppIcon() {
-  return <AppSectionIcon name="plans" size={23} />;
-}
+const APP_TILES: Record<string, TileDef> = {
+  plans: {
+    href: "/bible-plans",
+    icon: "plans",
+    labelKey: "more_tile_plans",
+    sub: { en: "Guided Scripture rhythms", es: "Ritmos guiados de Escritura" },
+  },
+  library: {
+    href: "/library",
+    icon: "library",
+    labelKey: "more_tile_books",
+    sub: { en: "Classic public-domain books", es: "Libros clásicos de dominio público" },
+  },
+  history: {
+    href: "/learn",
+    icon: "historical",
+    labelKey: "more_tile_history",
+    sub: { en: "Creeds, confessions, and councils", es: "Credos, confesiones y concilios" },
+  },
+  tracker: {
+    href: "/bible-tracker",
+    icon: "tracker",
+    labelKey: "more_tile_tracker",
+    sub: { en: "Progress through every book", es: "Progreso por cada libro" },
+  },
+  kids: {
+    href: "/kids-books",
+    icon: "kids",
+    labelKey: "more_tile_kids",
+    sub: { en: "Reading for children and families", es: "Lectura para niños y familias" },
+  },
+  videos: {
+    href: "/videos",
+    icon: "videos",
+    labelKey: "more_tile_videos",
+    sub: { en: "Teaching and testimonies", es: "Enseñanza y testimonios" },
+  },
+  studyTools: {
+    href: "/study-tools",
+    icon: "study-tools",
+    labelKey: "more_tile_study_tools",
+    sub: { en: "Commentary and dictionary", es: "Comentario y diccionario" },
+  },
+  collections: {
+    href: "/collections",
+    icon: "collections",
+    labelKey: "more_tile_collections",
+    sub: { en: "Saved highlights and books", es: "Resaltados y libros guardados" },
+  },
+  fellowship: {
+    href: "/fellowship",
+    icon: "fellowship",
+    labelKey: "more_tile_fellowship",
+    sub: { en: "Community and encouragement", es: "Comunidad y ánimo" },
+  },
+  church: {
+    href: "/church-directory",
+    icon: "church",
+    labelKey: "more_tile_church",
+    sub: { en: "Confessional churches nearby", es: "Iglesias confesionales cercanas" },
+  },
+  give: {
+    href: "/give",
+    icon: "give",
+    labelKey: "more_tile_give",
+    sub: { en: "Support the ministry", es: "Apoya el ministerio" },
+  },
+  churchAnalysis: {
+    href: "/church-analysis",
+    icon: "church-analysis",
+    labelKey: "more_tile_rebuttal",
+    sub: { en: "Discern sermons and teaching", es: "Discierne sermones y enseñanza" },
+  },
+};
 
-function LibraryAppIcon() {
-  return <AppSectionIcon name="library" size={23} />;
-}
-
-function TrackerAppIcon() {
-  return <AppSectionIcon name="tracker" size={23} />;
-}
-
-function FamilyAppIcon() {
-  return <AppSectionIcon name="worship" size={23} />;
-}
-
-function KidsAppIcon() {
-  return <AppSectionIcon name="kids" size={23} />;
-}
-
-function VideosAppIcon() {
-  return <AppSectionIcon name="videos" size={23} />;
-}
-
-function GiveAppIcon() {
-  return <AppSectionIcon name="give" size={23} />;
-}
-
-function FellowshipAppIcon() {
-  return <AppSectionIcon name="fellowship" size={23} />;
-}
-
-function HistoricalAppIcon() {
-  return <AppSectionIcon name="historical" size={23} />;
-}
-
-function ChurchAppIcon() {
-  return <AppSectionIcon name="church" size={23} />;
-}
-
-function NotesAppIcon() {
-  return <AppSectionIcon name="notes" size={23} />;
-}
-
-function CollectionsAppIcon() {
-  return <AppSectionIcon name="collections" size={23} />;
-}
-
-function StudyToolsAppIcon() {
-  return <AppSectionIcon name="study-tools" size={23} />;
-}
-
-function RebuttalAppIcon() {
-  return <AppSectionIcon name="church-analysis" size={23} />;
-}
-
-// ─── App grid config ──────────────────────────────────────────────────────────
-
-const APP_TILE_DEFS = [
-  { href: "/bible-plans",       Icon: PlansAppIcon,        labelKey: "more_tile_plans"       as const, color: "#5b21b6", sub: { en: "Guided reading plans", es: "Planes de lectura guiados" } },
-  { href: "/library",           Icon: LibraryAppIcon,      labelKey: "more_tile_books"       as const, color: "#0369a1", sub: { en: "Free books & theology", es: "Libros gratis y teología" } },
-  { href: "/learn",             Icon: HistoricalAppIcon,   labelKey: "more_tile_history"     as const, color: "#78350f", sub: { en: "Historical documents & creeds", es: "Documentos históricos y credos" } },
-  { href: "/bible-tracker",     Icon: TrackerAppIcon,      labelKey: "more_tile_tracker"     as const, color: "#065f46", sub: { en: "Track your reading progress", es: "Sigue tu progreso de lectura" } },
-  { href: "/kids-books",        Icon: KidsAppIcon,         labelKey: "more_tile_kids"        as const, color: "#c2410c", sub: { en: "Bible stories for children", es: "Historias bíblicas para niños" } },
-  { href: "/videos",            Icon: VideosAppIcon,       labelKey: "more_tile_videos"      as const, color: "#1e3a8a", sub: { en: "Teaching & testimonies", es: "Enseñanza y testimonios" } },
-  { href: "/study-tools",       Icon: StudyToolsAppIcon,   labelKey: "more_tile_study_tools" as const, color: "#8a6b2d", sub: { en: "Commentaries & concordance", es: "Comentarios y concordancia" } },
-  { href: "/collections",       Icon: CollectionsAppIcon,  labelKey: "more_tile_collections" as const, color: "#92400e", sub: { en: "Saved verses & notes", es: "Versículos y notas guardados" } },
-  { href: "/fellowship",        Icon: FellowshipAppIcon,   labelKey: "more_tile_fellowship"  as const, color: "#7c3aed", sub: { en: "Connect with believers", es: "Conéctate con creyentes" } },
-  { href: "/church-directory",  Icon: ChurchAppIcon,       labelKey: "more_tile_church"      as const, color: "#1a6b3a", sub: { en: "Find a church near you", es: "Encuentra una iglesia cerca" } },
-  { href: "/give",              Icon: GiveAppIcon,         labelKey: "more_tile_give"        as const, color: "#b45309", sub: { en: "Support the ministry", es: "Apoya el ministerio" } },
-  { href: "/church-analysis",  Icon: RebuttalAppIcon,     labelKey: "more_tile_rebuttal"    as const, color: "#6b1d1d", sub: { en: "Analyze church teachings", es: "Analiza enseñanzas de iglesias" } },
+const PRIMARY_TOOLS = [APP_TILES.studyTools, APP_TILES.library, APP_TILES.history, APP_TILES.videos];
+const DAILY_TOOLS = [APP_TILES.plans, APP_TILES.tracker, APP_TILES.kids];
+const CONNECT_TOOLS = [
+  APP_TILES.collections,
+  APP_TILES.church,
+  APP_TILES.churchAnalysis,
+  APP_TILES.fellowship,
+  APP_TILES.give,
 ];
 
-// Top featured square cards, 2x2: Videos, Free Books (Library), Historical Documents, Study Tools
-const TOP_TILE_INDICES = [5, 1, 2, 6];
-// Remaining tiles as full-width banner cards, in exact required order:
-// Kid's Books, Bible Tracker, Plans, Fellowship, Collections, Find a Church, Church Analysis, Give
-const BANNER_TILE_INDICES = [4, 3, 0, 8, 7, 9, 11, 10];
+type Palette = {
+  bg: string;
+  page: string;
+  card: string;
+  cardAlt: string;
+  text: string;
+  muted: string;
+  faint: string;
+  border: string;
+  iconWell: string;
+  primary: string;
+  primaryText: string;
+  shadow: string;
+};
 
-// ─── Component ────────────────────────────────────────────────────────────────
+function getPalette(isLight: boolean): Palette {
+  if (isLight) {
+    return {
+      bg: "#ffffff",
+      page: "#f5f5f6",
+      card: "#ffffff",
+      cardAlt: "#f1f1f2",
+      text: "#050505",
+      muted: "rgba(0,0,0,0.58)",
+      faint: "rgba(0,0,0,0.35)",
+      border: "rgba(0,0,0,0.08)",
+      iconWell: "#ececed",
+      primary: "#050505",
+      primaryText: "#ffffff",
+      shadow: "0 18px 40px rgba(0,0,0,0.08)",
+    };
+  }
+
+  return {
+    bg: "#080a10",
+    page: "#0d1018",
+    card: "rgba(255,255,255,0.055)",
+    cardAlt: "rgba(255,255,255,0.085)",
+    text: "#ffffff",
+    muted: "rgba(255,255,255,0.66)",
+    faint: "rgba(255,255,255,0.38)",
+    border: "rgba(255,255,255,0.10)",
+    iconWell: "rgba(211,179,97,0.14)",
+    primary: "#d3b361",
+    primaryText: "#050505",
+    shadow: "0 20px 50px rgba(0,0,0,0.35)",
+  };
+}
+
+function copyFor(lang: Lang) {
+  return {
+    account: lang === "es" ? "Cuenta" : "Account",
+    signedIn: lang === "es" ? "Sesión iniciada" : "Signed in",
+    viewProfile: lang === "es" ? "Ver mi perfil" : "View my profile",
+    signInTitle: lang === "es" ? "Sincroniza tu Biblia" : "Sync your Bible",
+    signInSub:
+      lang === "es"
+        ? "Guarda notas, resaltados, planes y colecciones en todos tus dispositivos."
+        : "Keep notes, highlights, plans, and collections across your devices.",
+    signIn: lang === "es" ? "Iniciar sesión" : "Sign in",
+    heroLabel: lang === "es" ? "Extras" : "Extras",
+    heroTitle: lang === "es" ? "Todo para estudiar mejor." : "Everything for deeper study.",
+    heroSub:
+      lang === "es"
+        ? "Abre comentarios, libros, videos, herramientas y conexiones sin perderte."
+        : "Open commentaries, books, videos, tools, and church connections without hunting around.",
+    continueStudy: lang === "es" ? "Continuar estudio" : "Continue study",
+    saved: lang === "es" ? "Guardados" : "Saved",
+    libraryStudy: lang === "es" ? "Biblioteca y estudio" : "Library & Study",
+    daily: lang === "es" ? "Ritmos diarios" : "Daily Rhythms",
+    connect: lang === "es" ? "Conectar" : "Connect",
+    settings: lang === "es" ? "Ajustes" : "Settings",
+    syncDone: lang === "es" ? "Sincronizado" : "Synced",
+    syncing: lang === "es" ? "Sincronizando" : "Syncing",
+    syncError: lang === "es" ? "Revisar conexión" : "Check connection",
+    idle: lang === "es" ? "Listo" : "Ready",
+  };
+}
+
+function statusLabel(lang: Lang, status: "idle" | "syncing" | "done" | "error") {
+  const c = copyFor(lang);
+  if (status === "done") return c.syncDone;
+  if (status === "syncing") return c.syncing;
+  if (status === "error") return c.syncError;
+  return c.idle;
+}
+
+function SectionLabel({
+  label,
+  palette,
+}: {
+  label: string;
+  palette: Palette;
+}) {
+  return (
+    <p
+      className="px-1 text-[10px] font-black uppercase tracking-[0.28em]"
+      style={{ color: palette.faint }}
+    >
+      {label}
+    </p>
+  );
+}
+
+function IconWell({
+  name,
+  palette,
+  large = false,
+}: {
+  name: AppSectionIconName;
+  palette: Palette;
+  large?: boolean;
+}) {
+  return (
+    <span
+      className="flex shrink-0 items-center justify-center"
+      style={{
+        width: large ? 48 : 42,
+        height: large ? 48 : 42,
+        borderRadius: large ? 18 : 15,
+        color: palette.text,
+        background: palette.iconWell,
+        border: `1px solid ${palette.border}`,
+      }}
+    >
+      <AppSectionIcon name={name} size={large ? 25 : 22} />
+    </span>
+  );
+}
+
+function FeatureCard({
+  tile,
+  palette,
+  lang,
+}: {
+  tile: TileDef;
+  palette: Palette;
+  lang: Lang;
+}) {
+  return (
+    <Link
+      href={tile.href}
+      className="group flex min-h-[152px] flex-col justify-between rounded-[28px] p-5 transition-transform active:scale-[0.985]"
+      style={{
+        color: palette.text,
+        background: palette.card,
+        border: `1px solid ${palette.border}`,
+        boxShadow: palette.shadow,
+      }}
+    >
+      <IconWell name={tile.icon} palette={palette} large />
+      <span>
+        <span className="block text-[19px] font-black leading-tight">{t(lang, tile.labelKey)}</span>
+        <span className="mt-2 block text-[13px] font-medium leading-snug" style={{ color: palette.muted }}>
+          {tile.sub[lang]}
+        </span>
+      </span>
+    </Link>
+  );
+}
+
+function RowLink({
+  tile,
+  palette,
+  lang,
+}: {
+  tile: TileDef;
+  palette: Palette;
+  lang: Lang;
+}) {
+  return (
+    <Link
+      href={tile.href}
+      className="flex items-center gap-4 rounded-[24px] px-4 py-4 transition-transform active:scale-[0.99]"
+      style={{
+        color: palette.text,
+        background: palette.card,
+        border: `1px solid ${palette.border}`,
+      }}
+    >
+      <IconWell name={tile.icon} palette={palette} />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-[16px] font-black">{t(lang, tile.labelKey)}</span>
+        <span className="mt-0.5 block truncate text-[13px] font-medium" style={{ color: palette.muted }}>
+          {tile.sub[lang]}
+        </span>
+      </span>
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full" style={{ background: palette.cardAlt, color: palette.muted }}>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="m9 18 6-6-6-6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </span>
+    </Link>
+  );
+}
+
+function SettingRow({
+  label,
+  sub,
+  palette,
+  children,
+}: {
+  label: string;
+  sub: string;
+  palette: Palette;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex items-center justify-between gap-4 rounded-[24px] px-4 py-4"
+      style={{
+        background: palette.card,
+        border: `1px solid ${palette.border}`,
+        color: palette.text,
+      }}
+    >
+      <span className="min-w-0">
+        <span className="block text-[15px] font-black">{label}</span>
+        <span className="mt-0.5 block text-[12.5px] font-medium leading-snug" style={{ color: palette.muted }}>
+          {sub}
+        </span>
+      </span>
+      {children}
+    </div>
+  );
+}
 
 export default function MorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const router = useRouter();
+  const isLight = isLightTheme(theme);
+  const palette = getPalette(isLight);
+  const c = copyFor(lang);
 
-  // ── Cloud account state ────────────────────────────────────────────────────
   const [cloudUser, setCloudUser] = useState<User | null>(null);
   const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "done" | "error">("idle");
+  const [notifEnabled, setNotifEnabled] = useState(false);
+  const [notifStatus, setNotifStatus] = useState<"default" | "granted" | "denied">("default");
 
   useEffect(() => {
     getCloudUser().then((user) => {
       setCloudUser(user);
-      if (user) {
-        // Pull latest data from cloud on page open
-        setSyncStatus("syncing");
-        pullFromCloud(user)
-          .then(() => setSyncStatus("done"))
-          .catch(() => setSyncStatus("error"));
-      }
+      if (!user) return;
+
+      setSyncStatus("syncing");
+      pullFromCloud(user)
+        .then(() => setSyncStatus("done"))
+        .catch(() => setSyncStatus("error"));
     });
   }, []);
 
-
-  // ── Notification state ──────────────────────────────────────────────────────
-  const [notifEnabled, setNotifEnabled] = useState(false);
-  const [notifStatus, setNotifStatus] = useState<"default"|"granted"|"denied">("default");
-
   useEffect(() => {
     if (typeof Notification !== "undefined") {
-      setNotifStatus(Notification.permission as "default"|"granted"|"denied");
+      setNotifStatus(Notification.permission as "default" | "granted" | "denied");
     }
     try {
       setNotifEnabled(localStorage.getItem("tulip_notif_enabled") === "true");
-    } catch { /**/ }
+    } catch {
+      // localStorage can be unavailable in restrictive browsers.
+    }
   }, []);
 
   async function handleNotifToggle() {
     if (notifEnabled) {
-      // Turn off
       setNotifEnabled(false);
-      try { localStorage.setItem("tulip_notif_enabled", "false"); } catch { /**/ }
+      try {
+        localStorage.setItem("tulip_notif_enabled", "false");
+      } catch {}
       return;
     }
-    // Request permission
+
     if (typeof Notification === "undefined") return;
     let perm = Notification.permission;
     if (perm === "default") {
       perm = await Notification.requestPermission();
-      setNotifStatus(perm as "default"|"granted"|"denied");
+      setNotifStatus(perm as "default" | "granted" | "denied");
     }
-    if (perm === "granted") {
-      setNotifEnabled(true);
-      try { localStorage.setItem("tulip_notif_enabled", "true"); } catch { /**/ }
-      // Tell the service worker to start scheduling
-      if ("serviceWorker" in navigator) {
-        const reg = await navigator.serviceWorker.ready;
-        reg.active?.postMessage({ type: "SCHEDULE_NOTIFICATIONS" });
-      }
+    if (perm !== "granted") return;
+
+    setNotifEnabled(true);
+    try {
+      localStorage.setItem("tulip_notif_enabled", "true");
+    } catch {}
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      reg.active?.postMessage({ type: "SCHEDULE_NOTIFICATIONS" });
     }
   }
 
-  const isLight = theme === "white-noir";
-
-  const [isLightElegant, setIsLightElegant] = useState(false);
-  useEffect(() => {
-    const check = () => {
-      const mode = document.documentElement.getAttribute("data-theme-mode");
-      const t = document.documentElement.getAttribute("data-theme") ?? localStorage.getItem("ryc-theme") ?? "white-noir";
-      setIsLightElegant(mode === "light" || t === "white-noir" || t === "light");
+  async function handleShare() {
+    const data = {
+      title: "Tulip Bible App",
+      text: "Study Scripture with commentaries, books, notes, and daily devotional tools.",
+      url: "https://tulip-bible-app.vercel.app",
     };
-    check();
-    window.addEventListener("ryc-theme-change", check as EventListener);
-    return () => window.removeEventListener("ryc-theme-change", check as EventListener);
-  }, []);
+    try {
+      if (navigator.share) {
+        await navigator.share(data);
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(data.url);
+        alert(lang === "es" ? "Enlace copiado." : "Link copied.");
+      }
+    } catch {
+      // User cancelled native share sheet.
+    }
+  }
 
   return (
-    <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0f0f0f", color: isLight ? "#0a0a0a" : "white" }}>
-      <main className="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-6">
-
-        {/* ── Account / Cloud Sync ──────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>Account</p>
+    <div className="min-h-screen" style={{ background: palette.bg, color: palette.text }}>
+      <main className="mx-auto max-w-lg px-5 pb-10 pt-6">
+        <section className="space-y-3">
+          <SectionLabel label={c.account} palette={palette} />
           {cloudUser ? (
-            <div className="rounded-2xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
-              {/* Logged-in header — tap to view profile */}
-              <Link
-                href="/profile"
-                className="flex items-center gap-3 px-4 py-3.5 transition-colors"
-                style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)" }}
-              >
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                  style={{ background: "rgba(201,169,97,0.18)", color: "#c9a961" }}
-                >
-                  {(cloudUser.user_metadata?.avatar_url
-                    ? <img src={cloudUser.user_metadata.avatar_url} className="w-9 h-9 rounded-full object-cover" />
-                    : (cloudUser.email?.[0] ?? "?").toUpperCase()
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{cloudUser.user_metadata?.name ?? cloudUser.email}</p>
-                  <p className="text-xs mt-0.5" style={{ color: "#c9a961" }}>View my profile →</p>
-                </div>
-                <div
-                  className="w-2 h-2 rounded-full flex-shrink-0"
+            <Link
+              href="/profile"
+              className="flex items-center gap-4 rounded-[26px] p-4 transition-transform active:scale-[0.99]"
+              style={{
+                background: palette.cardAlt,
+                border: `1px solid ${palette.border}`,
+                color: palette.text,
+              }}
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: palette.card }}>
+                {cloudUser.user_metadata?.avatar_url ? (
+                  <img
+                    src={cloudUser.user_metadata.avatar_url}
+                    className="h-full w-full object-cover"
+                    alt=""
+                  />
+                ) : (
+                  <span className="text-base font-black">{(cloudUser.email?.[0] ?? "?").toUpperCase()}</span>
+                )}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[16px] font-black">
+                  {cloudUser.user_metadata?.name ?? cloudUser.email}
+                </span>
+                <span className="mt-0.5 block text-[13px] font-semibold" style={{ color: palette.muted }}>
+                  {c.viewProfile} →
+                </span>
+              </span>
+              <span className="flex flex-col items-end gap-1">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
                   style={{
-                    background: syncStatus === "done" ? "#4ade80"
-                      : syncStatus === "syncing" ? "#facc15"
-                      : syncStatus === "error" ? "#f87171"
-                      : "rgba(255,255,255,0.2)",
+                    background:
+                      syncStatus === "done"
+                        ? "#22c55e"
+                        : syncStatus === "syncing"
+                          ? "#a1a1aa"
+                          : syncStatus === "error"
+                            ? "#ef4444"
+                            : palette.faint,
                   }}
                 />
-              </Link>
-            </div>
+                <span className="text-[10px] font-bold uppercase tracking-[0.12em]" style={{ color: palette.faint }}>
+                  {statusLabel(lang, syncStatus)}
+                </span>
+              </span>
+            </Link>
           ) : (
             <div
-              className="rounded-2xl overflow-hidden"
-              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "linear-gradient(135deg, rgba(201,169,97,0.10) 0%, rgba(14,17,28,0.97) 100%)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.20)" }}
+              className="rounded-[28px] p-5"
+              style={{
+                background: palette.cardAlt,
+                border: `1px solid ${palette.border}`,
+              }}
             >
-              <div className="flex items-center gap-4 px-4 py-5">
-                <div
-                  className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.14)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.22)" }}
-                >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                    <circle cx="12" cy="8" r="4" stroke={isLight ? "#555" : "#c9a961"} strokeWidth="1.8"/>
-                    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={isLight ? "#555" : "#c9a961"} strokeWidth="1.8" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold">Sync Across Devices</p>
-                  <p className="text-[11px] mt-0.5 leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
-                    Highlights, bookmarks, notes, plans — everywhere.
+              <div className="flex items-start gap-4">
+                <IconWell name="home" palette={palette} large />
+                <div className="min-w-0 flex-1">
+                  <h2 className="text-[19px] font-black leading-tight">{c.signInTitle}</h2>
+                  <p className="mt-1 text-[13px] font-medium leading-relaxed" style={{ color: palette.muted }}>
+                    {c.signInSub}
                   </p>
                 </div>
-                <a
-                  href="/auth/login"
-                  className="flex-shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.25)" }}
-                >
-                  Sign In
-                </a>
               </div>
+              <Link
+                href="/auth/login"
+                className="mt-5 flex h-12 items-center justify-center rounded-2xl text-[14px] font-black active:scale-[0.99]"
+                style={{ background: palette.primary, color: palette.primaryText }}
+              >
+                {c.signIn}
+              </Link>
             </div>
           )}
         </section>
 
-        {/* ── Features ──────────────────────────────────────────────────────── */}
-        <section style={{ marginTop: 24 }}>
-          {/* Top row: 2 featured square cards */}
-          <div className="grid grid-cols-2" style={{ gap: 10, marginBottom: 10 }}>
-            {TOP_TILE_INDICES.map((idx) => {
-              const { href, Icon, labelKey, sub } = APP_TILE_DEFS[idx];
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex flex-col justify-between active:scale-[0.98] transition-transform"
-                  style={{
-                    background: isLightElegant ? "#f4f4f4" : "rgba(255,255,255,0.04)",
-                    border: isLightElegant ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)",
-                    borderRadius: 16,
-                    padding: 20,
-                    height: 140,
-                  }}
-                >
-                  <div
-                    className="flex items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      overflow: "hidden",
-                      background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
-                      color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
-                    }}
-                  >
-                    <span style={{ lineHeight: 0 }}>
-                      <Icon />
-                    </span>
-                  </div>
-                  <div>
-                    <p className="font-bold" style={{ fontSize: 15, color: isLightElegant ? "#000000" : "#ffffff" }}>
-                      {t(lang, labelKey)}
-                    </p>
-                    <p
-                      className="leading-snug"
-                      style={{
-                        fontSize: 12,
-                        marginTop: 2,
-                        color: isLightElegant ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.40)",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {lang === "es" ? sub.es : sub.en}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* Remaining features as full-width banner cards */}
-          <div className="flex flex-col" style={{ gap: 10 }}>
-            {BANNER_TILE_INDICES.map((idx) => {
-              const { href, Icon, labelKey, sub } = APP_TILE_DEFS[idx];
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="flex items-center active:scale-[0.985] transition-transform"
-                  style={{
-                    background: isLightElegant ? "#f4f4f4" : "rgba(255,255,255,0.04)",
-                    border: isLightElegant ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)",
-                    borderRadius: 14,
-                    padding: "16px 18px",
-                    height: 70,
-                  }}
-                >
-                  <div
-                    className="flex items-center justify-center flex-shrink-0"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      borderRadius: "50%",
-                      background: isLightElegant ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.18)",
-                      color: isLightElegant ? "rgba(0,0,0,0.75)" : "#c9a961",
-                    }}
-                  >
-                    <span style={{ lineHeight: 0 }}>
-                      <Icon />
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0" style={{ marginLeft: 14 }}>
-                    <p className="font-bold truncate" style={{ fontSize: 14, color: isLightElegant ? "#000000" : "#ffffff" }}>
-                      {t(lang, labelKey)}
-                    </p>
-                    <p className="truncate" style={{ fontSize: 11.5, marginTop: 1, color: isLightElegant ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.40)" }}>
-                      {lang === "es" ? sub.es : sub.en}
-                    </p>
-                  </div>
-                  <span
-                    className="flex-shrink-0"
-                    style={{ fontSize: 20, color: isLightElegant ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.25)" }}
-                  >
-                    ›
-                  </span>
-                </Link>
-              );
-            })}
+        <section
+          className="mt-6 overflow-hidden rounded-[34px] p-6"
+          style={{
+            background: isLight
+              ? "linear-gradient(135deg, #f6f6f7 0%, #ffffff 56%, #e9e9eb 100%)"
+              : "linear-gradient(135deg, #111827 0%, #0a0d16 58%, #201a0d 100%)",
+            border: `1px solid ${palette.border}`,
+            boxShadow: palette.shadow,
+          }}
+        >
+          <p className="text-[11px] font-black uppercase tracking-[0.32em]" style={{ color: palette.faint }}>
+            {c.heroLabel}
+          </p>
+          <h1 className="mt-3 max-w-[13ch] text-[38px] font-black leading-[0.94] tracking-[-0.04em]">
+            {c.heroTitle}
+          </h1>
+          <p className="mt-4 text-[15px] font-medium leading-relaxed" style={{ color: palette.muted }}>
+            {c.heroSub}
+          </p>
+          <div className="mt-6 flex gap-3">
+            <Link
+              href="/study-tools"
+              className="flex h-12 flex-1 items-center justify-center rounded-2xl text-[14px] font-black active:scale-[0.99]"
+              style={{ background: palette.primary, color: palette.primaryText }}
+            >
+              {c.continueStudy}
+            </Link>
+            <Link
+              href="/collections"
+              className="flex h-12 flex-1 items-center justify-center rounded-2xl text-[14px] font-black active:scale-[0.99]"
+              style={{
+                background: palette.card,
+                color: palette.text,
+                border: `1px solid ${palette.border}`,
+              }}
+            >
+              {c.saved}
+            </Link>
           </div>
         </section>
 
-        {/* ── Appearance ────────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>Appearance</p>
-          <div className="rounded-2xl overflow-hidden" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
-            {[
-              { key: "gold-navy", label: "Dark Mode", desc: "Dark navy with warm gold", swatch: ["#0e1018", "#c9a961"] },
-              { key: "white-noir", label: "Light Mode", desc: "Clean white with black ink", swatch: ["#ffffff", "#0a0a0a"] },
-            ].map((t, i, arr) => (
-              <button
-                key={t.key}
-                onClick={() => setTheme(t.key as Theme)}
-                className="w-full flex items-center gap-3 px-4 py-3.5 active:bg-white/[0.04] transition-colors text-left"
-                style={{ borderBottom: i < arr.length - 1 ? (isLight ? "1px solid rgba(0,0,0,0.05)" : "1px solid rgba(255,255,255,0.05)") : "none" }}
-              >
-                <div className="flex gap-1 flex-shrink-0">
-                  {t.swatch.map((c, j) => (
-                    <div key={j} className="w-5 h-5 rounded-full border border-white/10" style={{ background: c }} />
-                  ))}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold">{t.label}</p>
-                  <p className="text-xs" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>{t.desc}</p>
-                </div>
-                {theme === t.key && (
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={isLight ? "#0a0a0a" : "#c9a961"} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M20 6L9 17l-5-5" />
-                  </svg>
-                )}
-              </button>
+        <section className="mt-8 space-y-3">
+          <SectionLabel label={c.libraryStudy} palette={palette} />
+          <div className="grid grid-cols-2 gap-3">
+            {PRIMARY_TOOLS.map((tile) => (
+              <FeatureCard key={tile.href} tile={tile} palette={palette} lang={lang} />
             ))}
           </div>
         </section>
 
-        {/* ── Language ──────────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>{t(lang, "more_language_section")}</p>
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
-            <div>
-              <p className="text-sm font-semibold">{t(lang, "more_language_section")}</p>
-              <p className="text-xs mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>{lang === "en" ? "English" : "Español"}</p>
-            </div>
-            <button
-              onClick={() => setLang(lang === "en" ? "es" : "en")}
-              className="flex items-center h-8 rounded-full overflow-hidden"
-              style={{ border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)", background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}
-            >
-              <span className="px-3 py-1 text-xs font-bold transition-all" style={{ color: lang === "en" ? (isLight ? "#0a0a0a" : "white") : (isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"), background: lang === "en" ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)") : "transparent" }}>EN</span>
-              <span className="w-px h-4" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)" }} />
-              <span className="px-3 py-1 text-xs font-bold transition-all" style={{ color: lang === "es" ? (isLight ? "#0a0a0a" : "white") : (isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"), background: lang === "es" ? (isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)") : "transparent" }}>ES</span>
-            </button>
+        <section className="mt-8 space-y-3">
+          <SectionLabel label={c.daily} palette={palette} />
+          <div className="space-y-3">
+            {DAILY_TOOLS.map((tile) => (
+              <RowLink key={tile.href} tile={tile} palette={palette} lang={lang} />
+            ))}
           </div>
         </section>
 
-        {/* ── Notifications ─────────────────────────────────────────────────── */}
-        <section>
-          <p className="text-[10px] font-black tracking-widest uppercase mb-3 px-1" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.30)" }}>{t(lang, "more_notifications")}</p>
-          <div className="flex items-center justify-between px-4 py-3 rounded-2xl" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)" }}>
-            <div>
-              <p className="text-sm font-semibold">{t(lang, "more_daily_verse")}</p>
-              <p className="text-xs mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.40)" }}>
-                {notifStatus === "denied"
+        <section className="mt-8 space-y-3">
+          <SectionLabel label={c.connect} palette={palette} />
+          <div className="space-y-3">
+            {CONNECT_TOOLS.map((tile) => (
+              <RowLink key={tile.href} tile={tile} palette={palette} lang={lang} />
+            ))}
+          </div>
+        </section>
+
+        <section className="mt-8 space-y-3">
+          <SectionLabel label={c.settings} palette={palette} />
+          <div className="space-y-3">
+            <SettingRow
+              label={t(lang, "more_appearance")}
+              sub={isLight ? "Light Mode" : "Dark Mode"}
+              palette={palette}
+            >
+              <div
+                className="grid grid-cols-2 rounded-2xl p-1"
+                style={{ background: palette.cardAlt, border: `1px solid ${palette.border}` }}
+              >
+                {[
+                  { key: "white-noir" as Theme, label: "Light" },
+                  { key: "gold-navy" as Theme, label: "Dark" },
+                ].map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => setTheme(item.key)}
+                    className="h-9 rounded-xl px-3 text-[12px] font-black transition-colors"
+                    style={{
+                      background: theme === item.key ? palette.primary : "transparent",
+                      color: theme === item.key ? palette.primaryText : palette.muted,
+                    }}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </SettingRow>
+
+            <SettingRow
+              label={t(lang, "more_language_section")}
+              sub={lang === "en" ? "English" : "Español"}
+              palette={palette}
+            >
+              <button
+                onClick={() => setLang(lang === "en" ? "es" : "en")}
+                className="flex h-10 items-center overflow-hidden rounded-2xl p-1"
+                style={{ background: palette.cardAlt, border: `1px solid ${palette.border}` }}
+              >
+                {(["en", "es"] as const).map((code) => (
+                  <span
+                    key={code}
+                    className="flex h-8 w-10 items-center justify-center rounded-xl text-[12px] font-black uppercase"
+                    style={{
+                      background: lang === code ? palette.primary : "transparent",
+                      color: lang === code ? palette.primaryText : palette.muted,
+                    }}
+                  >
+                    {code}
+                  </span>
+                ))}
+              </button>
+            </SettingRow>
+
+            <SettingRow
+              label={t(lang, "more_daily_verse")}
+              sub={
+                notifStatus === "denied"
                   ? t(lang, "more_notif_blocked")
                   : notifEnabled
                     ? t(lang, "more_verse_on")
-                    : t(lang, "more_verse_off")}
-              </p>
-            </div>
-            <button
-              onClick={handleNotifToggle}
-              disabled={notifStatus === "denied"}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
-                notifEnabled ? "bg-white/25" : "bg-white/[0.08]"
-              } ${notifStatus === "denied" ? "opacity-30 cursor-not-allowed" : ""}`}
+                    : t(lang, "more_verse_off")
+              }
+              palette={palette}
             >
-              <span
-                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform duration-200 ${
-                  notifEnabled ? "translate-x-6" : "translate-x-0"
-                }`}
-              />
+              <button
+                onClick={handleNotifToggle}
+                disabled={notifStatus === "denied"}
+                className="relative h-8 w-14 rounded-full transition-colors disabled:opacity-40"
+                style={{
+                  background: notifEnabled ? palette.primary : palette.cardAlt,
+                  border: `1px solid ${palette.border}`,
+                }}
+                aria-pressed={notifEnabled}
+              >
+                <span
+                  className="absolute top-1 h-6 w-6 rounded-full transition-transform"
+                  style={{
+                    left: 4,
+                    transform: notifEnabled ? "translateX(22px)" : "translateX(0)",
+                    background: notifEnabled ? palette.primaryText : palette.text,
+                  }}
+                />
+              </button>
+            </SettingRow>
+
+            <button
+              onClick={handleShare}
+              className="flex w-full items-center justify-center gap-3 rounded-[24px] px-4 py-4 text-[15px] font-black transition-transform active:scale-[0.99]"
+              style={{
+                background: palette.card,
+                color: palette.text,
+                border: `1px solid ${palette.border}`,
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <path d="m16 6-4-4-4 4M12 2v13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              {t(lang, "more_share")}
             </button>
           </div>
         </section>
-
-        {/* ── Share ─────────────────────────────────────────────────────────── */}
-        <section>
-          <button
-            onClick={async () => {
-              const data = {
-                title: "Tulip Bible App",
-                text: "Study Scripture with Strong's Concordance, Matthew Henry Commentary, and daily verse. Free forever.",
-                url: "https://tulip-bible-app.vercel.app",
-              };
-              try {
-                if (navigator.share) {
-                  await navigator.share(data);
-                } else if (navigator.clipboard) {
-                  await navigator.clipboard.writeText(data.url);
-                  alert("Link copied!");
-                }
-              } catch { /* cancelled */ }
-            }}
-            className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl active:scale-[0.98] transition-all"
-            style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)" }}
-          >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-              <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <polyline points="16 6 12 2 8 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className="text-sm font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.70)" : "rgba(255,255,255,0.70)" }}>{t(lang, "more_share")}</span>
-          </button>
-        </section>
-
       </main>
     </div>
   );
