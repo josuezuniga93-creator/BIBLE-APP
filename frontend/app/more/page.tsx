@@ -252,10 +252,12 @@ function FeatureCard({
   palette: Palette;
   lang: Lang;
 }) {
+  const isVideoTile = tile.href === "/videos";
+
   return (
     <Link
       href={tile.href}
-      className="group flex min-h-[152px] flex-col justify-between rounded-[28px] p-5 transition-transform active:scale-[0.985]"
+      className={`group relative flex min-h-[168px] overflow-hidden rounded-[28px] p-5 text-center transition-transform active:scale-[0.985] ${isVideoTile ? "more-video-motion-card" : ""}`}
       style={{
         color: palette.text,
         background: palette.card,
@@ -263,11 +265,34 @@ function FeatureCard({
         boxShadow: palette.shadow,
       }}
     >
-      <IconWell name={tile.icon} palette={palette} large />
-      <span>
-        <span className="block text-[19px] font-black leading-tight">{t(lang, tile.labelKey)}</span>
-        <span className="mt-2 block text-[13px] font-medium leading-snug" style={{ color: palette.muted }}>
-          {tile.sub[lang]}
+      {isVideoTile && (
+        <>
+          <span className="more-video-card-orb" aria-hidden="true" />
+          <span className="more-video-card-sweep" aria-hidden="true" />
+        </>
+      )}
+
+      <span className="relative z-10 flex min-h-full w-full flex-col items-center justify-center gap-4">
+        <IconWell name={tile.icon} palette={palette} large />
+        <span className="flex flex-col items-center">
+          <span className="block max-w-[9ch] text-[20px] font-black leading-[1.04] tracking-[-0.04em]">
+            {t(lang, tile.labelKey)}
+          </span>
+          <span className="mt-2 block max-w-[15ch] text-[13px] font-semibold leading-snug" style={{ color: palette.muted }}>
+            {tile.sub[lang]}
+          </span>
+          {isVideoTile && (
+            <span
+              className="mt-3 rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em]"
+              style={{
+                background: palette.cardAlt,
+                border: `1px solid ${palette.border}`,
+                color: palette.muted,
+              }}
+            >
+              EN + ES
+            </span>
+          )}
         </span>
       </span>
     </Link>

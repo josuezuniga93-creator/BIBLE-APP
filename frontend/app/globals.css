@@ -983,6 +983,85 @@ html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
   transform: scale(0.975);
 }
 
+.more-video-motion-card {
+  isolation: isolate;
+}
+
+.more-video-card-orb,
+.more-video-card-sweep {
+  pointer-events: none;
+  position: absolute;
+  z-index: 0;
+}
+
+.more-video-card-orb {
+  inset: auto -34px -38px auto;
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.28), transparent 28%),
+    radial-gradient(circle, rgba(211,179,97,0.22), transparent 64%);
+  filter: blur(1px);
+  opacity: 0.85;
+  animation: moreVideoOrbFloat 5.8s var(--ease-premium) infinite alternate;
+}
+
+.more-video-card-sweep {
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 36%,
+    rgba(255,255,255,0.08) 48%,
+    transparent 61%,
+    transparent 100%
+  );
+  transform: translateX(-72%);
+  animation: moreVideoSweep 6.5s var(--ease-premium) infinite;
+}
+
+html[data-theme-mode="light"] .more-video-card-orb {
+  background:
+    radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), transparent 30%),
+    radial-gradient(circle, rgba(0,0,0,0.08), transparent 64%);
+  opacity: 0.7;
+}
+
+html[data-theme-mode="light"] .more-video-card-sweep {
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 36%,
+    rgba(0,0,0,0.045) 48%,
+    transparent 61%,
+    transparent 100%
+  );
+}
+
+@keyframes moreVideoSweep {
+  0%, 34% {
+    transform: translateX(-76%);
+    opacity: 0;
+  }
+  48% {
+    opacity: 1;
+  }
+  72%, 100% {
+    transform: translateX(76%);
+    opacity: 0;
+  }
+}
+
+@keyframes moreVideoOrbFloat {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-14px, -10px, 0) scale(1.08);
+  }
+}
+
 .spinner-inner {
   animation: spin-ccw 1.5s linear infinite;
 }
