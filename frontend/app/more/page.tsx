@@ -527,7 +527,7 @@ export default function MorePage() {
         </section>
 
         <section
-          className="mt-6 overflow-hidden rounded-[34px] p-6"
+          className="more-extras-hero relative mt-6 overflow-hidden rounded-[30px] p-5"
           style={{
             background: isLight
               ? "linear-gradient(135deg, #f6f6f7 0%, #ffffff 56%, #e9e9eb 100%)"
@@ -536,34 +536,40 @@ export default function MorePage() {
             boxShadow: palette.shadow,
           }}
         >
-          <p className="text-[11px] font-black uppercase tracking-[0.32em]" style={{ color: palette.faint }}>
-            {c.heroLabel}
-          </p>
-          <h1 className="mt-3 max-w-[13ch] text-[38px] font-black leading-[0.94] tracking-[-0.04em]">
-            {c.heroTitle}
-          </h1>
-          <p className="mt-4 text-[15px] font-medium leading-relaxed" style={{ color: palette.muted }}>
-            {c.heroSub}
-          </p>
-          <div className="mt-6 flex gap-3">
-            <Link
-              href="/study-tools"
-              className="flex h-12 flex-1 items-center justify-center rounded-2xl text-[14px] font-black active:scale-[0.99]"
-              style={{ background: palette.primary, color: palette.primaryText }}
-            >
-              {c.continueStudy}
-            </Link>
-            <Link
-              href="/collections"
-              className="flex h-12 flex-1 items-center justify-center rounded-2xl text-[14px] font-black active:scale-[0.99]"
-              style={{
-                background: palette.card,
-                color: palette.text,
-                border: `1px solid ${palette.border}`,
-              }}
-            >
-              {c.saved}
-            </Link>
+          <span className="more-extras-hero-orb" aria-hidden="true" />
+          <span className="more-extras-hero-line" aria-hidden="true" />
+          <div className="relative z-10 flex items-center gap-4">
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.30em]" style={{ color: palette.faint }}>
+                {c.heroLabel}
+              </p>
+              <h1 className="mt-2 max-w-[12ch] text-[27px] font-black leading-[0.96] tracking-[-0.04em]">
+                {c.heroTitle}
+              </h1>
+              <p className="mt-3 max-w-[24ch] text-[13.5px] font-semibold leading-relaxed" style={{ color: palette.muted }}>
+                {c.heroSub}
+              </p>
+            </div>
+            <div className="more-extras-tool-stack shrink-0" aria-hidden="true">
+              {[
+                { icon: "study-tools" as AppSectionIconName, delay: "0ms" },
+                { icon: "library" as AppSectionIconName, delay: "520ms" },
+                { icon: "videos" as AppSectionIconName, delay: "1040ms" },
+              ].map((item) => (
+                <span
+                  key={item.icon}
+                  className="more-extras-tool-chip"
+                  style={{
+                    animationDelay: item.delay,
+                    background: palette.cardAlt,
+                    border: `1px solid ${palette.border}`,
+                    color: palette.text,
+                  }}
+                >
+                  <AppSectionIcon name={item.icon} size={18} />
+                </span>
+              ))}
+            </div>
           </div>
         </section>
 
