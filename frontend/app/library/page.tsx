@@ -98,18 +98,6 @@ function loadAllBookHighlights(): BookHighlight[] {
     .sort((a, b) => b.createdAt - a.createdAt);
 }
 
-type StudyContinueItem = {
-  id: string;
-  source: string;
-  bookName: string;
-  chapter: number;
-  requestedVerse?: number;
-  title?: string;
-  readerPage?: number;
-  pageCount?: number;
-  updatedAt: number;
-};
-
 function entryPercent(entry: ProgressEntry): number {
   if (typeof entry.percent === "number") return Math.max(0, Math.min(100, entry.percent));
   if (!entry.total) return 0;
@@ -232,11 +220,6 @@ export default function LibraryPage() {
   const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(new Set());
   const [bookmarkTarget, setBookmarkTarget] = useState<BookCatalogEntry | null>(null);
   const [savedBooks, setSavedBooks] = useState<Set<string>>(new Set());
-  const [showSuggest, setShowSuggest] = useState(false);
-  const [suggestName, setSuggestName] = useState("");
-  const [suggestText, setSuggestText] = useState("");
-  const [suggestSent, setSuggestSent] = useState(false);
-  const [studyContinue, setStudyContinue] = useState<StudyContinueItem[]>([]);
   const [bookHighlights, setBookHighlights] = useState<BookHighlight[]>([]);
   const [showHighlightPocket, setShowHighlightPocket] = useState(false);
   const [hlSearch, setHlSearch] = useState("");
@@ -251,7 +234,6 @@ export default function LibraryPage() {
   }
 
   const available = STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon);
-  const comingSoon = STATIC_BOOK_CATALOG.filter((b) => b.coming_soon);
   const featuredBooks = available.slice(0, 3);
   const recentlyAdded = [...available].slice(-3).reverse();
 
@@ -279,14 +261,6 @@ export default function LibraryPage() {
     }
     setInProgress(entries);
     setCompletedSlugs(done);
-  }, []);
-
-  // Load Study Tools continue-reading from localStorage
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("tulip-study-tools-continue-reading");
-      if (raw) setStudyContinue(JSON.parse(raw).slice(0, 3));
-    } catch {}
   }, []);
 
   // Category book counts
@@ -712,74 +686,6 @@ export default function LibraryPage() {
         )}
       </div>
 
-      {/* ── Study Tools continue-reading (no banner) ─────────────────────────── */}
-      {studyContinue.length > 0 && (
-      <div className="mb-6">
-        <div className="px-4">
-          <div className="space-y-2">
-              <div className="flex items-end justify-between gap-2 px-1 mb-2">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: "#c9a961" }}>
-                    {lang === "es" ? "Reciente" : "Recent"}
-                  </p>
-                  <p className="text-base font-black text-white mt-0.5">
-                    {lang === "es" ? "Continuar estudiando" : "Continue Studying"}
-                  </p>
-                </div>
-                <Link href="/study-tools" className="text-xs font-bold active:opacity-70" style={{ color: "#c9a961" }}>
-                  {lang === "es" ? "Ver todo →" : "See all →"}
-                </Link>
-              </div>
-              {studyContinue.map((item) => (
-                <Link
-                  key={item.id}
-                  href="/study-tools"
-                  className="flex items-center gap-3 rounded-[20px] border p-3.5 active:scale-[0.99] transition-transform"
-                  style={{ background: "rgba(201,169,97,0.06)", borderColor: "rgba(201,169,97,0.14)" }}
-                >
-                  <div
-                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M5 4.5h6.5A3.5 3.5 0 0115 8v12a3.5 3.5 0 00-3.5-3.5H5V4.5z" stroke="currentColor" strokeWidth="1.7" />
-                      <path d="M19 4.5h-4A3.5 3.5 0 0011.5 8v12a3.5 3.5 0 013.5-3.5h4V4.5z" stroke="currentColor" strokeWidth="1.7" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.18em] font-black" style={{ color: "#c9a961" }}>{item.source}</p>
-                    <p className="text-sm font-black text-white truncate mt-0.5">
-                      {item.title ?? `${item.bookName} ${item.chapter}`}
-                    </p>
-                    {item.pageCount && (
-                      <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.08)" }}>
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${Math.min(100, Math.round(((item.readerPage ?? 0) + 1) / item.pageCount * 100))}%`,
-                            background: "#c9a961",
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
-                  <div
-                    className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                    style={{ background: "rgba(201,169,97,0.14)", color: "#c9a961" }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                      <path d="M9 18l6-6-6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}{/* end studyContinue */}
-
-
-
     </div>
 
     {/* ── My Highlights Pocket ────────────────────────────────────────────────── */}
@@ -1064,108 +970,6 @@ export default function LibraryPage() {
       />
     )}
 
-    {/* Suggest a book modal */}
-    {showSuggest && (
-      <div
-        className="fixed inset-0 z-[300] flex items-end justify-center"
-        style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
-        onClick={(e) => { if (e.target === e.currentTarget) setShowSuggest(false); }}
-      >
-        <div
-          className="w-full max-w-lg rounded-t-3xl p-6 pb-10"
-          style={{ backgroundColor: th.pageBg, border: `1px solid ${th.footerCardBorder}` }}
-        >
-          {/* Handle */}
-          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: th.textVeryFaint }} />
-
-          {suggestSent ? (
-            <div className="text-center py-6">
-              <div className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: "rgba(52,211,153,0.15)" }}>
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M5 13l4 4L19 7" stroke="#34d399" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </div>
-              <p className="text-base font-bold mb-1" style={{ color: th.textPrimary }}>Message sent!</p>
-              <p className="text-sm" style={{ color: th.textSecondary }}>Thank you for the recommendation. We&rsquo;ll review it.</p>
-              <button
-                onClick={() => setShowSuggest(false)}
-                className="mt-6 px-6 py-2.5 rounded-xl text-sm font-bold"
-                style={{ backgroundColor: th.primary, color: "white" }}
-              >
-                Done
-              </button>
-            </div>
-          ) : (
-            <>
-              <h3 className="text-lg font-bold mb-1" style={{ color: th.textPrimary }}>Recommend a book</h3>
-              <p className="text-xs mb-5" style={{ color: th.textSecondary }}>
-                Public domain, doctrinally sound — tell us what&rsquo;s missing from the library.
-              </p>
-
-              {/* Name field */}
-              <label className="block text-xs font-bold mb-1.5" style={{ color: th.textMuted }}>Your name (optional)</label>
-              <input
-                type="text"
-                value={suggestName}
-                onChange={(e) => setSuggestName(e.target.value)}
-                placeholder="e.g. John Calvin"
-                className="w-full rounded-xl px-4 py-3 text-sm mb-4 outline-none"
-                style={{
-                  backgroundColor: th.searchBg,
-                  border: `1px solid ${th.searchBorder}`,
-                  color: th.textPrimary,
-                }}
-              />
-
-              {/* Message field */}
-              <label className="block text-xs font-bold mb-1.5" style={{ color: th.textMuted }}>Book recommendation</label>
-              <textarea
-                value={suggestText}
-                onChange={(e) => setSuggestText(e.target.value)}
-                placeholder="Title, author, and why it belongs in the library…"
-                rows={4}
-                className="w-full rounded-xl px-4 py-3 text-sm mb-5 outline-none resize-none"
-                style={{
-                  backgroundColor: th.searchBg,
-                  border: `1px solid ${th.searchBorder}`,
-                  color: th.textPrimary,
-                }}
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setShowSuggest(false)}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold"
-                  style={{ backgroundColor: th.cardBg, border: `1px solid ${th.cardBorder}`, color: th.textSecondary }}
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={() => {
-                    if (!suggestText.trim()) return;
-                    const subject = encodeURIComponent("Book Recommendation – Rebuttal Your Church App");
-                    const body = encodeURIComponent(
-                      `From: ${suggestName.trim() || "Anonymous"}\n\n${suggestText.trim()}`
-                    );
-                    window.location.href = `mailto:josuezuniga93@gmail.com?subject=${subject}&body=${body}`;
-                    setSuggestSent(true);
-                  }}
-                  disabled={!suggestText.trim()}
-                  className="flex-1 py-3 rounded-xl text-sm font-bold transition-opacity"
-                  style={{
-                    backgroundColor: th.primary,
-                    color: "white",
-                    opacity: suggestText.trim() ? 1 : 0.45,
-                  }}
-                >
-                  Send message
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    )}
     </>
   );
 }
