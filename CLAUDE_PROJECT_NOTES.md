@@ -1,9 +1,16 @@
 # Tulip Bible App — Project Notes for Claude
 
 ## What this project is
-A mobile-first Reformed theology Bible app called the **Tulip Bible App**, built with **Next.js 13+ App Router** and deployed on **Vercel**. The frontend lives in `/frontend`. Deploy command: `git add -A && git commit -m "..." && cd frontend && vercel --prod`
+A mobile-first Reformed theology Bible app called the **Tulip Bible App**, built with **Next.js 13+ App Router** and deployed on **Vercel**. The frontend lives in `/frontend`. Deploys are manual (no CI auto-deploy on push/merge).
 
 Live URL: **https://tulip-bible-app.vercel.app**
+
+### Deploy command (run from Josue's main session, not a sandbox)
+```
+cd '/Users/josuezuniga/Documents/ Claude/Proiects/Rebuttal your church/frontend'
+vercel --prod
+```
+If working in a sandboxed/remote session with no Vercel token available: **do not attempt `vercel login`**. Stop and tell Josue the change is committed/merged but needs a manual deploy from his main session — he'll run the command above himself.
 
 ---
 
