@@ -15,7 +15,20 @@ import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
 import { AppSectionIcon } from "../components/AppSectionIcon";
 import { UiIcon } from "../components/UiIcon";
-import type { FundamentalsCategory, VideoLanguage } from "../lib/videoTypes";
+import type { VideoLanguage } from "../lib/videoTypes";
+import {
+  ARCHIVE_VIDEOS,
+  CATEGORY_COLORS,
+  COMMUNITY_VIDEOS,
+  CURRENT_FEATURED,
+  FUNDAMENTALS,
+  SHORT_VIDEOS,
+  TESTIMONIES_VIDEOS,
+  matchesVideoSearch,
+  uniqueVideos,
+  type FundamentalsSection,
+  type VideoEntry,
+} from "../data/videoLibrary";
 
 // ─── Design constants (matches app-wide system) ────────────────────────────────
 const AC        = "#c9a961";
@@ -25,147 +38,6 @@ const SERIF     = "'Iowan Old Style','Georgia','Times New Roman',serif";
 const BG_ROOT   = "#08090f";
 const BG_CARD   = "rgba(255,255,255,0.033)";
 const BD_CARD   = "rgba(255,255,255,0.08)";
-
-// ─── Static video data (future: replaced by Supabase fetch) ────────────────────
-
-interface VideoEntry {
-  id: string;               // YouTube video ID
-  title: string;
-  speaker: string;
-  church?: string;
-  series?: string;
-  category: "featured" | "archive" | "fundamentals" | "short" | "community" | "testimonies";
-  fundamentalsTopicId?: string;
-  description: string;
-  duration?: string;        // e.g. "31 min"
-  durationSeconds?: number;
-  datePublished?: string;
-  scriptureRefs?: string[];
-  isShort?: boolean;        // ≤ 6 min
-  isFeatured?: boolean;
-  language?: VideoLanguage; // defaults to English for existing content
-}
-
-// Videos loaded from Supabase (Phase 7). Empty until first content is approved.
-const CURRENT_FEATURED: VideoEntry | null = null;
-const ARCHIVE_VIDEOS:   VideoEntry[]      = [];
-const SHORT_VIDEOS:     VideoEntry[]      = [];
-const COMMUNITY_VIDEOS: VideoEntry[]      = [];
-
-// ─── Testimonies ───────────────────────────────────────────────────────────────
-const TESTIMONIES_VIDEOS: VideoEntry[] = [
-  {
-    id: "fU3Hek_exX0",
-    title: "ForCry Ministry Testimony",
-    speaker: "ForCry Ministry",
-    category: "testimonies",
-    description: "A testimony of God's grace shared through ForCry Ministry.",
-    isShort: true,
-    language: "en",
-  },
-];
-
-// ─── Phase 2: Fundamentals of the Faith data ───────────────────────────────────
-
-interface FundamentalsSection {
-  category: FundamentalsCategory;
-  topics: {
-    id: string;
-    title: string;
-    videoCount: number;
-    featuredVideoId?: string;
-  }[];
-}
-
-const FUNDAMENTALS: FundamentalsSection[] = [
-  {
-    category: "God",
-    topics: [
-      { id: "who-is-god",         title: "Who Is God?",                videoCount: 0 },
-      { id: "the-trinity",        title: "The Trinity",                videoCount: 0 },
-      { id: "attributes-of-god",  title: "Attributes of God",          videoCount: 0 },
-      { id: "holiness-of-god",    title: "Holiness of God",            videoCount: 0 },
-      { id: "sovereignty-of-god", title: "Sovereignty of God",         videoCount: 0 },
-    ],
-  },
-  {
-    category: "Jesus Christ",
-    topics: [
-      { id: "who-is-jesus",       title: "Who Is Jesus?",              videoCount: 0 },
-      { id: "deity-of-christ",    title: "Deity of Christ",            videoCount: 0 },
-      { id: "humanity-of-christ", title: "Humanity of Christ",         videoCount: 0 },
-      { id: "sinless-life",       title: "Sinless Life of Christ",     videoCount: 0 },
-      { id: "death-of-christ",    title: "Death of Christ",            videoCount: 0 },
-      { id: "resurrection",       title: "Resurrection of Christ",     videoCount: 0 },
-      { id: "ascension",          title: "Ascension of Christ",        videoCount: 0 },
-      { id: "return-of-christ",   title: "Return of Christ",           videoCount: 0 },
-    ],
-  },
-  {
-    category: "The Gospel",
-    topics: [
-      { id: "what-is-gospel",     title: "What Is the Gospel?",        videoCount: 0 },
-      { id: "what-is-sin",        title: "What Is Sin?",               videoCount: 0 },
-      { id: "why-jesus-die",      title: "Why Did Jesus Die?",         videoCount: 0 },
-      { id: "repentance",         title: "Repentance",                 videoCount: 0 },
-      { id: "faith",              title: "Faith",                      videoCount: 0 },
-      { id: "grace",              title: "Grace",                      videoCount: 0 },
-      { id: "justification",      title: "Justification",              videoCount: 0 },
-      { id: "adoption",           title: "Adoption",                   videoCount: 0 },
-      { id: "sanctification",     title: "Sanctification",             videoCount: 0 },
-    ],
-  },
-  {
-    category: "Scripture",
-    topics: [
-      { id: "what-is-bible",      title: "What Is the Bible?",         videoCount: 0 },
-      { id: "trust-bible",        title: "Why Can We Trust the Bible?", videoCount: 0 },
-      { id: "inspiration",        title: "Inspiration of Scripture",   videoCount: 0 },
-      { id: "authority",          title: "Authority of Scripture",     videoCount: 0 },
-      { id: "sufficiency",        title: "Sufficiency of Scripture",   videoCount: 0 },
-    ],
-  },
-  {
-    category: "Salvation",
-    topics: [
-      { id: "what-is-salvation",  title: "What Is Salvation?",         videoCount: 0 },
-      { id: "regeneration",       title: "Regeneration",               videoCount: 0 },
-      { id: "conversion",         title: "Conversion",                 videoCount: 0 },
-      { id: "union-with-christ",  title: "Union with Christ",          videoCount: 0 },
-      { id: "assurance",          title: "Assurance of Salvation",     videoCount: 0 },
-      { id: "perseverance",       title: "Perseverance of the Saints", videoCount: 0 },
-    ],
-  },
-  {
-    category: "The Holy Spirit",
-    topics: [
-      { id: "who-is-hs",          title: "Who Is the Holy Spirit?",    videoCount: 0 },
-      { id: "work-of-hs",         title: "Work of the Holy Spirit",    videoCount: 0 },
-      { id: "fruit-of-spirit",    title: "Fruit of the Spirit",        videoCount: 0 },
-    ],
-  },
-  {
-    category: "The Church",
-    topics: [
-      { id: "what-is-church",     title: "What Is the Church?",        videoCount: 0 },
-      { id: "baptism",            title: "Baptism",                    videoCount: 0 },
-      { id: "lords-supper",       title: "The Lord's Supper",          videoCount: 0 },
-      { id: "membership",         title: "Church Membership",          videoCount: 0 },
-      { id: "leadership",         title: "Biblical Leadership",        videoCount: 0 },
-      { id: "worship",            title: "Corporate Worship",          videoCount: 0 },
-    ],
-  },
-];
-
-const CATEGORY_COLORS: Record<FundamentalsCategory, string> = {
-  "God":              "#f59e0b",
-  "Jesus Christ":     "#3b82f6",
-  "The Gospel":       "#ef4444",
-  "Scripture":        "#c9a961",
-  "Salvation":        "#8b5cf6",
-  "The Holy Spirit":  "#06b6d4",
-  "The Church":       "#10b981",
-};
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -421,7 +293,7 @@ function ShortCard({
   );
 }
 
-// ─── Continue Watching card ────────────────────────────────────────────────────
+// ─── Recently watched card ─────────────────────────────────────────────────────
 
 function ContinueCard({ item, onClick, onRemove, isLight = false }: { item: WatchItem; onClick: () => void; onRemove: () => void; isLight?: boolean }) {
   return (
@@ -450,14 +322,13 @@ function ContinueCard({ item, onClick, onRemove, isLight = false }: { item: Watc
               <svg width="12" height="12" viewBox="0 0 24 24" fill={isLight ? "#ffffff" : "#08090f"}><polygon points="6,3 20,12 6,21"/></svg>
             </div>
           </div>
-          {/* Faux resume progress bar */}
-          <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: "rgba(255,255,255,0.18)" }}>
-            <div className="h-full" style={{ width: "38%", background: AC }} />
-          </div>
         </div>
         <div className="p-2.5">
           {item.speaker && <p className="text-[10px] font-bold mb-0.5 truncate" style={{ color: isLight ? "rgba(0,0,0,0.45)" : AC }}>{item.speaker}</p>}
           <p className="text-[11px] font-semibold leading-tight line-clamp-2" style={{ color: isLight ? "rgba(0,0,0,0.80)" : "rgba(255,255,255,0.80)" }}>{item.title}</p>
+          <p className="mt-1.5 text-[9px] font-bold uppercase tracking-[0.12em]" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)" }}>
+            Recently watched
+          </p>
         </div>
       </button>
     </div>
@@ -481,9 +352,7 @@ function VideoLibraryHero({
   onWatch: (video: VideoEntry) => void;
   activeLanguage: VideoLanguage;
 }) {
-  const preview = featured ?? TESTIMONIES_VIDEOS[0];
   const accent = isLight ? "#0a0a0a" : AC;
-  const imageUrl = ytThumb(preview.id, "hq");
   const headline = lang === "es" ? "Aprende de voces confiables." : "Learn from trusted voices.";
   const subcopy = lang === "es"
     ? "Sermones, testimonios y enseñanza bíblica para crecer con claridad."
@@ -492,84 +361,127 @@ function VideoLibraryHero({
   return (
     <section className="px-4 pt-4 mb-7">
       <div
-        className="video-premium-hero relative overflow-hidden rounded-[28px] min-h-[300px] p-5"
+        className="video-premium-hero relative overflow-hidden rounded-[28px] p-5 pb-6"
         style={{
           background: isLight
-            ? "linear-gradient(112deg, #ffffff 0%, #ffffff 42%, #f2f3f4 68%, #e4e6e8 100%)"
-            : "radial-gradient(circle at 82% 10%, rgba(201,169,97,0.22), transparent 38%), linear-gradient(135deg, #151821 0%, #08090f 100%)",
+            ? "linear-gradient(112deg, #ffffff 0%, #f2f3f4 60%, #e8eaec 100%)"
+            : "radial-gradient(circle at 88% 8%, rgba(201,169,97,0.28), transparent 42%), linear-gradient(135deg, #101420 0%, #08090f 100%)",
           border: `1px solid ${isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)"}`,
-          boxShadow: isLight ? "0 22px 50px rgba(15,23,42,0.12)" : "0 24px 60px rgba(0,0,0,0.35)",
+          boxShadow: isLight ? "0 22px 50px rgba(15,23,42,0.12)" : "0 24px 60px rgba(0,0,0,0.40)",
+          minHeight: "280px",
         }}
       >
         <div className="video-premium-sweep" />
         <div className="video-premium-orb" />
+        {!isLight && (
+          <div className="video-premium-motes" aria-hidden="true">
+            {[
+              { left: "58%", size: 4, dur: "7s", delay: "0s", drift: "6px" },
+              { left: "70%", size: 3, dur: "8.5s", delay: "1.6s", drift: "-8px" },
+              { left: "82%", size: 5, dur: "6.4s", delay: "3s", drift: "9px" },
+              { left: "91%", size: 3, dur: "9.2s", delay: "0.8s", drift: "-6px" },
+            ].map((m, i) => (
+              <span
+                key={i}
+                className="video-premium-mote"
+                style={{
+                  left: m.left,
+                  width: m.size,
+                  height: m.size,
+                  animationDuration: m.dur,
+                  animationDelay: m.delay,
+                  ["--mote-drift" as string]: m.drift,
+                }}
+              />
+            ))}
+          </div>
+        )}
 
-        <div
-          className="absolute inset-y-0 right-0 w-[58%]"
-          style={{
-            backgroundImage: `linear-gradient(90deg, ${isLight ? "#ffffff" : "#11131c"} 0%, ${isLight ? "rgba(255,255,255,0.78)" : "rgba(17,19,28,0.68)"} 25%, transparent 56%), url(${imageUrl})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center right",
-            filter: isLight ? "grayscale(1) contrast(1.03)" : "saturate(0.82) brightness(0.74)",
-            opacity: isLight ? 0.72 : 0.72,
-          }}
-        />
-        <div
-          className="absolute inset-x-0 bottom-0 h-28"
-          style={{ background: isLight ? "linear-gradient(to top, #ffffff, transparent)" : "linear-gradient(to top, #08090f, transparent)" }}
-        />
-
-        <div className="relative z-10 max-w-[58%]">
+        <div className="relative z-10">
+          {/* Badge */}
           <div
-            className="inline-flex items-center gap-2 rounded-full px-3 py-2 mb-6"
+            className="video-hero-badge inline-flex items-center gap-2 rounded-full px-3 py-2 mb-3"
             style={{
               background: isLight ? "#f0f1f2" : "rgba(255,255,255,0.07)",
               border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.10)"}`,
               color: isLight ? "#0a0a0a" : "rgba(255,255,255,0.90)",
             }}
           >
-            <span className="h-2 w-2 rounded-full" style={{ background: accent }} />
-            <span className="text-[10px] font-black uppercase tracking-[0.18em]">
+            <span className="h-[6px] w-[6px] rounded-full flex-shrink-0" style={{ background: accent }} />
+            <span className="text-[9px] font-black uppercase tracking-[0.18em]">
               {lang === "es" ? "Videos cristianos" : "Christian videos"}
             </span>
           </div>
 
-          <h2 className="text-[33px] font-black leading-[0.95] tracking-[-0.04em] mb-4" style={{ color: isLight ? "#050505" : "#ffffff" }}>
+          {/* Gold accent line */}
+          {!isLight && (
+            <div
+              className="mb-4 rounded-full"
+              style={{ width: 40, height: 2, background: `linear-gradient(90deg, ${AC}, transparent)` }}
+            />
+          )}
+
+          {/* Headline */}
+          <h2
+            className="video-hero-headline text-[34px] font-black leading-[0.95] tracking-[-0.04em] mb-3"
+            style={{ color: isLight ? "#050505" : "#ffffff", maxWidth: "66%" }}
+          >
             {headline}
           </h2>
-          <p className="text-[14px] leading-relaxed mb-6" style={{ color: isLight ? "rgba(0,0,0,0.58)" : "rgba(255,255,255,0.68)" }}>
+
+          {/* Subcopy */}
+          <p
+            className="video-hero-sub text-[13px] leading-[1.5] mb-6"
+            style={{ color: isLight ? "rgba(0,0,0,0.56)" : "rgba(255,255,255,0.60)", maxWidth: "70%" }}
+          >
             {subcopy}
           </p>
 
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => featured ? onWatch(featured) : onExplore()}
-              className="h-14 w-14 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-              style={{ background: isLight ? "#050505" : AC, color: isLight ? "#ffffff" : "#08090f" }}
-              aria-label={lang === "es" ? "Reproducir video" : "Play video"}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7,4 19,12 7,20"/></svg>
-            </button>
+          {/* CTA row */}
+          <div className="video-hero-cta flex items-center gap-3">
+            <div className="relative flex-shrink-0 video-hero-play-wrap">
+              <button
+                onClick={() => featured ? onWatch(featured) : onExplore()}
+                className="relative z-10 h-[50px] w-[50px] rounded-full flex items-center justify-center active:scale-95 transition-transform"
+                style={{ background: isLight ? "#050505" : AC, color: isLight ? "#ffffff" : "#08090f" }}
+                aria-label={lang === "es" ? "Reproducir video" : "Play video"}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="7,4 19,12 7,20"/></svg>
+              </button>
+              {!isLight && (
+                <>
+                  <span className="video-hero-pulse-ring" />
+                  <span className="video-hero-pulse-ring" style={{ animationDelay: "0.66s" }} />
+                  <span className="video-hero-pulse-ring" style={{ animationDelay: "1.33s" }} />
+                </>
+              )}
+            </div>
             <button
               onClick={onExplore}
-              className="rounded-full px-5 py-4 text-[14px] font-black active:scale-[0.98] transition-transform"
-              style={{ background: isLight ? "#050505" : "rgba(255,255,255,0.10)", color: "#ffffff", border: `1px solid ${isLight ? "#050505" : "rgba(255,255,255,0.12)"}` }}
+              className="rounded-full px-5 py-[14px] text-[13px] font-black active:scale-[0.98] transition-transform"
+              style={{
+                background: isLight ? "#050505" : "rgba(255,255,255,0.10)",
+                color: "#ffffff",
+                border: `1px solid ${isLight ? "#050505" : "rgba(255,255,255,0.12)"}`,
+              }}
             >
-              {lang === "es" ? "Explorar videos" : "Explore videos"}
+              {lang === "es" ? "Ver ahora" : "Watch now"}
             </button>
           </div>
 
-          <div className="mt-4 flex items-center gap-2">
+          {/* Language + Ask — subtle text row */}
+          <div className="mt-4 flex items-center gap-3">
             <span
-              className="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em]"
-              style={{ background: isLight ? "#eef0f1" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.58)" : "rgba(255,255,255,0.58)" }}
+              className="text-[10.5px] font-semibold"
+              style={{ color: isLight ? "rgba(0,0,0,0.36)" : "rgba(255,255,255,0.36)" }}
             >
-              {activeLanguage === "es" ? "ES" : "EN"} + {activeLanguage === "es" ? "EN" : "ES"}
+              EN · ES
             </span>
+            <span style={{ color: isLight ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.22)", fontSize: 10 }}>|</span>
             <button
               onClick={onAsk}
-              className="rounded-full px-3 py-2 text-[10px] font-black uppercase tracking-[0.08em] active:scale-[0.98] transition-transform"
-              style={{ background: "transparent", color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.52)", border: `1px solid ${isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)"}` }}
+              className="text-[10.5px] font-semibold active:opacity-60 transition-opacity"
+              style={{ background: "transparent", border: "none", color: isLight ? "rgba(0,0,0,0.36)" : "rgba(255,255,255,0.36)" }}
             >
               {lang === "es" ? "Haz una pregunta" : "Ask a question"}
             </button>
@@ -1189,13 +1101,7 @@ function VideoListView({
   isLight?: boolean;
 }) {
   const [q, setQ] = useState("");
-  const filtered = videos.filter(
-    (v) =>
-      !q ||
-      v.title.toLowerCase().includes(q.toLowerCase()) ||
-      v.speaker.toLowerCase().includes(q.toLowerCase()) ||
-      (v.church ?? "").toLowerCase().includes(q.toLowerCase())
-  );
+  const filtered = videos.filter((v) => matchesVideoSearch(v, q));
 
   return (
     <div className="min-h-screen" style={{ background: isLight ? "#f9fafb" : BG_ROOT }}>
@@ -1366,26 +1272,23 @@ export default function VideosPage() {
   const shortVideos = SHORT_VIDEOS.filter(matchesLanguage);
   const communityVideos = COMMUNITY_VIDEOS.filter(matchesLanguage);
   const testimoniesVideos = TESTIMONIES_VIDEOS.filter(matchesLanguage);
-  const allShorts = [...shortVideos, ...testimoniesVideos.filter((v) => v.isShort)];
+  const allShorts = uniqueVideos([...shortVideos, ...testimoniesVideos.filter((v) => v.isShort)]);
   const visibleVideoIds = new Set(
-    [
+    uniqueVideos([
       ...(currentFeatured ? [currentFeatured] : []),
       ...archiveVideos,
       ...shortVideos,
       ...communityVideos,
       ...testimoniesVideos,
-    ].map((video) => video.id)
+    ]).map((video) => video.id)
   );
   const visibleHistory = history.filter((item) => visibleVideoIds.has(item.videoId));
 
   // Filtered home results
-  const allVideos = [...(currentFeatured ? [currentFeatured] : []), ...archiveVideos, ...shortVideos, ...communityVideos, ...testimoniesVideos];
+  const allVideos = uniqueVideos([...(currentFeatured ? [currentFeatured] : []), ...archiveVideos, ...shortVideos, ...communityVideos, ...testimoniesVideos]);
+  const hasFundamentalsVideos = FUNDAMENTALS.some((section) => section.topics.some((topic) => topic.videoCount > 0));
   const searchResults = searchQuery
-    ? allVideos.filter(
-        (v) =>
-          v.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          v.speaker.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+    ? allVideos.filter((v) => matchesVideoSearch(v, searchQuery))
     : [];
 
   // ── Sub-screen renders ────────────────────────────────────────────────────────
@@ -1589,41 +1492,63 @@ export default function VideosPage() {
 
             <section className="mb-7 px-4">
               <div className="grid grid-cols-2 gap-3">
-                <VideoHubTile
-                  icon="videos"
-                  title={lang === "es" ? "Enseñanza" : "Teaching"}
-                  subtitle={lang === "es" ? "Biblioteca curada" : "Curated library"}
-                  onClick={() => go({ id: "archive" })}
-                  isLight={isLight}
-                />
-                <VideoHubTile
-                  icon="worship"
-                  title={lang === "es" ? "Testimonios" : "Testimonies"}
-                  subtitle={lang === "es" ? "Historias de gracia" : "Stories of grace"}
-                  onClick={() => go({ id: "testimonies" })}
-                  isLight={isLight}
-                />
-                <VideoHubTile
-                  icon="study-tools"
-                  title={lang === "es" ? "Fundamentos" : "Foundations"}
-                  subtitle={lang === "es" ? "Temas doctrinales" : "Doctrine topics"}
-                  onClick={() => go({ id: "fundamentals-home" })}
-                  isLight={isLight}
-                />
-                <VideoHubTile
-                  icon="library"
-                  title={lang === "es" ? "Cortos" : "Shorts"}
-                  subtitle={lang === "es" ? "Respuestas breves" : "Quick answers"}
-                  onClick={() => go({ id: "short" })}
-                  isLight={isLight}
-                />
+                {archiveVideos.length > 0 && (
+                  <VideoHubTile
+                    icon="videos"
+                    title={lang === "es" ? "Enseñanza" : "Teaching"}
+                    subtitle={lang === "es" ? "Biblioteca curada" : "Curated library"}
+                    onClick={() => go({ id: "archive" })}
+                    isLight={isLight}
+                  />
+                )}
+                {testimoniesVideos.length > 0 && (
+                  <VideoHubTile
+                    icon="worship"
+                    title={lang === "es" ? "Testimonios" : "Testimonies"}
+                    subtitle={lang === "es" ? "Historias de gracia" : "Stories of grace"}
+                    onClick={() => go({ id: "testimonies" })}
+                    isLight={isLight}
+                  />
+                )}
+                {hasFundamentalsVideos && (
+                  <VideoHubTile
+                    icon="study-tools"
+                    title={lang === "es" ? "Fundamentos" : "Foundations"}
+                    subtitle={lang === "es" ? "Temas doctrinales" : "Doctrine topics"}
+                    onClick={() => go({ id: "fundamentals-home" })}
+                    isLight={isLight}
+                  />
+                )}
+                {allShorts.length > 0 && (
+                  <VideoHubTile
+                    icon="library"
+                    title={lang === "es" ? "Cortos" : "Shorts"}
+                    subtitle={lang === "es" ? "Respuestas breves" : "Quick answers"}
+                    onClick={() => go({ id: "short" })}
+                    isLight={isLight}
+                  />
+                )}
               </div>
             </section>
 
-            {/* ── Continue Watching (only when there's history) ─────────────── */}
+            {!allVideos.length && (
+              <section className="mb-7 px-4">
+                <EmptyVideoShelf
+                  title={lang === "es" ? "Biblioteca en preparación." : "The video library is being curated."}
+                  body={lang === "es"
+                    ? "Aun no hay videos aprobados para este idioma. Puedes enviar contenido para revision o hacer una pregunta para futuros videos."
+                    : "Approved videos will appear here by language, category, and topic. Submit trusted teaching or ask a question for future short answers."}
+                  action={lang === "es" ? "Enviar video" : "Submit video"}
+                  onAction={() => setShowSubmitSheet(true)}
+                  isLight={isLight}
+                />
+              </section>
+            )}
+
+            {/* ── Recently watched (only when there's history) ─────────────── */}
             {visibleHistory.length > 0 && (
               <section className="mb-8">
-                <SectionHeader label={lang === "es" ? "Continúa donde lo dejaste" : "Pick up where you left off"} title={t("videos_continue_watching")} color={AC} isLight={isLight} />
+                <SectionHeader label={lang === "es" ? "Historial local" : "Local history"} title={lang === "es" ? "Vistos recientemente" : "Recently Watched"} color={AC} isLight={isLight} />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {visibleHistory.map((item) => (
                     <ContinueCard
@@ -1641,84 +1566,40 @@ export default function VideosPage() {
               </section>
             )}
 
-            <section className="mb-7 px-4">
-              <div
-                className="rounded-[24px] p-5"
-                style={{
-                  background: isLight ? "#ffffff" : "rgba(255,255,255,0.04)",
-                  border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}`,
-                  boxShadow: isLight ? "0 14px 34px rgba(15,23,42,0.06)" : "none",
-                }}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.38)" : AC }}>
-                      {lang === "es" ? "Tu canal" : "Your channel"}
-                    </p>
-                    <h3 className="mt-1 text-[21px] font-black tracking-[-0.03em]" style={{ color: isLight ? "#050505" : "#ffffff" }}>
-                      {lang === "es" ? "Videos en progreso" : "Videos in progress"}
-                    </h3>
-                    <p className="mt-2 text-[13px] leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.52)" : "rgba(255,255,255,0.55)" }}>
-                      {lang === "es"
-                        ? "Esta pagina ya esta lista para enseñar, guardar historial y separar contenido por idioma."
-                        : "This page is ready for teaching, watch history, and language-specific video shelves."}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowSubmitSheet(true)}
-                    className="shrink-0 rounded-full px-4 py-3 text-[12px] font-black active:scale-[0.98] transition-transform"
-                    style={{ background: isLight ? "#111111" : AC, color: isLight ? "#ffffff" : "#08090f" }}
-                  >
-                    {lang === "es" ? "Enviar" : "Submit"}
-                  </button>
-                </div>
-              </div>
-            </section>
-
-            {/* ── Short Videos (vertical 9:16, always present) ───────────────── */}
-            <section className="mb-7">
-              <SectionHeader
-                label={lang === "es" ? "Enseñanzas breves · Hechas para tu teléfono" : "Quick Teachings · Made for your phone"}
-                title={lang === "es" ? "Videos Cortos" : "Short Videos"}
-                onViewAll={() => go({ id: "short" })}
-                color={AC}
-                isLight={isLight}
-              />
-              {allShorts.length > 0 ? (
+            {/* ── Short Videos (vertical 9:16) ─────────────────────────────── */}
+            {allShorts.length > 0 && (
+              <section className="mb-7">
+                <SectionHeader
+                  label={lang === "es" ? "Enseñanzas breves · Hechas para tu teléfono" : "Quick Teachings · Made for your phone"}
+                  title={lang === "es" ? "Videos Cortos" : "Short Videos"}
+                  onViewAll={() => go({ id: "short" })}
+                  color={AC}
+                  isLight={isLight}
+                />
                 <div className="flex gap-3 overflow-x-auto px-4 pb-2" style={{ scrollbarWidth: "none" }}>
                   {allShorts.map((v) => (
                     <ShortCard key={v.id} video={v} onClick={() => playVideo(v.id, v.title, true, v.speaker)} isLight={isLight} />
                   ))}
                 </div>
-              ) : (
-                <div className="px-4">
-                  <EmptyVideoShelf
-                    title={lang === "es" ? "Cortos listos para respuestas rapidas." : "Shorts ready for quick answers."}
-                    body={lang === "es" ? "Cuando agregues videos breves, apareceran aqui en formato vertical." : "When short videos are added, they will appear here in a phone-first vertical shelf."}
-                    action={lang === "es" ? "Haz una pregunta" : "Ask a question"}
-                    onAction={() => setAskOpen(true)}
-                    isLight={isLight}
-                  />
-                </div>
-              )}
-            </section>
+              </section>
+            )}
 
             {/* ── Featured Videos (landscape grid, 231-style) ────────────────── */}
-            <section className="mb-8 px-4">
-              <div className="mb-3 flex items-end justify-between">
-                <div>
-                  <p className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.38)" : AC }}>
-                    {lang === "es" ? "Biblioteca" : "Library"}
-                  </p>
-                  <h3 className="text-[19px] font-black tracking-[-0.03em]" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
-                    {lang === "es" ? "Ensenanza destacada" : "Featured Teaching"}
-                  </h3>
+            {archiveVideos.length > 0 && (
+              <section className="mb-8 px-4">
+                <div className="mb-3 flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.38)" : AC }}>
+                      {lang === "es" ? "Biblioteca" : "Library"}
+                    </p>
+                    <h3 className="text-[19px] font-black tracking-[-0.03em]" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
+                      {lang === "es" ? "Ensenanza destacada" : "Featured Teaching"}
+                    </h3>
+                  </div>
+                  <button onClick={() => go({ id: "archive" })} className="text-[12px] font-bold" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(201,169,97,0.75)" }}>
+                    {lang === "es" ? "Ver todo" : "View all"}
+                  </button>
                 </div>
-                <button onClick={() => go({ id: "archive" })} className="text-[12px] font-bold" style={{ color: isLight ? "rgba(0,0,0,0.50)" : "rgba(201,169,97,0.75)" }}>
-                  {lang === "es" ? "Ver todo" : "View all"}
-                </button>
-              </div>
-              {archiveVideos.length > 0 ? (
                 <div className="grid grid-cols-2 gap-3">
                   {archiveVideos.map((v) => (
                     <button
@@ -1737,49 +1618,43 @@ export default function VideosPage() {
                     </button>
                   ))}
                 </div>
-              ) : (
-                <EmptyVideoShelf
-                  title={lang === "es" ? "La biblioteca principal esta lista." : "The main library is ready."}
-                  body={lang === "es" ? "Los videos aprobados apareceran aqui con tarjetas limpias, historial y reproduccion dentro de la app." : "Approved videos will appear here with clean cards, watch history, and in-app playback."}
-                  action={lang === "es" ? "Enviar video" : "Submit video"}
-                  onAction={() => setShowSubmitSheet(true)}
-                  isLight={isLight}
-                />
-              )}
-            </section>
+              </section>
+            )}
 
             {/* ── Browse by Topic ───────────────────────────────────────────── */}
-            <section className="mb-8">
-              <div className="px-4 mb-4">
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to right, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to right, transparent, rgba(201,169,97,0.35))" }} />
-                  <p className="text-[9px] font-black tracking-[0.22em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.40)" : AC }}>
-                    {lang === "es" ? "Fundamentos de la fe" : "Fundamentals of the Faith"}
-                  </p>
-                  <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to left, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to left, transparent, rgba(201,169,97,0.35))" }} />
+            {hasFundamentalsVideos && (
+              <section className="mb-8">
+                <div className="px-4 mb-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to right, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to right, transparent, rgba(201,169,97,0.35))" }} />
+                    <p className="text-[9px] font-black tracking-[0.22em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.40)" : AC }}>
+                      {lang === "es" ? "Fundamentos de la fe" : "Fundamentals of the Faith"}
+                    </p>
+                    <span className="h-px flex-1" style={{ background: isLight ? "linear-gradient(to left, transparent, rgba(0,0,0,0.15))" : "linear-gradient(to left, transparent, rgba(201,169,97,0.35))" }} />
+                  </div>
+                  <h3 className="text-[18px] font-bold text-center" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{lang === "es" ? "Explorar por tema" : "Browse by Topic"}</h3>
                 </div>
-                <h3 className="text-[18px] font-bold text-center" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{lang === "es" ? "Explorar por tema" : "Browse by Topic"}</h3>
-              </div>
-              <div className="px-4 grid grid-cols-2 gap-3">
-                {FUNDAMENTALS.map((section) => (
-                  <TopicCategoryCard
-                    key={section.category}
-                    section={section}
-                    onSelect={(s) => setSheetSection(s)}
-                    isLight={isLight}
-                  />
-                ))}
-              </div>
-              <div className="px-4 mt-3">
-                <button
-                  onClick={() => go({ id: "fundamentals-home" })}
-                  className="w-full py-3 rounded-xl text-[12px] font-bold tracking-wide transition-all active:scale-[0.98]"
-                  style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}` }}
-                >
-                  {lang === "es" ? "Ver biblioteca completa" : "See the full library"}
-                </button>
-              </div>
-            </section>
+                <div className="px-4 grid grid-cols-2 gap-3">
+                  {FUNDAMENTALS.map((section) => (
+                    <TopicCategoryCard
+                      key={section.category}
+                      section={section}
+                      onSelect={(s) => setSheetSection(s)}
+                      isLight={isLight}
+                    />
+                  ))}
+                </div>
+                <div className="px-4 mt-3">
+                  <button
+                    onClick={() => go({ id: "fundamentals-home" })}
+                    className="w-full py-3 rounded-xl text-[12px] font-bold tracking-wide transition-all active:scale-[0.98]"
+                    style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)", border: `1px solid ${isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}` }}
+                  >
+                    {lang === "es" ? "Ver biblioteca completa" : "See the full library"}
+                  </button>
+                </div>
+              </section>
+            )}
 
             {/* ── Community Videos (only when content exists) ────────────────── */}
             {communityVideos.length > 0 && (
