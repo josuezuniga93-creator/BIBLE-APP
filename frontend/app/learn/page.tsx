@@ -308,6 +308,9 @@ function SectionReader({
     ? Math.round(((sectionIndex + (totalPages > 0 ? currentPage / totalPages : 1)) / sections.length) * 100)
     : 0;
 
+  // Intentionally fires once per section visit (on section.id change only) — including
+  // completed/onToggle would re-run on every parent re-render since onToggle isn't memoized upstream.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (!completed.has(section.id)) onToggle(section.id); }, [section.id]);
   useEffect(() => {
     if (sectionIndex < 0) return;
@@ -484,7 +487,7 @@ function DocumentDetail({
         if (!cancelled) setTranslatedDescription(null);
       });
     return () => { cancelled = true; };
-  }, [doc.description, lang]);
+  }, [doc.id, doc.description, lang]);
 
   const toggleSection = useCallback((sectionId: string) => {
     setCompleted((prev) => {

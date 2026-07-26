@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Offline — Tulip Bible App</title>
+<style>
+  html, body {
+    height: 100%;
+    margin: 0;
+    background: #0f0f0f;
+    color: #f4f4f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+  .card { max-width: 340px; }
+  h1 { font-size: 20px; margin: 0 0 12px; }
+  p { font-size: 14px; line-height: 1.5; color: rgba(244,244,245,0.65); margin: 0 0 20px; }
+  button {
+    font: inherit;
+    font-weight: 700;
+    padding: 12px 20px;
+    border-radius: 999px;
+    border: none;
+    background: #c9a961;
+    color: #0f0f0f;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>You're offline</h1>
+    <p>This page needs an internet connection. Content you've already opened may still be available — check your recent reading.</p>
+    <button onclick="location.reload()">Try again</button>
+  </div>
+</body>
+</html>

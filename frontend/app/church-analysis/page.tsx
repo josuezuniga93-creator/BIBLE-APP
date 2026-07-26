@@ -155,7 +155,7 @@ export default function ChurchAnalysisPage() {
             </div>
             <p className="font-semibold text-sm mb-1" style={{ color: fg }}>No analyses yet</p>
             <p className="text-xs leading-relaxed max-w-[220px]" style={{ color: mutedFg }}>
-              Tap "New Analysis" to analyze a church or pastor's sermons against the historic Christian faith.
+              Tap &quot;New Analysis&quot; to analyze a church or pastor&apos;s sermons against the historic Christian faith.
             </p>
           </div>
         ) : (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import NextImage from "next/image";
 import { BadgeDefinition, badgeText, evaluateBadgeUnlocks, type BadgeLang } from "../lib/badges";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
@@ -290,9 +291,11 @@ export function BadgeRuntime() {
         <p className="text-[11px] font-black uppercase tracking-[0.24em]" style={{ color: isLight ? "rgba(0,0,0,0.40)" : "#d8b867" }}>
           {lang === "es" ? "Insignia Ganada" : "Badge Earned"}
         </p>
-        <img
+        <NextImage
           src={active.image}
           alt={copy.name}
+          width={160}
+          height={160}
           className="mx-auto mt-4 h-40 w-40 object-contain drop-shadow-[0_18px_28px_rgba(0,0,0,0.35)]"
         />
         <h2 id="badge-earned-title" className="mt-4 text-3xl font-black leading-tight" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h2>

@@ -770,6 +770,9 @@ export default function StudyToolsPage() {
   useEffect(() => {
     const frame = window.requestAnimationFrame(refreshHighlightGeometry);
     return () => window.cancelAnimationFrame(frame);
+    // refreshHighlightGeometry closes over selection/commentaryTokens/currentReaderPage/currentHighlights,
+    // all already listed below — it's redefined each render but reads no other state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, commentaryTokens, currentReaderPage, currentHighlights]);
 
   useEffect(() => {
@@ -960,7 +963,7 @@ export default function StudyToolsPage() {
                             </button>
                           </div>
                           <p className="mt-3 text-sm leading-6 line-clamp-5" style={{ color: isLight ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.64)" }}>
-                            "{highlight.text}"
+                            &quot;{highlight.text}&quot;
                           </p>
                           <button
                             onClick={() => openHighlightInReader(highlight)}
@@ -1021,7 +1024,7 @@ export default function StudyToolsPage() {
                                         </button>
                                       </div>
                                       <p className="mt-2 text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>
-                                        "{highlight.text}"
+                                        &quot;{highlight.text}&quot;
                                       </p>
                                       <button
                                         onClick={() => openHighlightInReader(highlight)}

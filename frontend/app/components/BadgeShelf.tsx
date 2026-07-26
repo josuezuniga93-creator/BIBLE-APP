@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import {
   BADGE_CATEGORIES,
   BADGE_DEFINITIONS,
@@ -46,7 +47,7 @@ function BadgeGalleryCard({
           : `1px solid ${isLE ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)"}`,
       }}
     >
-      <img src={badge.image} alt={copy.name} className="mx-auto h-24 w-24 object-contain" />
+      <Image src={badge.image} alt={copy.name} width={96} height={96} className="mx-auto h-24 w-24 object-contain" />
       <h3 className="mt-3 text-center text-sm font-black leading-tight" style={{ color: isLE ? "#0a0a0a" : "#ffffff" }}>{copy.name}</h3>
       <p className="mt-1 text-center text-[11px] leading-5" style={{ color: isLE ? "rgba(0,0,0,0.50)" : "rgba(255,255,255,0.50)" }}>{copy.reason}</p>
       {earned ? (
@@ -143,7 +144,7 @@ export function BadgeShelf() {
         <div className="mt-4 flex items-center justify-center gap-4">
           {best.map((badge) => (
             <button key={badge.id} type="button" onClick={() => setOpen(true)} className="active:scale-95">
-              <img src={badge.image} alt={badgeText(badge, lang).name} className="h-20 w-20 object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.25)]" />
+              <Image src={badge.image} alt={badgeText(badge, lang).name} width={80} height={80} className="h-20 w-20 object-contain drop-shadow-[0_12px_20px_rgba(0,0,0,0.25)]" />
             </button>
           ))}
         </div>

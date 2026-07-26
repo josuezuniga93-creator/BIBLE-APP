@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { applyThemeAttributes } from "../lib/useTheme";
 
 type Step = 1 | 2 | 3;
@@ -104,11 +105,12 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
         )}
 
         {/* Logo */}
-        <img
+        <Image
           src="/tulip-logo.png"
           alt="Tulip"
           width={60}
           height={60}
+          priority
           className="mx-auto mb-4 object-contain"
         />
 

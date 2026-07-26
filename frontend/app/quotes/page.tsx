@@ -2,6 +2,7 @@
 import { QUOTES, type Quote } from "../data/quotes";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "../lib/supabase/client";
@@ -247,9 +248,11 @@ export default function QuotesArchivePage() {
                 border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.10)",
               }}
             >
-              <img
+              <NextImage
                 src={q.image}
                 alt={q.author}
+                width={60}
+                height={60}
                 className="w-[60px] h-[60px] rounded-xl object-cover flex-shrink-0"
               />
               <div className="flex-1 min-w-0">

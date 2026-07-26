@@ -276,7 +276,7 @@ export function BracketHighlightReader({
   const persistHighlights = useCallback((next: ReaderHighlight[]) => {
     const sorted = [...next].sort((a, b) => b.createdAt - a.createdAt);
     setHighlights(sorted);
-  }, [context]);
+  }, []);
 
   function clearLongPressTimer() {
     if (longPressTimer.current) {
@@ -478,6 +478,9 @@ export function BracketHighlightReader({
   useEffect(() => {
     const frame = window.requestAnimationFrame(refreshHighlightGeometry);
     return () => window.cancelAnimationFrame(frame);
+    // refreshHighlightGeometry closes over selection/tokens/highlights, all already listed below —
+    // it's redefined each render but reads no other state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selection, tokens, highlights]);
 
   return (
@@ -739,7 +742,7 @@ export function BracketHighlightReader({
                               ×
                             </button>
                           </div>
-                          <p className="mt-3 text-sm leading-6 line-clamp-5" style={{ color: isLight ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.64)" }}>"{highlight.text}"</p>
+                          <p className="mt-3 text-sm leading-6 line-clamp-5" style={{ color: isLight ? "rgba(0,0,0,0.64)" : "rgba(255,255,255,0.64)" }}>&quot;{highlight.text}&quot;</p>
                         </article>
                       ))}
                     </div>
@@ -770,7 +773,7 @@ export function BracketHighlightReader({
                                     ×
                                   </button>
                                 </div>
-                                <p className="text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>"{highlight.text}"</p>
+                                <p className="text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)" }}>&quot;{highlight.text}&quot;</p>
                               </article>
                             ))}
                           </div>

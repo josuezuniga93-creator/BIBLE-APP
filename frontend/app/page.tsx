@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   recordLogin,
   type StreakData,
@@ -949,7 +950,7 @@ export default function Home() {
       } catch { /* fall back to English */ }
     })();
     return () => { cancelled = true; };
-  }, [lang, todayHV.id]);
+  }, [lang, todayHV.id, todayHV.title, todayHV.verseText]);
   const displayVerseText = lang === "es" ? (esVerseText ?? todayHV.verseText) : todayHV.verseText;
   const displayTitle     = lang === "es" ? (esTitle     ?? todayHV.title)     : todayHV.title;
 
@@ -1385,10 +1386,12 @@ export default function Home() {
           style={{ top: "-60px", height: "620px" }}
         >
           {/* Lamp photo — shifted up so the lamp head sits near the very top of the screen */}
-          <img
+          <Image
             src="/lamp-bg.png"
             alt=""
-            className="w-full h-full object-cover"
+            fill
+            priority
+            className="object-cover"
             style={{ objectPosition: "center top" }}
           />
           {/* Fade into page background */}

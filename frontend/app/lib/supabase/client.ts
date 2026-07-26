@@ -34,6 +34,11 @@ function createDisabledClient() {
         getPublicUrl: () => ({ data: { publicUrl: "" } }),
       }),
     },
+    channel: () => ({
+      on: () => ({ subscribe: () => ({}) }),
+      subscribe: () => ({}),
+    }),
+    removeChannel: () => {},
   } as unknown as ReturnType<typeof createBrowserClient>;
 }
 

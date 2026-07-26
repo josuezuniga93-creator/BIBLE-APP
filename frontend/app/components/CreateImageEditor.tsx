@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { UiIcon, type UiIconName } from "./UiIcon";
 import { BG_OPTIONS, renderVerseToCanvas, type VerseQuoteOptions } from "../lib/verseQuoteExport";
 import { isLightTheme, useTheme } from "../lib/useTheme";
@@ -442,8 +443,8 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
                       border: `1px solid ${active ? palette.active : palette.border}`,
                     }}
                   >
-                    <div className="mb-3 rounded-2xl overflow-hidden" style={{ height: 56, background: swatch ?? "#12151d", border: `1px solid ${palette.border}` }}>
-                      {preset.bgSrc && <img src={preset.bgSrc} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.72 }} />}
+                    <div className="relative mb-3 rounded-2xl overflow-hidden" style={{ height: 56, background: swatch ?? "#12151d", border: `1px solid ${palette.border}` }}>
+                      {preset.bgSrc && <Image src={preset.bgSrc} alt="" fill style={{ objectFit: "cover", opacity: 0.72 }} />}
                     </div>
                     <p style={{ fontSize: 15, fontWeight: 950, lineHeight: 1.1 }}>{preset.label}</p>
                     <p style={{ fontSize: 12, fontWeight: 700, opacity: 0.62, marginTop: 4 }}>{preset.desc}</p>
@@ -551,7 +552,7 @@ export default function CreateImageEditor({ verseText, reference, lang, onClose 
                       className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-2xl transition-all active:scale-95"
                       style={{ background: option.color ?? "#111827", border: `2px solid ${active ? palette.active : palette.border}` }}
                     >
-                      {option.src && <img src={option.src} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />}
+                      {option.src && <Image src={option.src} alt="" fill style={{ objectFit: "cover" }} />}
                       {active && (
                         <span className="absolute inset-0 flex items-center justify-center" style={{ color: option.color === "#f7f7f7" || option.color === "#eef0f3" ? "#111111" : "#ffffff", background: "rgba(0,0,0,0.06)" }}>
                           <UiIcon name="check" size={18} strokeWidth={3} />

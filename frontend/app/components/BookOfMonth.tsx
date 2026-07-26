@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useLanguage } from "../lib/useLanguage";
 
 const BOOKS = {
@@ -77,13 +78,11 @@ export default function BookOfMonth() {
             className="flex-shrink-0 relative"
             style={{ width: "34%" }}
           >
-            <img
+            <Image
               src={book.cover}
               alt={book.title}
+              fill
               style={{
-                display: "block",
-                width: "100%",
-                height: "100%",
                 objectFit: "cover",
                 borderRadius: "0",
                 boxShadow: "0 8px 18px rgba(0,0,0,0.35)",

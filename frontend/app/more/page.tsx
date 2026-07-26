@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { isLightTheme, useTheme, type Theme } from "../lib/useTheme";
@@ -173,12 +174,6 @@ function copyFor(lang: Lang) {
         ? "Guarda notas, resaltados, planes y colecciones en todos tus dispositivos."
         : "Keep notes, highlights, plans, and collections across your devices.",
     signIn: lang === "es" ? "Iniciar sesión" : "Sign in",
-    heroLabel: lang === "es" ? "Extras" : "Extras",
-    heroTitle: lang === "es" ? "Todo para estudiar mejor." : "Everything for deeper study.",
-    heroSub:
-      lang === "es"
-        ? "Abre comentarios, libros, videos, herramientas y conexiones sin perderte."
-        : "Open commentaries, books, videos, tools, and church connections without hunting around.",
     continueStudy: lang === "es" ? "Continuar estudio" : "Continue study",
     saved: lang === "es" ? "Guardados" : "Saved",
     libraryStudy: lang === "es" ? "Biblioteca y estudio" : "Library & Study",
@@ -462,8 +457,10 @@ export default function MorePage() {
             >
               <span className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full" style={{ background: palette.card }}>
                 {cloudUser.user_metadata?.avatar_url ? (
-                  <img
+                  <Image
                     src={cloudUser.user_metadata.avatar_url}
+                    width={48}
+                    height={48}
                     className="h-full w-full object-cover"
                     alt=""
                   />
@@ -524,53 +521,6 @@ export default function MorePage() {
               </Link>
             </div>
           )}
-        </section>
-
-        <section
-          className="more-extras-hero relative mt-6 overflow-hidden rounded-[30px] p-5"
-          style={{
-            background: isLight
-              ? "linear-gradient(135deg, #f6f6f7 0%, #ffffff 56%, #e9e9eb 100%)"
-              : "linear-gradient(135deg, #111827 0%, #0a0d16 58%, #201a0d 100%)",
-            border: `1px solid ${palette.border}`,
-            boxShadow: palette.shadow,
-          }}
-        >
-          <span className="more-extras-hero-orb" aria-hidden="true" />
-          <span className="more-extras-hero-line" aria-hidden="true" />
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-black uppercase tracking-[0.30em]" style={{ color: palette.faint }}>
-                {c.heroLabel}
-              </p>
-              <h1 className="mt-2 max-w-[12ch] text-[27px] font-black leading-[0.96] tracking-[-0.04em]">
-                {c.heroTitle}
-              </h1>
-              <p className="mt-3 max-w-[24ch] text-[13.5px] font-semibold leading-relaxed" style={{ color: palette.muted }}>
-                {c.heroSub}
-              </p>
-            </div>
-            <div className="more-extras-tool-stack shrink-0" aria-hidden="true">
-              {[
-                { icon: "study-tools" as AppSectionIconName, delay: "0ms" },
-                { icon: "library" as AppSectionIconName, delay: "520ms" },
-                { icon: "videos" as AppSectionIconName, delay: "1040ms" },
-              ].map((item) => (
-                <span
-                  key={item.icon}
-                  className="more-extras-tool-chip"
-                  style={{
-                    animationDelay: item.delay,
-                    background: palette.cardAlt,
-                    border: `1px solid ${palette.border}`,
-                    color: palette.text,
-                  }}
-                >
-                  <AppSectionIcon name={item.icon} size={18} />
-                </span>
-              ))}
-            </div>
-          </div>
         </section>
 
         <section className="mt-8 space-y-3">

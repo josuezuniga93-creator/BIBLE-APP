@@ -2,6 +2,7 @@
 import { getCurrentQuote } from "../data/quotes";
 import { useLanguage } from "../lib/useLanguage";
 import { useState, useEffect, useMemo } from "react";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "../lib/supabase/client";
@@ -294,9 +295,10 @@ export default function QuoteOfWeek() {
         }}
       >
         {/* Portrait artwork — full card so the beard naturally reaches the quote */}
-        <img
+        <NextImage
           src={quote.image}
           alt={quote.author}
+          fill
           className="absolute inset-0 h-full w-full"
           style={{
             objectFit: "cover",

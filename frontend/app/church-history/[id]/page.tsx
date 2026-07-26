@@ -40,7 +40,7 @@ export default function ChurchHistoryStory() {
       finally { if (!cancelled) setTranslating(false); }
     })();
     return () => { cancelled = true; };
-  }, [lang, entry?.id]);
+  }, [lang, entry]);
 
   const isLight = theme === "white-noir";
 

@@ -294,6 +294,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     } else {
       contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
+    // showDetail is read only to pick which container to scroll when a chapter loads —
+    // toggling it alone shouldn't re-trigger a chapter refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, book, currentChapter]);
 
   // Sync bookmark state from collections

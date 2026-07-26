@@ -1,6 +1,6 @@
-// Bible App — Service Worker v7 (daily verse notifications)
+// Bible App — Service Worker v8 (daily verse notifications + offline fallback)
 
-const CACHE_NAME = 'bible-v7';
+const CACHE_NAME = 'bible-v8';
 
 // ─── Daily verse pool ─────────────────────────────────────────────────────────
 const DAILY_VERSES = [
@@ -100,20 +100,32 @@ self.addEventListener('message', (event) => {
 });
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
-self.addEventListener('install', () => {
+const OFFLINE_URL = '/offline.html';
+
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.add(OFFLINE_URL))
+  );
   self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
       .then(() => self.clients.claim())
   );
 });
 
-// Network-first: always get fresh content, never serve stale
+// Network-first: always get fresh content, never serve stale.
+// Only fall back to a cached offline page for full-page navigations that fail outright.
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
   event.respondWith(fetch(event.request));
 });

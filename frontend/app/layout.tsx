@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, Inter, Lora, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
@@ -23,6 +23,13 @@ const playfair = Playfair_Display({
 const verseDisplay = Cormorant_Garamond({
   subsets: ["latin"],
   variable: "--font-verse-display",
+  weight: ["500", "600"],
+  display: "swap",
+});
+
+const lora = Lora({
+  subsets: ["latin"],
+  variable: "--font-lora",
   weight: ["500", "600"],
   display: "swap",
 });
@@ -89,7 +96,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${playfair.variable} ${verseDisplay.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfair.variable} ${verseDisplay.variable} ${lora.variable}`} suppressHydrationWarning>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         {/* Apply saved theme BEFORE first paint — eliminates the color flash */}

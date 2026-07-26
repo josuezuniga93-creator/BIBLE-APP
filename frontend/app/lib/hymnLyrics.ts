@@ -592,17 +592,6 @@ export const HYMN_LYRICS: Record<string, HymnEntry> = {
     ],
   },
 
-  "now thank we all our god": {
-    title: "Now Thank We All Our God",
-    author: "Martin Rinkart",
-    year: 1636,
-    verses: [
-      "Now thank we all our God\nwith heart and hands and voices,\nwho wondrous things hath done,\nin whom his world rejoices;\nwho from our mothers' arms\nhath blessed us on our way\nwith countless gifts of love,\nand still is ours today.",
-      "O may this bounteous God\nthrough all our life be near us,\nwith ever joyful hearts\nand blessed peace to cheer us;\nand keep us in his grace,\nand guide us when perplexed,\nand free us from all ills\nin this world and the next.",
-      "All praise and thanks to God\nthe Father now be given,\nthe Son, and him who reigns\nwith them in highest heaven,\nthe one eternal God,\nwhom earth and heaven adore;\nfor thus it was, is now,\nand shall be evermore.",
-    ],
-  },
-
   "of the father's love begotten": {
     title: "Of the Father's Love Begotten",
     author: "Aurelius Prudentius",
