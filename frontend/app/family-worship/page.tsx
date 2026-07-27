@@ -374,10 +374,74 @@ const LABEL_STYLE: React.CSSProperties = {
 
 const DEVOTIONAL_MOTION_STYLES = `
   .devotional-page-shell {
+    --dev-bg: #fbfaf7;
+    --dev-bg-top: #f5f1e9;
+    --dev-card: #ffffff;
+    --dev-card-soft: #f6f6f4;
+    --dev-card-muted: #f1f1ef;
+    --dev-control: rgba(255, 255, 255, 0.78);
+    --dev-control-text: #171512;
+    --dev-control-muted: #5f6166;
+    --dev-border: rgba(23, 21, 18, 0.10);
+    --dev-border-soft: rgba(23, 21, 18, 0.08);
+    --dev-text: #171512;
+    --dev-muted: #716b63;
+    --dev-faint: #9a9389;
+    --dev-dim: #8b8379;
+    --dev-accent: #171512;
+    --dev-accent-soft: #eeeeeb;
+    --dev-accent-contrast: #ffffff;
+    --dev-label-blue: #4b6f82;
+    --dev-label-green: #6f7b4d;
+    --dev-label-rose: #a95d52;
+    --dev-quote-bg: #f6f3ec;
+    --dev-action-bg: #f0f4f1;
+    --dev-action-text: #516044;
+    --dev-action-border: rgba(81, 96, 68, 0.10);
+    --dev-danger-bg: #fbf1ef;
+    --dev-danger-text: #a95d52;
+    --dev-shadow: 0 16px 40px rgba(54, 45, 34, 0.08);
+    --dev-control-shadow: 0 12px 28px rgba(53, 45, 35, 0.08);
+    --dev-shine: rgba(255,255,255,.72);
     min-height: 100vh;
     background:
-      linear-gradient(180deg, #f5f1e9 0 228px, #fbfaf7 228px 100%);
-    color: #171512;
+      linear-gradient(180deg, var(--dev-bg-top) 0 228px, var(--dev-bg) 228px 100%);
+    color: var(--dev-text);
+  }
+
+  html[data-theme-mode="dark"] .devotional-page-shell {
+    --dev-bg: #0e1018;
+    --dev-bg-top: #111421;
+    --dev-card: #171a24;
+    --dev-card-soft: #1d2130;
+    --dev-card-muted: #191d29;
+    --dev-control: #1d2130;
+    --dev-control-text: rgba(255, 255, 255, 0.92);
+    --dev-control-muted: rgba(255, 255, 255, 0.62);
+    --dev-border: rgba(255, 255, 255, 0.10);
+    --dev-border-soft: rgba(255, 255, 255, 0.07);
+    --dev-text: rgba(255, 255, 255, 0.94);
+    --dev-muted: rgba(255, 255, 255, 0.66);
+    --dev-faint: rgba(255, 255, 255, 0.44);
+    --dev-dim: rgba(255, 255, 255, 0.34);
+    --dev-accent: #c9a961;
+    --dev-accent-soft: rgba(201, 169, 97, 0.14);
+    --dev-accent-contrast: #111421;
+    --dev-label-blue: #8fb8c9;
+    --dev-label-green: #b7c58b;
+    --dev-label-rose: #d28a80;
+    --dev-quote-bg: rgba(255, 255, 255, 0.045);
+    --dev-action-bg: rgba(183, 197, 139, 0.12);
+    --dev-action-text: #b7c58b;
+    --dev-action-border: rgba(183, 197, 139, 0.18);
+    --dev-danger-bg: rgba(210, 138, 128, 0.12);
+    --dev-danger-text: #d28a80;
+    --dev-shadow: 0 22px 60px rgba(0, 0, 0, 0.28);
+    --dev-control-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+    --dev-shine: rgba(255, 255, 255, 0.10);
+    background:
+      radial-gradient(circle at 18% -8%, rgba(201, 169, 97, 0.14), transparent 34%),
+      linear-gradient(180deg, var(--dev-bg-top) 0 228px, var(--dev-bg) 228px 100%);
   }
 
   .devotional-phone {
@@ -398,9 +462,9 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-icon-button,
   .devotional-date-pill {
-    border: 1px solid rgba(23, 21, 18, 0.1);
-    background: rgba(255, 255, 255, 0.78);
-    box-shadow: 0 12px 28px rgba(53, 45, 35, 0.08);
+    border: 1px solid var(--dev-border);
+    background: var(--dev-control);
+    box-shadow: var(--dev-control-shadow);
   }
 
   .devotional-icon-button {
@@ -409,7 +473,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     border-radius: 20px;
     display: grid;
     place-items: center;
-    color: #171512;
+    color: var(--dev-control-text);
     font-size: 1.45rem;
     font-weight: 900;
     transition: transform 160ms ease, background-color 160ms ease;
@@ -417,7 +481,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-icon-button:active {
     transform: scale(.94);
-    background: #fff;
+    filter: brightness(1.04);
   }
 
   .devotional-date-pill {
@@ -427,7 +491,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     grid-template-columns: 30px minmax(0, 1fr) 30px;
     align-items: center;
     text-align: center;
-    color: #716b63;
+    color: var(--dev-control-muted);
     font-size: .78rem;
     font-weight: 900;
     letter-spacing: .08em;
@@ -441,7 +505,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-eyebrow {
     margin: 0 0 10px;
-    color: #6f7b4d;
+    color: var(--dev-label-green);
     font-size: .72rem;
     font-weight: 900;
     letter-spacing: .16em;
@@ -451,7 +515,7 @@ const DEVOTIONAL_MOTION_STYLES = `
   .devotional-title {
     margin: 0;
     max-width: 340px;
-    color: #171512;
+    color: var(--dev-text);
     font-family: ui-serif, Georgia, "Times New Roman", serif;
     font-size: clamp(3.1rem, 15vw, 4.45rem);
     line-height: .92;
@@ -461,7 +525,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-subtitle {
     margin: 16px 0 0;
-    color: #716b63;
+    color: var(--dev-muted);
     font-size: 1.05rem;
     line-height: 1.45;
   }
@@ -474,10 +538,10 @@ const DEVOTIONAL_MOTION_STYLES = `
     grid-template-columns: 58px minmax(0, 1fr) auto;
     gap: 14px;
     align-items: center;
-    border: 1px solid rgba(23, 21, 18, 0.08);
+    border: 1px solid var(--dev-border-soft);
     border-radius: 28px;
-    background: rgba(255, 255, 255, 0.86);
-    box-shadow: 0 18px 42px rgba(52, 43, 32, 0.08);
+    background: color-mix(in srgb, var(--dev-card) 92%, transparent);
+    box-shadow: var(--dev-shadow);
     animation: devotional-rise 680ms 170ms cubic-bezier(.2,.9,.2,1) both;
   }
 
@@ -488,7 +552,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     display: grid;
     place-items: center;
     position: relative;
-    background: conic-gradient(#a9782e var(--devotional-progress), #eee8dc 0);
+    background: conic-gradient(var(--dev-accent) var(--devotional-progress), var(--dev-accent-soft) 0);
   }
 
   .devotional-ring::after {
@@ -496,13 +560,13 @@ const DEVOTIONAL_MOTION_STYLES = `
     position: absolute;
     inset: 7px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--dev-card);
   }
 
   .devotional-ring span {
     position: relative;
     z-index: 1;
-    color: #171512;
+    color: var(--dev-text);
     font-size: .82rem;
     font-weight: 950;
   }
@@ -510,7 +574,7 @@ const DEVOTIONAL_MOTION_STYLES = `
   .devotional-theme-label {
     margin: 0;
     overflow: hidden;
-    color: #9a9389;
+    color: var(--dev-faint);
     font-size: .72rem;
     font-weight: 900;
     letter-spacing: .16em;
@@ -521,7 +585,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-theme-ref {
     margin: 5px 0 0;
-    color: #171512;
+    color: var(--dev-text);
     font-size: 1.25rem;
     line-height: 1.1;
     font-weight: 950;
@@ -535,8 +599,8 @@ const DEVOTIONAL_MOTION_STYLES = `
     justify-content: center;
     border: 0;
     border-radius: 18px;
-    background: #181512;
-    color: #fff8ec;
+    background: var(--dev-accent);
+    color: var(--dev-accent-contrast);
     font-size: .78rem;
     font-weight: 950;
     transition: transform 160ms ease;
@@ -553,10 +617,10 @@ const DEVOTIONAL_MOTION_STYLES = `
   }
 
   .devotional-motion-card {
-    border: 1px solid rgba(23, 21, 18, 0.08);
+    border: 1px solid var(--dev-border-soft);
     border-radius: 30px;
-    background: #fff;
-    box-shadow: 0 16px 40px rgba(54, 45, 34, 0.08);
+    background: var(--dev-card);
+    box-shadow: var(--dev-shadow);
     overflow: hidden;
     animation: devotional-rise 720ms cubic-bezier(.2,.9,.2,1) both;
     animation-delay: var(--motion-delay, 0ms);
@@ -564,7 +628,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-section-label {
     margin: 0;
-    color: #4b6f82;
+    color: var(--dev-label-blue);
     font-size: .72rem;
     font-weight: 950;
     letter-spacing: .16em;
@@ -573,7 +637,7 @@ const DEVOTIONAL_MOTION_STYLES = `
 
   .devotional-scripture-title {
     margin: 8px 0 15px;
-    color: #171512;
+    color: var(--dev-text);
     font-family: ui-serif, Georgia, "Times New Roman", serif;
     font-size: clamp(2.05rem, 10vw, 2.78rem);
     line-height: .96;
@@ -584,10 +648,10 @@ const DEVOTIONAL_MOTION_STYLES = `
   .devotional-quote-box {
     margin: 0;
     padding: 16px 16px 16px 18px;
-    border-left: 4px solid #a9782e;
+    border-left: 4px solid var(--dev-accent);
     border-radius: 22px;
-    background: #f6f3ec;
-    color: #423b33;
+    background: var(--dev-quote-bg);
+    color: var(--dev-text);
     font-family: ui-serif, Georgia, "Times New Roman", serif;
     font-size: 1.05rem;
     line-height: 1.62;
@@ -599,21 +663,21 @@ const DEVOTIONAL_MOTION_STYLES = `
     content: "";
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+    background: linear-gradient(90deg, transparent, var(--dev-shine), transparent);
     transform: translateX(-105%);
     animation: devotional-shine 1300ms 920ms ease-out both;
   }
 
   .devotional-scripture-ref {
     margin: 13px 0 0;
-    color: #a9782e;
+    color: var(--dev-accent);
     font-size: .9rem;
     font-weight: 950;
   }
 
   .devotional-read-prompt {
     margin: 12px 0 0;
-    color: #8b8379;
+    color: var(--dev-dim);
     font-size: .82rem;
     line-height: 1.5;
   }
@@ -624,7 +688,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     border-radius: 22px;
-    background: #ede8de;
+    background: var(--dev-accent-soft);
     position: relative;
   }
 
@@ -635,7 +699,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     left: 5px;
     top: 5px;
     border-radius: 18px;
-    background: #171512;
+    background: var(--dev-accent);
     box-shadow: 0 10px 20px rgba(23, 21, 18, 0.16);
     transform: translateX(var(--tab-shift, 0));
     transition: transform 260ms cubic-bezier(.2,.9,.2,1);
@@ -648,17 +712,17 @@ const DEVOTIONAL_MOTION_STYLES = `
     place-items: center;
     border: 0;
     background: transparent;
-    color: #716b63;
+    color: var(--dev-muted);
     font-size: .82rem;
     font-weight: 950;
   }
 
   .devotional-tab.is-active {
-    color: #fff8ec;
+    color: var(--dev-accent-contrast);
   }
 
   .devotional-meditation-body {
-    color: #4d463f;
+    color: var(--dev-muted);
     font-size: .98rem;
     line-height: 1.72;
     animation: devotional-reveal 680ms 150ms cubic-bezier(.2,.9,.2,1) both;
@@ -671,10 +735,10 @@ const DEVOTIONAL_MOTION_STYLES = `
     align-items: center;
     justify-content: center;
     gap: 8px;
-    border: 1px solid rgba(81, 96, 68, 0.08);
+    border: 1px solid var(--dev-action-border);
     border-radius: 17px;
-    background: #f0f4f1;
-    color: #516044;
+    background: var(--dev-action-bg);
+    color: var(--dev-action-text);
     font-size: .82rem;
     font-weight: 950;
   }
@@ -688,8 +752,8 @@ const DEVOTIONAL_MOTION_STYLES = `
     gap: 12px;
     border: 0;
     border-radius: 24px;
-    background: #171512;
-    color: #fff8ec;
+    background: var(--dev-accent);
+    color: var(--dev-accent-contrast);
     box-shadow: 0 18px 36px rgba(23, 21, 18, 0.22);
     font-size: .98rem;
     font-weight: 950;
@@ -707,8 +771,8 @@ const DEVOTIONAL_MOTION_STYLES = `
     display: grid;
     place-items: center;
     border-radius: 999px;
-    background: #a9782e;
-    color: #fff;
+    background: var(--dev-accent);
+    color: var(--dev-accent-contrast);
   }
 
   @media (min-width: 768px) {
@@ -1011,7 +1075,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
               {t(lang, "family_meditation")}
             </p>
             {canShowFullCommentary && (
-              <p className="mt-1 text-xs font-semibold" style={{ color: "#9a9389" }}>
+              <p className="mt-1 text-xs font-semibold" style={{ color: "var(--dev-faint)" }}>
                 {showFullCommentary ? t(lang, "family_full_commentary") : t(lang, "family_concise_reading")}
               </p>
             )}
@@ -1040,18 +1104,18 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
 
       {ryleAudioTracks.length > 0 && (
         <div className="px-5 pb-5">
-          <div className="rounded-[24px] border border-[#e5dfd3] bg-[#f8f6f1] p-4 space-y-3">
+          <div className="rounded-[24px] p-4 space-y-3" style={{ border: "1px solid var(--dev-border)", backgroundColor: "var(--dev-card-soft)" }}>
             <div>
               <p className="devotional-section-label">{t(lang, "family_read_aloud_label")}</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: "#716b63" }}>
+              <p className="mt-1 text-sm leading-6" style={{ color: "var(--dev-muted)" }}>
                 {t(lang, "family_ryle_audio_desc")}
               </p>
             </div>
             {ryleAudioTracks.map((track) => (
               <div key={track.url} className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-black" style={{ color: "#171512" }}>{track.title}</p>
-                  <p className="text-xs font-semibold" style={{ color: "#9a9389" }}>{track.duration}</p>
+                  <p className="text-sm font-black" style={{ color: "var(--dev-text)" }}>{track.title}</p>
+                  <p className="text-xs font-semibold" style={{ color: "var(--dev-faint)" }}>{track.duration}</p>
                 </div>
                 <audio controls preload="none" className="w-full">
                   <source src={track.url} type="audio/mpeg" />
@@ -1063,7 +1127,7 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
       )}
 
       <div className="px-5 pb-5">
-        <p className="text-xs italic pt-4 border-t border-[#eee8dc]" style={{ color: "#9a9389" }}>
+        <p className="text-xs italic pt-4 border-t" style={{ color: "var(--dev-faint)", borderColor: "var(--dev-border-soft)" }}>
           {t(lang, "family_ryle_attribution")}
         </p>
       </div>
@@ -1100,17 +1164,17 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
       className="devotional-motion-card"
       style={motionStyle("590ms")}
     >
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid #eee8dc" }}>
-        <p className="flex items-center gap-2 devotional-section-label" style={{ color: "#a95d52", marginBottom: 10 }}>
+      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid var(--dev-border-soft)" }}>
+        <p className="flex items-center gap-2 devotional-section-label" style={{ color: "var(--dev-label-rose)", marginBottom: 10 }}>
           <UiIcon name="music" size={14} />
           {lang === "es" ? "Himno" : "Hymn"}
         </p>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p style={{ fontSize: "1.1rem", fontWeight: 900, color: "#171512", lineHeight: 1.25 }}>
+            <p style={{ fontSize: "1.1rem", fontWeight: 900, color: "var(--dev-text)", lineHeight: 1.25 }}>
               {hymnTitle}
             </p>
-            <p className="mt-1" style={{ fontSize: "0.78rem", color: "#9a9389" }}>
+            <p className="mt-1" style={{ fontSize: "0.78rem", color: "var(--dev-faint)" }}>
               {hymnAuthor} · {hymnYear}
             </p>
           </div>
@@ -1124,8 +1188,8 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
       </div>
 
       {audioOpen && (
-        <div className="px-5 py-4" style={{ borderBottom: "1px solid #eee8dc" }}>
-          <p className="text-xs mb-3 leading-5" style={{ color: "#716b63" }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid var(--dev-border-soft)" }}>
+          <p className="text-xs mb-3 leading-5" style={{ color: "var(--dev-muted)" }}>
             {lang === "es"
               ? "Busca este himno en YouTube para cantarlo en familia."
               : "Tap below to find this hymn on YouTube and sing along as a family."}
@@ -1141,8 +1205,8 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
             <div>
-              <p className="font-semibold text-sm" style={{ color: "#423b33" }}>{hymnTitle}</p>
-              <p className="text-xs mt-0.5" style={{ color: "#716b63" }}>{t(lang, "family_open_youtube")}</p>
+              <p className="font-semibold text-sm" style={{ color: "var(--dev-text)" }}>{hymnTitle}</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--dev-muted)" }}>{t(lang, "family_open_youtube")}</p>
             </div>
           </a>
         </div>
@@ -1153,10 +1217,10 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
           <div className="space-y-6">
             {spanishVerses.map((verse, i) => (
               <div key={i}>
-                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
+                <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)", marginBottom: 8 }}>
                   Estrofa {i + 1}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "var(--dev-muted)", whiteSpace: "pre-line" }}>
                   {verse}
                 </p>
               </div>
@@ -1166,31 +1230,31 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
           <div className="space-y-6">
             {lyrics.verses.map((verse, i) => (
               <div key={i}>
-                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
+                <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)", marginBottom: 8 }}>
                   {t(lang, "family_verse_label")} {i + 1}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "var(--dev-muted)", whiteSpace: "pre-line" }}>
                   {verse}
                 </p>
               </div>
             ))}
             {lyrics.chorus && (
-              <div className="pt-5" style={{ borderTop: "1px solid #eee8dc" }}>
-                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
+              <div className="pt-5" style={{ borderTop: "1px solid var(--dev-border-soft)" }}>
+                <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)", marginBottom: 8 }}>
                   {t(lang, "family_chorus_label")}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "var(--dev-muted)", whiteSpace: "pre-line" }}>
                   {lyrics.chorus}
                 </p>
               </div>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#716b63" }}>
+          <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "var(--dev-muted)" }}>
             {entry.hymn.firstLine ? `"${entry.hymn.firstLine}…"` : "See The Baptist Hymnal for full text."}
           </p>
         )}
-        <p className="mt-5 text-xs" style={{ color: "#9a9389" }}>
+        <p className="mt-5 text-xs" style={{ color: "var(--dev-faint)" }}>
           {lang === "es" ? "Canta o lee en voz alta juntos como familia." : "Sing or read aloud together as a family."}
         </p>
       </div>
@@ -1245,17 +1309,17 @@ function PrayerCard() {
       className="devotional-motion-card"
       style={motionStyle("700ms")}
     >
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid #eee8dc" }}>
-        <p className="devotional-section-label" style={{ color: "#6f7b4d", marginBottom: 8 }}>{t(lang, "family_prayer_label")}</p>
-        <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "#171512" }}>{t(lang, "family_prayer_title")}</p>
-        <p className="mt-1" style={{ fontSize: "0.82rem", lineHeight: 1.55, color: "#716b63" }}>
+      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid var(--dev-border-soft)" }}>
+        <p className="devotional-section-label" style={{ color: "var(--dev-label-green)", marginBottom: 8 }}>{t(lang, "family_prayer_label")}</p>
+        <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "var(--dev-text)" }}>{t(lang, "family_prayer_title")}</p>
+        <p className="mt-1" style={{ fontSize: "0.82rem", lineHeight: 1.55, color: "var(--dev-muted)" }}>
           {t(lang, "family_prayer_sub")}
         </p>
       </div>
 
       <div className="px-5 py-4 space-y-3">
         {items.length === 0 && !adding && (
-          <p className="text-sm italic text-center py-3" style={{ color: "#9a9389" }}>
+          <p className="text-sm italic text-center py-3" style={{ color: "var(--dev-faint)" }}>
             {t(lang, "family_no_prayers")}
           </p>
         )}
@@ -1273,24 +1337,24 @@ function PrayerCard() {
                 }}
                 rows={2}
                 className="flex-1 px-3 py-2 rounded-xl outline-none resize-none text-sm leading-6"
-                style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
+                style={{ backgroundColor: "var(--dev-card-soft)", color: "var(--dev-text)", border: "1px solid var(--dev-border)" }}
               />
               <div className="flex flex-col gap-1.5 pt-0.5">
-                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "#f0f4f1", color: "#516044", border: "1px solid #dfe6dc" }}>{t(lang, "family_save")}</button>
-                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "#716b63", border: "1px solid #eee8dc" }}>{t(lang, "family_cancel")}</button>
+                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "var(--dev-action-bg)", color: "var(--dev-action-text)", border: "1px solid var(--dev-action-border)" }}>{t(lang, "family_save")}</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "var(--dev-muted)", border: "1px solid var(--dev-border-soft)" }}>{t(lang, "family_cancel")}</button>
               </div>
             </div>
           ) : (
             <div key={item.id} className="flex items-start gap-3 group">
-              <div className="flex-shrink-0 mt-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#f0f4f1", border: "1px solid #dfe6dc" }}>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#6f7b4d" }} />
+              <div className="flex-shrink-0 mt-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "var(--dev-action-bg)", border: "1px solid var(--dev-action-border)" }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "var(--dev-action-text)" }} />
               </div>
-              <p className="flex-1 text-sm leading-7" style={{ color: "#4d463f" }}>{item.text}</p>
+              <p className="flex-1 text-sm leading-7" style={{ color: "var(--dev-muted)" }}>{item.text}</p>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
-                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "#6f7b4d", backgroundColor: "#f0f4f1" }} title="Edit">
+                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "var(--dev-action-text)", backgroundColor: "var(--dev-action-bg)" }} title="Edit">
                   <UiIcon name="edit" size={13} />
                 </button>
-                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "#a95d52", backgroundColor: "#fbf1ef" }} title="Remove">
+                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "var(--dev-danger-text)", backgroundColor: "var(--dev-danger-bg)" }} title="Remove">
                   <UiIcon name="close" size={13} />
                 </button>
               </div>
@@ -1311,11 +1375,11 @@ function PrayerCard() {
               placeholder={t(lang, "family_prayer_placeholder")}
               rows={2}
               className="flex-1 px-3 py-2 rounded-xl outline-none resize-none text-sm leading-6"
-              style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
+              style={{ backgroundColor: "var(--dev-card-soft)", color: "var(--dev-text)", border: "1px solid var(--dev-border)" }}
             />
             <div className="flex flex-col gap-1.5 pt-0.5">
-              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "#f0f4f1", color: "#516044", border: "1px solid #dfe6dc" }}>{t(lang, "family_add")}</button>
-              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "#716b63", border: "1px solid #eee8dc" }}>{t(lang, "family_cancel")}</button>
+              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "var(--dev-action-bg)", color: "var(--dev-action-text)", border: "1px solid var(--dev-action-border)" }}>{t(lang, "family_add")}</button>
+              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "var(--dev-muted)", border: "1px solid var(--dev-border-soft)" }}>{t(lang, "family_cancel")}</button>
             </div>
           </div>
         )}
@@ -1326,7 +1390,7 @@ function PrayerCard() {
           <button
             onClick={() => setAdding(true)}
             className="w-full py-3 rounded-[20px] text-sm font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            style={{ backgroundColor: "#f0f4f1", border: "1px solid #dfe6dc", color: "#516044" }}
+            style={{ backgroundColor: "var(--dev-action-bg)", border: "1px solid var(--dev-action-border)", color: "var(--dev-action-text)" }}
           >
             <span className="text-base leading-none">+</span>
             {t(lang, "family_add_prayer")}
@@ -1370,19 +1434,19 @@ function CompletionCard({
         >
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"
-            style={{ backgroundColor: "#f0f4f1", border: "1px solid #6f7b4d", color: "#516044" }}
+            style={{ backgroundColor: "var(--dev-action-bg)", border: "1px solid var(--dev-action-border)", color: "var(--dev-action-text)" }}
           >
             <UiIcon name="check" size={28} strokeWidth={3} />
           </div>
-          <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "#171512" }}>
+          <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "var(--dev-text)" }}>
             {t(lang, "family_completed_title")}
           </p>
-          <p className="mt-2 text-sm leading-6" style={{ color: "#716b63" }}>
+          <p className="mt-2 text-sm leading-6" style={{ color: "var(--dev-muted)" }}>
             {t(lang, "family_completed_msg")}
           </p>
-          <div className="mt-5 pt-5" style={{ borderTop: "1px solid #eee8dc" }}>
-            <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 4 }}>{t(lang, "family_come_back_tomorrow")}</p>
-            <p className="text-sm font-black" style={{ color: "#4d463f" }}>
+          <div className="mt-5 pt-5" style={{ borderTop: "1px solid var(--dev-border-soft)" }}>
+            <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)", marginBottom: 4 }}>{t(lang, "family_come_back_tomorrow")}</p>
+            <p className="text-sm font-black" style={{ color: "var(--dev-muted)" }}>
               {formatDateShort(tomorrow, lang)}
             </p>
           </div>
@@ -1394,12 +1458,12 @@ function CompletionCard({
         className="devotional-motion-card flex items-center gap-4 px-5 py-4"
         style={motionStyle("820ms")}
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: "#f0f4f1", color: "#516044" }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: "var(--dev-action-bg)", color: "var(--dev-action-text)" }}>
           <UiIcon name="check" size={22} strokeWidth={3} />
         </div>
         <div>
-          <p style={{ fontSize: "0.9rem", fontWeight: 900, color: "#171512" }}>{t(lang, "family_completed_title")}</p>
-          <p className="text-xs mt-0.5" style={{ color: "#9a9389" }}>{t(lang, "family_completed_msg")}</p>
+          <p style={{ fontSize: "0.9rem", fontWeight: 900, color: "var(--dev-text)" }}>{t(lang, "family_completed_title")}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--dev-faint)" }}>{t(lang, "family_completed_msg")}</p>
         </div>
       </div>
     );
@@ -1415,10 +1479,10 @@ function CompletionCard({
           <UiIcon name="check" size={16} strokeWidth={3} />
         </span>
       </div>
-      <p style={{ fontSize: "1rem", fontWeight: 900, color: "#171512" }}>
+      <p style={{ fontSize: "1rem", fontWeight: 900, color: "var(--dev-text)" }}>
         {t(lang, "family_did_complete")}
       </p>
-      <p className="text-sm mt-2 leading-6" style={{ color: "#716b63" }}>
+      <p className="text-sm mt-2 leading-6" style={{ color: "var(--dev-muted)" }}>
         {t(lang, "family_complete_check")}
       </p>
       <button
@@ -1491,13 +1555,13 @@ function ReminderCard() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <p className="devotional-section-label" style={{ color: "#4b6f82", marginBottom: 8 }}>{t(lang, "family_daily_reminder")}</p>
-          <p className="text-xs mt-0.5" style={{ color: "#716b63" }}>{t(lang, "family_reminder_desc")}</p>
+          <p className="devotional-section-label" style={{ color: "var(--dev-label-blue)", marginBottom: 8 }}>{t(lang, "family_daily_reminder")}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--dev-muted)" }}>{t(lang, "family_reminder_desc")}</p>
         </div>
         <button
           onClick={handleToggle}
           className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-          style={{ backgroundColor: enabled ? "#171512" : "#ede8de" }}
+          style={{ backgroundColor: enabled ? "var(--dev-accent)" : "var(--dev-accent-soft)" }}
           type="button"
         >
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : ""}`} />
@@ -1506,22 +1570,22 @@ function ReminderCard() {
 
       {enabled && (
         <div className="space-y-2">
-          <p style={{ ...LABEL_STYLE, color: "#9a9389" }}>{t(lang, "family_reminder_time")}</p>
+          <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)" }}>{t(lang, "family_reminder_time")}</p>
           <div className="flex items-center gap-3">
             <input
               type="time"
               value={time}
               onChange={(e) => handleTimeChange(e.target.value)}
               className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
+              style={{ backgroundColor: "var(--dev-card-soft)", color: "var(--dev-text)", border: "1px solid var(--dev-border)" }}
             />
-            <span className="text-sm font-black flex-shrink-0" style={{ color: "#a9782e" }}>{displayTime}</span>
+            <span className="text-sm font-black flex-shrink-0" style={{ color: "var(--dev-accent)" }}>{displayTime}</span>
           </div>
           {permissionState === "denied" && (
-            <p className="text-xs" style={{ color: "#a95d52" }}>{t(lang, "family_notif_blocked")}</p>
+            <p className="text-xs" style={{ color: "var(--dev-danger-text)" }}>{t(lang, "family_notif_blocked")}</p>
           )}
-          {saved && <p className="text-xs" style={{ color: "#516044" }}>{t(lang, "family_reminder_saved")}</p>}
-          <p className="text-[11px] leading-relaxed" style={{ color: "#9a9389" }}>
+          {saved && <p className="text-xs" style={{ color: "var(--dev-action-text)" }}>{t(lang, "family_reminder_saved")}</p>}
+          <p className="text-[11px] leading-relaxed" style={{ color: "var(--dev-faint)" }}>
             {t(lang, "family_notif_note")}
           </p>
         </div>
@@ -1660,7 +1724,7 @@ export default function FamilyWorshipPage() {
                     {localizeReference(dailyEntry.scripture.reference, lang)}
                   </p>
                   {dailyEntry.displayDate && (
-                    <p className="mt-1 text-xs font-bold" style={{ color: "#9a9389" }}>
+                    <p className="mt-1 text-xs font-bold" style={{ color: "var(--dev-faint)" }}>
                       {lang === "es"
                         ? dailyEntry.displayDate.replace(/^Reading (\d+) of (\d+)$/, (_, n, total) =>
                             `${t(lang, "family_reading_label")} ${n} ${t(lang, "family_reading_of")} ${total}`)
@@ -1702,10 +1766,10 @@ export default function FamilyWorshipPage() {
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                 </svg>
               </div>
-              <p className="font-black mb-1" style={{ color: "#171512" }}>
+              <p className="font-black mb-1" style={{ color: "var(--dev-text)" }}>
                 {t(lang, "family_no_devotional")}
               </p>
-              <p className="text-sm leading-6" style={{ color: "#716b63" }}>
+              <p className="text-sm leading-6" style={{ color: "var(--dev-muted)" }}>
                 {t(lang, "family_no_devotional_sub")}
               </p>
               <button
@@ -1719,7 +1783,7 @@ export default function FamilyWorshipPage() {
           )}
 
           <div className="pt-2 pb-2 text-center">
-            <p className="text-xs leading-6" style={{ color: "#9a9389" }}>
+            <p className="text-xs leading-6" style={{ color: "var(--dev-faint)" }}>
               {t(lang, "family_proverbs_quote")}
               <br />{t(lang, "family_proverbs_ref")}
             </p>
