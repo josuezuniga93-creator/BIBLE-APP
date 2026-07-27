@@ -2865,11 +2865,10 @@ html[data-theme="white-noir"] input::placeholder { color: var(--fg-lo) !importan
 
 html[data-theme="white-noir"] .mobile-nav-surface,
 html[data-theme="white-noir"] nav.top-app-nav {
-  background: rgba(255,255,255,0.96) !important;
-  border-color: rgba(17,17,17,0.06) !important;
-  box-shadow:
-    0 22px 58px rgba(17,17,17,0.16),
-    0 2px 8px rgba(17,17,17,0.04) !important;
+  background: rgba(255,255,255,0.76) !important;
+  border-color: rgba(255,255,255,0.72) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 18px 55px rgba(16,17,20,0.16) !important;
 }
 html[data-theme="white-noir"] nav a[data-active="true"] {
   color: #111111 !important;
@@ -3771,20 +3770,18 @@ html[data-theme-mode="light"] .premium-library-search input {
 
 /* Raised mobile dock shared by every primary phone view. */
 .mobile-nav-floating {
-  padding-left: 1.125rem;
-  padding-right: 1.125rem;
+  padding-left: 20px;
+  padding-right: 20px;
   pointer-events: none;
 }
 
 .mobile-nav-surface {
   pointer-events: auto;
   overflow: hidden;
-  border: 1px solid rgba(17, 17, 17, 0.06);
-  border-radius: 2.15rem;
-  background: color-mix(in srgb, var(--nav-bg) 93%, transparent);
-  box-shadow:
-    0 22px 58px rgba(17, 17, 17, 0.16),
-    0 2px 8px rgba(17, 17, 17, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.76);
+  box-shadow: 0 18px 55px rgba(16, 17, 20, 0.16);
   backdrop-filter: blur(22px);
   -webkit-backdrop-filter: blur(22px);
 }
@@ -3828,11 +3825,10 @@ html[data-theme-mode="light"] .layout-children {
 }
 
 html[data-theme-mode="light"] .mobile-nav-surface {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(10, 10, 10, 0.06) !important;
-  box-shadow:
-    0 22px 58px rgba(17, 17, 17, 0.16),
-    0 2px 8px rgba(17, 17, 17, 0.04) !important;
+  background: rgba(255, 255, 255, 0.76) !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 18px 55px rgba(16, 17, 20, 0.16) !important;
 }
 
 html[data-theme-mode="light"] .desktop-nav-link[data-active="true"] {
@@ -3848,7 +3844,7 @@ html[data-theme-mode="light"] .mobile-nav-floating .nav-tab[data-active="true"] 
 }
 
 html[data-theme-mode="light"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
-  background: #bfc5cc !important;
+  content: none !important;
   box-shadow: none !important;
 }
 
