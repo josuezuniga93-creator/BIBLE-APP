@@ -1681,9 +1681,14 @@ export default function FamilyWorshipPage() {
               </span>
               <span>›</span>
             </div>
-            <div className="devotional-icon-button" aria-label="Current language">
-              {lang.toUpperCase()}
-            </div>
+            <button
+              onClick={() => goToDate(addDays(selectedDate, 1))}
+              aria-label="Next day"
+              className="devotional-icon-button"
+              type="button"
+            >
+              ›
+            </button>
           </nav>
 
           <header className="devotional-hero">
