@@ -75,7 +75,7 @@ function YouIcon({ active }: { active: boolean }) {
 
 const PRIMARY_TABS: Array<{ href: string; labelKey: TranslationKey }> = [
   { href: "/",               labelKey: "nav_home"               },
-  { href: "/library",        labelKey: "nav_mobile_scripture"   },
+  { href: "/lexicon",        labelKey: "nav_mobile_scripture"   },
   { href: "/notes",          labelKey: "nav_notes"              },
   { href: "/family-worship", labelKey: "nav_mobile_devotional"  },
 ];
@@ -156,7 +156,6 @@ function TimelineIcon({ active }: { active: boolean }) {
 }
 
 const MORE_LINKS: Array<{ href: string; iconName: AppSectionIconName; labelKey: TranslationKey }> = [
-  { href: "/lexicon",       iconName: "bible",      labelKey: "nav_bible"      },
   { href: "/learn",         iconName: "historical", labelKey: "nav_learn"      },
   { href: "/timeline",      iconName: "timeline",   labelKey: "nav_timeline"   },
   { href: "/bible-tracker", iconName: "tracker",    labelKey: "nav_tracker"    },
@@ -190,7 +189,7 @@ function MockupNavIcon({ href }: { href: string }) {
     );
   }
 
-  if (href === "/library") {
+  if (href === "/lexicon") {
     return (
       <svg {...common}>
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" {...strokeProps} />
