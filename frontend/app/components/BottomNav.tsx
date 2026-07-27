@@ -74,10 +74,10 @@ function YouIcon({ active }: { active: boolean }) {
 // ─── Tab definitions ──────────────────────────────────────────────────────────
 
 const PRIMARY_TABS: Array<{ href: string; labelKey: TranslationKey }> = [
-  { href: "/",               labelKey: "nav_home"     },
-  { href: "/library",        labelKey: "nav_books"    },
-  { href: "/notes",          labelKey: "nav_notes"    },
-  { href: "/family-worship", labelKey: "nav_worship"  },
+  { href: "/",               labelKey: "nav_home"               },
+  { href: "/library",        labelKey: "nav_mobile_scripture"   },
+  { href: "/notes",          labelKey: "nav_notes"              },
+  { href: "/family-worship", labelKey: "nav_mobile_devotional"  },
 ];
 
 // ─── Sheet link SVG icons ─────────────────────────────────────────────────────
