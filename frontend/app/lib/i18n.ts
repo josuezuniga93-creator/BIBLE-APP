@@ -8,8 +8,9 @@ const translations = {
     // Nav
     nav_home:          "Home",
     nav_bible:         "Bible",
-    nav_worship:       "Devotional",
-    nav_extras:        "Extras",
+    nav_books:         "Books",
+    nav_worship:       "Worship",
+    nav_extras:        "More",
     nav_more:          "More",
     nav_timeline:      "Timeline",
     nav_videos:        "Videos",
@@ -412,8 +413,9 @@ const translations = {
     // Nav
     nav_home:          "Inicio",
     nav_bible:         "Biblia",
-    nav_worship:       "Devocional",
-    nav_extras:        "Extras",
+    nav_books:         "Libros",
+    nav_worship:       "Adoración",
+    nav_extras:        "Más",
     nav_more:          "Más",
     nav_timeline:      "Cronología",
     nav_videos:        "Videos",

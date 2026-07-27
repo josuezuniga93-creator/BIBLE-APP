@@ -17,6 +17,7 @@ import { translateToSpanish } from "../lib/googleTranslate";
 import { t } from "../lib/i18n";
 import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
 import { AppReader } from "../components/AppReader";
+import { UiIcon } from "../components/UiIcon";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -814,6 +815,7 @@ function LearnPageInner() {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [hlDocCollapsed, setHlDocCollapsed] = useState<Record<string, boolean>>({});
   const [catExpanded, setCatExpanded] = useState<Record<string, boolean>>({});
+  const [docSearch, setDocSearch] = useState("");
   const [carouselSlide, setCarouselSlide] = useState(0);
   const [carouselPaused, setCarouselPaused] = useState(false);
   const [carouselTouchX, setCarouselTouchX] = useState(0);
@@ -875,14 +877,24 @@ function LearnPageInner() {
   const available = LEARN_DOCUMENTS;
 
   // Filter by Browse-by-Type pill
+  const activeDocType = DOC_TYPES.some((type) => type.key === activeType) ? activeType : "all";
+  const searchText = docSearch.trim().toLowerCase();
   const filteredDocs = available.filter((doc) =>
-    activeType === "all" || doc.category === activeType
+    (activeDocType === "all" || doc.category === activeDocType) &&
+    (
+      !searchText ||
+      documentTitle(doc, lang).toLowerCase().includes(searchText) ||
+      doc.title.toLowerCase().includes(searchText) ||
+      doc.origin.toLowerCase().includes(searchText) ||
+      String(doc.year).includes(searchText)
+    )
   );
 
   // Further filter by My Documents tab (independent control)
-  const listDocs = filteredDocs.filter((doc) =>
-    activeTab === "all" || doc.category === activeTab
-  );
+  const listDocs = filteredDocs.filter((doc) => {
+    if (activeType === "reading") return (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100;
+    return activeTab === "all" || doc.category === activeTab;
+  });
 
   const filteredDocHls = hlSearch.trim()
     ? docHighlights.filter(hl => {
@@ -899,297 +911,179 @@ function LearnPageInner() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
-
-      {/* Header */}
-      <div className="flex items-center px-4 pt-5 pb-2">
-        <h1 className="text-lg font-bold" style={{ color: th.textPrimary }}>
-          {lang === "es" ? t(lang, "learn_page_title") : "Historical"} <span style={{ color: th.accent }}>{lang === "es" ? t(lang, "learn_page_accent") : "Documents"}</span>
-        </h1>
-      </div>
-
-
-      {/* ── Hero Carousel ───────────────────────────────────────────────────────── */}
-      <div
-        className="mx-4 mb-6 rounded-[22px] overflow-hidden relative select-none"
-        style={{
-          height: "214px",
-          boxShadow: isLight ? "0 18px 45px rgba(0,0,0,0.08)" : "0 18px 45px rgba(0,0,0,0.35)",
-          border: `1px solid ${th.cardBorder}`,
-        }}
-        onTouchStart={(e) => {
-          setCarouselTouchX(e.touches[0].clientX);
-          setCarouselPaused(true);
-          carouselSwipedRef.current = false;
-        }}
-        onTouchEnd={(e) => {
-          const dx = e.changedTouches[0].clientX - carouselTouchX;
-          if (Math.abs(dx) > 40) {
-            carouselSwipedRef.current = true;
-            setCarouselSlide((prev) =>
-              dx < 0
-                ? (prev + 1) % featuredDocs.length
-                : (prev - 1 + featuredDocs.length) % featuredDocs.length
-            );
-          }
-        }}
-      >
-        {/* Sliding track */}
-        <div
-          className="flex h-full transition-transform duration-300 ease-in-out"
-          style={{
-            width: `${featuredDocs.length * 100}%`,
-            transform: `translateX(-${(carouselSlide * 100) / featuredDocs.length}%)`,
-          }}
-        >
-          {featuredDocs.map((doc) => (
-            <div
-              key={doc.id}
-              className="flex h-full flex-shrink-0 relative"
-              style={{ width: `${100 / featuredDocs.length}%`, background: th.heroBg }}
-            >
-              {/* Tap to open */}
-              <button
-                className="absolute inset-0 z-30"
-                onClick={() => { if (carouselSwipedRef.current) { carouselSwipedRef.current = false; return; } setSelected(doc.id); }}
-              />
-              {/* Radial glow */}
-              <div
-                className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none"
-                style={{ background: isLight ? "none" : "radial-gradient(circle at 65% 42%, rgba(201,169,97,0.18), transparent 42%)" }}
-              />
-              {/* Document cover */}
-              <div
-                className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/25 relative z-10"
-                style={{ width: "108px", height: "164px", alignSelf: "center", marginLeft: "16px" }}
-              >
-                <DocCover doc={doc} />
-              </div>
-              {/* Decorative SVG */}
-              <div className="absolute right-5 top-9 hidden min-[380px]:block opacity-70">
-                <svg width="92" height="112" viewBox="0 0 92 112" fill="none">
-                  <path d="M55 5C37 22 31 50 38 82" stroke={th.accent} strokeWidth="3" strokeLinecap="round"/>
-                  <path d="M55 5C70 37 65 68 38 82" stroke={th.accent} strokeWidth="2" strokeLinecap="round" opacity=".55"/>
-                  <path d="M33 81h22c9 0 16 7 16 16v4H17v-4c0-9 7-16 16-16Z" fill={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)"} opacity=".8"/>
-                  <path d="M27 102h34" stroke={isLight ? "#0a0a0a" : "#c9a961"} strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              </div>
-              {/* Info panel */}
-              <div className="flex-1 pt-7 pb-5 pr-4 pl-4 flex flex-col justify-between min-w-0 relative z-10">
-                <div>
-                  <div className="mb-2">
-                    <p
-                      className="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
-                      style={{ color: th.heroAccentText, background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", border: isLight ? "1px solid rgba(0,0,0,0.15)" : undefined }}
-                    >
-                      {lang === "es" ? "Documento Destacado" : "Featured Document"}
-                    </p>
-                  </div>
-                  <p className="text-[17px] font-black leading-[1.08] mb-1.5 line-clamp-3" style={{ color: th.textPrimary }}>
-                    {documentTitle(doc, lang)}
-                  </p>
-                  <p className="text-[11px] font-semibold mb-2 truncate" style={{ color: th.heroAccentText }}>
-                    {doc.year} · {doc.origin}
-                  </p>
-                  <p className="text-[10px] leading-[1.45] line-clamp-3 max-w-[190px]" style={{ color: th.heroSubtext }}>
-                    {(doc as any).description ?? "A foundational document of the Reformed tradition."}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Pagination dots */}
-        <div className="absolute bottom-3.5 left-0 right-0 flex items-center justify-center gap-1.5 pointer-events-none">
-          {featuredDocs.map((_, i) => (
-            <button
-              key={i}
-              className="rounded-full transition-all pointer-events-auto active:opacity-70"
-              style={{
-                width: i === carouselSlide ? "8px" : "6px",
-                height: "6px",
-                backgroundColor: i === carouselSlide ? th.accent : (isLight ? "rgba(0,0,0,0.20)" : "rgba(255,255,255,0.25)"),
-              }}
-              onClick={() => setCarouselSlide(i)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Timeline Highlights */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-4 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_timeline")}</p>
-          <button className="text-xs font-semibold" style={{ color: th.accent }}>{t(lang, "learn_view_all")}</button>
-        </div>
-        <div className="px-4 overflow-x-auto pb-2 scrollbar-none">
-          <div className="flex items-start gap-0 relative" style={{ minWidth: "max-content" }}>
-            {/* Connector line */}
-            <div className="absolute top-[9px] left-4 right-4 h-px" style={{ background: th.timelineLine, zIndex: 0 }} />
-            {TIMELINE.map((item, i) => {
-              const hasDoc = !!item.docId && LEARN_DOCUMENTS.some(d => d.id === item.docId);
-              const dot = (
-                <div className="w-[18px] h-[18px] rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: hasDoc ? (i % 2 === 0 ? th.timelineDotEven : th.timelineDotOdd) : pick("rgba(219,39,119,0.18)", "rgba(155,114,40,0.25)", "rgba(255,255,255,0.12)"),
-                    boxShadow: hasDoc ? th.timelineDotShadow : "none",
-                  }}>
-                  <div className="w-2 h-2 rounded-full opacity-80" style={{ backgroundColor: hasDoc ? "white" : pick("rgba(190,24,93,0.5)", "rgba(155,114,40,0.6)", "rgba(255,255,255,0.4)") }} />
-                </div>
-              );
-              const label = (
-                <div className="text-center">
-                  <p className="text-xs font-black" style={{ color: hasDoc ? th.timelineYear : pick("rgba(74,0,32,0.38)", "#b09878", "rgba(255,255,255,0.3)") }}>{item.year}</p>
-                  <p className="text-[9px] leading-tight text-center" style={{ color: hasDoc ? th.timelineLabel : pick("rgba(74,0,32,0.28)", "#c4b090", "rgba(255,255,255,0.22)"), maxWidth: "80px" }}>{item.label}</p>
-                </div>
-              );
-              return hasDoc ? (
-                <button key={item.year} onClick={() => setSelected(item.docId!)}
-                  className="flex flex-col items-center gap-2 active:scale-95 transition-transform relative z-10"
-                  style={{ minWidth: "90px", padding: "0 8px" }}>
-                  {dot}{label}
-                </button>
-              ) : (
-                <div key={item.year} className="flex flex-col items-center gap-2 relative z-10 pointer-events-none"
-                  style={{ minWidth: "90px", padding: "0 8px" }}>
-                  {dot}{label}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* My Highlights Banner */}
-      <div className="px-4 mb-6">
-        <button
-          onClick={() => { window.location.href = "/highlights"; }}
-          className="w-full flex items-center gap-3.5 p-4 rounded-2xl active:scale-[0.99] transition-transform"
-          style={{
-            background: "rgba(201,169,97,0.07)",
-            border: "1px solid rgba(201,169,97,0.22)",
-          }}
-        >
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(201,169,97,0.14)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-black" style={{ color: th.textPrimary }}>
-              {lang === "es" ? "Mis Resaltados" : "My Highlights"}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>
-              {lang === "es" ? "Pasajes guardados de documentos históricos" : "Saved passages from Historical Documents"}
-            </p>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={th.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+    <div className="premium-library-page">
+      <div className="premium-library-topbar">
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Atrás" : "Back"} onClick={() => history.back()}>
+          <span className="text-[30px] leading-none font-black">‹</span>
+        </button>
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Resaltados" : "Highlights"} onClick={() => setShowHighlightPocket(true)}>
+          <UiIcon name="book" size={23} />
         </button>
       </div>
 
-      {/* Continue Reading */}
-      {LEARN_DOCUMENTS.some(d => (progressMap[d.id] ?? 0) > 0 && (progressMap[d.id] ?? 0) < 100) && (
-        <div className="mb-6">
-          <div className="flex items-center justify-between px-4 mb-3">
-            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "learn_continue")}</p>
-          </div>
-          <div className="flex gap-3 px-4 overflow-x-auto pb-2 scrollbar-none">
-            {[...LEARN_DOCUMENTS.filter(doc => (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100)].sort((a, b) => getDocLastRead(b.id) - getDocLastRead(a.id)).map(doc => {
-              const pct = progressMap[doc.id] ?? 0;
-              const savedProgress = loadReaderProgress(doc.id, FULL_DOCUMENT_SECTIONS[doc.id] ? "full" : "overview");
-              return (
-                <div key={doc.id} className="flex-shrink-0 w-[108px] text-left">
-                  <div className="relative w-[108px] rounded-[14px] overflow-hidden mb-1.5 shadow-md shadow-black/40" style={{ aspectRatio: "2/3", border: `1px solid ${th.cardBorder}` }}>
-                    <button onClick={() => setSelected(doc.id)} className="absolute inset-0 w-full h-full active:scale-95 transition-transform" />
-                    <DocCover doc={doc} />
-                  </div>
-                  <button onClick={() => setSelected(doc.id)} className="w-full text-left">
-                    <p className="text-[11px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</p>
-                    <p className="text-[10px] mt-0.5" style={{ color: th.textSecondary }}>{doc.origin}</p>
-                    <div className="mt-1.5 h-1 rounded-full overflow-hidden" style={{ backgroundColor: "rgba(255,255,255,0.1)" }}>
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: th.progressBar }} />
-                    </div>
-                    <div className="mt-1 flex items-center justify-between gap-2">
-                      <p className="text-[9px]" style={{ color: th.textSecondary }}>
-                        {savedProgress
-                          ? `${lang === "es" ? "Página" : "Page"} ${savedProgress.page} ${lang === "es" ? "de" : "of"} ${savedProgress.total}`
-                          : lang === "es" ? "En progreso" : "In progress"}
-                      </p>
-                      <p className="text-[9px] font-bold" style={{ color: th.accent }}>{pct}%</p>
-                    </div>
-                  </button>
-                </div>
-              );
-            })}
+      <section className="premium-library-hero">
+        <p className="premium-library-eyebrow">{lang === "es" ? "Archivo" : "Archive"}</p>
+        <h1 className="premium-library-title">{lang === "es" ? "Documentos Históricos" : "Historical Documents"}</h1>
+        <p className="premium-library-subtitle">
+          {lang === "es"
+            ? "Credos, confesiones, concilios y documentos de la Reforma en una biblioteca tranquila de estudio."
+            : "Creeds, confessions, councils, and Reformation documents in one calm study library."}
+        </p>
+      </section>
+
+      <label className="premium-library-search">
+        <UiIcon name="search" size={18} />
+        <input
+          value={docSearch}
+          onChange={(e) => setDocSearch(e.target.value)}
+          placeholder={lang === "es" ? "Buscar documentos, años, origen" : "Search documents, years, origin"}
+        />
+      </label>
+
+      <div className="premium-library-tabs" role="tablist" aria-label={lang === "es" ? "Secciones de documentos" : "Document sections"}>
+        {([
+          ["all", lang === "es" ? "Docs" : "Docs"],
+          ["timeline", lang === "es" ? "Línea" : "Timeline"],
+          ["reading", lang === "es" ? "Leyendo" : "Reading"],
+          ["highlights", lang === "es" ? "Marcas" : "Marks"],
+        ] as [DocTab | "timeline" | "reading", string][]).map(([key, label]) => {
+          const active =
+            key === "timeline"
+              ? activeType === "timeline"
+              : key === "reading"
+              ? activeType === "reading"
+              : key === "highlights"
+              ? false
+              : activeType === "all" && activeTab === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              className="premium-library-tab"
+              data-active={active}
+              onClick={() => {
+                if (key === "highlights") setShowHighlightPocket(true);
+                else if (key === "timeline") setActiveType("timeline");
+                else if (key === "reading") setActiveType("reading");
+                else { setActiveTab("all"); setActiveType("all"); }
+              }}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      {featuredDocs[carouselSlide] && (() => {
+        const doc = featuredDocs[carouselSlide];
+        const pct = progressMap[doc.id] ?? 0;
+        return (
+          <button
+            type="button"
+            className="premium-library-feature text-left active:scale-[0.99] transition-transform"
+            onClick={() => {
+              if (carouselSwipedRef.current) {
+                carouselSwipedRef.current = false;
+                return;
+              }
+              setSelected(doc.id);
+            }}
+            onTouchStart={(e) => {
+              setCarouselTouchX(e.touches[0].clientX);
+              setCarouselPaused(true);
+              carouselSwipedRef.current = false;
+            }}
+            onTouchEnd={(e) => {
+              const dx = e.changedTouches[0].clientX - carouselTouchX;
+              if (Math.abs(dx) > 40) {
+                carouselSwipedRef.current = true;
+                setCarouselSlide((prev) => dx < 0 ? (prev + 1) % featuredDocs.length : (prev - 1 + featuredDocs.length) % featuredDocs.length);
+              }
+            }}
+          >
+            <div className="premium-library-cover bg-[#e8edf3]">
+              <DocCover doc={doc} />
+            </div>
+            <div className="premium-library-feature-copy">
+              <span className="premium-library-pill">{lang === "es" ? "Destacado" : "Featured"}</span>
+              <h2 className="premium-library-feature-title">
+                {lang === "es" ? "Una biblioteca alrededor de la memoria de la iglesia." : "A library built around the church's memory."}
+              </h2>
+              <p className="premium-library-meta">{doc.origin} · {doc.category} · {doc.year}</p>
+              <div className="premium-library-progress">
+                <span style={{ width: `${pct || 42}%` }} />
+              </div>
+              <p className="premium-library-meta mt-2">
+                {pct > 0 ? `${pct}% ${lang === "es" ? "completo" : "complete"}` : lang === "es" ? "Documento histórico seleccionado" : "Selected historical document"}
+              </p>
+            </div>
+          </button>
+        );
+      })()}
+
+      <section className="premium-library-section">
+        <div className="premium-library-section-head">
+          <h2>{t(lang, "learn_timeline")}</h2>
+          <button type="button" className="premium-library-link-button" onClick={() => setActiveType(activeType === "timeline" ? "all" : "timeline")}>
+            {lang === "es" ? "Ver todo" : "View all"}
+          </button>
+        </div>
+        <div className="premium-library-card !block overflow-hidden">
+          <div className="flex items-start gap-0 relative min-w-max">
+            <div className="absolute top-[13px] left-7 right-7 h-px bg-black/10" />
+            {TIMELINE.filter((item) => item.docId).slice(0, activeType === "timeline" ? 12 : 4).map((item) => (
+              <button
+                key={item.year}
+                type="button"
+                onClick={() => item.docId && setSelected(item.docId)}
+                className="relative z-10 flex min-w-[82px] flex-col items-center gap-2 px-2 text-center active:scale-95 transition-transform"
+              >
+                <span className="grid h-7 w-7 place-items-center rounded-full border border-black/10 bg-white shadow-[0_8px_18px_rgba(16,17,20,0.08)]">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#3f444c]" />
+                </span>
+                <span className="text-[11px] font-black text-[#101114]">{item.year}</span>
+                <span className="max-w-[72px] text-[9px] font-extrabold leading-tight text-black/35">{item.label}</span>
+              </button>
+            ))}
           </div>
         </div>
-      )}
+      </section>
 
-      {/* Category Rows */}
-      {([
-        { key: "confession", label: "Confessions",       esLabel: "Confesiones" },
-        { key: "creed",      label: "Creeds",            esLabel: "Credos" },
-        { key: "catechism",  label: "Catechisms",        esLabel: "Catecismos" },
-        { key: "council",    label: "Councils & Synods", esLabel: "Concilios y Sínodos" },
-        { key: "debate",     label: "Debates",           esLabel: "Debates" },
-        { key: "theses",     label: "Theses",            esLabel: "Tesis" },
-        { key: "solas",      label: "The Five Solas",    esLabel: "Las Cinco Solas" },
-        { key: "history",    label: "Church History",    esLabel: "Historia de la Iglesia" },
-      ] as { key: string; label: string; esLabel: string }[]).map(({ key, label, esLabel }) => {
-        const docs = LEARN_DOCUMENTS.filter((d) => d.category === key);
-        if (docs.length === 0) return null;
-        const showAll = catExpanded[key] ?? false;
-        const displayed = showAll ? docs : docs.slice(0, 3);
-        return (
-          <div key={key} className="mb-7">
-            <div className="flex items-center justify-between px-4 mb-3">
-              <p className="text-sm font-black" style={{ color: th.textPrimary }}>
-                {lang === "es" ? esLabel : label}
-              </p>
-              {docs.length > 3 && (
-                <button
-                  onClick={() => setCatExpanded((p) => ({ ...p, [key]: !p[key] }))}
-                  className="text-xs font-semibold"
-                  style={{ color: th.accent }}
-                >
-                  {showAll
-                    ? (lang === "es" ? "Mostrar menos" : "Show less")
-                    : (lang === "es" ? "Ver todo" : "See all")}
-                </button>
-              )}
-            </div>
-            <div className="grid grid-cols-3 gap-3 px-4">
-              {displayed.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => setSelected(doc.id)}
-                  className="text-left active:scale-95 transition-transform"
-                >
-                  <div
-                    className="relative w-full rounded-[14px] overflow-hidden mb-1.5 shadow-md shadow-black/40"
-                    style={{ aspectRatio: "2/3", border: `1px solid ${th.cardBorder}` }}
-                  >
-                    <DocCover doc={doc} size="full" />
-                  </div>
-                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
-                    {documentTitle(doc, lang)}
-                  </p>
-                  <p className="text-[9px] mt-0.5" style={{ color: th.textSecondary }}>{doc.year}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        );
-      })}
+      <section className="premium-library-section">
+        <div className="premium-library-section-head">
+          <h2>{lang === "es" ? "Explorar por tipo" : "Browse by type"}</h2>
+          <button type="button" className="premium-library-link-button" onClick={() => setCatExpanded((p) => ({ ...p, all: !p.all }))}>
+            {catExpanded.all ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "See all")}
+          </button>
+        </div>
+        <div className="premium-library-chip-row">
+          {DOC_TYPES.map((type) => (
+            <button
+              key={type.key}
+              type="button"
+              className="premium-library-chip"
+              data-active={activeType === type.key}
+              onClick={() => setActiveType(type.key)}
+            >
+              {type.key === "all" ? (lang === "es" ? "Todos" : "All") : type.label}
+            </button>
+          ))}
+        </div>
+        <div className="premium-library-grid">
+          {(catExpanded.all ? listDocs : listDocs.slice(0, 6)).map((doc) => (
+            <button key={doc.id} type="button" onClick={() => setSelected(doc.id)} className="premium-library-item active:scale-95 transition-transform">
+              <div className="premium-library-item-cover">
+                <DocCover doc={doc} size="full" />
+              </div>
+              <p className="premium-library-item-title line-clamp-2">{documentTitle(doc, lang)}</p>
+              <span className="premium-library-item-meta">{doc.year}</span>
+            </button>
+          ))}
+        </div>
+      </section>
 
-      <p className="text-center text-[10px] px-4 pb-10 mt-4" style={{ color: th.footerText }}>
-        All documents are public domain · Progress saved locally in your browser
+      <p className="mt-8 px-4 text-center text-[10px] font-bold text-black/25">
+        {lang === "es" ? "Documentos de dominio público · Progreso guardado localmente" : "All documents are public domain · Progress saved locally in your browser"}
       </p>
 
       {/* ── My Highlights Pocket ──────────────────────────────────────────────── */}

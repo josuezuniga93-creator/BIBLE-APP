@@ -226,6 +226,7 @@ export default function LibraryPage() {
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [collapsedBooks, setCollapsedBooks] = useState<Set<string>>(new Set());
   const [showAllOldBooks, setShowAllOldBooks] = useState(false);
+  const [librarySearch, setLibrarySearch] = useState("");
 
   // Refresh saved state whenever modal closes
   function refreshSaved() {
@@ -281,8 +282,18 @@ export default function LibraryPage() {
 
   // Filtered books
   const filteredBooks = useMemo(() => {
-    return available.filter((b) => activeCategory === "All" || b.tags.includes(activeCategory));
-  }, [available, activeCategory]);
+    const q = librarySearch.trim().toLowerCase();
+    return available.filter((b) => {
+      const matchesCategory = activeCategory === "All" || b.tags.includes(activeCategory);
+      const matchesSearch =
+        !q ||
+        bookTitle(b, lang).toLowerCase().includes(q) ||
+        b.title.toLowerCase().includes(q) ||
+        b.author.toLowerCase().includes(q) ||
+        b.tags.some((tag) => tag.toLowerCase().includes(q));
+      return matchesCategory && matchesSearch;
+    });
+  }, [available, activeCategory, librarySearch, lang]);
 
   const tabBooks = useMemo(() => {
     if (activeTab === "reading") return inProgress.filter((e) => !completedSlugs.has(e.book.slug)).map((e) => e.book);
@@ -314,378 +325,160 @@ export default function LibraryPage() {
 
   return (
     <>
-    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
-
-      {/* ── Header ────────────────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
-        <h1 className="text-[21px] font-black tracking-[-0.03em]" style={{ color: th.textPrimary }}>
-          {t(lang, "lib_page_title")} <span style={{ color: th.accent }}>{t(lang, "lib_page_accent")}</span>
-        </h1>
-      </div>
-
-      {/* ── Hero Carousel ────────────────────────────────────────────────────── */}
-      <div
-        className="mx-5 mb-6 rounded-[22px] overflow-hidden relative select-none"
-        style={{
-          height: "214px",
-          boxShadow: isLight ? "0 18px 45px rgba(0,0,0,0.08)" : isGoldNavy ? "0 18px 45px rgba(0,0,0,0.35)" : "0 18px 45px rgba(31,24,15,0.08)",
-          border: `1px solid ${th.cardBorder}`,
-        }}
-        onTouchStart={(e) => {
-          setCarouselTouchX(e.touches[0].clientX);
-          setCarouselPaused(true);
-          carouselSwipedRef.current = false;
-        }}
-        onTouchEnd={(e) => {
-          const dx = e.changedTouches[0].clientX - carouselTouchX;
-          if (Math.abs(dx) > 40) {
-            carouselSwipedRef.current = true;
-            setCarouselSlide(prev =>
-              dx < 0
-                ? (prev + 1) % featuredBooks.length
-                : (prev - 1 + featuredBooks.length) % featuredBooks.length
-            );
-          }
-        }}
-      >
-        {/* Sliding track */}
-        <div
-          className="flex h-full transition-transform duration-300 ease-in-out"
-          style={{
-            width: `${featuredBooks.length * 100}%`,
-            transform: `translateX(-${(carouselSlide * 100) / featuredBooks.length}%)`,
-          }}
-        >
-          {featuredBooks.map((book) => {
-            return (
-              <div
-                key={book.slug}
-                className="flex h-full flex-shrink-0 relative"
-                style={{ width: `${100 / featuredBooks.length}%`, background: th.heroBg }}
-              >
-                {/* Tap anywhere on slide to open the book */}
-                <Link
-                  href={`/library/${book.slug}`}
-                  className="absolute inset-0 z-30"
-                  onClick={(e) => { if (carouselSwipedRef.current) { e.preventDefault(); carouselSwipedRef.current = false; } }}
-                />
-                <div
-                  className="absolute right-0 top-0 bottom-0 w-[42%] pointer-events-none"
-                  style={{
-                    background: isGoldNavy
-                      ? "radial-gradient(circle at 65% 42%, rgba(201,169,97,0.18), transparent 42%)"
-                      : "radial-gradient(circle at 68% 45%, rgba(155,114,40,0.13), transparent 46%)",
-                  }}
-                />
-                {/* Book cover — tall, left-aligned */}
-                <div
-                  className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/25 relative z-10"
-                  style={{ width: "108px", height: "164px", alignSelf: "center", marginLeft: "16px" }}
-                >
-                  <BookCover book={book} />
-                </div>
-                <div className="absolute right-5 top-9 hidden min-[380px]:block opacity-70">
-                  <svg width="92" height="112" viewBox="0 0 92 112" fill="none">
-                    <path d="M55 5C37 22 31 50 38 82" stroke={th.accent} strokeWidth="3" strokeLinecap="round"/>
-                    <path d="M55 5C70 37 65 68 38 82" stroke={th.accent} strokeWidth="2" strokeLinecap="round" opacity=".55"/>
-                    <path d="M33 81h22c9 0 16 7 16 16v4H17v-4c0-9 7-16 16-16Z" fill={isGoldNavy ? "rgba(255,255,255,0.08)" : "#171717"} opacity={isGoldNavy ? ".8" : ".9"}/>
-                    <path d="M27 102h34" stroke={isGoldNavy ? "#c9a961" : "#d7c39a"} strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                {/* Info panel */}
-                <div className="flex-1 pt-7 pb-5 pr-4 pl-4 flex flex-col justify-between min-w-0 relative z-10">
-                  <div>
-                    {/* Featured Book label */}
-                    <div className="mb-2">
-                      <p
-                        className="inline-flex rounded-full px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.12em]"
-                        style={{
-                          color: th.heroAccentText,
-                          background: isGoldNavy ? "rgba(201,169,97,0.12)" : "rgba(0,0,0,0.045)",
-                        }}
-                      >
-                        {lang === "es" ? "Libro Destacado" : "Featured Book"}
-                      </p>
-                    </div>
-                    {/* Title */}
-                    <p className="text-[17px] font-black leading-[1.08] mb-1.5 line-clamp-3" style={{ color: th.textPrimary }}>
-                      {bookTitle(book, lang)}
-                    </p>
-                    {/* Author in gold */}
-                    <p className="text-[11px] font-semibold mb-2 truncate" style={{ color: th.heroAccentText }}>
-                      {book.author}
-                    </p>
-                    {/* Description */}
-                    <p className="text-[10px] leading-[1.45] line-clamp-3 max-w-[190px]" style={{ color: th.heroSubtext }}>
-                      {(book as any).description?.slice(0, 110) ?? "A foundational text of the Reformed tradition, essential for any serious reader."}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-        {/* Pagination dots */}
-        <div className="absolute bottom-3.5 left-0 right-0 flex items-center justify-center gap-1.5 pointer-events-none">
-          {featuredBooks.map((_, i) => (
-            <button
-              key={i}
-              className="rounded-full transition-all pointer-events-auto active:opacity-70"
-              style={{
-                width: i === carouselSlide ? "8px" : "6px",
-                height: "6px",
-                backgroundColor: i === carouselSlide ? th.accent : (isLight ? "rgba(0,0,0,0.20)" : isGoldNavy ? "rgba(255,255,255,0.25)" : "rgba(17,17,17,0.12)"),
-              }}
-              onClick={() => setCarouselSlide(i)}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* ── Continue Reading ─────────────────────────────────────────────────── */}
-      {inProgress.filter(e => !completedSlugs.has(e.book.slug)).length > 0 && (
-        <div className="mb-6">
-          <div className="flex items-center px-5 mb-3">
-            <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "lib_continue_reading")}</p>
-          </div>
-          <div className="flex gap-3 px-5 overflow-x-auto pb-2 scrollbar-none">
-            {[...inProgress.filter(e => !completedSlugs.has(e.book.slug))].sort((a, b) => b.lastRead - a.lastRead).map((entry) => {
-              const { book, chapter, total, page, pages } = entry;
-              const pct = entryPercent(entry);
-              return (
-              <div
-                key={book.slug}
-                className="flex-shrink-0 w-[250px] rounded-2xl p-3"
-                style={{
-                  background: th.cardBg,
-                  border: `1px solid ${th.cardBorder}`,
-                  boxShadow: isGoldNavy ? "none" : "0 14px 34px rgba(31,24,15,0.055)",
-                }}
-              >
-                <Link href={`/library/${book.slug}`} className="flex gap-3 active:opacity-80 transition-opacity">
-                  <div className="relative w-[58px] h-[82px] rounded-lg overflow-hidden flex-shrink-0 shadow-md shadow-black/20">
-                    <BookCover book={book} size="small" />
-                  </div>
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <p className="text-[12px] font-black leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{bookTitle(book, lang)}</p>
-                    <p className="text-[10px] mt-1 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
-                    <div className="mt-4 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
-                      <div className="h-full rounded-full" style={{ width: `${pct}%`, background: th.progressBar }} />
-                    </div>
-                    <div className="mt-1 flex items-center justify-between gap-2">
-                      <p className="text-[9px] truncate" style={{ color: th.textSecondary }}>
-                        {page && pages ? `${lang === "es" ? "Página" : "Page"} ${page}` : `${t(lang, "lib_ch_of")} ${chapter}`}
-                      </p>
-                      <p className="text-[10px] font-black" style={{ color: th.textPrimary }}>{pct}%</p>
-                    </div>
-                  </div>
-                  <span className="text-lg leading-none pt-0.5" style={{ color: th.textFaint }}>⋮</span>
-                </Link>
-              </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Highlights Banner ────────────────────────────────────────────────── */}
-      <div className="px-5 mb-6">
-        <button
-          onClick={() => { window.location.href = "/highlights"; }}
-          className="w-full flex items-center gap-3.5 p-4 rounded-2xl active:scale-[0.99] transition-transform"
-          style={{
-            background: isGoldNavy ? "rgba(201,169,97,0.07)" : th.cardBg,
-            border: `1px solid ${isGoldNavy ? "rgba(201,169,97,0.22)" : th.cardBorder}`,
-          }}
-        >
-          <div
-            className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-            style={{ background: "rgba(201,169,97,0.14)" }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#c9a961" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-          </div>
-          <div className="flex-1 text-left">
-            <p className="text-sm font-black" style={{ color: th.textPrimary }}>
-              {lang === "es" ? "Mis Resaltados" : "My Highlights"}
-            </p>
-            <p className="text-xs mt-0.5" style={{ color: th.textSecondary }}>
-              {lang === "es" ? "Pasajes guardados de libros gratuitos" : "Saved passages from Free Books"}
-            </p>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={th.accent} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18l6-6-6-6"/>
-          </svg>
+    <div className="premium-library-page">
+      <div className="premium-library-topbar">
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Atrás" : "Back"} onClick={() => history.back()}>
+          <span className="text-[30px] leading-none font-black">‹</span>
+        </button>
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Resaltados" : "Highlights"} onClick={() => setShowHighlightPocket(true)}>
+          <UiIcon name="book" size={23} />
         </button>
       </div>
 
-      {/* ── Popular Books ────────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="flex items-center px-5 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>{t(lang, "lib_popular_books")}</p>
-        </div>
-        <div className="grid grid-cols-3 gap-3 px-5">
-          {filteredBooks.slice(0, 3).map((book) => {
-            const saved = savedBooks.has(book.slug);
-            return (
-              <div
-                key={book.slug}
-                className="rounded-xl p-2.5"
-                style={{
-                  background: th.cardBg,
-                  border: `1px solid ${th.cardBorder}`,
-                  boxShadow: isGoldNavy ? "none" : "0 12px 30px rgba(31,24,15,0.05)",
-                }}
-              >
-                <div className="relative rounded-lg overflow-hidden mb-2 shadow-md shadow-black/20" style={{ aspectRatio: "2/3" }}>
-                  <BookCover book={book} />
-                  <Link href={`/library/${book.slug}`} className="absolute inset-0 z-10 active:opacity-80 transition-opacity" />
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBookmarkTarget(book); }}
-                    className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg flex items-center justify-center z-20 active:scale-95 transition-transform"
-                    style={{ backgroundColor: isGoldNavy ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.90)", color: saved ? th.accent : th.textSecondary }}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                <Link href={`/library/${book.slug}`}>
-                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
-                    {bookTitle(book, lang)}
-                  </p>
-                  <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
-                  <div className="flex items-center gap-0.5 mt-0.5">
-                    <UiIcon name="star" size={9} style={{ color: th.star }} />
-                    <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+      <section className="premium-library-hero">
+        <p className="premium-library-eyebrow">{lang === "es" ? "Biblioteca" : "Library"}</p>
+        <h1 className="premium-library-title">{lang === "es" ? "Libros Gratis" : "Free Books"}</h1>
+        <p className="premium-library-subtitle">
+          {lang === "es"
+            ? "Obras cristianas clásicas organizadas para lectura enfocada, progreso y resaltados."
+            : "Classic Christian works arranged for focused reading, progress, and highlights."}
+        </p>
+      </section>
+
+      <label className="premium-library-search">
+        <UiIcon name="search" size={18} />
+        <input
+          value={librarySearch}
+          onChange={(e) => setLibrarySearch(e.target.value)}
+          placeholder={lang === "es" ? "Buscar títulos, autores, temas" : "Search titles, authors, topics"}
+        />
+      </label>
+
+      <div className="premium-library-tabs" role="tablist" aria-label={lang === "es" ? "Secciones de libros" : "Book sections"}>
+        {([
+          ["books", lang === "es" ? "Libros" : "Books"],
+          ["reading", lang === "es" ? "Leyendo" : "Reading"],
+          ["completed", lang === "es" ? "Listos" : "Done"],
+          ["highlights", lang === "es" ? "Marcas" : "Marks"],
+        ] as [LibTab, string][]).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            className="premium-library-tab"
+            data-active={activeTab === key}
+            onClick={() => key === "highlights" ? setShowHighlightPocket(true) : setActiveTab(key)}
+          >
+            {label}
+          </button>
+        ))}
       </div>
 
-      {/* ── Recently Added ───────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="flex items-center px-5 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>
-            {lang === "es" ? "Añadido Recientemente" : "Recently Added"}
-          </p>
-        </div>
-        <div className="grid grid-cols-3 gap-3 px-5">
-          {recentlyAdded.map((book) => {
-            const saved = savedBooks.has(book.slug);
-            return (
-              <div
-                key={book.slug}
-                className="rounded-xl p-2.5"
-                style={{
-                  background: th.cardBg,
-                  border: `1px solid ${th.cardBorder}`,
-                  boxShadow: isGoldNavy ? "none" : "0 12px 30px rgba(31,24,15,0.05)",
-                }}
-              >
-                <div className="relative rounded-lg overflow-hidden mb-2 shadow-md shadow-black/20" style={{ aspectRatio: "2/3" }}>
-                  <BookCover book={book} />
-                  <Link href={`/library/${book.slug}`} className="absolute inset-0 z-10 active:opacity-80 transition-opacity" />
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBookmarkTarget(book); }}
-                    className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg flex items-center justify-center z-20 active:scale-95 transition-transform"
-                    style={{ backgroundColor: isGoldNavy ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.90)", color: saved ? th.accent : th.textSecondary }}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                <Link href={`/library/${book.slug}`}>
-                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
-                    {bookTitle(book, lang)}
-                  </p>
-                  <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
-                  <div className="flex items-center gap-0.5 mt-0.5">
-                    <UiIcon name="star" size={9} style={{ color: th.star }} />
-                    <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
-                  </div>
-                </Link>
+      {featuredBooks[carouselSlide] && (() => {
+        const book = featuredBooks[carouselSlide];
+        const progress = getProgress(book.slug);
+        const pct = progress ? entryPercent(progress) : 0;
+        return (
+          <Link
+            href={`/library/${book.slug}`}
+            className="premium-library-feature active:scale-[0.99] transition-transform"
+            onTouchStart={(e) => {
+              setCarouselTouchX(e.touches[0].clientX);
+              setCarouselPaused(true);
+              carouselSwipedRef.current = false;
+            }}
+            onTouchEnd={(e) => {
+              const dx = e.changedTouches[0].clientX - carouselTouchX;
+              if (Math.abs(dx) > 40) {
+                e.preventDefault();
+                carouselSwipedRef.current = true;
+                setCarouselSlide((prev) => dx < 0 ? (prev + 1) % featuredBooks.length : (prev - 1 + featuredBooks.length) % featuredBooks.length);
+              }
+            }}
+            onClick={(e) => {
+              if (carouselSwipedRef.current) {
+                e.preventDefault();
+                carouselSwipedRef.current = false;
+              }
+            }}
+          >
+            <div className="premium-library-cover">
+              <BookCover book={book} />
+            </div>
+            <div className="premium-library-feature-copy">
+              <span className="premium-library-pill">{progress ? (lang === "es" ? "Continuar" : "Continue") : (lang === "es" ? "Destacado" : "Featured")}</span>
+              <h2 className="premium-library-feature-title">
+                {progress
+                  ? (lang === "es" ? "Continúa donde dejaste tu lectura." : "Begin where your reading left off.")
+                  : bookTitle(book, lang)}
+              </h2>
+              <p className="premium-library-meta">{book.author} · {book.tags[0] ?? "Classic"} · {book.year}</p>
+              <div className="premium-library-progress">
+                <span style={{ width: `${pct || 68}%` }} />
               </div>
-            );
-          })}
-        </div>
-      </div>
+              <p className="premium-library-meta mt-2">
+                {progress
+                  ? `${pct}% ${lang === "es" ? "completo" : "complete"}`
+                  : lang === "es" ? "Lectura clásica seleccionada" : "Selected classic reading"}
+              </p>
+            </div>
+          </Link>
+        );
+      })()}
 
-      {/* ── Old Books ────────────────────────────────────────────────────────── */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between px-5 mb-3">
-          <p className="text-sm font-bold" style={{ color: th.textPrimary }}>
-            {lang === "es" ? "Todos los Libros" : "All Books"}
-          </p>
-          {!showAllOldBooks && available.length > 3 && (
-            <button
-              className="inline-flex items-center gap-1 text-[11px] font-semibold active:opacity-60 transition-opacity"
-              style={{ color: th.textSecondary }}
-              onClick={() => setShowAllOldBooks(true)}
-            >
-              {lang === "es" ? "Ver todo" : "See All"} <span style={{ color: th.textFaint }}>›</span>
-            </button>
-          )}
+      <section className="premium-library-section">
+        <div className="premium-library-section-head">
+          <h2>{activeTab === "reading" ? (lang === "es" ? "Continuar leyendo" : "Continue reading") : lang === "es" ? "Explorar estantes" : "Browse by shelf"}</h2>
+          <button type="button" className="premium-library-link-button" onClick={() => setShowAllOldBooks((v) => !v)}>
+            {showAllOldBooks ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "See all")}
+          </button>
         </div>
-        <div className="grid grid-cols-3 gap-3 px-5">
-          {(showAllOldBooks ? available : available.slice(0, 3)).map((book) => {
-            const saved = savedBooks.has(book.slug);
-            return (
-              <div
-                key={book.slug}
-                className="rounded-xl p-2.5"
-                style={{
-                  background: th.cardBg,
-                  border: `1px solid ${th.cardBorder}`,
-                  boxShadow: isGoldNavy ? "none" : "0 12px 30px rgba(31,24,15,0.05)",
-                }}
+        {activeTab === "books" && (
+          <div className="premium-library-chip-row">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                className="premium-library-chip"
+                data-active={activeCategory === cat}
+                onClick={() => setActiveCategory(cat)}
               >
-                <div className="relative rounded-lg overflow-hidden mb-2 shadow-md shadow-black/20" style={{ aspectRatio: "2/3" }}>
-                  <BookCover book={book} />
-                  <Link href={`/library/${book.slug}`} className="absolute inset-0 z-10 active:opacity-80 transition-opacity" />
-                  <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setBookmarkTarget(book); }}
-                    className="absolute bottom-1.5 right-1.5 w-6 h-6 rounded-lg flex items-center justify-center z-20 active:scale-95 transition-transform"
-                    style={{ backgroundColor: isGoldNavy ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.90)", color: saved ? th.accent : th.textSecondary }}
-                  >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill={saved ? "currentColor" : "none"}>
-                      <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
-                <Link href={`/library/${book.slug}`}>
-                  <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>
-                    {bookTitle(book, lang)}
-                  </p>
-                  <p className="text-[9px] mt-0.5 truncate" style={{ color: th.textSecondary }}>{book.author}</p>
-                  <div className="flex items-center gap-0.5 mt-0.5">
-                    <UiIcon name="star" size={9} style={{ color: th.star }} />
-                    <span style={{ color: th.textSecondary, fontSize: "9px" }}>4.8</span>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
-        </div>
-        {showAllOldBooks && (
-          <div className="flex justify-center mt-4">
-            <button
-              className="text-[11px] font-semibold px-4 py-2 rounded-full active:opacity-60 transition-opacity"
-              style={{ color: th.textSecondary, border: `1px solid ${th.cardBorder}` }}
-              onClick={() => setShowAllOldBooks(false)}
-            >
-              {lang === "es" ? "Mostrar menos" : "Show less"}
-            </button>
+                {cat === "All" ? (lang === "es" ? "Todos" : "All") : cat}
+              </button>
+            ))}
           </div>
         )}
-      </div>
+        <div className="premium-library-grid">
+          {(showAllOldBooks ? tabBooks : tabBooks.slice(0, 6)).map((book) => (
+            <Link key={book.slug} href={`/library/${book.slug}`} className="premium-library-item active:scale-95 transition-transform">
+              <div className="premium-library-item-cover">
+                <BookCover book={book} />
+              </div>
+              <p className="premium-library-item-title line-clamp-2">{bookTitle(book, lang)}</p>
+              <span className="premium-library-item-meta truncate">{book.author}</span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
+      <section className="premium-library-section">
+        <div className="premium-library-section-head">
+          <h2>{lang === "es" ? "Resaltados recientes" : "Recent highlights"}</h2>
+          <button type="button" className="premium-library-link-button" onClick={() => setShowHighlightPocket(true)}>
+            {lang === "es" ? "Abrir" : "Open"}
+          </button>
+        </div>
+        <button type="button" className="premium-library-card w-full text-left active:scale-[0.99] transition-transform" onClick={() => setShowHighlightPocket(true)}>
+          <div className="premium-library-item-cover !w-[54px] !h-[76px] !mb-0 !flex-shrink-0">
+            {available[0] && <BookCover book={available[0]} size="small" />}
+          </div>
+          <div className="min-w-0">
+            <p className="premium-library-item-title text-[15px]">{lang === "es" ? "Pasajes guardados" : "Saved passages"}</p>
+            <p className="premium-library-meta mt-1 line-clamp-2">
+              {lang === "es" ? "Abre tus resaltados y vuelve al texto exacto." : "Open your highlights and return to the exact text."}
+            </p>
+          </div>
+        </button>
+      </section>
     </div>
 
     {/* ── My Highlights Pocket ────────────────────────────────────────────────── */}

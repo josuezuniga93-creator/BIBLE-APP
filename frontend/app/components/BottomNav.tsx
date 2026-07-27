@@ -75,7 +75,7 @@ function YouIcon({ active }: { active: boolean }) {
 
 const PRIMARY_TABS: Array<{ href: string; labelKey: TranslationKey }> = [
   { href: "/",               labelKey: "nav_home"     },
-  { href: "/lexicon",        labelKey: "nav_bible"    },
+  { href: "/library",        labelKey: "nav_books"    },
   { href: "/notes",          labelKey: "nav_notes"    },
   { href: "/family-worship", labelKey: "nav_worship"  },
 ];
@@ -156,8 +156,9 @@ function TimelineIcon({ active }: { active: boolean }) {
 }
 
 const MORE_LINKS: Array<{ href: string; iconName: AppSectionIconName; labelKey: TranslationKey }> = [
+  { href: "/lexicon",       iconName: "bible",      labelKey: "nav_bible"      },
+  { href: "/learn",         iconName: "historical", labelKey: "nav_learn"      },
   { href: "/timeline",      iconName: "timeline",   labelKey: "nav_timeline"   },
-  { href: "/library",       iconName: "library",    labelKey: "nav_free_books" },
   { href: "/bible-tracker", iconName: "tracker",    labelKey: "nav_tracker"    },
   { href: "/bible-plans",   iconName: "plans",      labelKey: "nav_plans"      },
   { href: "/kids-books",    iconName: "kids",       labelKey: "nav_kids"       },
@@ -168,7 +169,7 @@ const MORE_LINKS: Array<{ href: string; iconName: AppSectionIconName; labelKey: 
 
 function TabIcon({ href, active, isWhiteNoir }: { href: string; active: boolean; isWhiteNoir: boolean }) {
   if (href === "/")               return <AppSectionIcon name="home" active={active} size={22} />;
-  if (href === "/lexicon")        return <AppSectionIcon name="bible" active={active} size={22} />;
+  if (href === "/library")        return <AppSectionIcon name="library" active={active} size={22} />;
   if (href === "/notes")          return <AppSectionIcon name="notes" active={active} size={22} />;
   if (href === "/family-worship") return <AppSectionIcon name="worship" active={active} size={22} />;
   return null;
@@ -258,9 +259,9 @@ export function BottomNav() {
   const navSurfaceStyle = isWhiteNoir ? {
     background: "rgba(255,255,255,0.98)",
     border: "1px solid rgba(0,0,0,0.08)",
-    backdropFilter: "blur(14px)",
-    WebkitBackdropFilter: "blur(14px)",
-    boxShadow: "0 12px 30px rgba(10,10,10,0.08)",
+    backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
+    boxShadow: "0 22px 60px rgba(10,10,10,0.18)",
   } : undefined;
 
   const fgActive   = isWhiteNoir ? "#0a0a0a"              : "var(--fg)";
@@ -272,11 +273,11 @@ export function BottomNav() {
       style={{
         backgroundColor: "transparent",
         borderColor: "transparent",
-        paddingBottom: "max(env(safe-area-inset-bottom), 8px)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 18px)",
       }}
     >
       <div
-        className="mobile-nav-surface flex items-stretch h-[58px]"
+        className="mobile-nav-surface flex items-stretch h-[70px]"
         suppressHydrationWarning
         style={navSurfaceStyle}
       >
@@ -291,11 +292,11 @@ export function BottomNav() {
               data-active={active ? "true" : undefined}
               aria-current={active ? "page" : undefined}
               aria-label={t(labelKey)}
-              className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[3px]"
+              className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[5px]"
               style={{ color: active ? fgActive : fgInactive }}
             >
               <TabIcon href={href} active={active} isWhiteNoir={isWhiteNoir} />
-              <span className="text-[10px] font-bold tracking-wide leading-none">
+              <span className="text-[11px] font-black tracking-[-0.01em] leading-none">
                 {t(labelKey)}
               </span>
             </button>
@@ -309,11 +310,11 @@ export function BottomNav() {
           data-active={youActive ? "true" : undefined}
           aria-current={youActive ? "page" : undefined}
           aria-label={t("nav_extras")}
-          className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[3px]"
+          className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[5px]"
           style={{ color: youActive ? fgActive : fgInactive }}
         >
           <AppSectionIcon name="extras" active={youActive} size={24} />
-          <span className="text-[10px] font-bold tracking-wide leading-none">
+          <span className="text-[11px] font-black tracking-[-0.01em] leading-none">
             {t("nav_extras")}
           </span>
         </button>
