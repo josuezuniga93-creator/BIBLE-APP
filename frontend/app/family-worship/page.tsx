@@ -372,6 +372,381 @@ const LABEL_STYLE: React.CSSProperties = {
   fontWeight: 600,
 };
 
+const DEVOTIONAL_MOTION_STYLES = `
+  .devotional-page-shell {
+    min-height: 100vh;
+    background:
+      linear-gradient(180deg, #f5f1e9 0 228px, #fbfaf7 228px 100%);
+    color: #171512;
+  }
+
+  .devotional-phone {
+    width: 100%;
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 0 18px 118px;
+  }
+
+  .devotional-topbar {
+    padding: 18px 6px 12px;
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 54px;
+    gap: 16px;
+    align-items: center;
+    animation: devotional-settle 520ms cubic-bezier(.2,.9,.2,1) both;
+  }
+
+  .devotional-icon-button,
+  .devotional-date-pill {
+    border: 1px solid rgba(23, 21, 18, 0.1);
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: 0 12px 28px rgba(53, 45, 35, 0.08);
+  }
+
+  .devotional-icon-button {
+    width: 54px;
+    height: 54px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    color: #171512;
+    font-size: 1.45rem;
+    font-weight: 900;
+    transition: transform 160ms ease, background-color 160ms ease;
+  }
+
+  .devotional-icon-button:active {
+    transform: scale(.94);
+    background: #fff;
+  }
+
+  .devotional-date-pill {
+    min-height: 54px;
+    border-radius: 24px;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    align-items: center;
+    text-align: center;
+    color: #716b63;
+    font-size: .78rem;
+    font-weight: 900;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+
+  .devotional-hero {
+    padding: 18px 6px 0;
+    animation: devotional-rise 650ms 70ms cubic-bezier(.2,.9,.2,1) both;
+  }
+
+  .devotional-eyebrow {
+    margin: 0 0 10px;
+    color: #6f7b4d;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .devotional-title {
+    margin: 0;
+    max-width: 340px;
+    color: #171512;
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-size: clamp(3.1rem, 15vw, 4.45rem);
+    line-height: .92;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .devotional-subtitle {
+    margin: 16px 0 0;
+    color: #716b63;
+    font-size: 1.05rem;
+    line-height: 1.45;
+  }
+
+  .devotional-progress-card {
+    min-height: 84px;
+    margin: 22px 6px 0;
+    padding: 14px 15px;
+    display: grid;
+    grid-template-columns: 58px minmax(0, 1fr) auto;
+    gap: 14px;
+    align-items: center;
+    border: 1px solid rgba(23, 21, 18, 0.08);
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.86);
+    box-shadow: 0 18px 42px rgba(52, 43, 32, 0.08);
+    animation: devotional-rise 680ms 170ms cubic-bezier(.2,.9,.2,1) both;
+  }
+
+  .devotional-ring {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    position: relative;
+    background: conic-gradient(#a9782e var(--devotional-progress), #eee8dc 0);
+  }
+
+  .devotional-ring::after {
+    content: "";
+    position: absolute;
+    inset: 7px;
+    border-radius: 50%;
+    background: #fff;
+  }
+
+  .devotional-ring span {
+    position: relative;
+    z-index: 1;
+    color: #171512;
+    font-size: .82rem;
+    font-weight: 950;
+  }
+
+  .devotional-theme-label {
+    margin: 0;
+    overflow: hidden;
+    color: #9a9389;
+    font-size: .72rem;
+    font-weight: 900;
+    letter-spacing: .16em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .devotional-theme-ref {
+    margin: 5px 0 0;
+    color: #171512;
+    font-size: 1.25rem;
+    line-height: 1.1;
+    font-weight: 950;
+  }
+
+  .devotional-today-chip {
+    min-height: 38px;
+    padding: 10px 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 18px;
+    background: #181512;
+    color: #fff8ec;
+    font-size: .78rem;
+    font-weight: 950;
+    transition: transform 160ms ease;
+  }
+
+  .devotional-today-chip:active {
+    transform: scale(.96);
+  }
+
+  .devotional-flow {
+    padding-top: 18px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .devotional-motion-card {
+    border: 1px solid rgba(23, 21, 18, 0.08);
+    border-radius: 30px;
+    background: #fff;
+    box-shadow: 0 16px 40px rgba(54, 45, 34, 0.08);
+    overflow: hidden;
+    animation: devotional-rise 720ms cubic-bezier(.2,.9,.2,1) both;
+    animation-delay: var(--motion-delay, 0ms);
+  }
+
+  .devotional-section-label {
+    margin: 0;
+    color: #4b6f82;
+    font-size: .72rem;
+    font-weight: 950;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+  }
+
+  .devotional-scripture-title {
+    margin: 8px 0 15px;
+    color: #171512;
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-size: clamp(2.05rem, 10vw, 2.78rem);
+    line-height: .96;
+    font-weight: 800;
+    letter-spacing: 0;
+  }
+
+  .devotional-quote-box {
+    margin: 0;
+    padding: 16px 16px 16px 18px;
+    border-left: 4px solid #a9782e;
+    border-radius: 22px;
+    background: #f6f3ec;
+    color: #423b33;
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-size: 1.05rem;
+    line-height: 1.62;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .devotional-quote-box::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.72), transparent);
+    transform: translateX(-105%);
+    animation: devotional-shine 1300ms 920ms ease-out both;
+  }
+
+  .devotional-scripture-ref {
+    margin: 13px 0 0;
+    color: #a9782e;
+    font-size: .9rem;
+    font-weight: 950;
+  }
+
+  .devotional-read-prompt {
+    margin: 12px 0 0;
+    color: #8b8379;
+    font-size: .82rem;
+    line-height: 1.5;
+  }
+
+  .devotional-tabs {
+    height: 54px;
+    padding: 5px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: 22px;
+    background: #ede8de;
+    position: relative;
+  }
+
+  .devotional-tab-thumb {
+    position: absolute;
+    width: calc((100% - 10px) / 2);
+    height: 44px;
+    left: 5px;
+    top: 5px;
+    border-radius: 18px;
+    background: #171512;
+    box-shadow: 0 10px 20px rgba(23, 21, 18, 0.16);
+    transform: translateX(var(--tab-shift, 0));
+    transition: transform 260ms cubic-bezier(.2,.9,.2,1);
+  }
+
+  .devotional-tab {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: transparent;
+    color: #716b63;
+    font-size: .82rem;
+    font-weight: 950;
+  }
+
+  .devotional-tab.is-active {
+    color: #fff8ec;
+  }
+
+  .devotional-meditation-body {
+    color: #4d463f;
+    font-size: .98rem;
+    line-height: 1.72;
+    animation: devotional-reveal 680ms 150ms cubic-bezier(.2,.9,.2,1) both;
+  }
+
+  .devotional-action-chip {
+    min-height: 38px;
+    padding: 0 13px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid rgba(81, 96, 68, 0.08);
+    border-radius: 17px;
+    background: #f0f4f1;
+    color: #516044;
+    font-size: .82rem;
+    font-weight: 950;
+  }
+
+  .devotional-complete-button {
+    width: 100%;
+    min-height: 58px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    border: 0;
+    border-radius: 24px;
+    background: #171512;
+    color: #fff8ec;
+    box-shadow: 0 18px 36px rgba(23, 21, 18, 0.22);
+    font-size: .98rem;
+    font-weight: 950;
+    animation: devotional-cta 3200ms 1200ms ease-in-out infinite;
+    transition: transform 160ms ease;
+  }
+
+  .devotional-complete-button:active {
+    transform: scale(.98);
+  }
+
+  .devotional-check-badge {
+    width: 24px;
+    height: 24px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: #a9782e;
+    color: #fff;
+  }
+
+  @media (min-width: 768px) {
+    .devotional-phone {
+      padding-top: 18px;
+    }
+  }
+
+  @keyframes devotional-rise {
+    from { opacity: 0; transform: translateY(24px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  @keyframes devotional-settle {
+    from { opacity: 0; transform: translateY(-14px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes devotional-shine {
+    to { transform: translateX(105%); }
+  }
+
+  @keyframes devotional-reveal {
+    from { opacity: 0; clip-path: inset(0 0 100% 0); }
+    to { opacity: 1; clip-path: inset(0); }
+  }
+
+  @keyframes devotional-cta {
+    0%, 65%, 100% { transform: translateY(0) scale(1); }
+    72% { transform: translateY(-3px) scale(1.015); }
+    80% { transform: translateY(0) scale(1); }
+  }
+`;
+
+function motionStyle(delay: string): React.CSSProperties {
+  return { "--motion-delay": delay } as React.CSSProperties;
+}
+
 const RYLE_THEME_ES: Record<string, string> = {
   "The Eternal Word": "El Verbo Eterno",
   "The Witness and the Children of God": "El Testigo y los Hijos de Dios",
@@ -582,89 +957,80 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
   }, [entry.scripture.reference, entry.scripture.text, lang]);
 
   return (
-    <div
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${tk.cardBorder}`,
-        backgroundColor: tk.scriptureCardBg,
-        boxShadow: tk.cardShadow,
-        overflow: "hidden",
-      }}
-    >
-      {/* Header row */}
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: `1px solid ${tk.divider}` }}>
-        <p style={{ ...LABEL_STYLE, color: tk.labelColor, marginBottom: 10 }}>
+    <article className="devotional-motion-card" style={motionStyle("280ms")}>
+      <div className="px-5 pt-5 pb-5">
+        <p className="devotional-section-label">
           {t(lang, "family_ryle_label")}
         </p>
-        <p style={{ fontSize: "1.75rem", fontWeight: 700, color: tk.textPrimary, lineHeight: 1.1 }}>
+        <h2 className="devotional-scripture-title">
           {localizeReference(entry.scripture.reference, lang)}
-        </p>
-        <p className="mt-1" style={{ fontSize: "0.72rem", color: tk.textFaint, letterSpacing: "0.06em" }}>
+        </h2>
+        <blockquote className="devotional-quote-box">
+          <p className="whitespace-pre-line">
+            {scriptureStatus === "loading" ? t(lang, "family_loading_passage") : scriptureText}
+          </p>
+        </blockquote>
+        <p className="devotional-scripture-ref">
+          {localizeReference(entry.scripture.reference, lang)} ·{" "}
           {scriptureStatus === "fallback"
             ? `${entry.scripture.translation} fallback`
             : lang === "es" ? "LBLA" : "ESV"}
         </p>
-      </div>
-
-      {/* Blockquote */}
-      <div className="px-5 py-5" style={{ borderBottom: `1px solid ${tk.divider}`, backgroundColor: tk.quoteBg }}>
-        <blockquote
-          style={{
-            borderLeft: `3px solid ${tk.blockquoteBorder}`,
-            paddingLeft: 16,
-          }}
-        >
-          <p
-            style={{
-              fontSize: "1.05rem",
-              lineHeight: 1.75,
-              fontStyle: "italic",
-              color: tk.textPrimary,
-              whiteSpace: "pre-line",
-            }}
-          >
-            {scriptureStatus === "loading" ? t(lang, "family_loading_passage") : scriptureText}
-          </p>
-          <p className="mt-3" style={{ fontSize: "0.85rem", fontWeight: 600, color: tk.accent }}>
-            — {localizeReference(entry.scripture.reference, lang)}
-          </p>
-        </blockquote>
-        <p className="mt-4" style={{ fontSize: "0.78rem", lineHeight: 1.6, color: tk.textFaint }}>
+        <p className="devotional-read-prompt">
           {t(lang, "family_read_aloud_prompt")}
         </p>
       </div>
 
-      {/* Meditation */}
-      <div className="px-5 py-5 space-y-4">
-        <div className="flex items-center justify-between gap-3">
+      <div className="px-5 pb-5 space-y-4">
+        {canShowFullCommentary && (
+          <div
+            className="devotional-tabs"
+            style={{ "--tab-shift": showFullCommentary ? "100%" : "0" } as React.CSSProperties}
+          >
+            <span className="devotional-tab-thumb" />
+            <button
+              type="button"
+              onClick={() => setShowFullCommentary(false)}
+              className={`devotional-tab ${!showFullCommentary ? "is-active" : ""}`}
+            >
+              {t(lang, "family_meditation")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFullCommentary(true)}
+              className={`devotional-tab ${showFullCommentary ? "is-active" : ""}`}
+            >
+              {t(lang, "family_full_commentary")}
+            </button>
+          </div>
+        )}
+
+        <div className="flex items-start justify-between gap-3">
           <div>
-            <p style={{ ...LABEL_STYLE, color: tk.textMuted }}>{t(lang, "family_meditation")}</p>
+            <p className="devotional-section-label">
+              {t(lang, "family_meditation")}
+            </p>
             {canShowFullCommentary && (
-              <p className="mt-1 text-xs" style={{ color: tk.textFaint }}>
+              <p className="mt-1 text-xs font-semibold" style={{ color: "#9a9389" }}>
                 {showFullCommentary ? t(lang, "family_full_commentary") : t(lang, "family_concise_reading")}
               </p>
             )}
           </div>
-          {canShowFullCommentary && (
-            <button
-              type="button"
-              onClick={() => setShowFullCommentary((value) => !value)}
-              className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-semibold active:scale-95 transition-all"
-              style={{
-                backgroundColor: tk.buttonBg,
-                border: `1px solid ${tk.buttonBorder}`,
-                color: tk.buttonText,
-              }}
-            >
-              {showFullCommentary ? t(lang, "family_show_concise") : t(lang, "family_read_full")}
-            </button>
+          {ryleAudioTracks.length > 0 && (
+            <span className="devotional-action-chip">
+              <UiIcon name="mic" size={15} />
+              {t(lang, "family_listen")}
+            </span>
           )}
         </div>
-        {(translatedCommentary ?? meditationText).split("\n\n").map((para, i) => (
-          <p key={i} style={{ fontSize: "0.95rem", lineHeight: 1.75, color: tk.textSecondary }}>
-            {para}
-          </p>
-        ))}
+
+        <div className="space-y-4" key={`${entry.scripture.reference}-${showFullCommentary ? "full" : "short"}`}>
+          {(translatedCommentary ?? meditationText).split("\n\n").map((para, i) => (
+            <p key={i} className="devotional-meditation-body">
+              {para}
+            </p>
+          ))}
+        </div>
         {lang === "es" && translating && (
           <p className="mt-2 text-xs" style={{ color: tk.textFaint }}>
             Traduciendo al español...
@@ -674,25 +1040,18 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
 
       {ryleAudioTracks.length > 0 && (
         <div className="px-5 pb-5">
-          <div
-            className="p-4 space-y-3"
-            style={{
-              borderRadius: 14,
-              border: `1px solid ${tk.cardBorder}`,
-              backgroundColor: tk.cardBg,
-            }}
-          >
-          <div>
-            <p style={{ ...LABEL_STYLE, color: tk.labelColor }}>{t(lang, "family_read_aloud_label")}</p>
-            <p className="mt-1 text-sm leading-6" style={{ color: tk.textMuted }}>
-              {t(lang, "family_ryle_audio_desc")}
-            </p>
-          </div>
+          <div className="rounded-[24px] border border-[#e5dfd3] bg-[#f8f6f1] p-4 space-y-3">
+            <div>
+              <p className="devotional-section-label">{t(lang, "family_read_aloud_label")}</p>
+              <p className="mt-1 text-sm leading-6" style={{ color: "#716b63" }}>
+                {t(lang, "family_ryle_audio_desc")}
+              </p>
+            </div>
             {ryleAudioTracks.map((track) => (
               <div key={track.url} className="space-y-2">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-semibold" style={{ color: tk.textPrimary }}>{track.title}</p>
-                  <p className="text-xs" style={{ color: tk.textFaint }}>{track.duration}</p>
+                  <p className="text-sm font-black" style={{ color: "#171512" }}>{track.title}</p>
+                  <p className="text-xs font-semibold" style={{ color: "#9a9389" }}>{track.duration}</p>
                 </div>
                 <audio controls preload="none" className="w-full">
                   <source src={track.url} type="audio/mpeg" />
@@ -704,14 +1063,11 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
       )}
 
       <div className="px-5 pb-5">
-        <p
-          className="text-xs italic pt-4"
-          style={{ color: tk.textFaint, borderTop: `1px solid ${tk.divider}` }}
-        >
-          — {t(lang, "family_ryle_attribution")}
+        <p className="text-xs italic pt-4 border-t border-[#eee8dc]" style={{ color: "#9a9389" }}>
+          {t(lang, "family_ryle_attribution")}
         </p>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -727,7 +1083,6 @@ function getSpanishHymn() {
 
 function HymnCard({ entry }: { entry: DailyDevotional }) {
   const { lang } = useLanguage();
-  const tk = useTheme();
 
   // In Spanish mode, show the day-of-week Spanish hymn from familyWorshipData
   const spanishHymn = lang === "es" ? getSpanishHymn() : null;
@@ -742,36 +1097,26 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
 
   return (
     <div
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${tk.cardBorder}`,
-        backgroundColor: tk.cardBg,
-        boxShadow: tk.cardShadow,
-        overflow: "hidden",
-      }}
+      className="devotional-motion-card"
+      style={motionStyle("590ms")}
     >
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: `1px solid ${tk.divider}` }}>
-        <p className="flex items-center gap-2" style={{ ...LABEL_STYLE, color: tk.labelColor, marginBottom: 10 }}>
+      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid #eee8dc" }}>
+        <p className="flex items-center gap-2 devotional-section-label" style={{ color: "#a95d52", marginBottom: 10 }}>
           <UiIcon name="music" size={14} />
           {lang === "es" ? "Himno" : "Hymn"}
         </p>
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <p style={{ fontSize: "1.1rem", fontWeight: 700, color: tk.textPrimary, lineHeight: 1.25 }}>
+            <p style={{ fontSize: "1.1rem", fontWeight: 900, color: "#171512", lineHeight: 1.25 }}>
               {hymnTitle}
             </p>
-            <p className="mt-1" style={{ fontSize: "0.78rem", color: tk.textFaint }}>
+            <p className="mt-1" style={{ fontSize: "0.78rem", color: "#9a9389" }}>
               {hymnAuthor} · {hymnYear}
             </p>
           </div>
           <button
             onClick={() => setAudioOpen(!audioOpen)}
-            className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold active:scale-95 transition-all"
-            style={{
-              backgroundColor: tk.buttonBg,
-              border: `1px solid ${tk.buttonBorder}`,
-              color: tk.buttonText,
-            }}
+            className="devotional-action-chip active:scale-95 transition-all"
           >
             {audioOpen ? t(lang, "family_close") : t(lang, "family_listen")}
           </button>
@@ -779,8 +1124,8 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
       </div>
 
       {audioOpen && (
-        <div className="px-5 py-4" style={{ borderBottom: `1px solid ${tk.divider}` }}>
-          <p className="text-xs mb-3 leading-5" style={{ color: tk.textMuted }}>
+        <div className="px-5 py-4" style={{ borderBottom: "1px solid #eee8dc" }}>
+          <p className="text-xs mb-3 leading-5" style={{ color: "#716b63" }}>
             {lang === "es"
               ? "Busca este himno en YouTube para cantarlo en familia."
               : "Tap below to find this hymn on YouTube and sing along as a family."}
@@ -789,15 +1134,15 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
             href={hymnYouTubeUrl(hymnTitle)}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-3 w-full px-4 py-3 rounded-xl border active:scale-95 transition-all"
+            className="flex items-center gap-3 w-full px-4 py-3 rounded-[20px] border active:scale-95 transition-all"
             style={{ backgroundColor: "rgba(255,0,0,0.07)", borderColor: "rgba(255,0,0,0.15)" }}
           >
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#FF0000">
               <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
             </svg>
             <div>
-              <p className="font-semibold text-sm" style={{ color: tk.textSecondary }}>{hymnTitle}</p>
-              <p className="text-xs mt-0.5" style={{ color: tk.textMuted }}>{t(lang, "family_open_youtube")}</p>
+              <p className="font-semibold text-sm" style={{ color: "#423b33" }}>{hymnTitle}</p>
+              <p className="text-xs mt-0.5" style={{ color: "#716b63" }}>{t(lang, "family_open_youtube")}</p>
             </div>
           </a>
         </div>
@@ -808,10 +1153,10 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
           <div className="space-y-6">
             {spanishVerses.map((verse, i) => (
               <div key={i}>
-                <p style={{ ...LABEL_STYLE, color: tk.textMuted, marginBottom: 8 }}>
+                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
                   Estrofa {i + 1}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: tk.textSecondary, whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
                   {verse}
                 </p>
               </div>
@@ -821,31 +1166,31 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
           <div className="space-y-6">
             {lyrics.verses.map((verse, i) => (
               <div key={i}>
-                <p style={{ ...LABEL_STYLE, color: tk.textMuted, marginBottom: 8 }}>
+                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
                   {t(lang, "family_verse_label")} {i + 1}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: tk.textSecondary, whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
                   {verse}
                 </p>
               </div>
             ))}
             {lyrics.chorus && (
-              <div className="pt-5" style={{ borderTop: `1px solid ${tk.divider}` }}>
-                <p style={{ ...LABEL_STYLE, color: tk.textMuted, marginBottom: 8 }}>
+              <div className="pt-5" style={{ borderTop: "1px solid #eee8dc" }}>
+                <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 8 }}>
                   {t(lang, "family_chorus_label")}
                 </p>
-                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: tk.textSecondary, whiteSpace: "pre-line" }}>
+                <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#4d463f", whiteSpace: "pre-line" }}>
                   {lyrics.chorus}
                 </p>
               </div>
             )}
           </div>
         ) : (
-          <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: tk.textMuted }}>
+          <p style={{ fontSize: "0.95rem", lineHeight: 1.75, fontStyle: "italic", color: "#716b63" }}>
             {entry.hymn.firstLine ? `"${entry.hymn.firstLine}…"` : "See The Baptist Hymnal for full text."}
           </p>
         )}
-        <p className="mt-5 text-xs" style={{ color: tk.textFaint }}>
+        <p className="mt-5 text-xs" style={{ color: "#9a9389" }}>
           {lang === "es" ? "Canta o lee en voz alta juntos como familia." : "Sing or read aloud together as a family."}
         </p>
       </div>
@@ -859,7 +1204,6 @@ interface PrayerItem { id: string; text: string; }
 
 function PrayerCard() {
   const { lang } = useLanguage();
-  const tk = useTheme();
   const [items, setItems] = useState<PrayerItem[]>([]);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
@@ -898,25 +1242,20 @@ function PrayerCard() {
 
   return (
     <div
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${tk.cardBorder}`,
-        backgroundColor: tk.cardBg,
-        boxShadow: tk.cardShadow,
-        overflow: "hidden",
-      }}
+      className="devotional-motion-card"
+      style={motionStyle("700ms")}
     >
-      <div className="px-5 pt-5 pb-4" style={{ borderBottom: `1px solid ${tk.divider}` }}>
-        <p style={{ ...LABEL_STYLE, color: tk.labelColor, marginBottom: 8 }}>{t(lang, "family_prayer_label")}</p>
-        <p style={{ fontSize: "1rem", fontWeight: 700, color: tk.textPrimary }}>{t(lang, "family_prayer_title")}</p>
-        <p className="mt-1" style={{ fontSize: "0.8rem", lineHeight: 1.55, color: tk.textFaint }}>
+      <div className="px-5 pt-5 pb-4" style={{ borderBottom: "1px solid #eee8dc" }}>
+        <p className="devotional-section-label" style={{ color: "#6f7b4d", marginBottom: 8 }}>{t(lang, "family_prayer_label")}</p>
+        <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "#171512" }}>{t(lang, "family_prayer_title")}</p>
+        <p className="mt-1" style={{ fontSize: "0.82rem", lineHeight: 1.55, color: "#716b63" }}>
           {t(lang, "family_prayer_sub")}
         </p>
       </div>
 
       <div className="px-5 py-4 space-y-3">
         {items.length === 0 && !adding && (
-          <p className="text-sm italic text-center py-3" style={{ color: tk.textFaint }}>
+          <p className="text-sm italic text-center py-3" style={{ color: "#9a9389" }}>
             {t(lang, "family_no_prayers")}
           </p>
         )}
@@ -934,24 +1273,24 @@ function PrayerCard() {
                 }}
                 rows={2}
                 className="flex-1 px-3 py-2 rounded-xl outline-none resize-none text-sm leading-6"
-                style={{ backgroundColor: tk.inputBg, color: tk.inputText, border: `1px solid ${tk.buttonBorder}` }}
+                style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
               />
               <div className="flex flex-col gap-1.5 pt-0.5">
-                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: tk.buttonBg, color: tk.buttonText, border: `1px solid ${tk.buttonBorder}` }}>{t(lang, "family_save")}</button>
-                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: tk.textMuted, border: `1px solid ${tk.divider}` }}>{t(lang, "family_cancel")}</button>
+                <button onClick={commitEdit} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "#f0f4f1", color: "#516044", border: "1px solid #dfe6dc" }}>{t(lang, "family_save")}</button>
+                <button onClick={() => setEditingId(null)} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "#716b63", border: "1px solid #eee8dc" }}>{t(lang, "family_cancel")}</button>
               </div>
             </div>
           ) : (
             <div key={item.id} className="flex items-start gap-3 group">
-              <div className="flex-shrink-0 mt-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: tk.buttonBg, border: `1px solid ${tk.buttonBorder}` }}>
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: tk.accent }} />
+              <div className="flex-shrink-0 mt-1 w-4 h-4 rounded-full flex items-center justify-center" style={{ backgroundColor: "#f0f4f1", border: "1px solid #dfe6dc" }}>
+                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: "#6f7b4d" }} />
               </div>
-              <p className="flex-1 text-sm leading-7" style={{ color: tk.textSecondary }}>{item.text}</p>
+              <p className="flex-1 text-sm leading-7" style={{ color: "#4d463f" }}>{item.text}</p>
               <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 pt-0.5">
-                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: tk.accentDim, backgroundColor: tk.buttonBg }} title="Edit">
+                <button onClick={() => startEdit(item)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "#6f7b4d", backgroundColor: "#f0f4f1" }} title="Edit">
                   <UiIcon name="edit" size={13} />
                 </button>
-                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: tk.dangerText, backgroundColor: tk.dangerBg }} title="Remove">
+                <button onClick={() => deleteItem(item.id)} className="w-6 h-6 flex items-center justify-center rounded-lg active:scale-90 transition-all" style={{ color: "#a95d52", backgroundColor: "#fbf1ef" }} title="Remove">
                   <UiIcon name="close" size={13} />
                 </button>
               </div>
@@ -972,11 +1311,11 @@ function PrayerCard() {
               placeholder={t(lang, "family_prayer_placeholder")}
               rows={2}
               className="flex-1 px-3 py-2 rounded-xl outline-none resize-none text-sm leading-6"
-              style={{ backgroundColor: tk.inputBg, color: tk.inputText, border: `1px solid ${tk.buttonBorder}` }}
+              style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
             />
             <div className="flex flex-col gap-1.5 pt-0.5">
-              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: tk.buttonBg, color: tk.buttonText, border: `1px solid ${tk.buttonBorder}` }}>{t(lang, "family_add")}</button>
-              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: tk.textMuted, border: `1px solid ${tk.divider}` }}>{t(lang, "family_cancel")}</button>
+              <button onClick={addItem} className="px-3 py-1.5 rounded-lg text-xs font-bold transition-all active:scale-95" style={{ backgroundColor: "#f0f4f1", color: "#516044", border: "1px solid #dfe6dc" }}>{t(lang, "family_add")}</button>
+              <button onClick={() => { setAdding(false); setDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs transition-all active:scale-95" style={{ color: "#716b63", border: "1px solid #eee8dc" }}>{t(lang, "family_cancel")}</button>
             </div>
           </div>
         )}
@@ -986,8 +1325,8 @@ function PrayerCard() {
         <div className="px-5 pb-5">
           <button
             onClick={() => setAdding(true)}
-            className="w-full py-2.5 rounded-xl text-sm font-semibold active:scale-[0.98] transition-all flex items-center justify-center gap-2"
-            style={{ backgroundColor: tk.buttonBg, border: `1px solid ${tk.buttonBorder}`, color: tk.buttonText }}
+            className="w-full py-3 rounded-[20px] text-sm font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+            style={{ backgroundColor: "#f0f4f1", border: "1px solid #dfe6dc", color: "#516044" }}
           >
             <span className="text-base leading-none">+</span>
             {t(lang, "family_add_prayer")}
@@ -1010,7 +1349,6 @@ function CompletionCard({
   onComplete: () => void;
 }) {
   const { lang } = useLanguage();
-  const tk = useTheme();
   const [done, setDone] = useState(false);
 
   useEffect(() => { setDone(isDevotionalComplete(dateStr)); }, [dateStr]);
@@ -1027,30 +1365,24 @@ function CompletionCard({
       const tomorrow = new Date(y, mo - 1, day + 1);
       return (
         <div
-          className="text-center"
-          style={{
-            borderRadius: 16,
-            border: `1px solid ${tk.cardBorder}`,
-            backgroundColor: tk.cardBg,
-            boxShadow: tk.cardShadow,
-            padding: "36px 24px",
-          }}
+          className="devotional-motion-card text-center px-6 py-9"
+          style={motionStyle("820ms")}
         >
           <div
             className="w-14 h-14 rounded-full flex items-center justify-center text-2xl mx-auto mb-4"
-            style={{ backgroundColor: tk.buttonBg, border: `1px solid ${tk.accent}` }}
+            style={{ backgroundColor: "#f0f4f1", border: "1px solid #6f7b4d", color: "#516044" }}
           >
             <UiIcon name="check" size={28} strokeWidth={3} />
           </div>
-          <p style={{ fontSize: "1.05rem", fontWeight: 700, color: tk.textPrimary }}>
+          <p style={{ fontSize: "1.05rem", fontWeight: 900, color: "#171512" }}>
             {t(lang, "family_completed_title")}
           </p>
-          <p className="mt-2 text-sm leading-6" style={{ color: tk.textMuted }}>
+          <p className="mt-2 text-sm leading-6" style={{ color: "#716b63" }}>
             {t(lang, "family_completed_msg")}
           </p>
-          <div className="mt-5 pt-5" style={{ borderTop: `1px solid ${tk.divider}` }}>
-            <p style={{ ...LABEL_STYLE, color: tk.textFaint, marginBottom: 4 }}>{t(lang, "family_come_back_tomorrow")}</p>
-            <p className="text-sm font-semibold" style={{ color: tk.textSecondary }}>
+          <div className="mt-5 pt-5" style={{ borderTop: "1px solid #eee8dc" }}>
+            <p style={{ ...LABEL_STYLE, color: "#9a9389", marginBottom: 4 }}>{t(lang, "family_come_back_tomorrow")}</p>
+            <p className="text-sm font-black" style={{ color: "#4d463f" }}>
               {formatDateShort(tomorrow, lang)}
             </p>
           </div>
@@ -1059,20 +1391,15 @@ function CompletionCard({
     }
     return (
       <div
-        className="flex items-center gap-4 px-5 py-4"
-        style={{
-          borderRadius: 16,
-          border: `1px solid ${tk.cardBorder}`,
-          backgroundColor: tk.cardBg,
-          boxShadow: tk.cardShadow,
-        }}
+        className="devotional-motion-card flex items-center gap-4 px-5 py-4"
+        style={motionStyle("820ms")}
       >
-        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: tk.buttonBg }}>
+        <div className="w-10 h-10 rounded-full flex items-center justify-center text-xl flex-shrink-0" style={{ backgroundColor: "#f0f4f1", color: "#516044" }}>
           <UiIcon name="check" size={22} strokeWidth={3} />
         </div>
         <div>
-          <p style={{ fontSize: "0.9rem", fontWeight: 700, color: tk.textPrimary }}>{t(lang, "family_completed_title")}</p>
-          <p className="text-xs mt-0.5" style={{ color: tk.textFaint }}>{t(lang, "family_completed_msg")}</p>
+          <p style={{ fontSize: "0.9rem", fontWeight: 900, color: "#171512" }}>{t(lang, "family_completed_title")}</p>
+          <p className="text-xs mt-0.5" style={{ color: "#9a9389" }}>{t(lang, "family_completed_msg")}</p>
         </div>
       </div>
     );
@@ -1080,31 +1407,28 @@ function CompletionCard({
 
   return (
     <div
-      className="text-center"
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${tk.cardBorder}`,
-        backgroundColor: tk.cardBg,
-        boxShadow: tk.cardShadow,
-        padding: "32px 24px",
-      }}
+      className="devotional-motion-card text-center px-6 py-8"
+      style={motionStyle("820ms")}
     >
       <div className="flex items-center justify-center mb-4">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ color: tk.textMuted, opacity: 0.6 }}>
-          <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
-        </svg>
+        <span className="devotional-check-badge">
+          <UiIcon name="check" size={16} strokeWidth={3} />
+        </span>
       </div>
-      <p style={{ fontSize: "1rem", fontWeight: 700, color: tk.textPrimary }}>
+      <p style={{ fontSize: "1rem", fontWeight: 900, color: "#171512" }}>
         {t(lang, "family_did_complete")}
       </p>
-      <p className="text-sm mt-2 leading-6" style={{ color: tk.textMuted }}>
+      <p className="text-sm mt-2 leading-6" style={{ color: "#716b63" }}>
         {t(lang, "family_complete_check")}
       </p>
       <button
         onClick={handleComplete}
-        className="mt-5 w-full py-3 rounded-xl active:scale-[0.98] transition-all font-semibold text-sm"
-        style={{ backgroundColor: tk.toggleActive, color: tk.ctaText }}
+        className="devotional-complete-button mt-5"
+        type="button"
       >
+        <span className="devotional-check-badge">
+          <UiIcon name="check" size={16} strokeWidth={3} />
+        </span>
         {t(lang, "family_yes_completed")}
       </button>
     </div>
@@ -1117,7 +1441,6 @@ const REMINDER_KEY = "axiom-fw-reminder";
 
 function ReminderCard() {
   const { lang } = useLanguage();
-  const tk = useTheme();
   const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState("19:00");
   const [permissionState, setPermissionState] = useState<NotificationPermission>("default");
@@ -1163,23 +1486,19 @@ function ReminderCard() {
 
   return (
     <div
-      className="px-5 py-5 space-y-4"
-      style={{
-        borderRadius: 16,
-        border: `1px solid ${tk.cardBorder}`,
-        backgroundColor: tk.cardBg,
-        boxShadow: tk.cardShadow,
-      }}
+      className="devotional-motion-card px-5 py-5 space-y-4"
+      style={motionStyle("940ms")}
     >
       <div className="flex items-center justify-between">
         <div>
-          <p style={{ fontSize: "0.9rem", fontWeight: 600, color: tk.textPrimary }}>{t(lang, "family_daily_reminder")}</p>
-          <p className="text-xs mt-0.5" style={{ color: tk.textMuted }}>{t(lang, "family_reminder_desc")}</p>
+          <p className="devotional-section-label" style={{ color: "#4b6f82", marginBottom: 8 }}>{t(lang, "family_daily_reminder")}</p>
+          <p className="text-xs mt-0.5" style={{ color: "#716b63" }}>{t(lang, "family_reminder_desc")}</p>
         </div>
         <button
           onClick={handleToggle}
           className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-          style={{ backgroundColor: enabled ? tk.toggleActive : tk.toggleOffBg }}
+          style={{ backgroundColor: enabled ? "#171512" : "#ede8de" }}
+          type="button"
         >
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : ""}`} />
         </button>
@@ -1187,22 +1506,22 @@ function ReminderCard() {
 
       {enabled && (
         <div className="space-y-2">
-          <p style={{ ...LABEL_STYLE, color: tk.textMuted }}>{t(lang, "family_reminder_time")}</p>
+          <p style={{ ...LABEL_STYLE, color: "#9a9389" }}>{t(lang, "family_reminder_time")}</p>
           <div className="flex items-center gap-3">
             <input
               type="time"
               value={time}
               onChange={(e) => handleTimeChange(e.target.value)}
               className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
-              style={{ backgroundColor: tk.inputBg, color: tk.inputText, border: `1px solid ${tk.buttonBorder}` }}
+              style={{ backgroundColor: "#fbfaf7", color: "#171512", border: "1px solid #e5dfd3" }}
             />
-            <span className="text-sm font-semibold flex-shrink-0" style={{ color: tk.accent }}>{displayTime}</span>
+            <span className="text-sm font-black flex-shrink-0" style={{ color: "#a9782e" }}>{displayTime}</span>
           </div>
           {permissionState === "denied" && (
-            <p className="text-xs" style={{ color: tk.dangerText }}>{t(lang, "family_notif_blocked")}</p>
+            <p className="text-xs" style={{ color: "#a95d52" }}>{t(lang, "family_notif_blocked")}</p>
           )}
-          {saved && <p className="text-xs" style={{ color: tk.successText }}>{t(lang, "family_reminder_saved")}</p>}
-          <p className="text-[11px] leading-relaxed" style={{ color: tk.textFaint }}>
+          {saved && <p className="text-xs" style={{ color: "#516044" }}>{t(lang, "family_reminder_saved")}</p>}
+          <p className="text-[11px] leading-relaxed" style={{ color: "#9a9389" }}>
             {t(lang, "family_notif_note")}
           </p>
         </div>
@@ -1223,6 +1542,7 @@ export default function FamilyWorshipPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [showConfetti, setShowConfetti] = useState(false);
+  const [heroProgress, setHeroProgress] = useState(72);
 
   // Must match the SSR value ("white-noir" — what readStoredAppTheme returns
   // when window is undefined). A lazy client-side read here caused a hydration
@@ -1254,6 +1574,7 @@ export default function FamilyWorshipPage() {
   }
 
   const handleComplete = useCallback(() => {
+    setHeroProgress(100);
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 2500);
   }, []);
@@ -1266,162 +1587,114 @@ export default function FamilyWorshipPage() {
   const dailyEntry = getDevotionalForDate(selectedDate);
   const dateStr    = toDateStr(selectedDate);
 
+  useEffect(() => {
+    setHeroProgress(isDevotionalComplete(dateStr) ? 100 : 72);
+  }, [dateStr]);
+
   return (
     <ThemeCtx.Provider value={tokens}>
-      <div className="min-h-screen" style={{ background: "var(--bg, #0e1018)" }}>
+      <style>{DEVOTIONAL_MOTION_STYLES}</style>
+      <div className="devotional-page-shell">
         {showConfetti && <ConfettiOverlay />}
 
-        {/* ── Header (no card — floats on bg) ─────────────────────────────── */}
-        <div className="max-w-2xl mx-auto px-5 pt-12 pb-6">
-          {/* Pill badge */}
-          <div className="mb-3">
-            <span
-              className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-              style={{
-                ...LABEL_STYLE,
-                backgroundColor: tokens.pillBg,
-                color: tokens.pillText,
-                border: `1px solid ${tokens.cardBorder}`,
-              }}
+        <main className="devotional-phone">
+          <nav className="devotional-topbar" aria-label="Devotional date navigation">
+            <button
+              onClick={() => goToDate(addDays(selectedDate, -1))}
+              aria-label="Previous day"
+              className="devotional-icon-button"
+              type="button"
             >
-              {t(lang, "family_worship_pill")}
-            </span>
-          </div>
-          <h1 style={{ fontSize: "2rem", fontWeight: 700, color: tokens.textPrimary, lineHeight: 1.1 }}>
-            {t(lang, "family_heading")}
-          </h1>
-          <p className="mt-2" style={{ fontSize: "0.9rem", lineHeight: 1.55, color: tokens.textSecondary }}>
-            {t(lang, "family_worship_sub")}
-          </p>
-        </div>
-
-        {/* ── Date navigator ────────────────────────────────────────────────── */}
-        <div className="max-w-2xl mx-auto px-5 mb-3">
-          <div
-            style={{
-              borderRadius: 16,
-              border: `1px solid ${tokens.cardBorder}`,
-              backgroundColor: tokens.cardBg,
-              boxShadow: tokens.cardShadow,
-              padding: "16px 16px",
-            }}
-          >
-            <div className="flex items-center gap-3">
-              {/* Prev */}
-              <button
-                onClick={() => goToDate(addDays(selectedDate, -1))}
-                aria-label="Previous day"
-                className="flex items-center justify-center active:scale-90 transition-all"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  backgroundColor: tokens.buttonBg,
-                  border: `1px solid ${tokens.buttonBorder}`,
-                  color: tokens.textSecondary,
-                  flexShrink: 0,
-                  fontSize: "1.1rem",
-                }}
-              >
-                ‹
-              </button>
-
-              {/* Date center */}
-              <div className="flex-1 text-center">
-                <p style={{ fontSize: "1rem", fontWeight: 700, color: tokens.textPrimary }}>
-                  {formatDateShort(selectedDate, lang)}
-                </p>
-                <p className="mt-0.5" style={{ fontSize: "0.8rem", fontWeight: 600, color: tokens.accent }}>
-                  {dailyEntry?.displayDate
-                    ? lang === "es"
-                      ? dailyEntry.displayDate.replace(/^Reading (\d+) of (\d+)$/, (_, n, total) =>
-                          `${t(lang, "family_reading_label")} ${n} ${t(lang, "family_reading_of")} ${total}`)
-                      : dailyEntry.displayDate
-                    : ""}
-                </p>
-              </div>
-
-              {/* Next */}
-              <button
-                onClick={() => goToDate(addDays(selectedDate, 1))}
-                aria-label="Next day"
-                className="flex items-center justify-center active:scale-90 transition-all"
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: "50%",
-                  backgroundColor: tokens.buttonBg,
-                  border: `1px solid ${tokens.buttonBorder}`,
-                  color: tokens.textSecondary,
-                  flexShrink: 0,
-                  fontSize: "1.1rem",
-                }}
-              >
-                ›
-              </button>
+              ‹
+            </button>
+            <div className="devotional-date-pill" aria-label={formatDateShort(selectedDate, lang)}>
+              <span>‹</span>
+              <span>
+                {selectedDate.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+              <span>›</span>
             </div>
-          </div>
-        </div>
+            <div className="devotional-icon-button" aria-label="Current language">
+              {lang.toUpperCase()}
+            </div>
+          </nav>
 
-        {/* ── Content ───────────────────────────────────────────────────────── */}
-        <div className="max-w-2xl mx-auto px-5 pb-32 space-y-3">
+          <header className="devotional-hero">
+            <p className="devotional-eyebrow">{t(lang, "family_worship_pill")}</p>
+            <h1 className="devotional-title">
+              {lang === "es" ? "Devocional de Hoy" : "Today’s Devotional"}
+            </h1>
+            <p className="devotional-subtitle">
+              {lang === "es"
+                ? "Escritura, meditación, himno y oración reunidos en un ritmo diario tranquilo."
+                : "Scripture, meditation, hymn, and prayer gathered into one quiet daily rhythm."}
+            </p>
+          </header>
+
           {dailyEntry ? (
             <>
-              {/* Theme row: left = theme title pill, right = Today / Back to Today */}
-              <div className="flex items-center gap-2 pt-1">
-                <div
-                  className="flex-1 min-w-0 px-3 py-2 rounded-xl"
-                  style={{
-                    backgroundColor: tokens.cardBg,
-                    border: `1px solid ${tokens.cardBorder}`,
-                  }}
-                >
-                  <p
-                    className="truncate"
-                    style={{ ...LABEL_STYLE, color: tokens.textSecondary, letterSpacing: "0.10em" }}
+              <section className="devotional-progress-card" aria-label="Devotional progress">
+                {isToday ? (
+                  <div
+                    className="devotional-ring"
+                    style={{ "--devotional-progress": `${heroProgress}%` } as React.CSSProperties}
                   >
+                    <span>{heroProgress}%</span>
+                  </div>
+                ) : (
+                  <div
+                    className="devotional-ring"
+                    style={{ "--devotional-progress": "45%" } as React.CSSProperties}
+                  >
+                    <span>45%</span>
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="devotional-theme-label">
                     {familyThemeTitle(dailyEntry.theme, lang)}
                   </p>
+                  <p className="devotional-theme-ref">
+                    {localizeReference(dailyEntry.scripture.reference, lang)}
+                  </p>
+                  {dailyEntry.displayDate && (
+                    <p className="mt-1 text-xs font-bold" style={{ color: "#9a9389" }}>
+                      {lang === "es"
+                        ? dailyEntry.displayDate.replace(/^Reading (\d+) of (\d+)$/, (_, n, total) =>
+                            `${t(lang, "family_reading_label")} ${n} ${t(lang, "family_reading_of")} ${total}`)
+                        : dailyEntry.displayDate}
+                    </p>
+                  )}
                 </div>
                 {isToday ? (
-                  <span
-                    className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold"
-                    style={{
-                      backgroundColor: tokens.accent,
-                      color: tokens.accentText,
-                    }}
-                  >
+                  <span className="devotional-today-chip">
                     {t(lang, "family_today")}
                   </span>
                 ) : (
                   <button
                     onClick={goToToday}
-                    className="flex-shrink-0 px-3 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all"
-                    style={{
-                      backgroundColor: tokens.accent,
-                      color: tokens.accentText,
-                    }}
+                    className="devotional-today-chip"
+                    type="button"
                   >
                     {t(lang, "family_back_today")}
                   </button>
                 )}
-              </div>
+              </section>
 
-              <ScriptureAndDevotionalCard entry={dailyEntry} />
-              <HymnCard entry={dailyEntry} />
-              <PrayerCard />
-              <CompletionCard dateStr={dateStr} isToday={isToday} onComplete={handleComplete} />
-              <ReminderCard />
+              <div className="devotional-flow">
+                <ScriptureAndDevotionalCard entry={dailyEntry} />
+                <HymnCard entry={dailyEntry} />
+                <PrayerCard />
+                <CompletionCard dateStr={dateStr} isToday={isToday} onComplete={handleComplete} />
+                <ReminderCard />
+              </div>
             </>
           ) : (
             <div
-              className="p-8 text-center"
-              style={{
-                borderRadius: 16,
-                border: `1px solid ${tokens.cardBorder}`,
-                backgroundColor: tokens.cardBg,
-                boxShadow: tokens.cardShadow,
-              }}
+              className="devotional-motion-card p-8 text-center mt-6"
+              style={motionStyle("220ms")}
             >
               <div className="flex items-center justify-center mb-3">
                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.4 }}>
@@ -1429,33 +1702,29 @@ export default function FamilyWorshipPage() {
                   <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
                 </svg>
               </div>
-              <p className="font-semibold mb-1" style={{ color: tokens.textSecondary }}>
+              <p className="font-black mb-1" style={{ color: "#171512" }}>
                 {t(lang, "family_no_devotional")}
               </p>
-              <p className="text-sm leading-6" style={{ color: tokens.textFaint }}>
+              <p className="text-sm leading-6" style={{ color: "#716b63" }}>
                 {t(lang, "family_no_devotional_sub")}
               </p>
               <button
                 onClick={goToToday}
-                className="mt-5 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all active:scale-95"
-                style={{
-                  backgroundColor: tokens.accent,
-                  color: tokens.accentText,
-                }}
+                className="mt-5 devotional-today-chip"
+                type="button"
               >
                 {t(lang, "family_go_today")}
               </button>
             </div>
           )}
 
-          {/* Footer */}
           <div className="pt-2 pb-2 text-center">
-            <p className="text-xs leading-6" style={{ color: tokens.textFaint }}>
+            <p className="text-xs leading-6" style={{ color: "#9a9389" }}>
               {t(lang, "family_proverbs_quote")}
               <br />{t(lang, "family_proverbs_ref")}
             </p>
           </div>
-        </div>
+        </main>
       </div>
     </ThemeCtx.Provider>
   );
