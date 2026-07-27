@@ -4,7 +4,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import type { TranslationKey } from "../lib/i18n";
-import { AppSectionIcon, type AppSectionIconName } from "./AppSectionIcon";
+import type { AppSectionIconName } from "./AppSectionIcon";
 
 // ─── SVG Icons — use currentColor so theme CSS variables drive the color ─────
 
@@ -167,12 +167,64 @@ const MORE_LINKS: Array<{ href: string; iconName: AppSectionIconName; labelKey: 
   { href: "/fellowship",    iconName: "fellowship", labelKey: "nav_fellowship" },
 ] as const;
 
-function TabIcon({ href, active, isWhiteNoir }: { href: string; active: boolean; isWhiteNoir: boolean }) {
-  if (href === "/")               return <AppSectionIcon name="home" active={active} size={22} />;
-  if (href === "/library")        return <AppSectionIcon name="library" active={active} size={22} />;
-  if (href === "/notes")          return <AppSectionIcon name="notes" active={active} size={22} />;
-  if (href === "/family-worship") return <AppSectionIcon name="worship" active={active} size={22} />;
-  return null;
+function MockupNavIcon({ href }: { href: string }) {
+  const common = {
+    width: 24,
+    height: 24,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    "aria-hidden": true as const,
+  };
+  const strokeProps = {
+    stroke: "currentColor",
+    strokeWidth: 2.25,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+  };
+
+  if (href === "/") {
+    return (
+      <svg {...common}>
+        <path d="M3.5 10.8 12 3.4l8.5 7.4v9.4H3.5v-9.4Z" {...strokeProps} />
+      </svg>
+    );
+  }
+
+  if (href === "/library") {
+    return (
+      <svg {...common}>
+        <path d="M5 19.5A2.5 2.5 0 0 1 7.5 17H20" {...strokeProps} />
+        <path d="M7.5 3H20v18H7.5A2.5 2.5 0 0 1 5 18.5v-13A2.5 2.5 0 0 1 7.5 3Z" {...strokeProps} />
+      </svg>
+    );
+  }
+
+  if (href === "/notes") {
+    return (
+      <svg {...common}>
+        <path d="M12 20h8.5" {...strokeProps} />
+        <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" {...strokeProps} />
+      </svg>
+    );
+  }
+
+  if (href === "/family-worship") {
+    return (
+      <svg {...common}>
+        <path d="M12 6v12" {...strokeProps} />
+        <path d="M6 8.25h12v9.5H6v-9.5Z" {...strokeProps} />
+        <path d="M8.75 8.25V6.8h6.5v1.45" {...strokeProps} />
+      </svg>
+    );
+  }
+
+  return (
+    <svg {...common}>
+      <path d="M4.5 6h15" {...strokeProps} />
+      <path d="M4.5 12h15" {...strokeProps} />
+      <path d="M4.5 18h15" {...strokeProps} />
+    </svg>
+  );
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -257,15 +309,15 @@ export function BottomNav() {
   // White Noir: explicit inline styles so nav is always white regardless of
   // CSS variable support (color-mix() may not work on older Android Chrome).
   const navSurfaceStyle = isWhiteNoir ? {
-    background: "rgba(255,255,255,0.98)",
-    border: "1px solid rgba(0,0,0,0.08)",
-    backdropFilter: "blur(24px)",
-    WebkitBackdropFilter: "blur(24px)",
-    boxShadow: "0 22px 60px rgba(10,10,10,0.18)",
+    background: "rgba(255,255,255,0.96)",
+    border: "1px solid rgba(17,17,17,0.06)",
+    backdropFilter: "blur(22px)",
+    WebkitBackdropFilter: "blur(22px)",
+    boxShadow: "0 22px 58px rgba(17,17,17,0.16)",
   } : undefined;
 
   const fgActive   = isWhiteNoir ? "#0a0a0a"              : "var(--fg)";
-  const fgInactive = isWhiteNoir ? "rgba(10,10,10,0.38)"  : "var(--fg-lo)";
+  const fgInactive = isWhiteNoir ? "rgba(10,10,10,0.36)"  : "var(--fg-lo)";
 
   return (
     <nav
@@ -273,11 +325,11 @@ export function BottomNav() {
       style={{
         backgroundColor: "transparent",
         borderColor: "transparent",
-        paddingBottom: "max(env(safe-area-inset-bottom), 18px)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
       }}
     >
       <div
-        className="mobile-nav-surface flex items-stretch h-[70px]"
+        className="mobile-nav-surface flex items-stretch h-[72px]"
         suppressHydrationWarning
         style={navSurfaceStyle}
       >
@@ -292,11 +344,11 @@ export function BottomNav() {
               data-active={active ? "true" : undefined}
               aria-current={active ? "page" : undefined}
               aria-label={t(labelKey)}
-              className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[5px]"
+              className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[6px]"
               style={{ color: active ? fgActive : fgInactive }}
             >
-              <TabIcon href={href} active={active} isWhiteNoir={isWhiteNoir} />
-              <span className="text-[11px] font-black tracking-[-0.01em] leading-none">
+              <MockupNavIcon href={href} />
+              <span className="text-[11px] font-black leading-none">
                 {t(labelKey)}
               </span>
             </button>
@@ -310,11 +362,11 @@ export function BottomNav() {
           data-active={youActive ? "true" : undefined}
           aria-current={youActive ? "page" : undefined}
           aria-label={t("nav_extras")}
-          className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[5px]"
+          className="nav-tab motion-pressable tap-target ui-interactive flex-1 flex flex-col items-center justify-center gap-[6px]"
           style={{ color: youActive ? fgActive : fgInactive }}
         >
-          <AppSectionIcon name="extras" active={youActive} size={24} />
-          <span className="text-[11px] font-black tracking-[-0.01em] leading-none">
+          <MockupNavIcon href="/more" />
+          <span className="text-[11px] font-black leading-none">
             {t("nav_extras")}
           </span>
         </button>
