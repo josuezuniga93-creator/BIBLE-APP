@@ -36,7 +36,7 @@ const SOURCE_FILTERS: Array<{ key: "all" | UnifiedHighlightSource; en: string; e
 const COPY = {
   en: {
     eyebrow: "Your Pocket",
-    title: "Collections",
+    title: "My Highlights",
     subtitle: "Highlights, bookmarks, and saved reading in one clean place.",
     highlights: "Highlights",
     collections: "Collections",
