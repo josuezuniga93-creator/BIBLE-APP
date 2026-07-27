@@ -537,32 +537,28 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
   const src = coverHref(book);
 
   return (
-    <section className="mb-20">
-      <div className="flex items-center gap-4 mb-6">
-        <p
-          className="text-[11px] font-bold tracking-[0.25em] uppercase"
-          style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
-        >
-          Editor&rsquo;s Pick
-        </p>
+    <section className="mb-16 sm:mb-20">
+      <div
+        className="mx-auto mb-8 flex h-[304px] max-w-[298px] flex-col items-center justify-center rounded-[30px]"
+        style={{
+          background: isLight ? "#ffffff" : "rgba(255,255,255,0.045)",
+          border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
         <div
-          className="flex-1 h-px"
-          style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(201,169,97,0.25)" }}
-        />
-      </div>
-
-      {/* Featured cover — centered above "Featured" label */}
-      <div className="flex flex-col items-center mb-8">
-        <div
-          className="relative w-[160px] aspect-[2/3] rounded-xl overflow-hidden shadow-2xl mb-4 group"
-          style={{ background: isLight ? "#f0f0f0" : "#111111" }}
+          className="group relative mb-0 aspect-[138/176] w-[138px] overflow-hidden rounded-[18px]"
+          style={{
+            background: isLight ? "#f6f1e9" : "#111111",
+            border: isLight ? "1px solid rgba(210,179,117,0.35)" : "1px solid rgba(201,169,97,0.25)",
+            boxShadow: isLight ? "none" : "0 24px 55px rgba(0,0,0,0.35)",
+          }}
         >
           {src && !imgError ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={src}
               alt={`${book.title} cover`}
-              className="w-full h-full object-contain"
+              className="h-full w-full object-cover"
               onError={() => setImgError(true)}
             />
           ) : (
@@ -577,7 +573,6 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
               >{book.title}</p>
             </div>
           )}
-          {/* Subtle edge vignette */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -585,39 +580,36 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
               background: "linear-gradient(to top, rgba(10,6,22,0.25) 0%, transparent 30%), linear-gradient(to bottom, rgba(10,6,22,0.10) 0%, transparent 25%)",
             }}
           />
-          {/* Gold sheen */}
           <div
             className="absolute inset-0 pointer-events-none opacity-30"
             style={{ display: isLight ? "none" : undefined, background: "radial-gradient(ellipse 70% 50% at 20% 12%, rgba(201,169,97,0.22) 0%, transparent 70%)" }}
           />
         </div>
+      </div>
         <p
-          className="text-[11px] font-bold tracking-[0.2em] uppercase"
-          style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.45)" }}
+          className="text-center text-[11px] font-black uppercase"
+          style={{ color: isLight ? "#b2a58f" : "rgba(255,255,255,0.45)" }}
         >
           Featured of the Month
         </p>
-      </div>
 
-      {/* Copy — full width below the cover */}
-      <div className="flex flex-col">
+      <div className="mt-5 flex flex-col text-center">
         <div className="flex flex-col justify-start flex-1 min-w-0">
           <h2
-            className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight leading-[1.05] mb-2"
+            className="mb-3 text-[24px] font-black leading-none sm:text-3xl md:text-4xl"
             style={{ color: "#0a0a0a" }}
           >
             {book.title}
           </h2>
-          <p className="text-base italic mb-5" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "#c9a961" }}>by {book.author}</p>
+          <p className="mb-4 text-sm italic sm:text-base" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "#c9a961" }}>by {book.author}</p>
           <p
-            className="text-[15px] leading-relaxed mb-6 max-w-2xl"
-            style={{ color: isLight ? "rgba(0,0,0,0.60)" : "rgba(255,255,255,0.65)" }}
+            className="mx-auto mb-6 max-w-[298px] text-[15px] font-medium leading-[1.18] sm:max-w-2xl"
+            style={{ color: isLight ? "#777777" : "rgba(255,255,255,0.65)" }}
           >
-            {book.description}
+            A warm catechism companion for parents and children learning Christian doctrine together.
           </p>
 
-          {/* Metadata strip */}
-          <div className="grid grid-cols-3 gap-6 max-w-md mb-7">
+          <div className="mx-auto mb-7 hidden max-w-md grid-cols-3 gap-6 sm:grid">
             <div>
               <p
                 className="text-[10px] font-bold tracking-wider uppercase mb-1"
@@ -647,7 +639,7 @@ function EditorsPick({ book, isLight }: { book: KidsBook; isLight: boolean }) {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="hidden flex-wrap items-center justify-center gap-3 sm:flex">
             <a
               href={book.buyLink ?? "#"}
               target="_blank"
@@ -935,32 +927,30 @@ export default function KidsBooksPage() {
     .filter((s) => s.books.length > 0);
 
   return (
-    <div className="min-h-screen" style={{ background: isLight ? "#ffffff" : "#0a0a0c", color: "#0a0a0a" }}>
-      {/* Hero */}
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-14 pb-8">
+    <div className="min-h-screen" style={{ background: isLight ? "#fbfbfa" : "#0a0a0c", color: "#0a0a0a" }}>
+      <div className="mx-auto max-w-6xl px-6 pb-8 pt-14 sm:px-8">
         <p
-          className="text-[11px] font-bold tracking-[0.25em] uppercase mb-4"
-          style={{ color: isLight ? "rgba(0,0,0,0.45)" : "#c9a961" }}
+          className="mb-5 text-[12px] font-black uppercase"
+          style={{ color: isLight ? "#a3a3a3" : "#c9a961" }}
         >
-          The Reading Room  /  Christian Children&rsquo;s Literature
+          The Reading Room
         </p>
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.04] mb-2" style={{ color: "#0a0a0a" }}>
+        <h1 className="mb-1 text-[35px] font-black leading-none sm:text-5xl md:text-6xl" style={{ color: "#0a0a0a" }}>
           Books for children
         </h1>
         <h1
-          className="text-4xl sm:text-5xl md:text-6xl italic font-bold tracking-tight leading-[1.04] mb-6"
-          style={{ color: isLight ? "rgba(0,0,0,0.40)" : "rgba(255,255,255,0.55)" }}
+          className="mb-[48px] text-[25px] italic leading-none sm:mb-6 sm:text-5xl md:text-6xl"
+          style={{ color: isLight ? "#8e8e8e" : "rgba(255,255,255,0.55)", fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           and the families who love them.
         </h1>
-        <p className="text-base sm:text-lg leading-relaxed max-w-2xl" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.55)" }}>
+        <p className="max-w-[326px] text-[17px] font-medium leading-[1.18] sm:max-w-2xl sm:text-lg" style={{ color: isLight ? "#6f6f6f" : "rgba(255,255,255,0.55)" }}>
           Gospel-centered reading lists for every age — curated to plant
           deep roots and make the gospel feel glorious to your children.
         </p>
       </div>
 
-      {/* Content */}
-      <div className="max-w-6xl mx-auto px-5 sm:px-8 py-12">
+      <div className="mx-auto max-w-6xl px-6 pb-28 pt-5 sm:px-8 sm:py-12">
         <EditorsPick book={EDITORS_PICK} isLight={isLight} />
 
         <div className="space-y-20">

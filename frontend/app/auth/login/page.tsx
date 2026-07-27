@@ -137,18 +137,18 @@ function LoginContent() {
   }
 
   // Theme-aware color tokens
-  const pageBg         = isLight ? "#ffffff"                    : "#08090f";
+  const pageBg         = isLight ? "#fbfbfa"                    : "#08090f";
   const backBtnBg      = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.06)";
   const backIconStroke = isLight ? "#0a0a0a"                    : "white";
-  const brandLabel     = isLight ? "rgba(0,0,0,0.35)"           : "rgba(0,0,0,0.35)";
-  const iconBoxBg      = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.06)";
+  const brandLabel     = isLight ? "#9a9a9a"                    : "rgba(255,255,255,0.35)";
+  const iconBoxBg      = isLight ? "#f4f4f2"                    : "rgba(255,255,255,0.06)";
   const iconBoxBorder  = isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(255,255,255,0.10)";
   const personStroke   = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.7)";
   const headingColor   = isLight ? "#0a0a0a"                    : "#ffffff";
-  const subColor       = isLight ? "rgba(0,0,0,0.50)"           : "rgba(255,255,255,0.5)";
+  const subColor       = isLight ? "#6f6f6f"                    : "rgba(255,255,255,0.5)";
   const primaryBtnBg   = "#0a0a0a";
   const primaryBtnTxt  = "#ffffff";
-  const secondBtnBg    = isLight ? "rgba(0,0,0,0.06)"           : "rgba(255,255,255,0.07)";
+  const secondBtnBg    = isLight ? "#f1f1ef"                    : "rgba(255,255,255,0.07)";
   const secondBtnBdr   = isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)";
   const secondBtnTxt   = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.85)";
   const dividerColor   = isLight ? "rgba(0,0,0,0.08)"           : "rgba(255,255,255,0.08)";
@@ -156,7 +156,7 @@ function LoginContent() {
   const inputBg        = isLight ? "rgba(0,0,0,0.04)"           : "rgba(255,255,255,0.06)";
   const inputBorder    = isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.10)";
   const inputColor     = isLight ? "#0a0a0a"                    : "#ffffff";
-  const footerColor    = isLight ? "rgba(0,0,0,0.40)"           : "rgba(255,255,255,0.4)";
+  const footerColor    = isLight ? "#8e8e8e"                    : "rgba(255,255,255,0.4)";
   const linkColor      = isLight ? "#0a0a0a"                    : "rgba(255,255,255,0.8)";
   const h2Color        = isLight ? "#0a0a0a"                    : "#ffffff";
 
@@ -173,46 +173,46 @@ function LoginContent() {
           paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
-        {/* Top bar — back button */}
-        <div className="flex items-center justify-between px-5 pt-4 pb-2 flex-shrink-0">
-          <button
-            onClick={() => router.back()}
-            className="w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90"
-            style={{ background: backBtnBg }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={backIconStroke} strokeWidth="2.2" strokeLinecap="round">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-          </button>
-          <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: brandLabel }}>
+        <div className="flex items-center justify-center px-5 pt-[58px] pb-2 flex-shrink-0">
+          <p className="text-[12px] font-black uppercase" style={{ color: brandLabel }}>
             Tulip Bible App
           </p>
-          <div className="w-9" />
         </div>
 
-        {/* All content centered */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6 text-center min-h-0">
+        <div className="flex-1 flex flex-col items-center px-[30px] text-center min-h-0">
           <div
-            className="w-20 h-20 rounded-3xl flex items-center justify-center mb-5"
+            className="mt-[82px] w-[84px] h-[84px] rounded-[24px] flex items-center justify-center mb-[42px]"
             style={{ background: iconBoxBg, border: iconBoxBorder }}
           >
-            <svg width="36" height="36" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="8" r="4" stroke={personStroke} strokeWidth="1.8"/>
-              <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke={personStroke} strokeWidth="1.8" strokeLinecap="round"/>
-            </svg>
+            <span className="text-[28px] font-black" style={{ color: personStroke }}>U</span>
           </div>
-          <h1 className="text-[26px] font-bold leading-tight mb-3" style={{ color: headingColor }}>
-            Access the Full Experience
+          <h1 className="max-w-[310px] text-[34px] font-black leading-[1.05] mb-4" style={{ color: headingColor }}>
+            Access the full experience
           </h1>
-          <p className="text-[14px] leading-relaxed mb-7" style={{ color: subColor, maxWidth: 280 }}>
-            Sync your highlights, notes, and reading history across all your devices. Free forever — no ads.
+          <p className="text-[17px] font-medium leading-[1.15] mb-[31px]" style={{ color: subColor, maxWidth: 282 }}>
+            Sync highlights, notes, reading history, and collections. Free forever. No ads.
           </p>
+
+          <div
+            className="mb-[54px] w-full rounded-[22px] px-6 py-5"
+            style={{
+              background: isLight ? "#f6f3ec" : "rgba(201,169,97,0.08)",
+              border: "1px solid rgba(201,169,97,0.22)",
+            }}
+          >
+            <p className="text-[14px] font-black" style={{ color: isLight ? "#7f6a33" : "#d4b878" }}>
+              Private study stays yours
+            </p>
+            <p className="mt-3 text-[13px] font-medium leading-tight" style={{ color: isLight ? "#6d6250" : "rgba(255,255,255,0.62)" }}>
+              Sign in only to keep your Bible across devices.
+            </p>
+          </div>
 
           <div className="w-full flex flex-col gap-3">
             <button
               onClick={handleGoogleSignIn}
               disabled={googleLoading}
-              className="w-full flex items-center justify-center gap-3 rounded-2xl py-4 font-bold text-[15px] transition-all active:scale-95"
+              className="w-full flex items-center justify-center gap-3 rounded-[18px] h-[54px] font-black text-[15px] transition-all active:scale-95"
               style={{
                 background: primaryBtnBg,
                 color: primaryBtnTxt,
@@ -225,7 +225,7 @@ function LoginContent() {
 
             <button
               onClick={() => setView("email")}
-              className="w-full rounded-2xl py-4 font-semibold text-[15px] transition-all active:scale-95"
+              className="w-full rounded-[18px] h-[54px] font-black text-[15px] transition-all active:scale-95"
               style={{
                 background: secondBtnBg,
                 border: secondBtnBdr,
@@ -241,8 +241,9 @@ function LoginContent() {
               </p>
             )}
 
-            <PrivacyConsent color={footerColor} linkColor={linkColor} />
-            <LoginHelp color={footerColor} linkColor={linkColor} />
+            <div className="pt-2">
+              <PrivacyConsent color={footerColor} linkColor={linkColor} />
+            </div>
           </div>
         </div>
       </div>

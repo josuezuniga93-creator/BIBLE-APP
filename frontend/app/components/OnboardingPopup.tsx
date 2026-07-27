@@ -81,38 +81,47 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
   const isDark = theme === "gold-navy";
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center px-5">
-      {/* Overlay */}
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-0">
       <div
         className="absolute inset-0 backdrop-blur-[12px]"
-        style={{ background: isDark ? "rgba(0,0,0,0.7)" : "rgba(247,247,247,0.92)" }}
+        style={{ background: isDark ? "rgba(0,0,0,0.7)" : "#fbfbfa" }}
       />
 
-      {/* Card */}
       <div
         className="relative w-full overflow-hidden text-center"
         style={{
-          maxWidth: 340,
-          background: isDark ? "#0e1018" : "#ffffff",
-          border: isDark ? "1px solid rgba(201,169,97,0.25)" : "1px solid rgba(0,0,0,0.12)",
-          borderRadius: 24,
-          padding: "32px 24px",
-          boxShadow: isDark ? "0 24px 60px rgba(0,0,0,0.5)" : "0 24px 60px rgba(0,0,0,0.12)",
+          minHeight: "100dvh",
+          maxWidth: 390,
+          background: isDark ? "#0e1018" : "#fbfbfa",
+          border: isDark ? "1px solid rgba(201,169,97,0.25)" : "1px solid #d8d8d8",
+          borderRadius: 36,
+          padding: step === 1 ? "42px 28px 34px" : "34px 24px",
+          boxShadow: isDark ? "0 24px 60px rgba(0,0,0,0.5)" : "none",
           transition: "background 0.15s, border 0.15s, box-shadow 0.15s",
         }}>
         {step > 1 && (
           <BackButton isDark={isDark} onClick={() => setStep((s) => (s - 1) as Step)} />
         )}
 
-        {/* Logo */}
-        <Image
-          src="/tulip-logo.png"
-          alt="Tulip"
-          width={60}
-          height={60}
-          priority
-          className="mx-auto mb-4 object-contain"
-        />
+        {step === 1 ? (
+          <>
+            <p className="text-[11px] font-black uppercase" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "#77736a" }}>
+              Tulip Bible App
+            </p>
+            <div className="mx-auto mt-10 mb-11 grid h-[74px] w-[74px] place-items-center rounded-[20px] bg-[#111]">
+              <span className="font-serif text-[34px] font-black leading-none text-[#c9a961]">T</span>
+            </div>
+          </>
+        ) : (
+          <Image
+            src="/tulip-logo.png"
+            alt="Tulip"
+            width={60}
+            height={60}
+            priority
+            className="mx-auto mb-4 object-contain"
+          />
+        )}
 
         {step === 1 && (
           <StepLanguage lang={lang} isDark={isDark} onSelect={handleSelectLang} onContinue={() => setStep(2)} />
@@ -158,28 +167,45 @@ function StepLanguage({
     <>
       <h2
         style={{
-          fontSize: 20,
-          fontWeight: 700,
+          fontSize: 34,
+          fontWeight: 900,
           color: isDark ? "#ffffff" : "#0a0a0a",
-          lineHeight: 1.25,
-          marginBottom: 6,
+          lineHeight: 1.05,
+          marginBottom: 36,
           transition: "color 0.15s",
         }}
       >
-        {tx(lang, "Welcome to Tulip Bible App", "Bienvenido a Tulip Bible App")}
+        {tx(lang, "Welcome to Tulip", "Bienvenido a Tulip")}
       </h2>
-      <p style={{ fontSize: 13, color: isDark ? "rgba(255,255,255,0.55)" : "rgba(0,0,0,0.5)", marginBottom: 24, transition: "color 0.15s" }}>
-        {tx(lang, "Choose your language", "Elige tu idioma")}
+      <p style={{ fontSize: 17, fontWeight: 500, lineHeight: 1.18, color: isDark ? "rgba(255,255,255,0.58)" : "#6f6f6f", margin: "0 auto 44px", maxWidth: 294, transition: "color 0.15s" }}>
+        {tx(lang, "A quiet place for Scripture, prayer, and daily growth.", "Un lugar tranquilo para la Escritura, la oración y el crecimiento diario.")}
       </p>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
-        <LangCard label="English" selected={lang === "en"} isDark={isDark} onClick={() => onSelect("en")} />
-        <LangCard label="Español" selected={lang === "es"} isDark={isDark} onClick={() => onSelect("es")} />
+      <div
+        style={{
+          borderRadius: 26,
+          background: isDark ? "rgba(255,255,255,0.04)" : "#ffffff",
+          border: isDark ? "1px solid rgba(255,255,255,0.10)" : "1px solid rgba(0,0,0,0.08)",
+          padding: "26px 24px 64px",
+          marginBottom: 42,
+        }}
+      >
+        <p style={{ fontSize: 13, fontWeight: 900, color: isDark ? "rgba(255,255,255,0.52)" : "#9a9184", marginBottom: 24 }}>
+          {tx(lang, "Choose your language", "Elige tu idioma")}
+        </p>
+        <div style={{ display: "flex", gap: 22 }}>
+          <LangCard label="English" selected={lang === "en"} isDark={isDark} onClick={() => onSelect("en")} />
+          <LangCard label="Espanol" selected={lang === "es"} isDark={isDark} onClick={() => onSelect("es")} />
+        </div>
       </div>
 
       <button onClick={onContinue} style={primaryButtonStyle(false, isDark)}>
-        {tx(lang, "Continue →", "Continuar →")}
+        {tx(lang, "Continue", "Continuar")}
       </button>
+      <p style={{ marginTop: 36, fontSize: 12, fontWeight: 900, color: "#c9a961" }}>Psalm 119:105</p>
+      <p style={{ marginTop: 12, fontFamily: "'Cormorant Garamond', Georgia, serif", fontSize: 22, color: isDark ? "rgba(255,255,255,0.84)" : "#383838" }}>
+        Your word is a lamp to my feet
+      </p>
     </>
   );
 }
@@ -208,8 +234,9 @@ function LangCard({
       onClick={onClick}
       style={{
         flex: 1,
-        padding: "28px 8px",
-        borderRadius: 16,
+        height: 72,
+        padding: "0 8px",
+        borderRadius: 22,
         border,
         background,
         cursor: "pointer",
@@ -219,7 +246,7 @@ function LangCard({
         transition: "border 0.15s, background 0.15s",
       }}
     >
-      <span style={{ fontSize: 15, fontWeight: 600, color: textColor, transition: "color 0.15s" }}>{label}</span>
+      <span style={{ fontSize: 17, fontWeight: 900, color: textColor, transition: "color 0.15s" }}>{label}</span>
     </button>
   );
 }
@@ -433,10 +460,11 @@ function BackButton({ isDark, onClick }: { isDark: boolean; onClick: () => void 
 function primaryButtonStyle(disabled: boolean, isDark = false): React.CSSProperties {
   return {
     width: "100%",
-    padding: "13px 0",
-    borderRadius: 14,
+    height: 54,
+    padding: "0",
+    borderRadius: 18,
     fontSize: 15,
-    fontWeight: 700,
+    fontWeight: 900,
     background: isDark
       ? disabled ? "rgba(201,169,97,0.3)" : "#c9a961"
       : disabled ? "rgba(10,10,10,0.3)" : "#0a0a0a",

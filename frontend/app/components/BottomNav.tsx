@@ -256,10 +256,11 @@ export function BottomNav() {
   // White Noir: explicit inline styles so nav is always white regardless of
   // CSS variable support (color-mix() may not work on older Android Chrome).
   const navSurfaceStyle = isWhiteNoir ? {
-    background: "rgba(255,255,255,0.97)",
-    borderTop: "1px solid rgba(0,0,0,0.06)",
+    background: "rgba(255,255,255,0.98)",
+    border: "1px solid rgba(0,0,0,0.08)",
     backdropFilter: "blur(14px)",
     WebkitBackdropFilter: "blur(14px)",
+    boxShadow: "0 12px 30px rgba(10,10,10,0.08)",
   } : undefined;
 
   const fgActive   = isWhiteNoir ? "#0a0a0a"              : "var(--fg)";

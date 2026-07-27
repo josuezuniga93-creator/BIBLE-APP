@@ -15,9 +15,8 @@ import { useTheme } from "../lib/useTheme";
 const FILTERS: Array<{ key: "all" | UnifiedHighlightSource; en: string; es: string }> = [
   { key: "all", en: "All", es: "Todo" },
   { key: "scripture", en: "Scripture", es: "Biblia" },
-  { key: "study-tools", en: "Study Tools", es: "Estudio" },
+  { key: "study-tools", en: "Study", es: "Estudio" },
   { key: "free-books", en: "Free Books", es: "Libros" },
-  { key: "historical-documents", en: "Historical Docs", es: "Historia" },
 ];
 
 function normalize(value: string) {
@@ -149,27 +148,36 @@ export default function HighlightsPage() {
     return Array.from(groups.entries());
   }, [filtered]);
 
+  const stats = useMemo(() => {
+    const count = (source: UnifiedHighlightSource) => highlights.filter((item) => item.source === source).length;
+    return [
+      { label: lang === "es" ? "Biblia" : "Scripture", value: count("scripture") },
+      { label: lang === "es" ? "Estudio" : "Study Tools", value: count("study-tools") },
+      { label: lang === "es" ? "Libros" : "Free Books", value: count("free-books") },
+    ];
+  }, [highlights, lang]);
+
   return (
     <main
-      className="min-h-screen px-6 pb-28 pt-12"
-      style={{ background: isLight ? "#ffffff" : "#080b13", color: isLight ? "#050505" : "#ffffff" }}
+      className="min-h-screen px-6 pb-28 pt-14"
+      style={{ background: isLight ? "#fbfbfa" : "#080b13", color: isLight ? "#050505" : "#ffffff" }}
     >
       <div className="mx-auto max-w-xl">
         <div className="flex items-start justify-between gap-4">
-          <div>
+          <div className="min-w-0 flex-1">
             <p
-              className="text-[11px] font-black uppercase tracking-[0.28em]"
-              style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(216,188,120,0.88)" }}
+              className="text-[12px] font-black uppercase"
+              style={{ color: isLight ? "#9a9a9a" : "rgba(216,188,120,0.88)" }}
             >
-              {lang === "es" ? "En tu bolsillo" : "In Your Pocket"}
+              {lang === "es" ? "Tu bolsillo" : "Your pocket"}
             </p>
-            <h1 className="mt-2 text-4xl font-black tracking-tight">
+            <h1 className="mt-4 text-[38px] font-black leading-none">
               {lang === "es" ? "Mis resaltados" : "My Highlights"}
             </h1>
-            <p className="mt-2 text-sm" style={{ color: isLight ? "rgba(0,0,0,0.54)" : "rgba(255,255,255,0.52)" }}>
+            <p className="mt-5 max-w-[310px] text-[16px] font-medium leading-[1.18]" style={{ color: isLight ? "#747474" : "rgba(255,255,255,0.52)" }}>
               {lang === "es"
-                ? "Biblia, comentarios, libros y documentos en un solo lugar."
-                : "Scripture, commentary, books, and documents in one place."}
+                ? "Resaltados, marcadores y lecturas guardadas en un lugar limpio."
+                : "Highlights, bookmarks, and saved reading in one clean place."}
             </p>
           </div>
           <button
@@ -186,10 +194,56 @@ export default function HighlightsPage() {
           </button>
         </div>
 
+        <div className="mt-7 grid grid-cols-3 gap-3">
+          {stats.map((stat) => (
+            <div
+              key={stat.label}
+              className="grid h-[88px] place-items-center rounded-[18px] px-2 text-center"
+              style={{
+                background: isLight ? "#f7f7f5" : "rgba(255,255,255,0.055)",
+                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <div>
+                <p className="text-[30px] font-black leading-none">{stat.value}</p>
+                <p className="mt-3 text-[10px] font-black" style={{ color: isLight ? "#8a8a8a" : "rgba(255,255,255,0.48)" }}>
+                  {stat.label}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+
         <div
-          className="mt-7 rounded-[26px] px-4 py-3"
+          className="mt-8 grid h-[54px] grid-cols-3 items-center rounded-[22px] p-2"
           style={{
-            background: isLight ? "#f5f6f7" : "rgba(255,255,255,0.055)",
+            background: isLight ? "#eeeeeb" : "rgba(255,255,255,0.055)",
+            border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+          }}
+        >
+          {[
+            lang === "es" ? "Resaltados" : "Highlights",
+            lang === "es" ? "Colecciones" : "Collections",
+            lang === "es" ? "Marcadores" : "Bookmarks",
+          ].map((label, index) => (
+            <button
+              key={label}
+              type="button"
+              className="h-9 rounded-[18px] text-[12px] font-black"
+              style={{
+                background: index === 0 ? (isLight ? "#0a0a0a" : "#ffffff") : "transparent",
+                color: index === 0 ? (isLight ? "#ffffff" : "#0a0a0a") : (isLight ? "#777777" : "rgba(255,255,255,0.55)"),
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        <div
+          className="mt-6 rounded-[20px] px-6 py-4"
+          style={{
+            background: isLight ? "#f4f4f2" : "rgba(255,255,255,0.055)",
             border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
           }}
         >
@@ -202,7 +256,7 @@ export default function HighlightsPage() {
           />
         </div>
 
-        <div className="mt-4 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {FILTERS.map((item) => {
             const active = filter === item.key;
             return (
@@ -212,7 +266,7 @@ export default function HighlightsPage() {
                 onClick={() => setFilter(item.key)}
                 className="flex-shrink-0 rounded-full px-4 py-2 text-xs font-black"
                 style={{
-                  background: active ? (isLight ? "#050505" : "#ffffff") : (isLight ? "#f1f2f4" : "rgba(255,255,255,0.06)"),
+                  background: active ? (isLight ? "#050505" : "#ffffff") : (isLight ? "#f1f1ef" : "rgba(255,255,255,0.06)"),
                   color: active ? (isLight ? "#ffffff" : "#050505") : (isLight ? "rgba(0,0,0,0.62)" : "rgba(255,255,255,0.62)"),
                   border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)",
                 }}
@@ -225,17 +279,26 @@ export default function HighlightsPage() {
 
         {filtered.length === 0 ? (
           <div
-            className="mt-8 rounded-[30px] p-7"
+            className="mt-5 rounded-[28px] px-6 py-8 text-center"
             style={{
-              background: isLight ? "#f6f7f8" : "rgba(255,255,255,0.055)",
+              background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
               border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
             }}
           >
-            <p className="text-xl font-black">{lang === "es" ? "No hay resaltados todavía" : "No highlights yet"}</p>
-            <p className="mt-2 text-sm leading-6" style={{ color: isLight ? "rgba(0,0,0,0.56)" : "rgba(255,255,255,0.52)" }}>
+            <div
+              className="mx-auto mb-6 grid h-[54px] w-[54px] place-items-center rounded-[18px]"
+              style={{
+                background: isLight ? "#fbfbfa" : "rgba(255,255,255,0.06)",
+                border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              <span className="text-[18px] font-black">B</span>
+            </div>
+            <p className="text-[23px] font-black leading-none">{lang === "es" ? "No hay resaltados" : "No highlights yet"}</p>
+            <p className="mx-auto mt-4 max-w-[254px] text-[15px] font-medium leading-[1.18]" style={{ color: isLight ? "#7b7b7b" : "rgba(255,255,255,0.52)" }}>
               {lang === "es"
-                ? "Cuando resaltes en Biblia, Study Tools, libros o documentos, aparecerán aquí."
-                : "When you highlight in Scripture, Study Tools, books, or documents, they will appear here."}
+                ? "Guarda pasajes y notas. Se reunirán aquí por fuente."
+                : "Save passages and notes. They will gather here by source."}
             </p>
           </div>
         ) : (
