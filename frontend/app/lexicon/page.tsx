@@ -1383,7 +1383,7 @@ function LexiconInner() {
     <div
       className="min-h-screen bg-[#0f0f0f] text-white"
       style={{
-        background: isLight ? "#fbfbfa" : "#0b0d13",
+        background: isLight ? "#ffffff" : "#0b0d13",
         color: isLight ? "#0a0a0a" : "#ffffff",
       }}
     >
@@ -1418,28 +1418,9 @@ function LexiconInner() {
       )}
       {/* ── Books loading skeleton ── */}
       {booksLoading && !booksError && (
-        <div className="mx-auto flex max-w-[390px] flex-col items-center px-8 pt-32 text-center">
-          <p className="text-[11px] font-black uppercase" style={{ color: isLight ? "#c9a961" : "#c9a961" }}>
-            {lang === "es" ? "Preparando Escritura" : "Preparing Scripture"}
-          </p>
-          <h1 className="mt-7 text-[31px] font-black leading-none" style={{ color: isLight ? "#0a0a0a" : "#ffffff" }}>
-            {lang === "es" ? "Abriendo la Biblia" : "Scripture is opening"}
-          </h1>
-          <div
-            className="mt-10 h-[298px] w-full rounded-[28px] border px-[26px] py-[34px]"
-            style={{
-              background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
-              borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-            }}
-          >
-            {[254, 218, 254, 218, 254, 218].map((width, index) => (
-              <div
-                key={index}
-                className="mb-[26px] h-[14px] rounded-full"
-                style={{ width: `${width}px`, maxWidth: "100%", background: isLight ? "#eeeeea" : "rgba(255,255,255,0.08)" }}
-              />
-            ))}
-          </div>
+        <div className="flex flex-col items-center justify-center pt-24 gap-3">
+          <div className="w-5 h-5 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+          <span className="text-white/30 text-sm">Loading Scripture…</span>
           <WakingUpHint />
         </div>
       )}
@@ -2115,22 +2096,9 @@ function LexiconInner() {
             {/* ── Verses ── */}
             <div>
               {loadingChapter && (
-                <div className="mx-auto max-w-[326px] py-8">
-                  <div
-                    className="h-[298px] rounded-[28px] border px-[26px] py-[34px]"
-                    style={{
-                      background: isLight ? "#ffffff" : "rgba(255,255,255,0.055)",
-                      borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-                    }}
-                  >
-                    {[254, 218, 254, 218, 254, 218].map((width, index) => (
-                      <div
-                        key={index}
-                        className="mb-[26px] h-[14px] animate-pulse rounded-full"
-                        style={{ width: `${width}px`, maxWidth: "100%", background: isLight ? "#eeeeea" : "rgba(255,255,255,0.08)" }}
-                      />
-                    ))}
-                  </div>
+                <div className="flex items-center gap-3 py-20 justify-center">
+                  <div className="w-5 h-5 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
+                  <span className="text-white/30 text-sm">Loading…</span>
                 </div>
               )}
 
@@ -2192,15 +2160,8 @@ function LexiconInner() {
                     )}
 
                     <div
-                      className="rounded-[28px] border px-5 py-7 sm:px-8"
-                      style={{
-                        background: isLight ? "#ffffff" : "rgba(255,255,255,0.045)",
-                        borderColor: isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.08)",
-                      }}
-                    >
-                    <div
                       className={`${FONT_SIZE_CLASSES[fontSize]} ${FONT_SIZE_LEADING_CLASSES[fontSize]}`}
-                      style={{ fontFamily: activeFontFamily, color: isLight ? "#161616" : "rgba(255,255,255,0.86)" }}
+                      style={{ fontFamily: activeFontFamily }}
                       translate="no"
                     >
                       {visibleVerses.map((verse) => {
@@ -2258,7 +2219,6 @@ function LexiconInner() {
                           </span>
                         );
                       })}
-                    </div>
                     </div>
                   </>
                 );
