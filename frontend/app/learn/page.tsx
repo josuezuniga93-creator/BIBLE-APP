@@ -5,12 +5,9 @@ import { usePagination } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
-import { LEARN_DOCUMENTS as _LEARN_DOCS_FOR_HL } from "../lib/learnData";
-import { collectUnifiedHighlights, deleteUnifiedHighlight, getReaderHighlights, type UnifiedHighlight } from "../lib/unifiedHighlights";
+import { getReaderHighlights } from "../lib/unifiedHighlights";
 import { useTheme } from "../lib/useTheme";
-import { BookmarkModal } from "../components/BookmarkModal";
-import { isAnySaved } from "../lib/collections";
-import { GeneratedCategoryMark, GeneratedDocumentCover, GeneratedMetaIcon } from "../components/GeneratedArtwork";
+import { GeneratedDocumentCover } from "../components/GeneratedArtwork";
 import { getDocumentCoverImage } from "../lib/documentCoverImages";
 import { useLanguage } from "../lib/useLanguage";
 import { translateToSpanish } from "../lib/googleTranslate";
@@ -18,6 +15,7 @@ import { t } from "../lib/i18n";
 import { documentSectionTitle, documentTitle } from "../lib/spanishContent";
 import { AppReader } from "../components/AppReader";
 import { UiIcon } from "../components/UiIcon";
+import { isFavorite, setFavorite, toggleFavorite } from "../lib/favorites";
 
 // ─── Progress helpers ─────────────────────────────────────────────────────────
 
@@ -139,51 +137,14 @@ const TIMELINE: { year: string; label: string; docId?: string }[] = [
   { year: "1741",     label: "Sinners in God's Hands",   docId: "sinners-in-hands"  },
 ];
 
-// ─── Type categories ──────────────────────────────────────────────────────────
-
-const DOC_TYPES = [
-  { key: "all",         label: "All" },
-  { key: "confession",  label: "Confessions" },
-  { key: "creed",       label: "Creeds" },
-  { key: "debate",      label: "Debates" },
-  { key: "council",     label: "Councils" },
-  { key: "catechism",   label: "Catechisms" },
-];
-
 // ─── Tab keys ─────────────────────────────────────────────────────────────────
-type DocTab = "all" | "confession" | "creed" | "debate" | "council" | "catechism" | "highlights";
-
-// ─── Historical doc highlights aggregation ────────────────────────────────────
-interface DocHighlight extends UnifiedHighlight {
-  docId: string;
-  docTitle: string;
-  sectionId: string;
-  rawId: string;
-}
+type DocTab = "all" | "favorites";
 
 type HighlightTarget = {
   docId: string;
   sectionId: string;
   highlightId: string;
 };
-
-function loadAllDocHighlights(): DocHighlight[] {
-  if (typeof window === "undefined") return [];
-  return collectUnifiedHighlights()
-    .filter((highlight) => highlight.source === "historical-documents")
-    .map((highlight) => {
-      const params = highlight.openHref.split("?")[1];
-      const search = params ? new URLSearchParams(params) : new URLSearchParams();
-      const docId = typeof highlight.meta?.docId === "string" ? highlight.meta.docId : (search.get("doc") ?? "");
-      const sectionId = typeof highlight.meta?.sectionId === "string" ? highlight.meta.sectionId : (search.get("section") ?? "");
-      const rawId = typeof highlight.meta?.rawId === "string"
-        ? highlight.meta.rawId
-        : highlight.id.replace(/^historical-documents-/, "");
-      const doc = _LEARN_DOCS_FOR_HL.find((d) => d.id === docId);
-      return { ...highlight, docId, docTitle: doc?.title ?? highlight.title, sectionId, rawId };
-    })
-    .sort((a, b) => b.createdAt - a.createdAt);
-}
 
 // ─── Section Reader ───────────────────────────────────────────────────────────
 
@@ -446,8 +407,7 @@ function DocumentDetail({
   const [readerMode, setReaderMode] = useState<ReaderMode>(hasFullDocument ? "full" : "overview");
   const [descExpanded, setDescExpanded] = useState(false);
   const [translatedDescription, setTranslatedDescription] = useState<string | null>(null);
-  const [bookmarked, setBookmarked] = useState(() => isAnySaved(`learn::${doc.id}`));
-  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+  const [favorited, setFavorited] = useState(() => isFavorite("learn", doc.id));
   const [savedReaderProgress, setSavedReaderProgress] = useState<ReaderProgress | null>(null);
   const [readerTargetHighlightId, setReaderTargetHighlightId] = useState<string | null>(null);
 
@@ -457,6 +417,7 @@ function DocumentDetail({
     setReaderMode(hasFullDocument ? "full" : "overview");
     setDescExpanded(false);
     setTranslatedDescription(null);
+    setFavorited(isFavorite("learn", doc.id));
     setSavedReaderProgress(loadReaderProgress(doc.id, hasFullDocument ? "full" : "overview"));
   }, [doc.id, hasFullDocument]);
 
@@ -499,6 +460,10 @@ function DocumentDetail({
     });
   }, [doc.id]);
 
+  const toggleDocFavorite = useCallback(() => {
+    setFavorited(toggleFavorite("learn", doc.id));
+  }, [doc.id]);
+
   const readerSections = readerMode === "full" && fullDocumentSections ? fullDocumentSections : doc.sections;
   const validSavedProgress = savedReaderProgress && readerSections.some((section) => section.id === savedReaderProgress.sectionId)
     ? savedReaderProgress
@@ -537,10 +502,8 @@ function DocumentDetail({
   }
 
   const related = allDocs.filter((d) => d.id !== doc.id && (d.category === doc.category || d.year === doc.year)).slice(0, 5);
-  const typeLabel = doc.category.charAt(0).toUpperCase() + doc.category.slice(1);
-
   return (
-    <div className="min-h-screen" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+    <div className="premium-detail-page" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* Top bar */}
       <div className="sticky top-0 z-30 flex items-center justify-between px-4 h-12"
@@ -548,119 +511,103 @@ function DocumentDetail({
         <button onClick={onClose} style={{ color: th.textMuted }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
-        <div style={{ width: "48px" }} />
-      </div>
-
-      {/* Cover + meta */}
-      <div className="flex gap-4 px-4 pt-6 pb-5">
-        <div className="flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/60" style={{ width: "110px", height: "148px", border: `1px solid ${th.btnBorder}` }}>
-          <DocCover doc={doc} />
-        </div>
-        <div className="flex-1 min-w-0 flex flex-col justify-center">
-          <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>{documentTitle(doc, lang)}</h1>
-          <p className="text-sm font-semibold mb-1" style={{ color: th.accent }}>{doc.origin}</p>
-          <div className="flex items-center gap-1 mb-2">
-            <span style={{ color: th.star }}>badge</span>
-            <span className="text-xs font-bold" style={{ color: th.starText }}>4.8</span>
-            <span className="text-xs" style={{ color: th.starFaint }}>{lang === "es" ? "(Histórico)" : "(Historic)"}</span>
-          </div>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-              style={{ backgroundColor: th.tagBg, border: `1px solid ${th.tagBorder}`, color: th.tagColor }}>
-              {lang === "es" ? ({ confession: "Confesión", catechism: "Catecismo", creed: "Credo", council: "Concilio", debate: "Debate", history: "Historia", theses: "Tesis", solas: "Solas" } as Record<string, string>)[doc.category] ?? typeLabel : typeLabel}
-            </span>
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-              style={{ backgroundColor: th.tagBg, border: `1px solid ${th.tagBorder}`, color: th.tagColor }}>
-              {lang === "es" ? "Doctrinal" : "Doctrinal"}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span style={{ color: "#34d399", fontSize: "12px" }}>Done</span>
-            <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
-            <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Buttons */}
-      <div className="px-4 flex flex-col gap-2.5 mb-5">
-        {hasFullDocument && (
-          <div className="grid grid-cols-2 gap-1.5 p-1 rounded-2xl" style={{ backgroundColor: th.modeBg, border: `1px solid ${th.modeBorder}` }}>
-            {(["full", "overview"] as ReaderMode[]).map((mode) => {
-              const active = readerMode === mode;
-              return (
-                <button
-                  key={mode}
-                  onClick={() => { setReaderMode(mode); setReading(null); setReaderTargetHighlightId(null); }}
-                  className="py-2.5 rounded-xl text-xs font-black transition-all active:scale-[0.98]"
-                  style={{ backgroundColor: active ? th.modeActiveBg : "transparent", color: active ? th.modeActiveText : th.modeInactiveText }}
-                >
-                  {lang === "es" ? (mode === "full" ? "Documento completo" : "Resumen") : (mode === "full" ? "Full document" : "Overview")}
-                </button>
-              );
-            })}
-          </div>
-        )}
-        <button onClick={() => { setReaderTargetHighlightId(null); setReading(validSavedProgress?.sectionId ?? readerSections[0]?.id ?? null); }} className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
-          style={{ background: th.readGradient, color: th.readBtnText }}>
-          {validSavedProgress
-            ? (lang === "es" ? "Continuar Leyendo" : "Continue Reading")
-            : lang === "es" ? (readerMode === "full" ? "Leer Documento Completo" : "Leer Resumen") : (readerMode === "full" ? "Read Full Document" : "Read Overview")}
-        </button>
-        <button onClick={() => setShowBookmarkModal(true)} className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-          style={{ border: `1px solid ${th.btnBorder}`, color: th.textSecondary }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? "#c4973a" : "currentColor" }}>
-            <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-          </svg>
-          {bookmarked ? (lang === "es" ? "Guardado en colección" : "Saved to Collection") : (lang === "es" ? "Guardar en Colección" : "Save to Collection")}
+        <button
+          type="button"
+          onClick={toggleDocFavorite}
+          className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
+          style={{ color: favorited ? th.accent : th.textMuted }}
+          aria-label={favorited ? (lang === "es" ? "Quitar favorito" : "Remove favorite") : (lang === "es" ? "Marcar favorito" : "Favorite document")}
+        >
+          <UiIcon name="heart" size={18} />
         </button>
       </div>
 
-      {/* About */}
-      <div className="px-4 mb-4">
-        <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>{lang === "es" ? "Acerca de este documento" : "About this document"}</p>
-        <p className="text-xs leading-relaxed" style={{ color: th.textMuted }}>
-          {descExpanded ? descriptionText : descriptionText.slice(0, 160)}
-          {!descExpanded && descriptionText.length > 160 && (
-            <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>{lang === "es" ? "Más" : "More"}</button>
+      <div className="premium-detail-shell">
+        <section className="premium-detail-hero">
+          <div className="premium-detail-cover premium-detail-cover-document">
+            <DocCover doc={doc} />
+          </div>
+          <p className="premium-detail-eyebrow">{lang === "es" ? "Documento histórico" : "Historical Document"}</p>
+          <h1 className="premium-detail-title">{documentTitle(doc, lang)}</h1>
+          <p className="premium-detail-meta">{doc.origin} · {doc.year} · {readerSections.length} {lang === "es" ? "secciones" : "sections"}</p>
+        </section>
+
+        <div className="premium-detail-stack">
+          <button
+            type="button"
+            className="premium-detail-favorite-row"
+            data-active={favorited}
+            onClick={toggleDocFavorite}
+          >
+            <span className="premium-detail-row-icon"><UiIcon name="heart" size={18} /></span>
+            <span className="premium-detail-row-copy">
+              <strong>{favorited ? (lang === "es" ? "En favoritos" : "In Favorites") : (lang === "es" ? "Favorito" : "Favorite this document")}</strong>
+              <span>{favorited ? (lang === "es" ? "Disponible en Favoritos." : "Available in Favorites.") : (lang === "es" ? "Guárdalo para estudiar después." : "Save it for later study.")}</span>
+            </span>
+            <span className="premium-detail-switch"><span /></span>
+          </button>
+
+          {hasFullDocument && (
+            <div className="premium-detail-mode">
+              {(["full", "overview"] as ReaderMode[]).map((mode) => {
+                const active = readerMode === mode;
+                return (
+                  <button
+                    key={mode}
+                    type="button"
+                    data-active={active}
+                    onClick={() => { setReaderMode(mode); setReading(null); setReaderTargetHighlightId(null); }}
+                  >
+                    {lang === "es" ? (mode === "full" ? "Completo" : "Resumen") : (mode === "full" ? "Full" : "Overview")}
+                  </button>
+                );
+              })}
+            </div>
           )}
-        </p>
-      </div>
 
-      {/* Metadata */}
-      <div className="flex gap-4 px-4 mb-5">
-        {[
-          { icon: "sections", label: `${readerSections.length} ${lang === "es" ? (readerMode === "full" ? "Secciones del Documento" : "Secciones de Resumen") : (readerMode === "full" ? "Document Sections" : "Overview Sections")}` },
-          { icon: "language", label: lang === "es" ? "Español automático" : "English" },
-          { icon: "year", label: lang === "es" ? `Publicado ${doc.year}` : `Published ${doc.year}` },
-        ].map((m) => (
-          <div key={m.label} className="flex items-center gap-1.5">
-            <GeneratedMetaIcon type={m.icon as "sections" | "language" | "year"} size={15} />
-            <span className="text-xs" style={{ color: th.textMuted }}>{m.label}</span>
-          </div>
-        ))}
-      </div>
+          <button
+            type="button"
+            onClick={() => { setReaderTargetHighlightId(null); setReading(validSavedProgress?.sectionId ?? readerSections[0]?.id ?? null); }}
+            className="premium-detail-primary"
+          >
+            {validSavedProgress
+              ? (lang === "es" ? "Continuar Leyendo" : "Continue Reading")
+              : lang === "es" ? (readerMode === "full" ? "Leer Documento" : "Leer Resumen") : (readerMode === "full" ? "Read Document" : "Read Overview")}
+          </button>
 
-      {/* Progress bar */}
-      {progress > 0 && (
-        <div className="px-4 mb-5">
-          <div className="flex justify-between text-xs mb-1.5" style={{ color: th.textFaint }}>
-            <span>
-              {validSavedProgress
-                ? `${lang === "es" ? "Página" : "Page"} ${validSavedProgress.page} ${lang === "es" ? "de" : "of"} ${validSavedProgress.total}`
-                : lang === "es"
-                ? `${completedInReader} de ${readerSections.length} secciones ${readerMode === "full" ? "del documento" : "del resumen"} leídas`
-                : `${completedInReader} of ${readerSections.length} ${readerMode === "full" ? "document" : "overview"} sections read`}
-            </span>
-            <span>{progress}%</span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: th.progressTrack }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${progress}%`, background: th.progressBar }} />
+          {progress > 0 && (
+            <div className="premium-detail-progress-card">
+              <div>
+                <strong>{progress}%</strong>
+                <span>
+                  {validSavedProgress
+                    ? `${lang === "es" ? "Página" : "Page"} ${validSavedProgress.page} ${lang === "es" ? "de" : "of"} ${validSavedProgress.total}`
+                    : lang === "es"
+                    ? `${completedInReader} de ${readerSections.length} secciones`
+                    : `${completedInReader} of ${readerSections.length} sections`}
+                </span>
+              </div>
+              <div className="premium-detail-progress-track"><span style={{ width: `${progress}%` }} /></div>
+            </div>
+          )}
+
+          <section className="premium-detail-about">
+            <p className="premium-detail-section-title">{lang === "es" ? "Acerca de este documento" : "About this document"}</p>
+            <p>
+              {descExpanded ? descriptionText : descriptionText.slice(0, 190)}
+              {!descExpanded && descriptionText.length > 190 && (
+                <button type="button" onClick={() => setDescExpanded(true)}>{lang === "es" ? "Más" : "More"}</button>
+              )}
+            </p>
+          </section>
+
+          <div className="premium-detail-metrics">
+            <span><UiIcon name="file" size={15} />{readerSections.length} {lang === "es" ? "Secciones" : "Sections"}</span>
+            <span><UiIcon name="globe" size={15} />{lang === "es" ? "Español automático" : "English"}</span>
+            <span><UiIcon name="calendar" size={15} />{doc.year}</span>
           </div>
         </div>
-      )}
-
-      <div className="mx-4 mb-4" style={{ height: "1px", backgroundColor: th.divider }} />
+      </div>
 
       {/* Section list */}
       <div className="px-4 mb-6">
@@ -715,14 +662,6 @@ function DocumentDetail({
             ))}
           </div>
         </div>
-      )}
-
-      {showBookmarkModal && (
-        <BookmarkModal
-          item={{ id: `learn::${doc.id}`, type: "learn", title: documentTitle(doc, lang), subtitle: doc.origin, preview: String(doc.year) }}
-          label={documentTitle(doc, lang)}
-          onClose={() => { setShowBookmarkModal(false); setBookmarked(isAnySaved(`learn::${doc.id}`)); }}
-        />
       )}
     </div>
   );
@@ -807,29 +746,29 @@ function LearnPageInner() {
   const [activeType, setActiveType] = useState("all");
   const [activeTab, setActiveTab] = useState<DocTab>("all");
   const [progressMap, setProgressMap] = useState<Record<string, number>>({});
-  const [bookmarkTarget, setBookmarkTarget] = useState<LearnDocument | null>(null);
-  const [savedDocs, setSavedDocs] = useState<Set<string>>(new Set());
-  const [docHighlights, setDocHighlights] = useState<DocHighlight[]>([]);
-  const [showHighlightPocket, setShowHighlightPocket] = useState(false);
-  const [hlSearch, setHlSearch] = useState("");
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
-  const [hlDocCollapsed, setHlDocCollapsed] = useState<Record<string, boolean>>({});
-  const [catExpanded, setCatExpanded] = useState<Record<string, boolean>>({});
+  const [favoriteDocs, setFavoriteDocs] = useState<Set<string>>(new Set());
+  const [showAllDocs, setShowAllDocs] = useState(false);
   const [docSearch, setDocSearch] = useState("");
   const [carouselSlide, setCarouselSlide] = useState(0);
   const [carouselPaused, setCarouselPaused] = useState(false);
   const [carouselTouchX, setCarouselTouchX] = useState(0);
   const carouselSwipedRef = useRef(false);
 
-  function refreshSaved() {
-    setSavedDocs(new Set(LEARN_DOCUMENTS.filter((d) => isAnySaved(`learn::${d.id}`)).map((d) => d.id)));
+  function refreshFavorites() {
+    setFavoriteDocs(new Set(LEARN_DOCUMENTS.filter((d) => isFavorite("learn", d.id)).map((d) => d.id)));
   }
 
-  useEffect(() => { refreshSaved(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  function toggleDocFavorite(docId: string) {
+    const next = !favoriteDocs.has(docId);
+    setFavorite("learn", docId, next);
+    setFavoriteDocs((prev) => {
+      const updated = new Set(prev);
+      if (next) updated.add(docId); else updated.delete(docId);
+      return updated;
+    });
+  }
 
-  useEffect(() => {
-    if (showHighlightPocket) setDocHighlights(loadAllDocHighlights());
-  }, [showHighlightPocket]);
+  useEffect(() => { refreshFavorites(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Deep-link: /learn?doc=ID opens that document directly.
   // /learn?doc=ID&section=SECTION_ID&hlid=HIGHLIGHT_ID opens the exact highlight.
@@ -876,39 +815,20 @@ function LearnPageInner() {
 
   const available = LEARN_DOCUMENTS;
 
-  // Filter by Browse-by-Type pill
-  const activeDocType = DOC_TYPES.some((type) => type.key === activeType) ? activeType : "all";
   const searchText = docSearch.trim().toLowerCase();
   const filteredDocs = available.filter((doc) =>
-    (activeDocType === "all" || doc.category === activeDocType) &&
-    (
-      !searchText ||
-      documentTitle(doc, lang).toLowerCase().includes(searchText) ||
-      doc.title.toLowerCase().includes(searchText) ||
-      doc.origin.toLowerCase().includes(searchText) ||
-      String(doc.year).includes(searchText)
-    )
+    !searchText ||
+    documentTitle(doc, lang).toLowerCase().includes(searchText) ||
+    doc.title.toLowerCase().includes(searchText) ||
+    doc.origin.toLowerCase().includes(searchText) ||
+    String(doc.year).includes(searchText)
   );
 
-  // Further filter by My Documents tab (independent control)
   const listDocs = filteredDocs.filter((doc) => {
     if (activeType === "reading") return (progressMap[doc.id] ?? 0) > 0 && (progressMap[doc.id] ?? 0) < 100;
-    return activeTab === "all" || doc.category === activeTab;
+    if (activeTab === "favorites") return favoriteDocs.has(doc.id);
+    return true;
   });
-
-  const filteredDocHls = hlSearch.trim()
-    ? docHighlights.filter(hl => {
-        const q = hlSearch.toLowerCase();
-        return hl.docTitle.toLowerCase().includes(q) || hl.sectionId.toLowerCase().includes(q) || hl.text.toLowerCase().includes(q);
-      })
-    : docHighlights;
-
-  const hlByDoc: Record<string, { docTitle: string; docId: string; sections: Record<string, DocHighlight[]> }> = {};
-  for (const hl of filteredDocHls) {
-    if (!hlByDoc[hl.docId]) hlByDoc[hl.docId] = { docTitle: hl.docTitle, docId: hl.docId, sections: {} };
-    if (!hlByDoc[hl.docId].sections[hl.sectionId]) hlByDoc[hl.docId].sections[hl.sectionId] = [];
-    hlByDoc[hl.docId].sections[hl.sectionId].push(hl);
-  }
 
   return (
     <div className="premium-library-page">
@@ -916,8 +836,8 @@ function LearnPageInner() {
         <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Atrás" : "Back"} onClick={() => history.back()}>
           <span className="text-[30px] leading-none font-black">‹</span>
         </button>
-        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Resaltados" : "Highlights"} onClick={() => setShowHighlightPocket(true)}>
-          <UiIcon name="book" size={23} />
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Favoritos" : "Favorites"} onClick={() => { setActiveType("all"); setActiveTab("favorites"); }}>
+          <UiIcon name="heart" size={21} />
         </button>
       </div>
 
@@ -945,15 +865,13 @@ function LearnPageInner() {
           ["all", lang === "es" ? "Docs" : "Docs"],
           ["timeline", lang === "es" ? "Línea" : "Timeline"],
           ["reading", lang === "es" ? "Leyendo" : "Reading"],
-          ["highlights", lang === "es" ? "Marcas" : "Marks"],
+          ["favorites", lang === "es" ? "Favoritos" : "Favorites"],
         ] as [DocTab | "timeline" | "reading", string][]).map(([key, label]) => {
           const active =
             key === "timeline"
               ? activeType === "timeline"
               : key === "reading"
               ? activeType === "reading"
-              : key === "highlights"
-              ? false
               : activeType === "all" && activeTab === key;
           return (
             <button
@@ -962,10 +880,9 @@ function LearnPageInner() {
               className="premium-library-tab"
               data-active={active}
               onClick={() => {
-                if (key === "highlights") setShowHighlightPocket(true);
-                else if (key === "timeline") setActiveType("timeline");
-                else if (key === "reading") setActiveType("reading");
-                else { setActiveTab("all"); setActiveType("all"); }
+                if (key === "timeline") { setActiveTab("all"); setActiveType("timeline"); }
+                else if (key === "reading") { setActiveTab("all"); setActiveType("reading"); }
+                else { setActiveTab(key); setActiveType("all"); }
               }}
             >
               {label}
@@ -1024,14 +941,15 @@ function LearnPageInner() {
       <section className="premium-library-section">
         <div className="premium-library-section-head">
           <h2>{t(lang, "learn_timeline")}</h2>
-          <button type="button" className="premium-library-link-button" onClick={() => setActiveType(activeType === "timeline" ? "all" : "timeline")}>
-            {lang === "es" ? "Ver todo" : "View all"}
+          <button type="button" className="premium-library-link-button" onClick={() => { setActiveTab("all"); setActiveType(activeType === "timeline" ? "all" : "timeline"); }}>
+            {activeType === "timeline" ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "View all")}
           </button>
         </div>
-        <div className="premium-library-card !block overflow-hidden">
-          <div className="flex items-start gap-0 relative min-w-max">
-            <div className="absolute top-[13px] left-7 right-7 h-px bg-black/10" />
-            {TIMELINE.filter((item) => item.docId).slice(0, activeType === "timeline" ? 12 : 4).map((item) => (
+        <div className="premium-library-card !block">
+          <div className="premium-library-timeline-scroll">
+            <div className="premium-library-timeline-track flex items-start gap-0 relative min-w-max">
+              <div className="absolute top-[13px] left-7 right-7 h-px bg-black/10" />
+              {(activeType === "timeline" ? TIMELINE.filter((item) => item.docId) : TIMELINE.filter((item) => item.docId).slice(0, 4)).map((item) => (
               <button
                 key={item.year}
                 type="button"
@@ -1044,335 +962,76 @@ function LearnPageInner() {
                 <span className="text-[11px] font-black text-[#101114]">{item.year}</span>
                 <span className="max-w-[72px] text-[9px] font-extrabold leading-tight text-black/35">{item.label}</span>
               </button>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
       <section className="premium-library-section">
         <div className="premium-library-section-head">
-          <h2>{lang === "es" ? "Explorar por tipo" : "Browse by type"}</h2>
-          <button type="button" className="premium-library-link-button" onClick={() => setCatExpanded((p) => ({ ...p, all: !p.all }))}>
-            {catExpanded.all ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "See all")}
+          <h2>
+            {activeType === "reading"
+              ? (lang === "es" ? "Continuar leyendo" : "Continue reading")
+              : activeTab === "favorites"
+              ? (lang === "es" ? "Tus favoritos" : "Your favorites")
+              : lang === "es" ? "Todos los documentos" : "All documents"}
+          </h2>
+          <button type="button" className="premium-library-link-button" onClick={() => setShowAllDocs((v) => !v)}>
+            {showAllDocs ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "See all")}
           </button>
         </div>
-        <div className="premium-library-chip-row">
-          {DOC_TYPES.map((type) => (
-            <button
-              key={type.key}
-              type="button"
-              className="premium-library-chip"
-              data-active={activeType === type.key}
-              onClick={() => setActiveType(type.key)}
-            >
-              {type.key === "all" ? (lang === "es" ? "Todos" : "All") : type.label}
-            </button>
-          ))}
-        </div>
-        <div className="premium-library-grid">
-          {(catExpanded.all ? listDocs : listDocs.slice(0, 6)).map((doc) => (
-            <button key={doc.id} type="button" onClick={() => setSelected(doc.id)} className="premium-library-item active:scale-95 transition-transform">
-              <div className="premium-library-item-cover">
-                <DocCover doc={doc} size="full" />
-              </div>
-              <p className="premium-library-item-title line-clamp-2">{documentTitle(doc, lang)}</p>
-              <span className="premium-library-item-meta">{doc.year}</span>
-            </button>
-          ))}
-        </div>
+        {listDocs.length === 0 ? (
+          <div className="premium-library-card block text-center">
+            <p className="premium-library-item-title text-[15px]">
+              {activeTab === "favorites"
+                ? (lang === "es" ? "Sin favoritos todavía" : "No favorites yet")
+                : (lang === "es" ? "Nada para mostrar" : "Nothing to show yet")}
+            </p>
+            <p className="premium-library-meta mt-1">
+              {activeTab === "favorites"
+                ? (lang === "es" ? "Toca el corazón en un documento para guardarlo aquí." : "Tap the heart on a document to keep it here.")
+                : (lang === "es" ? "Prueba otra búsqueda." : "Try another search.")}
+            </p>
+          </div>
+        ) : (
+          <div className="premium-library-grid">
+            {(showAllDocs ? listDocs : listDocs.slice(0, 6)).map((doc) => {
+              const favorite = favoriteDocs.has(doc.id);
+              return (
+                <div key={doc.id} className="premium-library-item">
+                  <div className="relative">
+                    <button type="button" onClick={() => setSelected(doc.id)} className="block w-full active:scale-95 transition-transform">
+                      <div className="premium-library-item-cover">
+                        <DocCover doc={doc} size="full" />
+                      </div>
+                    </button>
+                    <button
+                      type="button"
+                      className="premium-library-favorite-button"
+                      data-active={favorite}
+                      aria-label={favorite ? (lang === "es" ? "Quitar favorito" : "Remove favorite") : (lang === "es" ? "Marcar favorito" : "Favorite document")}
+                      onClick={() => toggleDocFavorite(doc.id)}
+                    >
+                      <UiIcon name="heart" size={14} />
+                    </button>
+                  </div>
+                  <button type="button" onClick={() => setSelected(doc.id)} className="block w-full text-left">
+                    <p className="premium-library-item-title line-clamp-2">{documentTitle(doc, lang)}</p>
+                    <span className="premium-library-item-meta">{doc.year}</span>
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <p className="mt-8 px-4 text-center text-[10px] font-bold text-black/25">
         {lang === "es" ? "Documentos de dominio público · Progreso guardado localmente" : "All documents are public domain · Progress saved locally in your browser"}
       </p>
 
-      {/* ── My Highlights Pocket ──────────────────────────────────────────────── */}
-      {showHighlightPocket && (
-        <div className="fixed inset-0 z-[65]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "white" }}>
-          <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
 
-            {/* Header */}
-            <div
-              className="px-5 pb-4 flex items-center justify-between flex-shrink-0"
-              style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}
-            >
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                  {lang === "es" ? "Documentos Históricos" : "Historical Documents"}
-                </p>
-                <h2 className="text-[30px] leading-none font-black mt-1">
-                  {lang === "es" ? "Mis Resaltados" : "My Highlights"}
-                </h2>
-              </div>
-              <button
-                onClick={() => { setShowHighlightPocket(false); setConfirmRemoveId(null); setHlSearch(""); }}
-                className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.4)" : undefined }}
-              >
-                ×
-              </button>
-            </div>
-
-            {/* Search */}
-            <div className="px-5 pt-4 pb-3 flex-shrink-0">
-              <label
-                className="flex items-center gap-3 rounded-[22px] px-4 py-3"
-                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.055)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}
-              >
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                  <circle cx="11" cy="11" r="7" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" />
-                  <path d="M16.5 16.5L21 21" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" strokeLinecap="round" />
-                </svg>
-                <input
-                  value={hlSearch}
-                  onChange={(e) => setHlSearch(e.target.value)}
-                  placeholder={lang === "es" ? "Buscar documento, sección o texto..." : "Search document, section, or text..."}
-                  className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold"
-                  style={{ color: isLight ? "#0a0a0a" : "white" }}
-                />
-                {hlSearch && (
-                  <button onClick={() => setHlSearch("")} className="text-sm flex-shrink-0 leading-none" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                    ×
-                  </button>
-                )}
-              </label>
-            </div>
-
-            {/* Scrollable content */}
-            <div className="overflow-y-auto flex-1 px-5 pb-10">
-              {docHighlights.length === 0 ? (
-                <div
-                  className="rounded-[30px] p-7 text-center mt-4"
-                  style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
-                >
-                  <p className="font-black text-lg mb-2">
-                    {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
-                  </p>
-                  <p className="text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                    {lang === "es"
-                      ? "Selecciona texto mientras lees un documento para guardar un resaltado."
-                      : "Select text while reading a document to save a highlight."}
-                  </p>
-                </div>
-              ) : filteredDocHls.length === 0 ? (
-                <div className="text-center py-10">
-                  <p className="text-sm font-bold" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                    {lang === "es" ? "Sin resultados" : `No results for "${hlSearch}"`}
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-7 pt-2">
-
-                  {/* Recent */}
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                      {lang === "es" ? "Recientes" : "Recent"}
-                    </p>
-                    <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
-                      {filteredDocHls.slice(0, 5).map((hl) => {
-                        const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                        const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
-                        const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
-                        return (
-                          <div
-                            key={hl.id}
-                            className="w-[82%] snap-start rounded-[26px] p-4 flex flex-col gap-2 flex-shrink-0 overflow-hidden"
-                            style={{ background: isLight ? "rgba(0,0,0,0.03)" : `linear-gradient(135deg,${dot}18 0%,rgba(255,255,255,0.04) 100%)`, border: isLight ? "1px solid rgba(0,0,0,0.08)" : `1px solid ${dot}30` }}
-                          >
-                            <p className="text-[9px] font-black uppercase tracking-[0.18em] truncate" style={{ color: isLight ? "rgba(0,0,0,0.45)" : dot }}>
-                              {hl.docTitle}
-                            </p>
-                            <p
-                              className="text-[13px] leading-snug line-clamp-3 flex-1"
-                              style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
-                            >
-                              &ldquo;{hl.text}&rdquo;
-                            </p>
-                            <button
-                              onClick={() => {
-                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.rawId });
-                                setSelected(hl.docId);
-                                setShowHighlightPocket(false);
-                              }}
-                              className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
-                              style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.28)" }}
-                            >
-                              {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
-                            </button>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* By Document */}
-                  <div>
-                    <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                      {lang === "es" ? "Por Documento" : "By Document"}
-                    </p>
-                    <div className="space-y-3">
-                      {Object.keys(hlByDoc).map((docId) => {
-                        const { docTitle: dTitle, sections } = hlByDoc[docId];
-                        const sectionIds = Object.keys(sections);
-                        const totalHls = Object.values(sections).reduce((n, arr) => n + arr.length, 0);
-                        return (
-                          <div
-                            key={docId}
-                            className="rounded-[28px] p-4"
-                            style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
-                          >
-                            <button
-                              className="w-full flex items-center justify-between mb-1 active:opacity-70 transition-opacity"
-                              onClick={() => setHlDocCollapsed((p) => ({ ...p, [docId]: !p[docId] }))}
-                            >
-                              <p className="font-black text-sm text-left">{dTitle}</p>
-                              <div className="flex items-center gap-2">
-                                <span
-                                  className="text-[10px] font-black px-2.5 py-0.5 rounded-full"
-                                  style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961" }}
-                                >
-                                  {totalHls}
-                                </span>
-                                <svg
-                                  width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                  stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="2.2"
-                                  strokeLinecap="round" strokeLinejoin="round"
-                                  style={{ transform: hlDocCollapsed[docId] ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s" }}
-                                >
-                                  <path d="M6 9l6 6 6-6" />
-                                </svg>
-                              </div>
-                            </button>
-                            {!hlDocCollapsed[docId] && <div className="space-y-2 mt-3">
-                              {sectionIds.map((secId) => {
-                                const sectionLabel = FULL_DOCUMENT_SECTIONS[docId]?.find(s => s.id === secId)?.title
-                                  ?? LEARN_DOCUMENTS.find(d => d.id === docId)?.sections.find(s => s.id === secId)?.title
-                                  ?? secId.replace(/-/g, " ");
-                                return (
-                                  <div
-                                    key={secId}
-                                    className="rounded-[22px] p-3"
-                                    style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(255,255,255,0.06)" }}
-                                  >
-                                    <p
-                                      className="text-[9px] font-black uppercase tracking-widest mb-2"
-                                      style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(201,169,97,0.65)" }}
-                                    >
-                                      {sectionLabel}
-                                    </p>
-                                    <div className="space-y-2">
-                                      {sections[secId].map((hl) => {
-                                        const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                                        const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
-                                        const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
-                                        return (
-                                          <div
-                                            key={hl.id}
-                                            className="rounded-[18px] p-3"
-                                            style={{ background: isLight ? "rgba(0,0,0,0.03)" : `${dot}0a`, border: isLight ? "1px solid rgba(0,0,0,0.07)" : `1px solid ${dot}22` }}
-                                          >
-                                            <div className="flex items-start gap-2 mb-2">
-                                              <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
-                                              <p
-                                                className="text-[13px] leading-snug flex-1"
-                                                style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
-                                              >
-                                                &ldquo;{hl.text}&rdquo;
-                                              </p>
-                                              <button
-                                                onClick={() => setConfirmRemoveId(hl.id)}
-                                                className="text-xs flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
-                                                style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)" }}
-                                              >
-                                                ×
-                                              </button>
-                                            </div>
-                                            <button
-                                              onClick={() => {
-                                                setHighlightTarget({ docId: hl.docId, sectionId: hl.sectionId, highlightId: hl.rawId });
-                                                setSelected(hl.docId);
-                                                setShowHighlightPocket(false);
-                                              }}
-                                              className="text-[10px] font-black px-3 py-1 rounded-full active:scale-95 transition-transform"
-                                              style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.22)" }}
-                                            >
-                                              {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
-                                            </button>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Confirm remove */}
-          {confirmRemoveId && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
-              <div
-                className="w-full max-w-[300px] rounded-[28px] p-5 text-center"
-                style={{ background: isLight ? "#f5f5f5" : "#1a1d27", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)", color: isLight ? "#0a0a0a" : "white" }}
-              >
-                <p className="font-black text-base mb-1">
-                  {lang === "es" ? "¿Eliminar resaltado?" : "Remove highlight?"}
-                </p>
-                <p className="text-sm mb-5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
-                  {lang === "es" ? "Esta acción no se puede deshacer." : "This cannot be undone."}
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setConfirmRemoveId(null)}
-                    className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
-                    style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)" }}
-                  >
-                    {lang === "es" ? "Cancelar" : "Cancel"}
-                  </button>
-                  <button
-                    onClick={() => {
-                      const target = docHighlights.find(h => h.id === confirmRemoveId);
-                      if (target) {
-                        deleteUnifiedHighlight(target);
-                        setDocHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
-                      }
-                      setConfirmRemoveId(null);
-                    }}
-                    className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
-                    style={{ background: "rgba(239,68,68,0.18)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.28)" }}
-                  >
-                    {lang === "es" ? "Eliminar" : "Delete"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Bookmark modal */}
-      {bookmarkTarget && (
-        <BookmarkModal
-          item={{
-            id: `learn::${bookmarkTarget.id}`,
-            type: "learn",
-            title: bookmarkTarget.title,
-            subtitle: bookmarkTarget.origin,
-            preview: String(bookmarkTarget.year),
-          }}
-          label={bookmarkTarget.title}
-          onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
-        />
-      )}
     </div>
   );
 }

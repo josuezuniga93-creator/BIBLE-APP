@@ -11,13 +11,12 @@ import { getBookCoverImage } from "../../lib/bookCoverImages";
 import { useLanguage } from "../../lib/useLanguage";
 import { translateToSpanish } from "../../lib/googleTranslate";
 import { useTheme, type Theme } from "../../lib/useTheme";
-import { BookmarkModal } from "../../components/BookmarkModal";
-import { isAnySaved } from "../../lib/collections";
-import { GeneratedBookCover, GeneratedMetaIcon } from "../../components/GeneratedArtwork";
+import { GeneratedBookCover } from "../../components/GeneratedArtwork";
 import { bookSectionTitle, bookTitle } from "../../lib/spanishContent";
 import { AppReader } from "../../components/AppReader";
 import { getReaderHighlights } from "../../lib/unifiedHighlights";
 import { UiIcon } from "../../components/UiIcon";
+import { isFavorite, toggleFavorite } from "../../lib/favorites";
 
 function DetailBookCover({ slug, title, author }: { slug: string; title: string; author: string }) {
   const imageSrc = getBookCoverImage(slug);
@@ -196,8 +195,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   const [fontSize, setFontSize] = useState<FontSize>("md");
   const [showToc, setShowToc] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [showBookmarkModal, setShowBookmarkModal] = useState(false);
+  const [favorited, setFavorited] = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
 
   const contentRef = useRef<HTMLDivElement>(null);
@@ -299,9 +297,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug, book, currentChapter]);
 
-  // Sync bookmark state from collections
+  // Sync favorite state from local private favorites
   useEffect(() => {
-    setBookmarked(isAnySaved(`book::${slug}`));
+    setFavorited(isFavorite("book", slug));
   }, [slug]);
 
   // Auto-save progress
@@ -317,13 +315,9 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     }));
   }, [slug, book, currentChapter, currentPage, totalPages, bookPercent]);
 
-  function refreshBookmarked() {
-    setBookmarked(isAnySaved(`book::${slug}`));
-  }
-
-  const toggleBookmark = useCallback(() => {
-    setShowBookmarkModal(true);
-  }, []);
+  const toggleBookFavorite = useCallback(() => {
+    setFavorited(toggleFavorite("book", slug));
+  }, [slug]);
 
   const goPrev = () => { if (chapter?.has_prev) setCurrentChapter((n) => n - 1); };
   const goNext = () => { if (chapter?.has_next) setCurrentChapter((n) => n + 1); };
@@ -455,7 +449,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
   // ── Detail page ──────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen ryc-reader-bg" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
+    <div className="premium-detail-page ryc-reader-bg" style={{ backgroundColor: th.pageBg, color: th.textPrimary }}>
 
       {/* ── Top bar ────────────────────────────────────────────────────────── */}
       <div
@@ -484,15 +478,14 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
             </svg>
           </button>
 
-          {/* Bookmark */}
+          {/* Favorite */}
           <button
-            onClick={toggleBookmark}
+            onClick={toggleBookFavorite}
             className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
-            style={{ color: bookmarked ? "#c9a961" : th.iconInactive }}
+            style={{ color: favorited ? th.iconActive : th.iconInactive }}
+            aria-label={favorited ? (lang === "es" ? "Quitar favorito" : "Remove favorite") : (lang === "es" ? "Marcar favorito" : "Favorite book")}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"}>
-              <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-            </svg>
+            <UiIcon name="heart" size={18} />
           </button>
 
           {/* More */}
@@ -510,96 +503,60 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
 
       {/* ── Book detail section ───────────────────────────────────────────── */}
       {showDetail && (
-        <div style={{ backgroundColor: th.pageBg }}>
-          {/* Cover + meta */}
-          <div className="flex gap-4 px-4 pt-6 pb-5">
-            <div className="w-28 h-40 flex-shrink-0 rounded-xl overflow-hidden shadow-2xl shadow-black/60">
+        <div className="premium-detail-shell">
+          <section className="premium-detail-hero">
+            <div className="premium-detail-cover">
               <DetailBookCover slug={slug} title={book.title} author={book.author} />
             </div>
-            <div className="flex-1 min-w-0 flex flex-col justify-center">
-              <h1 className="text-base font-black leading-tight mb-1" style={{ color: th.textPrimary }}>
-                {bookTitle(book, lang)}
-              </h1>
-              <p className="text-sm font-semibold mb-2" style={{ color: th.accent }}>{book.author}</p>
-              <div className="flex items-center gap-1 mb-3">
-                <UiIcon name="star" size={13} style={{ color: "#c9a961" }} />
-                <span className="text-xs font-bold" style={{ color: th.textMuted }}>4.8</span>
-                <span className="text-xs" style={{ color: th.textVeryMuted }}>(Reformed Classic)</span>
-              </div>
-              {/* Tags */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
-                {book.tags.slice(0, 3).map((tag) => (
-                  <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] font-bold"
-                    style={{ backgroundColor: th.tagBg, border: `1px solid ${th.tagBorder}`, color: th.tagColor }}>
-                    {tag}
-                  </span>
-                ))}
-              </div>
-              {/* Free badge */}
-              <div className="flex items-center gap-1.5">
-                <UiIcon name="check" size={12} style={{ color: "#34d399" }} strokeWidth={3} />
-                <span style={{ color: "#34d399", fontSize: "11px", fontWeight: "bold" }}>{lang === "es" ? "Gratis" : "Free"}</span>
-                <span style={{ color: "rgba(52,211,153,0.6)", fontSize: "11px" }}>{lang === "es" ? "100% gratis para leer" : "100% free to read"}</span>
-              </div>
-            </div>
-          </div>
+            <p className="premium-detail-eyebrow">{lang === "es" ? "Libro gratis" : "Free Book"}</p>
+            <h1 className="premium-detail-title">{bookTitle(book, lang)}</h1>
+            <p className="premium-detail-meta">{book.author} · {book.year ?? (lang === "es" ? "Clásico" : "Classic")} · {book.chapter_count} {lang === "es" ? "capítulos" : "chapters"}</p>
+          </section>
 
-          {/* Action buttons */}
-          <div className="px-4 flex flex-col gap-2.5 mb-5">
+          <div className="premium-detail-stack">
             <button
-              onClick={() => setShowDetail(false)}
-              className="w-full py-3.5 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform"
-              style={{ background: th.readNowGradient, color: isLight ? "#0a0a0a" : "#ffffff" }}
+              type="button"
+              className="premium-detail-favorite-row"
+              data-active={favorited}
+              onClick={toggleBookFavorite}
             >
+              <span className="premium-detail-row-icon"><UiIcon name="heart" size={18} /></span>
+              <span className="premium-detail-row-copy">
+                <strong>{favorited ? (lang === "es" ? "En favoritos" : "In Favorites") : (lang === "es" ? "Favorito" : "Favorite this title")}</strong>
+                <span>{favorited ? (lang === "es" ? "Disponible en la pestaña Favoritos." : "Available in the Favorites tab.") : (lang === "es" ? "Guárdalo para volver rápido." : "Save it for quick return.")}</span>
+              </span>
+              <span className="premium-detail-switch"><span /></span>
+            </button>
+
+            <button type="button" onClick={() => setShowDetail(false)} className="premium-detail-primary">
               {lang === "es" ? "Leer Ahora" : "Read Now"}
             </button>
-            <button
-              onClick={toggleBookmark}
-              className="w-full py-3 rounded-2xl font-bold text-sm active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
-              style={{ border: `1px solid ${th.addLibBorder}`, color: th.addLibText, backgroundColor: "transparent" }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill={bookmarked ? "currentColor" : "none"} style={{ color: bookmarked ? (isLight ? "#0a0a0a" : "#c9a961") : th.addLibText }}>
-                <path d="M5 3h14a1 1 0 011 1v17l-7-4-7 4V4a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
-              </svg>
-              {bookmarked ? (lang === "es" ? "Guardado en colección" : "Saved to Collection") : (lang === "es" ? "Guardar en Colección" : "Save to Collection")}
-            </button>
-          </div>
 
-          {/* About */}
-          <div className="px-4 mb-5">
-            <p className="text-sm font-bold mb-2" style={{ color: th.textPrimary }}>{lang === "es" ? "Acerca del libro" : "About the book"}</p>
-            <p className="text-xs leading-relaxed" style={{ color: th.textMuted }}>
-              {descExpanded ? book.description : (book.description?.slice(0, 160) ?? "")}
-              {!descExpanded && (book.description?.length ?? 0) > 160 && (
-                <button onClick={() => setDescExpanded(true)} className="font-bold ml-1" style={{ color: th.accent }}>{lang === "es" ? "Más" : "More"}</button>
-              )}
-            </p>
-          </div>
-
-          {/* Metadata chips */}
-          <div className="flex gap-4 px-4 mb-6">
-            {[
-              { icon: "sections", label: `${book.chapter_count} ${lang === "es" ? "Capítulos" : "Chapters"}` },
-              { icon: "language", label: lang === "es" ? "Español automático" : "English" },
-              { icon: "year", label: book.year ? String(book.year) : "" },
-            ].filter(m => m.label).map((m) => (
-              <div key={m.label} className="flex items-center gap-1.5">
-                <GeneratedMetaIcon type={m.icon as "sections" | "language" | "year"} size={15} />
-                <span className="text-xs" style={{ color: th.textMuted }}>{m.label}</span>
+            {bookPercent > 0 && (
+              <div className="premium-detail-progress-card">
+                <div>
+                  <strong>{bookPercent}%</strong>
+                  <span>{lang === "es" ? "completo" : "complete"}</span>
+                </div>
+                <div className="premium-detail-progress-track"><span style={{ width: `${bookPercent}%` }} /></div>
               </div>
-            ))}
-          </div>
+            )}
 
-          <div className="mx-4 mb-4" style={{ height: "1px", backgroundColor: th.border }} />
+            <section className="premium-detail-about">
+              <p className="premium-detail-section-title">{lang === "es" ? "Acerca del libro" : "About the book"}</p>
+              <p>
+                {descExpanded ? book.description : (book.description?.slice(0, 190) ?? "")}
+                {!descExpanded && (book.description?.length ?? 0) > 190 && (
+                  <button type="button" onClick={() => setDescExpanded(true)}>{lang === "es" ? "Más" : "More"}</button>
+                )}
+              </p>
+            </section>
 
-          {/* Continue to reader */}
-          <div className="px-4 pb-6">
-            <button
-              onClick={() => setShowDetail(false)}
-              className="text-xs font-bold" style={{ color: th.accent }}
-            >
-              {lang === "es" ? "Ir a la lectura ↓" : "Skip to reading ↓"}
-            </button>
+            <div className="premium-detail-metrics">
+              <span><UiIcon name="book" size={15} />{book.chapter_count} {lang === "es" ? "Capítulos" : "Chapters"}</span>
+              <span><UiIcon name="globe" size={15} />{lang === "es" ? "Español automático" : "English"}</span>
+              {book.year && <span><UiIcon name="calendar" size={15} />{book.year}</span>}
+            </div>
           </div>
         </div>
       )}
@@ -679,13 +636,6 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
         </div>
       )}
 
-      {showBookmarkModal && book && (
-        <BookmarkModal
-          item={{ id: `book::${slug}`, type: "book", title: bookTitle(book, lang), subtitle: book.author ?? undefined, preview: book.year ? String(book.year) : undefined }}
-          label={bookTitle(book, lang)}
-          onClose={() => { setShowBookmarkModal(false); refreshBookmarked(); }}
-        />
-      )}
     </div>
   );
 }

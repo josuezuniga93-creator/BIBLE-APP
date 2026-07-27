@@ -7,15 +7,11 @@ import type { BookCatalogEntry } from "../lib/types";
 import { STATIC_BOOK_CATALOG } from "../lib/bookCatalog";
 import { getBookCoverImage } from "../lib/bookCoverImages";
 import { useTheme } from "../lib/useTheme";
-import { BookmarkModal } from "../components/BookmarkModal";
-import { isAnySaved } from "../lib/collections";
-import { GeneratedBookCover, GeneratedCategoryMark, GeneratedMetaIcon } from "../components/GeneratedArtwork";
+import { GeneratedBookCover } from "../components/GeneratedArtwork";
 import { useLanguage } from "../lib/useLanguage";
-import { t } from "../lib/i18n";
 import { bookTitle } from "../lib/spanishContent";
-import { collectUnifiedHighlights, deleteUnifiedHighlight, type UnifiedHighlight } from "../lib/unifiedHighlights";
-import { STATIC_BOOK_CATALOG as _CATALOG_FOR_SLUGS } from "../lib/bookCatalog";
 import { UiIcon } from "../components/UiIcon";
+import { isFavorite, setFavorite } from "../lib/favorites";
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -50,12 +46,6 @@ function BookCover({ book, size = "full" }: { book: BookCatalogEntry; size?: "fu
   );
 }
 
-// ─── Categories ────────────────────────────────────────────────────────────────
-
-const CATEGORIES = [
-  "All", "Puritan", "Patristic", "Reformed", "Devotional", "Theology", "Classic", "Allegory",
-];
-
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
 type ProgressEntry = {
@@ -67,36 +57,7 @@ type ProgressEntry = {
   percent?: number;
   lastRead: number;
 };
-type LibTab = "books" | "reading" | "completed" | "highlights";
-
-// ─── Book highlights aggregation ──────────────────────────────────────────────
-interface BookHighlight extends UnifiedHighlight {
-  slug: string;
-  bookTitle: string;
-  chapter: number;
-  rawId: string;
-}
-
-function loadAllBookHighlights(): BookHighlight[] {
-  if (typeof window === "undefined") return [];
-  return collectUnifiedHighlights()
-    .filter((highlight) => highlight.source === "free-books")
-    .map((highlight) => {
-      const hrefMatch = highlight.openHref.match(/\/library\/([^?]+)\?chapter=(\d+)/);
-      const slug = typeof highlight.meta?.slug === "string"
-        ? highlight.meta.slug
-        : hrefMatch ? decodeURIComponent(hrefMatch[1]) : "";
-      const chapter = typeof highlight.meta?.chapter === "number"
-        ? highlight.meta.chapter
-        : hrefMatch ? parseInt(hrefMatch[2], 10) : 1;
-      const rawId = typeof highlight.meta?.rawId === "string"
-        ? highlight.meta.rawId
-        : highlight.id.replace(/^free-books-/, "");
-      const entry = _CATALOG_FOR_SLUGS.find((b) => b.slug === slug);
-      return { ...highlight, slug, bookTitle: entry?.title ?? highlight.title, chapter, rawId };
-    })
-    .sort((a, b) => b.createdAt - a.createdAt);
-}
+type LibTab = "books" | "reading" | "completed" | "favorites";
 
 function entryPercent(entry: ProgressEntry): number {
   if (typeof entry.percent === "number") return Math.max(0, Math.min(100, entry.percent));
@@ -214,36 +175,32 @@ export default function LibraryPage() {
   const [carouselTouchX, setCarouselTouchX] = useState(0);
   const [carouselPaused, setCarouselPaused] = useState(false);
   const carouselSwipedRef = useRef(false);
-  const [activeCategory, setActiveCategory] = useState("All");
   const [activeTab, setActiveTab] = useState<LibTab>("books");
   const [inProgress, setInProgress] = useState<ProgressEntry[]>([]);
   const [completedSlugs, setCompletedSlugs] = useState<Set<string>>(new Set());
-  const [bookmarkTarget, setBookmarkTarget] = useState<BookCatalogEntry | null>(null);
-  const [savedBooks, setSavedBooks] = useState<Set<string>>(new Set());
-  const [bookHighlights, setBookHighlights] = useState<BookHighlight[]>([]);
-  const [showHighlightPocket, setShowHighlightPocket] = useState(false);
-  const [hlSearch, setHlSearch] = useState("");
-  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
-  const [collapsedBooks, setCollapsedBooks] = useState<Set<string>>(new Set());
+  const [favoriteBooks, setFavoriteBooks] = useState<Set<string>>(new Set());
   const [showAllOldBooks, setShowAllOldBooks] = useState(false);
   const [librarySearch, setLibrarySearch] = useState("");
 
-  // Refresh saved state whenever modal closes
-  function refreshSaved() {
-    const s = new Set(available.map((b) => b.slug).filter((slug) => isAnySaved(`book::${slug}`)));
-    setSavedBooks(s);
+  function refreshFavorites() {
+    setFavoriteBooks(new Set(available.filter((b) => isFavorite("book", b.slug)).map((b) => b.slug)));
+  }
+
+  function toggleBookFavorite(slug: string) {
+    const next = !favoriteBooks.has(slug);
+    setFavorite("book", slug, next);
+    setFavoriteBooks((prev) => {
+      const updated = new Set(prev);
+      if (next) updated.add(slug); else updated.delete(slug);
+      return updated;
+    });
   }
 
   const available = STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon);
   const featuredBooks = available.slice(0, 3);
   const recentlyAdded = [...available].slice(-3).reverse();
 
-  useEffect(() => { refreshSaved(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  // Load book highlights when pocket opens
-  useEffect(() => {
-    if (showHighlightPocket) setBookHighlights(loadAllBookHighlights());
-  }, [showHighlightPocket]);
+  useEffect(() => { refreshFavorites(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Load progress from localStorage
   useEffect(() => {
@@ -264,15 +221,6 @@ export default function LibraryPage() {
     setCompletedSlugs(done);
   }, []);
 
-  // Category book counts
-  const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { All: available.length };
-    for (const cat of CATEGORIES.filter((c) => c !== "All")) {
-      counts[cat] = available.filter((b) => b.tags.includes(cat)).length;
-    }
-    return counts;
-  }, [available]);
-
   // Carousel auto-advance every 4 seconds — pauses permanently once user touches
   useEffect(() => {
     if (featuredBooks.length <= 1 || carouselPaused) return;
@@ -284,40 +232,21 @@ export default function LibraryPage() {
   const filteredBooks = useMemo(() => {
     const q = librarySearch.trim().toLowerCase();
     return available.filter((b) => {
-      const matchesCategory = activeCategory === "All" || b.tags.includes(activeCategory);
       const matchesSearch =
         !q ||
         bookTitle(b, lang).toLowerCase().includes(q) ||
         b.title.toLowerCase().includes(q) ||
-        b.author.toLowerCase().includes(q) ||
-        b.tags.some((tag) => tag.toLowerCase().includes(q));
-      return matchesCategory && matchesSearch;
+        b.author.toLowerCase().includes(q);
+      return matchesSearch;
     });
-  }, [available, activeCategory, librarySearch, lang]);
+  }, [available, librarySearch, lang]);
 
   const tabBooks = useMemo(() => {
     if (activeTab === "reading") return inProgress.filter((e) => !completedSlugs.has(e.book.slug)).map((e) => e.book);
     if (activeTab === "completed") return inProgress.filter((e) => completedSlugs.has(e.book.slug)).map((e) => e.book);
+    if (activeTab === "favorites") return filteredBooks.filter((book) => favoriteBooks.has(book.slug));
     return filteredBooks;
-  }, [activeTab, filteredBooks, inProgress, completedSlugs]);
-
-  const filteredHls = useMemo(() => {
-    if (!hlSearch.trim()) return bookHighlights;
-    const q = hlSearch.toLowerCase();
-    return bookHighlights.filter(hl =>
-      hl.bookTitle.toLowerCase().includes(q) || String(hl.chapter).includes(q) || hl.text.toLowerCase().includes(q)
-    );
-  }, [bookHighlights, hlSearch]);
-
-  const hlByBook = useMemo(() => {
-    const map: Record<string, { bookTitle: string; slug: string; chapters: Record<number, BookHighlight[]> }> = {};
-    for (const hl of filteredHls) {
-      if (!map[hl.slug]) map[hl.slug] = { bookTitle: hl.bookTitle, slug: hl.slug, chapters: {} };
-      if (!map[hl.slug].chapters[hl.chapter]) map[hl.slug].chapters[hl.chapter] = [];
-      map[hl.slug].chapters[hl.chapter].push(hl);
-    }
-    return map;
-  }, [filteredHls]);
+  }, [activeTab, filteredBooks, inProgress, completedSlugs, favoriteBooks]);
 
   function getProgress(slug: string) {
     return inProgress.find((e) => e.book.slug === slug);
@@ -330,8 +259,8 @@ export default function LibraryPage() {
         <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Atrás" : "Back"} onClick={() => history.back()}>
           <span className="text-[30px] leading-none font-black">‹</span>
         </button>
-        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Resaltados" : "Highlights"} onClick={() => setShowHighlightPocket(true)}>
-          <UiIcon name="book" size={23} />
+        <button type="button" className="premium-library-icon-button" aria-label={lang === "es" ? "Favoritos" : "Favorites"} onClick={() => setActiveTab("favorites")}>
+          <UiIcon name="heart" size={21} />
         </button>
       </div>
 
@@ -340,8 +269,8 @@ export default function LibraryPage() {
         <h1 className="premium-library-title">{lang === "es" ? "Libros Gratis" : "Free Books"}</h1>
         <p className="premium-library-subtitle">
           {lang === "es"
-            ? "Obras cristianas clásicas organizadas para lectura enfocada, progreso y resaltados."
-            : "Classic Christian works arranged for focused reading, progress, and highlights."}
+            ? "Obras cristianas clásicas organizadas para lectura enfocada, progreso y favoritos."
+            : "Classic Christian works arranged for focused reading, progress, and favorites."}
         </p>
       </section>
 
@@ -359,14 +288,14 @@ export default function LibraryPage() {
           ["books", lang === "es" ? "Libros" : "Books"],
           ["reading", lang === "es" ? "Leyendo" : "Reading"],
           ["completed", lang === "es" ? "Listos" : "Done"],
-          ["highlights", lang === "es" ? "Marcas" : "Marks"],
+          ["favorites", lang === "es" ? "Favoritos" : "Favorites"],
         ] as [LibTab, string][]).map(([key, label]) => (
           <button
             key={key}
             type="button"
             className="premium-library-tab"
             data-active={activeTab === key}
-            onClick={() => key === "highlights" ? setShowHighlightPocket(true) : setActiveTab(key)}
+            onClick={() => setActiveTab(key)}
           >
             {label}
           </button>
@@ -427,341 +356,63 @@ export default function LibraryPage() {
 
       <section className="premium-library-section">
         <div className="premium-library-section-head">
-          <h2>{activeTab === "reading" ? (lang === "es" ? "Continuar leyendo" : "Continue reading") : lang === "es" ? "Explorar estantes" : "Browse by shelf"}</h2>
+          <h2>
+            {activeTab === "reading"
+              ? (lang === "es" ? "Continuar leyendo" : "Continue reading")
+              : activeTab === "favorites"
+              ? (lang === "es" ? "Tus favoritos" : "Your favorites")
+              : lang === "es" ? "Todos los libros" : "All books"}
+          </h2>
           <button type="button" className="premium-library-link-button" onClick={() => setShowAllOldBooks((v) => !v)}>
             {showAllOldBooks ? (lang === "es" ? "Menos" : "Less") : (lang === "es" ? "Ver todo" : "See all")}
           </button>
         </div>
-        {activeTab === "books" && (
-          <div className="premium-library-chip-row">
-            {CATEGORIES.map((cat) => (
-              <button
-                key={cat}
-                type="button"
-                className="premium-library-chip"
-                data-active={activeCategory === cat}
-                onClick={() => setActiveCategory(cat)}
-              >
-                {cat === "All" ? (lang === "es" ? "Todos" : "All") : cat}
-              </button>
-            ))}
-          </div>
-        )}
-        <div className="premium-library-grid">
-          {(showAllOldBooks ? tabBooks : tabBooks.slice(0, 6)).map((book) => (
-            <Link key={book.slug} href={`/library/${book.slug}`} className="premium-library-item active:scale-95 transition-transform">
-              <div className="premium-library-item-cover">
-                <BookCover book={book} />
-              </div>
-              <p className="premium-library-item-title line-clamp-2">{bookTitle(book, lang)}</p>
-              <span className="premium-library-item-meta truncate">{book.author}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="premium-library-section">
-        <div className="premium-library-section-head">
-          <h2>{lang === "es" ? "Resaltados recientes" : "Recent highlights"}</h2>
-          <button type="button" className="premium-library-link-button" onClick={() => setShowHighlightPocket(true)}>
-            {lang === "es" ? "Abrir" : "Open"}
-          </button>
-        </div>
-        <button type="button" className="premium-library-card w-full text-left active:scale-[0.99] transition-transform" onClick={() => setShowHighlightPocket(true)}>
-          <div className="premium-library-item-cover !w-[54px] !h-[76px] !mb-0 !flex-shrink-0">
-            {available[0] && <BookCover book={available[0]} size="small" />}
-          </div>
-          <div className="min-w-0">
-            <p className="premium-library-item-title text-[15px]">{lang === "es" ? "Pasajes guardados" : "Saved passages"}</p>
-            <p className="premium-library-meta mt-1 line-clamp-2">
-              {lang === "es" ? "Abre tus resaltados y vuelve al texto exacto." : "Open your highlights and return to the exact text."}
+        {tabBooks.length === 0 ? (
+          <div className="premium-library-card block text-center">
+            <p className="premium-library-item-title text-[15px]">
+              {activeTab === "favorites"
+                ? (lang === "es" ? "Sin favoritos todavía" : "No favorites yet")
+                : (lang === "es" ? "Nada para mostrar" : "Nothing to show yet")}
+            </p>
+            <p className="premium-library-meta mt-1">
+              {activeTab === "favorites"
+                ? (lang === "es" ? "Toca el corazón en un libro para guardarlo aquí." : "Tap the heart on a book to keep it here.")
+                : (lang === "es" ? "Prueba otra búsqueda." : "Try another search.")}
             </p>
           </div>
-        </button>
-      </section>
-    </div>
-
-    {/* ── My Highlights Pocket ────────────────────────────────────────────────── */}
-    {showHighlightPocket && (
-      <div className="fixed inset-0 z-[65]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "white" }}>
-        <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
-
-          {/* Header */}
-          <div
-            className="px-5 pb-4 flex items-center justify-between flex-shrink-0"
-            style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}
-          >
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                {lang === "es" ? "Libros Gratuitos" : "Free Books"}
-              </p>
-              <h2 className="text-[30px] leading-none font-black mt-1">
-                {lang === "es" ? "Mis Resaltados" : "My Highlights"}
-              </h2>
-            </div>
-            <button
-              onClick={() => { setShowHighlightPocket(false); setConfirmRemoveId(null); setHlSearch(""); }}
-              className="w-11 h-11 rounded-full flex items-center justify-center active:scale-95 transition-transform"
-              style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)", color: isLight ? "rgba(0,0,0,0.4)" : undefined }}
-            >
-              <UiIcon name="close" size={20} />
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="px-5 pt-4 pb-3 flex-shrink-0">
-            <label
-              className="flex items-center gap-3 rounded-[22px] px-4 py-3"
-              style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.055)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)" }}
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                <circle cx="11" cy="11" r="7" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" />
-                <path d="M16.5 16.5L21 21" stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <input
-                value={hlSearch}
-                onChange={(e) => setHlSearch(e.target.value)}
-                placeholder={lang === "es" ? "Buscar libro, capítulo o texto..." : "Search book, chapter, or text..."}
-                className="min-w-0 flex-1 bg-transparent outline-none text-sm font-bold"
-                style={{ color: isLight ? "#0a0a0a" : "white" }}
-              />
-              {hlSearch && (
-                <button onClick={() => setHlSearch("")} className="text-sm flex-shrink-0 leading-none" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                  <UiIcon name="close" size={16} />
-                </button>
-              )}
-            </label>
-          </div>
-
-          {/* Scrollable content */}
-          <div className="overflow-y-auto flex-1 px-5 pb-10">
-            {bookHighlights.length === 0 ? (
-              <div
-                className="rounded-[30px] p-7 text-center mt-4"
-                style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
-              >
-                <p className="font-black text-lg mb-2">
-                  {lang === "es" ? "Sin resaltados aún" : "No highlights yet"}
-                </p>
-                <p className="text-sm leading-relaxed" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                  {lang === "es"
-                    ? "Selecciona texto mientras lees un libro para guardar un resaltado."
-                    : "Select text while reading a book to save a highlight."}
-                </p>
-              </div>
-            ) : filteredHls.length === 0 ? (
-              <div className="text-center py-10">
-                <p className="text-sm font-bold" style={{ color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}>
-                  {lang === "es" ? "Sin resultados" : `No results for "${hlSearch}"`}
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-7 pt-2">
-
-                {/* Recent */}
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                    {lang === "es" ? "Recientes" : "Recent"}
-                  </p>
-                  <div className="flex gap-3 overflow-x-auto pb-2 -mx-5 px-5 snap-x" style={{ scrollbarWidth: "none" }}>
-                    {filteredHls.slice(0, 5).map((hl) => {
-                      const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                      const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
-                      const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
-                      return (
-                        <div
-                          key={hl.id}
-                          className="w-[80vw] snap-start rounded-[26px] p-4 flex flex-col gap-2 flex-shrink-0 overflow-hidden"
-                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : `linear-gradient(135deg,${dot}18 0%,rgba(255,255,255,0.04) 100%)`, border: isLight ? "1px solid rgba(0,0,0,0.08)" : `1px solid ${dot}30` }}
-                        >
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: isLight ? "rgba(0,0,0,0.45)" : dot }}>
-                            {hl.bookTitle} · Ch. {hl.chapter}
-                          </p>
-                          <p
-                            className="text-[13px] leading-snug line-clamp-2"
-                            style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
-                          >
-                            &ldquo;{hl.text.slice(0, 65)}{hl.text.length > 65 ? '…' : ''}&rdquo;
-                          </p>
-                          <Link
-                            href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.rawId}`}
-                            onClick={() => setShowHighlightPocket(false)}
-                            className="self-start text-[10px] font-black px-3 py-1.5 rounded-full active:scale-95 transition-transform"
-                            style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.28)" }}
-                          >
-                            {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
-                          </Link>
-                        </div>
-                      );
-                    })}
+        ) : (
+          <div className="premium-library-grid">
+            {(showAllOldBooks ? tabBooks : tabBooks.slice(0, 6)).map((book) => {
+              const favorite = favoriteBooks.has(book.slug);
+              return (
+                <div key={book.slug} className="premium-library-item">
+                  <div className="relative">
+                    <Link href={`/library/${book.slug}`} className="block active:scale-95 transition-transform">
+                      <div className="premium-library-item-cover">
+                        <BookCover book={book} />
+                      </div>
+                    </Link>
+                    <button
+                      type="button"
+                      className="premium-library-favorite-button"
+                      data-active={favorite}
+                      aria-label={favorite ? (lang === "es" ? "Quitar favorito" : "Remove favorite") : (lang === "es" ? "Marcar favorito" : "Favorite book")}
+                      onClick={() => toggleBookFavorite(book.slug)}
+                    >
+                      <UiIcon name="heart" size={14} />
+                    </button>
                   </div>
+                  <Link href={`/library/${book.slug}`} className="block">
+                    <p className="premium-library-item-title line-clamp-2">{bookTitle(book, lang)}</p>
+                    <span className="premium-library-item-meta truncate">{book.author}</span>
+                  </Link>
                 </div>
-
-                {/* By Book & Chapter */}
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.22em] font-black mb-3" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
-                    {lang === "es" ? "Por Libro" : "By Book"}
-                  </p>
-                  <div className="space-y-3">
-                    {Object.keys(hlByBook).map((slug) => {
-                      const { bookTitle: bTitle, chapters } = hlByBook[slug];
-                      const chapNums = Object.keys(chapters).map(Number).sort((a, b) => a - b);
-                      const totalHls = Object.values(chapters).reduce((n, arr) => n + arr.length, 0);
-                      return (
-                        <div
-                          key={slug}
-                          className="rounded-[28px] p-4"
-                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.07)" }}
-                        >
-                          <button
-                            className="w-full flex items-center justify-between active:opacity-70 transition-opacity"
-                            style={{ marginBottom: collapsedBooks.has(slug) ? 0 : "12px" }}
-                            onClick={() => setCollapsedBooks(prev => {
-                              const next = new Set(prev);
-                              if (next.has(slug)) next.delete(slug); else next.add(slug);
-                              return next;
-                            })}
-                          >
-                            <p className="font-black text-sm text-left">{bTitle}</p>
-                            <div className="flex items-center gap-2">
-                              <span
-                                className="text-[10px] font-black px-2.5 py-0.5 rounded-full"
-                                style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.15)", color: isLight ? "#0a0a0a" : "#c9a961" }}
-                              >
-                                {totalHls}
-                              </span>
-                              <svg
-                                width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                stroke={isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.35)"} strokeWidth="2"
-                                strokeLinecap="round" strokeLinejoin="round"
-                                style={{ transform: collapsedBooks.has(slug) ? "rotate(-90deg)" : "rotate(0deg)", transition: "transform 0.2s ease" }}
-                              >
-                                <path d="M6 9l6 6 6-6"/>
-                              </svg>
-                            </div>
-                          </button>
-                          {!collapsedBooks.has(slug) && <div className="space-y-2">
-                            {chapNums.map((chNum) => (
-                              <div
-                                key={chNum}
-                                className="rounded-[22px] p-3"
-                                style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.04)", border: isLight ? "1px solid rgba(0,0,0,0.06)" : "1px solid rgba(255,255,255,0.06)" }}
-                              >
-                                <p
-                                  className="text-[9px] font-black uppercase tracking-widest mb-2"
-                                  style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(201,169,97,0.65)" }}
-                                >
-                                  {lang === "es" ? `Capítulo ${chNum}` : `Chapter ${chNum}`}
-                                </p>
-                                <div className="space-y-2">
-                                  {chapters[chNum].map((hl) => {
-                                    const DOT: Record<string, string> = { purple: "#a855f7", yellow: "#eab308", red: "#ef4444", blue: "#3b82f6", lime: "#84cc16", pink: "#ec4899", gold: "#c9a961", rose: "#f472b6", green: "#4ade80" };
-                                    const colorKey = typeof hl.meta?.colorName === "string" ? hl.meta.colorName : "gold";
-                                    const dot = DOT[colorKey] ?? hl.color ?? "#c9a961";
-                                    return (
-                                      <div
-                                        key={hl.id}
-                                        className="rounded-[18px] p-3"
-                                        style={{ background: isLight ? "rgba(0,0,0,0.03)" : `${dot}0a`, border: isLight ? "1px solid rgba(0,0,0,0.07)" : `1px solid ${dot}22` }}
-                                      >
-                                        <div className="flex items-start gap-2 mb-2">
-                                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ background: dot }} />
-                                          <p
-                                            className="text-[13px] leading-snug flex-1"
-                                            style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.75)", fontFamily: "Georgia, serif" }}
-                                          >
-                                            &ldquo;{hl.text}&rdquo;
-                                          </p>
-                                          <button
-                                            onClick={() => setConfirmRemoveId(hl.id)}
-                                            className="text-xs flex-shrink-0 w-5 h-5 flex items-center justify-center rounded-full transition-colors"
-                                            style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.2)" }}
-                                          >
-                                            ×
-                                          </button>
-                                        </div>
-                                        <Link
-                                          href={`/library/${hl.slug}?chapter=${hl.chapter}&hlid=${hl.rawId}`}
-                                          onClick={() => setShowHighlightPocket(false)}
-                                          className="text-[10px] font-black px-3 py-1 rounded-full inline-block active:scale-95 transition-transform"
-                                          style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#c9a961", border: isLight ? "1px solid rgba(0,0,0,0.12)" : "1px solid rgba(201,169,97,0.22)" }}
-                                        >
-                                          {lang === "es" ? "Abrir resaltado →" : "Open highlight →"}
-                                        </Link>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                            ))}
-                          </div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Confirm remove */}
-        {confirmRemoveId && (
-          <div className="absolute inset-0 z-10 flex items-center justify-center px-8 bg-black/55 backdrop-blur-sm">
-            <div
-              className="w-full max-w-[300px] rounded-[28px] p-5 text-center"
-              style={{ background: isLight ? "#f5f5f5" : "#1a1d27", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)", color: isLight ? "#0a0a0a" : "white" }}
-            >
-              <p className="font-black text-base mb-1">
-                {lang === "es" ? "¿Eliminar resaltado?" : "Remove highlight?"}
-              </p>
-              <p className="text-sm mb-5" style={{ color: isLight ? "rgba(0,0,0,0.45)" : "rgba(255,255,255,0.45)" }}>
-                {lang === "es" ? "Esta acción no se puede deshacer." : "This cannot be undone."}
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setConfirmRemoveId(null)}
-                  className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.07)" }}
-                >
-                  {lang === "es" ? "Cancelar" : "Cancel"}
-                </button>
-                <button
-                  onClick={() => {
-                    const target = bookHighlights.find(h => h.id === confirmRemoveId);
-                    if (target) {
-                      deleteUnifiedHighlight(target);
-                      setBookHighlights(prev => prev.filter(h => h.id !== confirmRemoveId));
-                    }
-                    setConfirmRemoveId(null);
-                  }}
-                  className="flex-1 py-3 rounded-2xl font-bold text-sm active:scale-95 transition-transform"
-                  style={{ background: "rgba(239,68,68,0.18)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.28)" }}
-                >
-                  {lang === "es" ? "Eliminar" : "Delete"}
-                </button>
-              </div>
-            </div>
+              );
+            })}
           </div>
         )}
-      </div>
-    )}
-
-    {/* Bookmark modal */}
-    {bookmarkTarget && (
-      <BookmarkModal
-        item={{
-          id: `book::${bookmarkTarget.slug}`,
-          type: "book",
-          title: bookTitle(bookmarkTarget, lang),
-          subtitle: bookmarkTarget.author,
-          preview: bookmarkTarget.description?.slice(0, 120) ?? undefined,
-        }}
-        label={bookTitle(bookmarkTarget, lang)}
-        onClose={() => { setBookmarkTarget(null); refreshSaved(); }}
-      />
-    )}
+      </section>
+    </div>
 
     </>
   );
