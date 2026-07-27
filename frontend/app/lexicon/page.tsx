@@ -2054,7 +2054,7 @@ function LexiconInner() {
 
       {/* ── Reader tab ── */}
       {activeTab === "reader" && (
-        <div className="max-w-screen-xl mx-auto px-4 py-8 pb-48">
+        <div className="max-w-screen-xl mx-auto px-4 py-8 pb-[17rem] sm:pb-48">
 
           {/* Chapter hero */}
           {selectedBook && (
@@ -2271,7 +2271,7 @@ function LexiconInner() {
       {/* ── Floating reader bar ── */}
       {activeTab === "reader" && (
         <div className="scripture-reader-bar fixed left-0 right-0 z-40 px-4 print:hidden"
-          style={{ bottom: "calc(48px + max(env(safe-area-inset-bottom), 8px) + 8px)" }}>
+          style={{ bottom: "calc(100px + max(env(safe-area-inset-bottom), 0px))" }}>
           <div
             className="le-chapter-nav rounded-[28px] shadow-2xl border grid grid-cols-[54px_1fr_54px] items-center gap-2 p-1.5"
             style={{
