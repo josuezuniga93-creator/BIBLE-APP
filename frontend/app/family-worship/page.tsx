@@ -12,9 +12,11 @@ import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import { getHymnLyrics } from "../lib/hymnLyrics";
 import { FAMILY_WORSHIP_WEEK } from "../lib/familyWorshipData";
 import {
-  loadDevotionalProgress,
+  DEVOTIONAL_SECTION_IDS,
+  DevotionalSectionId,
+  getDevotionalSectionProgress,
   markDevotionalComplete,
-  isDevotionalComplete,
+  markDevotionalSection,
 } from "../lib/devotionalProgress";
 import { localizeReference } from "../lib/spanishContent";
 import { UiIcon } from "../components/UiIcon";
@@ -743,6 +745,32 @@ const DEVOTIONAL_MOTION_STYLES = `
     font-weight: 950;
   }
 
+  .devotional-step-button {
+    min-height: 42px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    border: 1px solid var(--dev-action-border);
+    border-radius: 18px;
+    background: var(--dev-action-bg);
+    color: var(--dev-action-text);
+    font-size: .84rem;
+    font-weight: 950;
+    transition: transform 160ms ease, filter 160ms ease;
+  }
+
+  .devotional-step-button:active {
+    transform: scale(.98);
+  }
+
+  .devotional-step-button[data-complete="true"] {
+    background: var(--dev-accent);
+    color: var(--dev-accent-contrast);
+    border-color: transparent;
+  }
+
   .devotional-complete-button {
     width: 100%;
     min-height: 58px;
@@ -809,6 +837,33 @@ const DEVOTIONAL_MOTION_STYLES = `
 
 function motionStyle(delay: string): React.CSSProperties {
   return { "--motion-delay": delay } as React.CSSProperties;
+}
+
+type DevotionalSectionProgressState = ReturnType<typeof getDevotionalSectionProgress>;
+
+function DevotionalStepButton({
+  complete,
+  label,
+  completeLabel,
+  onComplete,
+}: {
+  complete: boolean;
+  label: string;
+  completeLabel: string;
+  onComplete: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onComplete}
+      disabled={complete}
+      data-complete={complete}
+      className="devotional-step-button"
+    >
+      <UiIcon name="check" size={15} strokeWidth={3} />
+      {complete ? completeLabel : label}
+    </button>
+  );
 }
 
 const RYLE_THEME_ES: Record<string, string> = {
@@ -920,8 +975,17 @@ function ConfettiOverlay() {
 
 // ─── Scripture + Ryle Card ────────────────────────────────────────────────────
 
-function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
-  const tk = useTheme();
+function ScriptureAndDevotionalCard({
+  entry,
+  scriptureComplete,
+  meditationComplete,
+  onSectionComplete,
+}: {
+  entry: DailyDevotional;
+  scriptureComplete: boolean;
+  meditationComplete: boolean;
+  onSectionComplete: (sectionId: DevotionalSectionId) => void;
+}) {
   const { lang } = useLanguage();
   const [scriptureText, setScriptureText] = useState("");
   const [scriptureStatus, setScriptureStatus] = useState<"loading" | "ready" | "fallback">("loading");
@@ -1043,6 +1107,14 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
         <p className="devotional-read-prompt">
           {t(lang, "family_read_aloud_prompt")}
         </p>
+        <div className="mt-4">
+          <DevotionalStepButton
+            complete={scriptureComplete}
+            label={lang === "es" ? "Marcar Escritura leída" : "Mark scripture read"}
+            completeLabel={lang === "es" ? "Escritura leída" : "Scripture read"}
+            onComplete={() => onSectionComplete("scripture")}
+          />
+        </div>
       </div>
 
       <div className="px-5 pb-5 space-y-4">
@@ -1096,10 +1168,16 @@ function ScriptureAndDevotionalCard({ entry }: { entry: DailyDevotional }) {
           ))}
         </div>
         {lang === "es" && translating && (
-          <p className="mt-2 text-xs" style={{ color: tk.textFaint }}>
+          <p className="mt-2 text-xs" style={{ color: "var(--dev-faint)" }}>
             Traduciendo al español...
           </p>
         )}
+        <DevotionalStepButton
+          complete={meditationComplete}
+          label={lang === "es" ? "Marcar meditación leída" : "Mark meditation read"}
+          completeLabel={lang === "es" ? "Meditación leída" : "Meditation read"}
+          onComplete={() => onSectionComplete("meditation")}
+        />
       </div>
 
       {ryleAudioTracks.length > 0 && (
@@ -1145,7 +1223,15 @@ function getSpanishHymn() {
   return worshipDay?.hymnEs ?? null;
 }
 
-function HymnCard({ entry }: { entry: DailyDevotional }) {
+function HymnCard({
+  entry,
+  hymnComplete,
+  onSectionComplete,
+}: {
+  entry: DailyDevotional;
+  hymnComplete: boolean;
+  onSectionComplete: (sectionId: DevotionalSectionId) => void;
+}) {
   const { lang } = useLanguage();
 
   // In Spanish mode, show the day-of-week Spanish hymn from familyWorshipData
@@ -1257,6 +1343,14 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
         <p className="mt-5 text-xs" style={{ color: "var(--dev-faint)" }}>
           {lang === "es" ? "Canta o lee en voz alta juntos como familia." : "Sing or read aloud together as a family."}
         </p>
+        <div className="mt-4">
+          <DevotionalStepButton
+            complete={hymnComplete}
+            label={lang === "es" ? "Marcar himno visto" : "Mark hymn viewed"}
+            completeLabel={lang === "es" ? "Himno visto" : "Hymn viewed"}
+            onComplete={() => onSectionComplete("hymn")}
+          />
+        </div>
       </div>
     </div>
   );
@@ -1266,7 +1360,13 @@ function HymnCard({ entry }: { entry: DailyDevotional }) {
 
 interface PrayerItem { id: string; text: string; }
 
-function PrayerCard() {
+function PrayerCard({
+  prayerComplete,
+  onSectionComplete,
+}: {
+  prayerComplete: boolean;
+  onSectionComplete: (sectionId: DevotionalSectionId) => void;
+}) {
   const { lang } = useLanguage();
   const [items, setItems] = useState<PrayerItem[]>([]);
   const [adding, setAdding] = useState(false);
@@ -1386,7 +1486,7 @@ function PrayerCard() {
       </div>
 
       {!adding && (
-        <div className="px-5 pb-5">
+        <div className="px-5 pb-5 space-y-3">
           <button
             onClick={() => setAdding(true)}
             className="w-full py-3 rounded-[20px] text-sm font-black active:scale-[0.98] transition-all flex items-center justify-center gap-2"
@@ -1395,6 +1495,12 @@ function PrayerCard() {
             <span className="text-base leading-none">+</span>
             {t(lang, "family_add_prayer")}
           </button>
+          <DevotionalStepButton
+            complete={prayerComplete}
+            label={lang === "es" ? "Marcar oración completada" : "Mark prayer complete"}
+            completeLabel={lang === "es" ? "Oración completada" : "Prayer complete"}
+            onComplete={() => onSectionComplete("prayer")}
+          />
         </div>
       )}
     </div>
@@ -1406,24 +1512,23 @@ function PrayerCard() {
 function CompletionCard({
   dateStr,
   isToday,
+  isComplete,
+  sectionProgress,
   onComplete,
 }: {
   dateStr: string;
   isToday: boolean;
+  isComplete: boolean;
+  sectionProgress: DevotionalSectionProgressState;
   onComplete: () => void;
 }) {
   const { lang } = useLanguage();
-  const [done, setDone] = useState(false);
-
-  useEffect(() => { setDone(isDevotionalComplete(dateStr)); }, [dateStr]);
 
   function handleComplete() {
-    markDevotionalComplete(dateStr);
-    setDone(true);
     onComplete();
   }
 
-  if (done) {
+  if (isComplete) {
     if (isToday) {
       const [y, mo, day] = dateStr.split("-").map(Number);
       const tomorrow = new Date(y, mo - 1, day + 1);
@@ -1483,7 +1588,8 @@ function CompletionCard({
         {t(lang, "family_did_complete")}
       </p>
       <p className="text-sm mt-2 leading-6" style={{ color: "var(--dev-muted)" }}>
-        {t(lang, "family_complete_check")}
+        {sectionProgress.completedSections.length}/{sectionProgress.total}{" "}
+        {lang === "es" ? "pasos completados" : "steps complete"}
       </p>
       <button
         onClick={handleComplete}
@@ -1606,7 +1712,12 @@ export default function FamilyWorshipPage() {
 
   const [selectedDate, setSelectedDate] = useState<Date>(today);
   const [showConfetti, setShowConfetti] = useState(false);
-  const [heroProgress, setHeroProgress] = useState(72);
+  const [sectionProgress, setSectionProgress] = useState<DevotionalSectionProgressState>({
+    completedSections: [],
+    total: DEVOTIONAL_SECTION_IDS.length,
+    percent: 0,
+    isComplete: false,
+  });
 
   // Must match the SSR value ("white-noir" — what readStoredAppTheme returns
   // when window is undefined). A lazy client-side read here caused a hydration
@@ -1637,12 +1748,6 @@ export default function FamilyWorshipPage() {
     try { localStorage.removeItem("axiom-fw-date"); } catch { /**/ }
   }
 
-  const handleComplete = useCallback(() => {
-    setHeroProgress(100);
-    setShowConfetti(true);
-    setTimeout(() => setShowConfetti(false), 2500);
-  }, []);
-
   const isToday =
     selectedDate.getFullYear() === today.getFullYear() &&
     selectedDate.getMonth()    === today.getMonth() &&
@@ -1652,7 +1757,30 @@ export default function FamilyWorshipPage() {
   const dateStr    = toDateStr(selectedDate);
 
   useEffect(() => {
-    setHeroProgress(isDevotionalComplete(dateStr) ? 100 : 72);
+    setSectionProgress(getDevotionalSectionProgress(dateStr));
+  }, [dateStr]);
+
+  const sectionComplete = useCallback(
+    (sectionId: DevotionalSectionId) => sectionProgress.completedSections.includes(sectionId),
+    [sectionProgress.completedSections]
+  );
+
+  const completeSection = useCallback((sectionId: DevotionalSectionId) => {
+    const wasComplete = sectionProgress.isComplete;
+    markDevotionalSection(dateStr, sectionId);
+    const next = getDevotionalSectionProgress(dateStr);
+    setSectionProgress(next);
+    if (!wasComplete && next.isComplete) {
+      setShowConfetti(true);
+      setTimeout(() => setShowConfetti(false), 2500);
+    }
+  }, [dateStr, sectionProgress.isComplete]);
+
+  const handleComplete = useCallback(() => {
+    markDevotionalComplete(dateStr);
+    setSectionProgress(getDevotionalSectionProgress(dateStr));
+    setShowConfetti(true);
+    setTimeout(() => setShowConfetti(false), 2500);
   }, [dateStr]);
 
   return (
@@ -1706,21 +1834,12 @@ export default function FamilyWorshipPage() {
           {dailyEntry ? (
             <>
               <section className="devotional-progress-card" aria-label="Devotional progress">
-                {isToday ? (
-                  <div
-                    className="devotional-ring"
-                    style={{ "--devotional-progress": `${heroProgress}%` } as React.CSSProperties}
-                  >
-                    <span>{heroProgress}%</span>
-                  </div>
-                ) : (
-                  <div
-                    className="devotional-ring"
-                    style={{ "--devotional-progress": "45%" } as React.CSSProperties}
-                  >
-                    <span>45%</span>
-                  </div>
-                )}
+                <div
+                  className="devotional-ring"
+                  style={{ "--devotional-progress": `${sectionProgress.percent}%` } as React.CSSProperties}
+                >
+                  <span>{sectionProgress.percent}%</span>
+                </div>
                 <div className="min-w-0">
                   <p className="devotional-theme-label">
                     {familyThemeTitle(dailyEntry.theme, lang)}
@@ -1736,6 +1855,10 @@ export default function FamilyWorshipPage() {
                         : dailyEntry.displayDate}
                     </p>
                   )}
+                  <p className="mt-1 text-xs font-bold" style={{ color: "var(--dev-faint)" }}>
+                    {sectionProgress.completedSections.length}/{sectionProgress.total}{" "}
+                    {lang === "es" ? "pasos completados" : "steps complete"}
+                  </p>
                 </div>
                 {isToday ? (
                   <span className="devotional-today-chip">
@@ -1753,10 +1876,28 @@ export default function FamilyWorshipPage() {
               </section>
 
               <div className="devotional-flow">
-                <ScriptureAndDevotionalCard entry={dailyEntry} />
-                <HymnCard entry={dailyEntry} />
-                <PrayerCard />
-                <CompletionCard dateStr={dateStr} isToday={isToday} onComplete={handleComplete} />
+                <ScriptureAndDevotionalCard
+                  entry={dailyEntry}
+                  scriptureComplete={sectionComplete("scripture")}
+                  meditationComplete={sectionComplete("meditation")}
+                  onSectionComplete={completeSection}
+                />
+                <HymnCard
+                  entry={dailyEntry}
+                  hymnComplete={sectionComplete("hymn")}
+                  onSectionComplete={completeSection}
+                />
+                <PrayerCard
+                  prayerComplete={sectionComplete("prayer")}
+                  onSectionComplete={completeSection}
+                />
+                <CompletionCard
+                  dateStr={dateStr}
+                  isToday={isToday}
+                  isComplete={sectionProgress.isComplete}
+                  sectionProgress={sectionProgress}
+                  onComplete={handleComplete}
+                />
                 <ReminderCard />
               </div>
             </>
