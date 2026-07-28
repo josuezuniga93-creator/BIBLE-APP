@@ -324,7 +324,7 @@ export function BottomNav() {
       style={{
         backgroundColor: "transparent",
         borderColor: "transparent",
-        paddingBottom: "calc(env(safe-area-inset-bottom) + 10px)",
+        paddingBottom: "calc(env(safe-area-inset-bottom) + 4px)",
       }}
     >
       <div
