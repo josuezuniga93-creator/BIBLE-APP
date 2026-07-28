@@ -57,6 +57,11 @@ type SelectionGeometry = {
   endHandle?: { left: number; top: number };
 };
 
+type ToolbarPosition = {
+  left: number;
+  top: number;
+};
+
 type Props = {
   context: string;
   text: string;
@@ -79,6 +84,13 @@ const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string;
 };
 
 const ACTIVE_SELECTION_BG = "rgba(54,97,208,0.58)";
+const TOOLBAR_WIDTH = 360;
+const TOOLBAR_HEIGHT = 126;
+const REMOVE_TOOLBAR_HEIGHT = 66;
+const TOOLBAR_GAP = 10;
+const VIEWPORT_PADDING = 16;
+const READER_HEADER_RESERVE = 88;
+const READER_FOOTER_RESERVE = 126;
 
 function normalizeText(value: string) {
   return value.replace(/\s+/g, " ").trim();
@@ -194,6 +206,7 @@ export function BracketHighlightReader({
   const [highlightSearchQuery, setHighlightSearchQuery] = useState("");
   const [pendingRemoveId, setPendingRemoveId] = useState<string | null>(null);
   const [showImageEditor, setShowImageEditor] = useState(false);
+  const [toolbarPosition, setToolbarPosition] = useState<ToolbarPosition | null>(null);
   const longPressTimer = useRef<number | null>(null);
   const activeHandle = useRef<"start" | "end" | null>(null);
   const textLayerRef = useRef<HTMLDivElement | null>(null);
@@ -234,6 +247,7 @@ export function BracketHighlightReader({
     })));
     setSelection(null);
     setPendingRemoveId(null);
+    setToolbarPosition(null);
     setHighlightSearchQuery("");
   }, [context, title, reference, highlightAdapter]);
 
@@ -247,6 +261,7 @@ export function BracketHighlightReader({
       .map((token) => token.text)
       .join(" "));
   }, [tokens, selection]);
+  const toolbarVisible = Boolean((selection && selectedText) || pendingRemoveId);
   const visibleHighlights = useMemo(() => {
     const sorted = [...highlights].sort((a, b) => b.createdAt - a.createdAt);
     const needle = normalizeText(highlightSearchQuery).toLowerCase();
@@ -334,8 +349,36 @@ export function BracketHighlightReader({
   function clearSelection() {
     setSelection(null);
     setPendingRemoveId(null);
+    setToolbarPosition(null);
     activeHandle.current = null;
     clearLongPressTimer();
+  }
+
+  function clampToolbarToViewport(anchor: { left: number; right: number; top: number; bottom: number }, toolbarHeight = TOOLBAR_HEIGHT) {
+    if (typeof window === "undefined") return null;
+
+    const width = Math.min(TOOLBAR_WIDTH, window.innerWidth - (VIEWPORT_PADDING * 2));
+    const rightAlignedLeft = anchor.right - width;
+    const left = Math.round(Math.max(VIEWPORT_PADDING, Math.min(rightAlignedLeft, window.innerWidth - width - VIEWPORT_PADDING)));
+    const minTop = READER_HEADER_RESERVE;
+    const maxTop = Math.max(minTop, window.innerHeight - READER_FOOTER_RESERVE - toolbarHeight);
+    const preferredAbove = anchor.top - toolbarHeight - TOOLBAR_GAP;
+    const preferredBelow = anchor.bottom + TOOLBAR_GAP;
+    const top = preferredAbove >= minTop
+      ? preferredAbove
+      : Math.min(Math.max(preferredBelow, minTop), maxTop);
+
+    return {
+      left,
+      top: Math.round(Math.max(minTop, Math.min(top, maxTop))),
+    };
+  }
+
+  function showRemoveToolbar(id: string, target: HTMLElement) {
+    setPendingRemoveId(id);
+    setSelection(null);
+    const rect = target.getBoundingClientRect();
+    setToolbarPosition(clampToolbarToViewport(rect, REMOVE_TOOLBAR_HEIGHT));
   }
 
   function openUnifiedHighlights() {
@@ -455,6 +498,17 @@ export function BracketHighlightReader({
       startHandle: first ? { left: first.left + 3, top: first.top + first.height - 1 } : undefined,
       endHandle: last ? { left: last.left + last.width - 3, top: last.top + last.height - 1 } : undefined,
     });
+    if (selection && selectedText && first && last && textLayerRef.current) {
+      const layerRect = textLayerRef.current.getBoundingClientRect();
+      setToolbarPosition(clampToolbarToViewport({
+        left: layerRect.left + first.left,
+        right: layerRect.left + last.left + last.width,
+        top: layerRect.top + first.top,
+        bottom: layerRect.top + last.top + last.height,
+      }));
+    } else if (!pendingRemoveId) {
+      setToolbarPosition(null);
+    }
 
     const grouped = new Map<string, { highlight: ReaderHighlight; indexes: number[] }>();
     tokens.forEach((token) => {
@@ -481,91 +535,130 @@ export function BracketHighlightReader({
     // refreshHighlightGeometry closes over selection/tokens/highlights, all already listed below —
     // it's redefined each render but reads no other state.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selection, tokens, highlights]);
+  }, [selection, selectedText, tokens, highlights, pendingRemoveId]);
+
+  useEffect(() => {
+    if (!toolbarVisible) return;
+    const target = scrollRef?.current;
+    const update = () => window.requestAnimationFrame(refreshHighlightGeometry);
+    target?.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      target?.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+    // refreshHighlightGeometry intentionally recalculates from current DOM geometry.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [toolbarVisible, selection, selectedText, pendingRemoveId, scrollRef]);
 
   return (
     <>
       <div
-        className="fixed left-0 right-0 z-[260] px-5"
+        className="fixed z-[260] px-0"
         style={{
-          bottom: 0,
-          paddingTop: 14,
-          paddingBottom: "max(env(safe-area-inset-bottom), 14px)",
-          background: isLight ? "rgba(249,250,251,0.98)" : "rgba(12,14,22,0.98)",
-          borderTop: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)",
-          transform: ((selection && selectedText) || pendingRemoveId) ? "translateY(0)" : "translateY(110%)",
-          transition: "transform 0.26s cubic-bezier(0.32, 0.72, 0, 1)",
-          pointerEvents: ((selection && selectedText) || pendingRemoveId) ? "auto" : "none",
-          boxShadow: isLight ? "0 -18px 48px rgba(0,0,0,0.10)" : "0 -18px 48px rgba(0,0,0,0.48)",
+          left: toolbarPosition ? toolbarPosition.left : VIEWPORT_PADDING,
+          top: toolbarPosition ? toolbarPosition.top : `calc(50% - ${TOOLBAR_HEIGHT / 2}px)`,
+          width: `min(${TOOLBAR_WIDTH}px, calc(100vw - ${VIEWPORT_PADDING * 2}px))`,
+          transform: toolbarVisible ? "translateY(0) scale(1)" : "translateY(18px) scale(0.96)",
+          opacity: toolbarVisible ? 1 : 0,
+          transformOrigin: "top right",
+          transition: "transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.2s ease",
+          pointerEvents: toolbarVisible ? "auto" : "none",
         }}
         onPointerDown={(event) => event.stopPropagation()}
       >
-        <div className="max-w-lg mx-auto">
+        <div
+          className="mx-auto w-full max-w-[360px] rounded-[30px] p-2.5"
+          style={{
+            background: isLight ? "rgba(255,255,255,0.96)" : "rgba(21,23,30,0.94)",
+            border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.10)",
+            boxShadow: isLight
+              ? "0 18px 45px rgba(16,17,20,0.16), inset 0 1px 0 rgba(255,255,255,0.86)"
+              : "0 18px 50px rgba(0,0,0,0.52), inset 0 1px 0 rgba(255,255,255,0.08)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+          }}
+        >
           {pendingRemoveId ? (
-            <div className="flex items-center gap-3">
-              <p className="flex-1 text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}>
+            <div className="flex items-center gap-2">
+              <p className="min-w-0 flex-1 pl-2 text-sm font-black" style={{ color: isLight ? "rgba(0,0,0,0.72)" : "rgba(255,255,255,0.72)" }}>
                 {lang === "es" ? "Eliminar este resaltado?" : "Remove this highlight?"}
               </p>
               <button
                 onClick={() => removeHighlight(pendingRemoveId)}
-                className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95"
-                style={{ background: "rgba(239,68,68,0.18)", color: "rgba(248,113,113,1)" }}
+                className="h-10 rounded-[18px] px-4 text-sm font-black transition-transform active:scale-95"
+                style={{ background: "rgba(239,68,68,0.16)", color: "#ef4444" }}
               >
                 {lang === "es" ? "Eliminar" : "Remove"}
               </button>
               <button
                 onClick={() => setPendingRemoveId(null)}
-                className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}
+                className="flex h-10 w-10 items-center justify-center rounded-[18px] transition-transform active:scale-95"
+                style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.56)" }}
+                aria-label={lang === "es" ? "Cancelar" : "Cancel"}
               >
-                {"x"}
+                <UiIcon name="close" size={16} strokeWidth={2.4} />
               </button>
             </div>
           ) : (
-            <>
-              <div className="flex items-center gap-3 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-                <div className="flex items-center gap-4 flex-shrink-0">
-                  {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((color) => (
-                    <button
-                      key={color}
-                      onClick={() => addHighlightForSelection(color)}
-                      className="w-10 h-10 rounded-full active:scale-90 transition-transform flex-shrink-0"
-                      style={{ background: HIGHLIGHT_COLORS[color].dot, boxShadow: `0 3px 10px ${HIGHLIGHT_COLORS[color].dot}55` }}
-                      aria-label={lang === "es" ? HIGHLIGHT_COLORS[color].labelEs : HIGHLIGHT_COLORS[color].label}
-                    />
-                  ))}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {(Object.keys(HIGHLIGHT_COLORS) as HighlightColor[]).map((color) => {
+                    const tone = HIGHLIGHT_COLORS[color];
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => addHighlightForSelection(color)}
+                        className="h-10 w-10 rounded-full transition-transform active:scale-90"
+                        style={{
+                          background: tone.dot,
+                          boxShadow: isLight
+                            ? `0 8px 18px ${tone.dot}40, inset 0 1px 0 rgba(255,255,255,0.46)`
+                            : `0 8px 20px ${tone.dot}2f, inset 0 1px 0 rgba(255,255,255,0.26)`,
+                          border: isLight ? "1px solid rgba(255,255,255,0.72)" : "1px solid rgba(255,255,255,0.14)",
+                        }}
+                        aria-label={lang === "es" ? tone.labelEs : tone.label}
+                      />
+                    );
+                  })}
                 </div>
-                <div className="w-px h-7 flex-shrink-0" style={{ background: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.12)" }} />
+                <button
+                  onClick={clearSelection}
+                  className="flex h-10 w-10 items-center justify-center rounded-[18px] transition-transform active:scale-95"
+                  style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.56)" }}
+                  aria-label={lang === "es" ? "Cerrar resaltador" : "Close highlighter"}
+                >
+                  <UiIcon name="close" size={16} strokeWidth={2.4} />
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={copySelection}
-                  className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)" }}
+                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
+                  style={{ background: isLight ? "rgba(0,0,0,0.055)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.76)" : "rgba(255,255,255,0.78)" }}
                 >
+                  <UiIcon name="copy" size={16} strokeWidth={2.3} />
                   {lang === "es" ? "Copiar" : "Copy"}
                 </button>
                 <button
                   onClick={openUnifiedHighlights}
-                  className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.12)", color: isLight ? "#0a0a0a" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
+                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
+                  style={{ background: isLight ? "rgba(0,0,0,0.055)" : "rgba(201,169,97,0.12)", color: isLight ? "rgba(0,0,0,0.76)" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(201,169,97,0.16)" }}
                 >
-                  {lang === "es" ? "Bolsa" : "Pocket"}
+                  <UiIcon name="archive" size={16} strokeWidth={2.3} />
+                  {lang === "es" ? "Guardar" : "Saved"}
                 </button>
                 <button
                   onClick={() => { if (selectedText) setShowImageEditor(true); }}
-                  className="h-10 px-4 rounded-2xl text-sm font-black active:scale-95 flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.08)" : "rgba(201,169,97,1)", color: isLight ? "#0a0a0a" : "#08090f" }}
+                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
+                  style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#08090f" }}
                 >
+                  <UiIcon name="sparkle" size={16} strokeWidth={2.3} />
                   {lang === "es" ? "Imagen" : "Image"}
                 </button>
-                <button
-                  onClick={clearSelection}
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center text-xl font-black active:scale-95 flex-shrink-0"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.4)" : "rgba(255,255,255,0.4)" }}
-                >
-                  {"x"}
-                </button>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>
@@ -656,7 +749,7 @@ export function BracketHighlightReader({
               }}
               onPointerUp={finishWordPress}
               onPointerCancel={finishWordPress}
-              onClick={() => token.highlight ? setPendingRemoveId(token.highlight.id) : undefined}
+              onClick={(event) => token.highlight ? showRemoveToolbar(token.highlight.id, event.currentTarget) : undefined}
               title={token.highlight ? (lang === "es" ? "Toca para opciones" : "Tap for options") : undefined}
             >
               {token.text}
