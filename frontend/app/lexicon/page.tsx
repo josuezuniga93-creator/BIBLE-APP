@@ -2275,9 +2275,11 @@ function LexiconInner() {
           <div
             className="le-chapter-nav rounded-[28px] shadow-2xl border grid grid-cols-[54px_1fr_54px] items-center gap-2 p-1.5"
             style={{
-              background: isLight ? "rgba(246,247,248,0.98)" : "rgba(19,20,24,0.96)",
-              borderColor: isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.08)",
-              boxShadow: isLight ? "0 16px 32px rgba(15,23,42,0.12)" : "0 18px 42px rgba(0,0,0,0.45)",
+              background: isLight ? "rgba(255,255,255,0.94)" : "rgba(19,20,24,0.96)",
+              borderColor: isLight ? "rgba(255,255,255,0.88)" : "rgba(255,255,255,0.08)",
+              boxShadow: isLight ? "0 18px 55px rgba(16,17,20,0.16)" : "0 18px 42px rgba(0,0,0,0.45)",
+              backdropFilter: "blur(22px)",
+              WebkitBackdropFilter: "blur(22px)",
             }}
           >
 
