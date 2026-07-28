@@ -62,6 +62,13 @@ type ToolbarPosition = {
   top: number;
 };
 
+type ToolbarAnchor = {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+};
+
 type Props = {
   context: string;
   text: string;
@@ -354,7 +361,7 @@ export function BracketHighlightReader({
     clearLongPressTimer();
   }
 
-  function clampToolbarToViewport(anchor: { left: number; right: number; top: number; bottom: number }, toolbarHeight = TOOLBAR_HEIGHT) {
+  function clampToolbarToViewport(anchor: ToolbarAnchor, toolbarHeight = TOOLBAR_HEIGHT) {
     if (typeof window === "undefined") return null;
 
     const width = Math.min(TOOLBAR_WIDTH, window.innerWidth - (VIEWPORT_PADDING * 2));
@@ -362,11 +369,20 @@ export function BracketHighlightReader({
     const left = Math.round(Math.max(VIEWPORT_PADDING, Math.min(rightAlignedLeft, window.innerWidth - width - VIEWPORT_PADDING)));
     const minTop = READER_HEADER_RESERVE;
     const maxTop = Math.max(minTop, window.innerHeight - READER_FOOTER_RESERVE - toolbarHeight);
-    const preferredAbove = anchor.top - toolbarHeight - TOOLBAR_GAP;
-    const preferredBelow = anchor.bottom + TOOLBAR_GAP;
-    const top = preferredAbove >= minTop
-      ? preferredAbove
-      : Math.min(Math.max(preferredBelow, minTop), maxTop);
+    const visibleBottom = window.innerHeight - READER_FOOTER_RESERVE;
+    const fitsAbove = anchor.top - TOOLBAR_GAP - toolbarHeight >= minTop;
+    const fitsBelow = anchor.bottom + TOOLBAR_GAP + toolbarHeight <= visibleBottom;
+
+    let top: number;
+    if (fitsAbove) {
+      top = anchor.top - toolbarHeight - TOOLBAR_GAP;
+    } else if (fitsBelow) {
+      top = anchor.bottom + TOOLBAR_GAP;
+    } else {
+      const spaceAbove = Math.max(0, anchor.top - minTop);
+      const spaceBelow = Math.max(0, visibleBottom - anchor.bottom);
+      top = spaceAbove >= spaceBelow ? minTop : maxTop;
+    }
 
     return {
       left,
