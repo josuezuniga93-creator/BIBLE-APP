@@ -969,6 +969,91 @@ html[data-theme="premium-neon"] .generated-category-mark[data-active="true"] {
   animation: motionNavIn var(--motion-slow) var(--ease-premium) both;
 }
 
+.scripture-loading-motion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  color: var(--scripture-loader-text);
+}
+
+.scripture-loading-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 36px;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.scripture-loading-ring {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 3px solid var(--scripture-loader-ring);
+}
+
+.scripture-loading-ring span {
+  position: absolute;
+  inset: -3px;
+  border-radius: inherit;
+  border: 3px solid transparent;
+  border-top-color: var(--scripture-loader-arc);
+  border-right-color: var(--scripture-loader-arc);
+  animation: scriptureLoaderSpin 1.2s linear infinite;
+}
+
+.scripture-loading-lines {
+  width: min(84vw, 333px);
+  display: flex;
+  flex-direction: column;
+  gap: 21px;
+}
+
+.scripture-loading-line {
+  position: relative;
+  display: block;
+  height: 13px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--scripture-loader-line);
+}
+
+.scripture-loading-line::after {
+  content: "";
+  position: absolute;
+  inset: -2px auto -2px -82px;
+  width: 82px;
+  border-radius: inherit;
+  background: var(--scripture-loader-shine);
+  filter: blur(10px);
+  animation: scriptureLoaderShimmer 1.3s var(--ease-premium) infinite;
+  animation-delay: inherit;
+}
+
+.scripture-content-reveal {
+  animation: scriptureContentReveal 280ms var(--ease-premium) both;
+}
+
+@keyframes scriptureLoaderSpin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes scriptureLoaderShimmer {
+  from { transform: translateX(0); opacity: 0; }
+  20% { opacity: 0.75; }
+  68% { opacity: 0.75; }
+  to { transform: translateX(430px); opacity: 0; }
+}
+
+@keyframes scriptureContentReveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .motion-pressable {
   transition:
     transform var(--motion-fast) var(--ease-press),

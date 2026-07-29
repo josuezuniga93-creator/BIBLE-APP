@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
+import type { CSSProperties } from "react";
 import { useSearchParams } from "next/navigation";
 import { useTheme } from "../lib/useTheme";
 import { useLanguage } from "../lib/useLanguage";
@@ -2096,9 +2097,36 @@ function LexiconInner() {
             {/* ── Verses ── */}
             <div>
               {loadingChapter && (
-                <div className="flex items-center gap-3 py-20 justify-center">
-                  <div className="w-5 h-5 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin" />
-                  <span className="text-white/30 text-sm">Loading…</span>
+                <div
+                  className="scripture-loading-motion py-16"
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    "--scripture-loader-text": isLight ? "rgba(0,0,0,0.44)" : "rgba(255,255,255,0.45)",
+                    "--scripture-loader-ring": isLight ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.16)",
+                    "--scripture-loader-arc": isLight ? "#0a0a0a" : "#f4f5f7",
+                    "--scripture-loader-line": isLight ? "rgba(229,229,231,0.76)" : "rgba(255,255,255,0.09)",
+                    "--scripture-loader-shine": isLight ? "rgba(255,255,255,0.86)" : "rgba(255,255,255,0.18)",
+                  } as CSSProperties}
+                >
+                  <div className="scripture-loading-status">
+                    <span className="scripture-loading-ring" aria-hidden="true">
+                      <span />
+                    </span>
+                    <span>{lang === "es" ? "Cargando Escritura" : "Loading Scripture"}</span>
+                  </div>
+                  <div className="scripture-loading-lines" aria-hidden="true">
+                    {[92, 78, 88, 66, 96].map((width, index) => (
+                      <span
+                        key={width}
+                        className="scripture-loading-line"
+                        style={{
+                          width: `${width}%`,
+                          animationDelay: `${index * 120}ms`,
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -2160,7 +2188,7 @@ function LexiconInner() {
                     )}
 
                     <div
-                      className={`${FONT_SIZE_CLASSES[fontSize]} ${FONT_SIZE_LEADING_CLASSES[fontSize]}`}
+                      className={`scripture-content-reveal ${FONT_SIZE_CLASSES[fontSize]} ${FONT_SIZE_LEADING_CLASSES[fontSize]}`}
                       style={{ fontFamily: activeFontFamily }}
                       translate="no"
                     >
