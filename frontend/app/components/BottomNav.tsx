@@ -304,8 +304,8 @@ export function BottomNav() {
   if (hiddenForReader) return null;
   if (pathname.startsWith("/auth")) return null;
 
-  // White Noir: explicit inline styles so nav is always white regardless of
-  // CSS variable support (color-mix() may not work on older Android Chrome).
+  // Explicit inline styles keep the dock correct on iOS Safari even when older
+  // theme CSS or color-mix support behaves inconsistently.
   const navSurfaceStyle = isWhiteNoir ? {
     background: "rgba(255,255,255,0.94)",
     border: "1px solid rgba(255,255,255,0.88)",
@@ -313,10 +313,17 @@ export function BottomNav() {
     backdropFilter: "blur(22px)",
     WebkitBackdropFilter: "blur(22px)",
     boxShadow: "0 18px 55px rgba(16,17,20,0.16)",
-  } : undefined;
+  } : {
+    background: "rgba(22,23,29,0.94)",
+    border: "1px solid rgba(255,255,255,0.09)",
+    borderRadius: "24px",
+    backdropFilter: "blur(22px)",
+    WebkitBackdropFilter: "blur(22px)",
+    boxShadow: "0 18px 55px rgba(0,0,0,0.42)",
+  };
 
-  const fgActive   = isWhiteNoir ? "#0a0a0a"              : "var(--fg)";
-  const fgInactive = isWhiteNoir ? "rgba(10,10,10,0.36)"  : "var(--fg-lo)";
+  const fgActive   = isWhiteNoir ? "#0a0a0a"             : "rgba(255,255,255,0.94)";
+  const fgInactive = isWhiteNoir ? "rgba(10,10,10,0.36)" : "rgba(255,255,255,0.38)";
 
   return (
     <nav

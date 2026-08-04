@@ -340,9 +340,9 @@ function verseNumsFromRange(start: number, end: number) {
 
 function splitScriptureSearchQuery(rawQuery: string) {
   const trimmed = rawQuery.trim();
-  const spacedMatch = trimmed.match(/^(.+?)\s+(\d+)(?::(\d+)(?:\s*[-–—]\s*(\d+))?)?$/);
+  const spacedMatch = trimmed.match(/^(.+?)\s+(\d+)\s*(?::\s*(\d+)(?:\s*[-–—]\s*(\d+))?)?$/);
   const compactVerseMatch = !spacedMatch && trimmed.includes(":")
-    ? trimmed.match(/^(.+?)(\d+):(\d+)(?:\s*[-–—]\s*(\d+))?$/)
+    ? trimmed.match(/^(.+?)(\d+)\s*:\s*(\d+)(?:\s*[-–—]\s*(\d+))?$/)
     : null;
   const match = spacedMatch ?? compactVerseMatch;
 

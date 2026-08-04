@@ -4281,6 +4281,24 @@ html[data-theme-mode="light"] .mobile-nav-floating .nav-tab[data-active="true"]:
   box-shadow: none !important;
 }
 
+html[data-theme-mode="dark"] .mobile-nav-surface {
+  background: rgba(22, 23, 29, 0.94) !important;
+  border-color: rgba(255, 255, 255, 0.09) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.42) !important;
+}
+
+html[data-theme-mode="dark"] .mobile-nav-floating .nav-tab[data-active="true"] {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.94) !important;
+  box-shadow: none !important;
+}
+
+html[data-theme-mode="dark"] .mobile-nav-floating .nav-tab[data-active="true"]::after {
+  content: none !important;
+  box-shadow: none !important;
+}
+
 html[data-theme-mode="light"] .desktop-nav-link[data-active="true"] .desktop-nav-icon {
   background: #ffffff !important;
   color: #050505 !important;
