@@ -4,6 +4,10 @@
 // Requires ANTHROPIC_API_KEY in .env.local
 
 import { NextRequest, NextResponse } from "next/server";
+import { allowRequest, readBoundedJson, RequestInputError } from "../../lib/apiSafety";
+import { createClient } from "../../lib/supabase/server";
+
+export const maxDuration = 60;
 
 const HISTORIC_SYSTEM_PROMPT = `You are performing a Historic Christianity analysis. The framework is historic Christian orthodoxy anchored in:
 - The Five Solas (Sola Scriptura, Sola Fide, Sola Gratia, Solus Christus, Soli Deo Gloria)
@@ -183,26 +187,41 @@ export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey || apiKey === "your_anthropic_api_key_here") {
     return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured. Add it to .env.local and redeploy." },
-      { status: 500 }
+      { error: "Church analysis is temporarily unavailable. Please try again later." },
+      { status: 503 }
     );
   }
 
   let body: { churchName: string; denomination?: string; sermons: SermonInput[]; language?: string };
   try {
-    body = await req.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    body = await readBoundedJson(req, 700_000) as typeof body;
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid request." }, { status: error instanceof RequestInputError ? error.status : 400 });
   }
+
+  if (!body || typeof body !== "object") return NextResponse.json({ error: "Invalid request." }, { status: 400 });
 
   const { churchName, denomination, sermons, language } = body;
   const systemPrompt = language === "es" ? HISTORIC_SYSTEM_PROMPT + SPANISH_ADDENDUM : HISTORIC_SYSTEM_PROMPT;
 
-  if (!churchName || !sermons || sermons.length < 4) {
+  if (typeof churchName !== "string" || !churchName.trim() || churchName.length > 200 ||
+    (denomination !== undefined && (typeof denomination !== "string" || denomination.length > 200)) ||
+    !Array.isArray(sermons) || sermons.length < 4 || sermons.length > 8 ||
+    sermons.some((sermon) => !sermon || typeof sermon.transcript !== "string" || sermon.transcript.trim().length < 100 || sermon.transcript.length > 150_000 ||
+      (sermon.title !== undefined && (typeof sermon.title !== "string" || sermon.title.length > 300)) ||
+      (sermon.url !== undefined && (typeof sermon.url !== "string" || sermon.url.length > 2000)))) {
     return NextResponse.json(
-      { error: "churchName and at least 4 sermons with transcripts are required" },
+      { error: "Enter a church name and 4 to 8 sermon transcripts (100 to 150,000 characters each)." },
       { status: 400 }
     );
+  }
+
+  const supabase = await createClient();
+  if (!supabase) return NextResponse.json({ error: "Sign-in is temporarily unavailable." }, { status: 503 });
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  if (authError || !user) return NextResponse.json({ error: "Please sign in to run a church analysis. Your transcripts remain on this page." }, { status: 401 });
+  if (!allowRequest(`analysis:${user.id}`, 3, 10 * 60_000)) {
+    return NextResponse.json({ error: "Please wait a few minutes before running another analysis." }, { status: 429, headers: { "Retry-After": "600" } });
   }
 
   // Build user message from all transcripts.
@@ -227,6 +246,7 @@ Please provide a complete Historic Christianity analysis following the structure
   try {
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
+      signal: AbortSignal.timeout(50_000),
       headers: {
         "Content-Type": "application/json",
         "x-api-key": apiKey,
@@ -241,15 +261,18 @@ Please provide a complete Historic Christianity analysis following the structure
     });
 
     if (!response.ok) {
-      const errText = await response.text();
+      console.error("[church-analysis] Provider status:", response.status);
       return NextResponse.json(
-        { error: `Anthropic API error ${response.status}: ${errText}` },
+        { error: "The analysis service is temporarily unavailable. Your transcripts are still here; please try again." },
         { status: 502 }
       );
     }
 
     const data = (await response.json()) as AnthropicMessage;
-    const analysisText = data.content?.[0]?.text ?? "";
+    const analysisText = data.content?.filter((block) => block.type === "text").map((block) => block.text).join("\n") ?? "";
+    if (!analysisText.trim() || data.stop_reason === "max_tokens") {
+      return NextResponse.json({ error: "The analysis was incomplete. Please shorten the transcripts and try again." }, { status: 502 });
+    }
 
     // Extract verdict from the analysis text
     const verdictMatch = analysisText.match(
@@ -257,11 +280,11 @@ Please provide a complete Historic Christianity analysis following the structure
     );
     const verdict = verdictMatch
       ? verdictMatch[1].trim()
-      : "THEOLOGICALLY CONCERNING";
+      : "MIXED / USE DISCERNMENT";
 
     return NextResponse.json({ analysis: analysisText, verdict });
   } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    const timedOut = err instanceof Error && (err.name === "TimeoutError" || err.name === "AbortError");
+    return NextResponse.json({ error: timedOut ? "The analysis took too long. Your transcripts are still here; please try again." : "The analysis could not be completed. Please try again." }, { status: timedOut ? 504 : 502 });
   }
 }

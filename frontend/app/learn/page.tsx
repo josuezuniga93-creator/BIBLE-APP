@@ -860,7 +860,7 @@ function LearnPageInner() {
         />
       </label>
 
-      <div className="premium-library-tabs" role="tablist" aria-label={lang === "es" ? "Secciones de documentos" : "Document sections"}>
+      <div className="premium-library-tabs" role="group" aria-label={lang === "es" ? "Secciones de documentos" : "Document sections"}>
         {([
           ["all", lang === "es" ? "Docs" : "Docs"],
           ["timeline", lang === "es" ? "Línea" : "Timeline"],

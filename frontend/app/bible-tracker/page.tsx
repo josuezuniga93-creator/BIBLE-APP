@@ -33,14 +33,12 @@ const BIBLE_TRACKER_THEME_STYLES = `
     --bt-muted: #656565;
     --bt-faint: rgba(10, 10, 10, 0.45);
     --bt-dim: rgba(10, 10, 10, 0.28);
-    --bt-gold: #c9a961;
-    --bt-gold-strong: #7f745f;
+    --bt-gold: #0a0a0a;
+    --bt-gold-strong: #50545c;
     --bt-ring-fill: #f4f4f2;
     --bt-shadow: 0 18px 42px rgba(12, 12, 10, 0.06);
     min-height: 100vh;
-    background:
-      radial-gradient(circle at 22% -8%, rgba(201, 169, 97, 0.10), transparent 32%),
-      var(--bt-bg);
+    background: var(--bt-bg);
     color: var(--bt-text);
   }
 
@@ -311,8 +309,8 @@ function StatsBar({ readMap }: { readMap: ReadMap }) {
           <p className="text-[21px] font-black" style={{ color: "var(--bt-text)" }}>{otRead}/{OT_CHAPTERS}</p>
           <div className="mt-3 h-1.5 overflow-hidden rounded-full" style={{ backgroundColor: "var(--bt-border-soft)" }}>
             <div
-              className="h-full rounded-full bg-[#c9a961] transition-all"
-              style={{ width: `${otPct}%` }}
+              className="h-full rounded-full transition-all"
+              style={{ width: `${otPct}%`, backgroundColor: "var(--bt-gold)" }}
             />
           </div>
           <p className="mt-1 text-xs" style={{ color: "var(--bt-dim)" }}>{otPct}%</p>
@@ -351,10 +349,10 @@ function WhatsNext({ readMap }: { readMap: ReadMap }) {
   if (!next) return null;
 
   return (
-    <div className="mb-4 flex items-center gap-3 rounded-xl border border-[#c9a961]/25 bg-[#c9a961]/10 px-4 py-3">
-      <span className="text-lg text-[#c9a961]">→</span>
+    <div className="mb-4 flex items-center gap-3 rounded-xl border px-4 py-3" style={{ borderColor: "var(--bt-border)", background: "var(--bt-card-soft)" }}>
+      <span className="text-lg" style={{ color: "var(--bt-gold-strong)" }}>→</span>
       <div>
-        <p className="mb-0.5 text-xs font-bold uppercase tracking-widest text-[#c9a961]">{lang === "es" ? "Leer Después" : "Read Next"}</p>
+        <p className="mb-0.5 text-xs font-bold uppercase tracking-widest" style={{ color: "var(--bt-gold-strong)" }}>{lang === "es" ? "Leer Después" : "Read Next"}</p>
         <p className="text-sm font-semibold" style={{ color: "var(--bt-text)" }}>
           {bibleBookName(next.book, lang)} {next.chapter}
         </p>

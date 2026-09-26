@@ -63,6 +63,7 @@ export default function PrivacyPage() {
         <div className="flex items-center gap-3 mb-8">
           <button
             onClick={() => router.back()}
+            aria-label="Go back"
             className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
             style={{ background: backBg }}
           >

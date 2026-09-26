@@ -1,6 +1,6 @@
 "use client";
 
-import { LEARN_DOCUMENTS } from "./learnData";
+import LEARN_DOCUMENTS from "./learnCatalog.json";
 import { loadDevotionalProgress } from "./devotionalProgress";
 import { loadNotes } from "./notesData";
 import { loadStreak } from "./streakData";

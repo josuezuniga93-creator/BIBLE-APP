@@ -1,4 +1,5 @@
 "use client";
+import { useClientReady } from "../lib/useClientReady";
 
 /**
  * /preview — Cinematic dark home page redesign (v1)
@@ -122,6 +123,7 @@ function dayOfWeekIndex() {
 }
 
 export default function PreviewHome() {
+  const clientReady = useClientReady();
   const today = new Date();
   const todayHV = HISTORY_VERSES[today.getDate() % HISTORY_VERSES.length];
 
@@ -165,6 +167,8 @@ export default function PreviewHome() {
   const streak = streakData?.streak ?? 0;
   const dayName = today.toLocaleDateString("en-US", { weekday: "long" });
   const dayUpper = dayName.toUpperCase();
+
+  if (!clientReady) return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
 
   // Pull the most memorable two-line phrase from the verse text
   // (falls back to verse text if it isn't a famous phrase)
@@ -277,13 +281,13 @@ export default function PreviewHome() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60">
+            <button className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60" aria-label="Search">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2"/>
                 <path d="m20 20-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </button>
-            <Link href="/more" className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60">
+            <Link href="/more" aria-label="More" className="w-9 h-9 rounded-full border border-white/10 bg-white/[0.04] flex items-center justify-center text-white/60">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                 <path d="M6 8c0-3 3-5 6-5s6 2 6 5v5l2 3H4l2-3V8Z" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"/>
                 <path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" strokeWidth="2"/>

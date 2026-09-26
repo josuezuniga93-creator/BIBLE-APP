@@ -47,21 +47,19 @@ export function loadNotes(): SermonNote[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(NOTES_STORAGE_KEY);
-    return raw ? (JSON.parse(raw) as SermonNote[]) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as SermonNote[]) : [];
   } catch {
     return [];
   }
 }
 
-export function saveNotes(notes: SermonNote[]): void {
-  if (typeof window === "undefined") return;
-  try {
-    const value = JSON.stringify(notes);
-    localStorage.setItem(NOTES_STORAGE_KEY, value);
-    syncKey(NOTES_STORAGE_KEY, value).catch(() => {});
-  } catch {
-    // Storage quota exceeded — fail silently
-  }
+export function saveNotes(notes: SermonNote[]): boolean {
+  if (typeof window === "undefined") return true;
+  const value = JSON.stringify(notes);
+  localStorage.setItem(NOTES_STORAGE_KEY, value);
+  syncKey(NOTES_STORAGE_KEY, value).catch(() => {});
+  return true;
 }
 
 // ─── Note Factory ─────────────────────────────────────────────────────────────

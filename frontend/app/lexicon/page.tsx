@@ -2314,6 +2314,7 @@ function LexiconInner() {
             {/* Prev chapter */}
             <button
               onClick={goPrev}
+              aria-label={lang === "es" ? "Capítulo anterior" : "Previous chapter"}
               className="le-nav-arrow h-[52px] w-[52px] rounded-[22px] flex items-center justify-center transition-transform active:scale-95"
               style={{
                 background: isLight ? "#ffffff" : "rgba(255,255,255,0.06)",
@@ -2359,6 +2360,7 @@ function LexiconInner() {
             {/* Next chapter */}
             <button
               onClick={goNext}
+              aria-label={lang === "es" ? "Capítulo siguiente" : "Next chapter"}
               className="le-nav-arrow h-[52px] w-[52px] rounded-[22px] flex items-center justify-center transition-transform active:scale-95"
               style={{
                 background: isLight ? "#ffffff" : "rgba(255,255,255,0.06)",

@@ -294,7 +294,7 @@ function TimelineItem({ event, sectionId, isLast }: { event: TimelineEvent; sect
       </div>
     </div>
   );
-  if (event.docId) return <Link href={`/learn?doc=${event.docId}`} className="block no-underline">{content}</Link>;
+  if (event.docId) return <Link href={`/learn?doc=${event.docId}`} className="block no-underline" aria-label={`${event.label}: ${event.year}`}>{content}</Link>;
   return <div>{content}</div>;
 }
 
@@ -309,7 +309,7 @@ function DocCard({ doc, th }: { doc: DocEntry; th: Record<string, string> }) {
           size="small"
           doc={{ id: doc.docId, title: doc.label, shortTitle: doc.shortTitle, year: doc.year, origin: doc.origin, category: doc.category }}
         />
-        <Link href={`/learn?doc=${doc.docId}`} className="absolute inset-0 z-10 active:opacity-80 transition-opacity" />
+        <Link href={`/learn?doc=${doc.docId}`} className="absolute inset-0 z-10 active:opacity-80 transition-opacity" aria-label={`${doc.label}: ${doc.year}`} />
       </div>
       <Link href={`/learn?doc=${doc.docId}`}>
         <p className="text-[10px] font-bold leading-tight line-clamp-2" style={{ color: th.textPrimary }}>{doc.label}</p>
@@ -486,6 +486,7 @@ export default function TimelinePage() {
               <Link
                 href={`/learn?doc=${doc.docId}`}
                 className="absolute inset-0 z-30"
+                aria-label={`${lang === "es" ? "Abrir" : "Open"} ${doc.label}`}
                 onClick={e => { if (swipedRef.current) { e.preventDefault(); swipedRef.current = false; } }}
               />
               {/* Radial glow */}
@@ -534,9 +535,12 @@ export default function TimelinePage() {
         </div>
         {/* Pagination dots */}
         <div className="absolute bottom-3.5 left-0 right-0 flex items-center justify-center gap-1.5 pointer-events-none">
-          {FEATURED_DOCS.map((_, i) => (
+          {FEATURED_DOCS.map((doc, i) => (
             <button
               key={i}
+              type="button"
+              aria-label={`${lang === "es" ? "Mostrar" : "Show"} ${doc.label}`}
+              aria-pressed={i === slide}
               className="rounded-full transition-all pointer-events-auto active:opacity-70"
               style={{
                 width: i === slide ? "8px" : "6px",

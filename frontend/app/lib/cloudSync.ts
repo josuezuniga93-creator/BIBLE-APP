@@ -7,42 +7,12 @@
 
 import { createClient } from "./supabase/client";
 import type { User } from "@supabase/supabase-js";
-
-const SYNC_PREFIXES = [
-  // Scripture reading, highlights, notes, bookmarks
-  "ryc-vcolor-",
-  "ryc-chapter-note-",
-  "axiom-hl-",
-  "ryc-bookmarks",
-  "tulip_bookmarks",
-  "tulip_bookmark_categories",
-  "ryc-collections",
-  "ryc-last-position",
-  "ryc-translation",
-
-  // Church, family worship, study, books, historical documents
-  "tulip-church-analyses",
-  "axiom-fw-prayers",
-  "axiom-fw-date",
-  "tulip-reader-highlights:",
-  "tulip-matthew-henry-highlights",
-  "tulip-unified-highlights-v1",
-  "tulip-study-tools-continue-reading",
-  "axiom-progress-",
-  "axiom-bookmark-",
-  "tulip_notes_v1",
-
-  // Progress, badges, account preferences
-  "tulip_badges_earned_v1",
-  "tulip_scripture_shares_v1",
-  "tulip_bible_tracker_v1",
-  "tulip_user_name",
-  "ryc-lang",
-  "tulip_onboarded",
-  "ryc-android-mode",
-];
+import { isSyncableStorageKey as isSyncKey } from "./storageKeys";
+export { isSyncableStorageKey } from "./storageKeys";
 
 const PENDING_SYNC_KEY = "tulip_sync_pending_v1";
+const SYNC_BASELINE_KEY = "tulip_sync_baseline_v1";
+const SYNC_OWNER_KEY = "tulip_sync_owner_v1";
 export const SYNC_STATUS_EVENT = "tulip-cloud-sync-status";
 export const SYNC_COMPLETE_EVENT = "tulip-cloud-sync-complete";
 
@@ -51,18 +21,61 @@ type PendingSyncValue = {
   updatedAt: string;
 };
 
-type SyncStatus = "idle" | "syncing" | "done" | "error";
+export type SyncStatus = "idle" | "syncing" | "done" | "error";
 
 let flushTimer: number | null = null;
 let backgroundSyncStarted = false;
 let storageBridgeInstalled = false;
+let applyingCloudData = false;
+let activeSync: Promise<void> | null = null;
+let currentStatus: SyncStatus = "idle";
 
-function isSyncKey(key: string): boolean {
-  return SYNC_PREFIXES.some((prefix) => key.startsWith(prefix));
+export function getSyncStatus(): SyncStatus { return currentStatus; }
+
+function assertAccount(user: User) {
+  const owner = localStorage.getItem(SYNC_OWNER_KEY);
+  if (owner && owner !== user.id) {
+    throw new Error("This device has reading data from another account. Export a backup before switching accounts.");
+  }
+  localStorage.setItem(SYNC_OWNER_KEY, user.id);
 }
 
-export function isSyncableStorageKey(key: string): boolean {
-  return isSyncKey(key);
+function readBaseline(): Record<string, string> {
+  try { return JSON.parse(localStorage.getItem(SYNC_BASELINE_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function fingerprint(value: string | null): string {
+  if (value === null) return "deleted";
+  let hash = 2166136261;
+  for (let i = 0; i < value.length; i++) hash = Math.imul(hash ^ value.charCodeAt(i), 16777619);
+  return `${value.length}:${hash >>> 0}`;
+}
+
+function rememberSynced(key: string, value: string | null) {
+  const baseline = readBaseline();
+  if (value === null) delete baseline[key];
+  else baseline[key] = fingerprint(value);
+  localStorage.setItem(SYNC_BASELINE_KEY, JSON.stringify(baseline));
+}
+
+function preserveConflict(key: string, value: string) {
+  const keyName = "tulip_sync_conflicts_v1";
+  let conflicts: Array<{ key: string; value: string; savedAt: string }> = [];
+  try { conflicts = JSON.parse(localStorage.getItem(keyName) || "[]"); } catch { /* first backup */ }
+  if (!Array.isArray(conflicts)) conflicts = [];
+  if (!conflicts.some((item) => item.key === key && item.value === value)) {
+    localStorage.setItem(keyName, JSON.stringify([...conflicts, { key, value, savedAt: new Date().toISOString() }]));
+  }
+}
+
+function applyCloudValue(key: string, value: string | null) {
+  applyingCloudData = true;
+  try {
+    if (value === null) localStorage.removeItem(key);
+    else localStorage.setItem(key, value);
+    rememberSynced(key, value);
+  } finally { applyingCloudData = false; }
 }
 
 function getAllSyncableLocalStorage(): Record<string, string> {
@@ -84,6 +97,7 @@ function getAllSyncableLocalStorage(): Record<string, string> {
 }
 
 function emitSyncStatus(status: SyncStatus): void {
+  currentStatus = status;
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent(SYNC_STATUS_EVENT, { detail: { status } }));
 }
@@ -133,7 +147,7 @@ export function scheduleCloudFlush(delay = 800): void {
 
   flushTimer = window.setTimeout(() => {
     flushTimer = null;
-    flushPendingSync().catch((err) => {
+    syncReadingData().catch((err) => {
       console.error("[cloudSync] flush error:", err);
       emitSyncStatus("error");
     });
@@ -141,8 +155,9 @@ export function scheduleCloudFlush(delay = 800): void {
 }
 
 async function flushPendingSyncForUser(user: User): Promise<void> {
+  assertAccount(user);
   const pending = readPendingSync();
-  const entries = Object.entries(pending);
+  const entries = Object.entries(pending).filter(([key]) => isSyncKey(key));
   if (entries.length === 0) return;
 
   const supabase = createClient();
@@ -177,7 +192,8 @@ async function flushPendingSyncForUser(user: User): Promise<void> {
 
   const latestPending = readPendingSync();
   for (const [storageKey, item] of entries) {
-    if (latestPending[storageKey]?.updatedAt === item.updatedAt) {
+    rememberSynced(storageKey, item.value);
+    if (latestPending[storageKey]?.updatedAt === item.updatedAt && latestPending[storageKey]?.value === item.value) {
       delete latestPending[storageKey];
     }
   }
@@ -185,13 +201,12 @@ async function flushPendingSyncForUser(user: User): Promise<void> {
 }
 
 export async function flushPendingSync(): Promise<void> {
-  const user = await getCloudUser();
-  if (!user) return;
-  await flushPendingSyncForUser(user);
+  await syncReadingData();
 }
 
 // Upload all local data to Supabase. Used when a profile has no cloud data yet.
 export async function pushToCloud(user: User): Promise<void> {
+  assertAccount(user);
   const supabase = createClient();
   const localData = getAllSyncableLocalStorage();
   if (Object.keys(localData).length === 0) return;
@@ -208,11 +223,13 @@ export async function pushToCloud(user: User): Promise<void> {
     .from("user_sync_data")
     .upsert(rows, { onConflict: "user_id,storage_key" });
 
-  if (error) console.error("[cloudSync] push error:", error.message);
+  if (error) throw error;
+  for (const [key, value] of Object.entries(localData)) rememberSynced(key, value);
 }
 
 // Pull cloud data into localStorage without overwriting existing local state.
 export async function pullFromCloud(user: User): Promise<void> {
+  assertAccount(user);
   const supabase = createClient();
 
   const { data, error } = await supabase
@@ -221,40 +238,50 @@ export async function pullFromCloud(user: User): Promise<void> {
     .eq("user_id", user.id);
 
   if (error) {
-    console.error("[cloudSync] pull error:", error.message);
-    return;
+    throw error;
   }
-
-  if (!data || data.length === 0) {
-    await pushToCloud(user);
-    return;
-  }
-
+  const rows = data ?? [];
+  const baseline = readBaseline();
   try {
     let filledMissingLocalData = false;
 
-    for (const row of data) {
+    for (const row of rows) {
       if (!row.storage_key || row.value === null || !isSyncKey(row.storage_key)) continue;
 
       const localValue = localStorage.getItem(row.storage_key);
-      if (localValue === null) {
-        localStorage.setItem(row.storage_key, row.value);
+      const pending = readPendingSync()[row.storage_key];
+      if (pending) {
+        if (localValue !== row.value) preserveConflict(row.storage_key, row.value);
+        continue;
+      }
+      if (localValue === row.value) {
+        rememberSynced(row.storage_key, row.value);
+      } else if (localValue === null || baseline[row.storage_key] === fingerprint(localValue)) {
+        applyCloudValue(row.storage_key, row.value);
         filledMissingLocalData = true;
       } else if (localValue !== row.value) {
+        preserveConflict(row.storage_key, row.value);
         queuePendingSync(row.storage_key, localValue);
       }
     }
 
-    const cloudKeys = new Set(data.map((row: { storage_key: string }) => row.storage_key));
+    const cloudKeys = new Set(rows.map((row: { storage_key: string }) => row.storage_key));
     const localData = getAllSyncableLocalStorage();
     for (const [storageKey, value] of Object.entries(localData)) {
-      if (!cloudKeys.has(storageKey)) queuePendingSync(storageKey, value);
+      if (cloudKeys.has(storageKey) || readPendingSync()[storageKey]) continue;
+      if (baseline[storageKey] === fingerprint(value)) {
+        applyCloudValue(storageKey, null);
+        filledMissingLocalData = true;
+      } else {
+        queuePendingSync(storageKey, value);
+      }
     }
 
     await flushPendingSyncForUser(user);
     if (filledMissingLocalData) emitSyncComplete();
   } catch (err) {
     console.error("[cloudSync] merge error:", err);
+    throw err;
   }
 }
 
@@ -272,8 +299,9 @@ function installLocalStorageSyncBridge(): void {
   const nativeRemoveItem = Storage.prototype.removeItem;
 
   Storage.prototype.setItem = function setItemWithCloudQueue(key: string, value: string) {
+    const changed = this.getItem(key) !== String(value);
     nativeSetItem.call(this, key, value);
-    if (this === window.localStorage && isSyncKey(key)) {
+    if (changed && !applyingCloudData && this === window.localStorage && isSyncKey(key)) {
       queuePendingSync(key, value);
       scheduleCloudFlush();
     }
@@ -281,7 +309,7 @@ function installLocalStorageSyncBridge(): void {
 
   Storage.prototype.removeItem = function removeItemWithCloudQueue(key: string) {
     nativeRemoveItem.call(this, key);
-    if (this === window.localStorage && isSyncKey(key)) {
+    if (!applyingCloudData && this === window.localStorage && isSyncKey(key)) {
       queuePendingSync(key, null);
       scheduleCloudFlush();
     }
@@ -293,7 +321,19 @@ export function startBackgroundCloudSync(): void {
   backgroundSyncStarted = true;
   installLocalStorageSyncBridge();
 
-  const run = async () => {
+  window.setTimeout(() => { syncReadingData().catch(() => {}); }, 300);
+  window.addEventListener("online", () => scheduleCloudFlush(250));
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) scheduleCloudFlush(250);
+  });
+  window.addEventListener("storage", (event) => {
+    if (event.key && isSyncKey(event.key)) emitSyncComplete();
+  });
+}
+
+export function syncReadingData(): Promise<void> {
+  if (activeSync) return activeSync;
+  activeSync = (async () => {
     emitSyncStatus("syncing");
     try {
       const user = await getCloudUser();
@@ -308,19 +348,11 @@ export function startBackgroundCloudSync(): void {
       console.error("[cloudSync] background sync error:", err);
       emitSyncStatus("error");
     }
-  };
-
-  window.setTimeout(() => {
-    run().catch((err) => {
-      console.error("[cloudSync] background sync error:", err);
-      emitSyncStatus("error");
-    });
-  }, 300);
-
-  window.addEventListener("online", () => scheduleCloudFlush(250));
-  document.addEventListener("visibilitychange", () => {
-    if (!document.hidden) scheduleCloudFlush(250);
+  })().finally(() => {
+    activeSync = null;
+    if (currentStatus === "done" && Object.keys(readPendingSync()).length > 0) scheduleCloudFlush();
   });
+  return activeSync;
 }
 
 export async function getCloudUser(): Promise<User | null> {

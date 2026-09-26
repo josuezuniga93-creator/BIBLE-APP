@@ -12,6 +12,7 @@ import type {
 } from "./types";
 import { BIBLE_BOOKS } from "./bibleBooks";
 import { getCommentaryEntries } from "./studyToolsData";
+import { isValidChapter, readChapterCache, writeChapterCache } from "./chapterCache";
 
 // ─── Base config ──────────────────────────────────────────────────────────────
 
@@ -408,26 +409,6 @@ async function fetchChapterFallback(
   };
 }
 
-// ─── Chapter cache (localStorage) ────────────────────────────────────────────
-
-// v2 — busts any stale KJV-fallback data cached under Spanish translation keys
-const CHAPTER_CACHE_KEY = (book: number, ch: number, t: string) =>
-  `ryc-ch-v2-${book}-${ch}-${t}`;
-
-function readChapterCache(book: number, ch: number, t: string): ChapterData | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(CHAPTER_CACHE_KEY(book, ch, t));
-    return raw ? (JSON.parse(raw) as ChapterData) : null;
-  } catch { return null; }
-}
-
-function writeChapterCache(data: ChapterData): void {
-  if (typeof window === "undefined") return;
-  const key = CHAPTER_CACHE_KEY(data.book, data.chapter, data.translation ?? "kjv");
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch { /* quota */ }
-}
-
 // ─── Local proxy for non-English translations ─────────────────────────────────
 //     Calls the Next.js API route /api/bible/chapter which fetches from
 //     helloao.org server-side, bypassing browser CORS restrictions.
@@ -441,7 +422,7 @@ async function fetchChapterProxy(
     chapter:     String(chapter),
     translation: trans,
   });
-  const res = await fetch(`/api/bible/chapter?${params.toString()}`, { cache: "no-store" });
+  const res = await fetch(`/api/bible/chapter?${params.toString()}`, { signal: AbortSignal.timeout(15_000) });
   const contentType = res.headers.get("content-type") ?? "";
 
   if (!res.ok || !contentType.includes("application/json")) {
@@ -470,7 +451,18 @@ async function fetchChapterProxy(
  *
  *  All results cached in localStorage for instant subsequent loads.
  */
-export async function fetchChapter(
+const pendingChapters = new Map<string, Promise<ChapterData>>();
+
+export function fetchChapter(bookNum: number, chapter: number, translation = "kjv"): Promise<ChapterData> {
+  const key = `${bookNum}:${chapter}:${translation}`;
+  const pending = pendingChapters.get(key);
+  if (pending) return pending;
+  const request = loadChapter(bookNum, chapter, translation).finally(() => pendingChapters.delete(key));
+  pendingChapters.set(key, request);
+  return request;
+}
+
+async function loadChapter(
   bookNum: number,
   chapter: number,
   translation?: string
@@ -478,8 +470,15 @@ export async function fetchChapter(
   const trans = translation ?? "kjv";
 
   // ── 1. Instant cache hit ───────────────────────────────────────────────────
-  const cached = readChapterCache(bookNum, chapter, trans);
+  const meta = STATIC_BOOKS.find((book) => book.num === bookNum);
+  if (!meta || !Number.isInteger(chapter) || chapter < 1 || chapter > meta.chapters) {
+    throw new Error("Choose a valid book and chapter.");
+  }
+  const cached = await readChapterCache(bookNum, chapter, trans);
   if (cached) return cached;
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    throw new Error("This chapter has not been saved on this device yet. Connect to the internet to open it.");
+  }
 
   // ── 2. Fetch ───────────────────────────────────────────────────────────────
   let result: ChapterData;
@@ -509,7 +508,10 @@ export async function fetchChapter(
   }
 
   // ── 3. Cache for next visit ────────────────────────────────────────────────
-  writeChapterCache(result);
+  if (!isValidChapter(result, bookNum, chapter, trans)) {
+    throw new Error("This translation is temporarily unavailable. Please try again.");
+  }
+  await writeChapterCache(result);
   return result;
 }
 

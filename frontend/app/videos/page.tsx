@@ -131,6 +131,7 @@ function VideoPlayerModal({ videoId, title, onClose, vertical = false }: { video
       <div className="flex items-center px-3 py-2 flex-shrink-0">
         <button
           onClick={onClose}
+          aria-label="Go back"
           className="w-9 h-9 flex items-center justify-center rounded-full transition-all active:scale-90"
           style={{ background: "rgba(255,255,255,0.08)" }}
         >
@@ -1428,6 +1429,7 @@ export default function VideosPage() {
             </button>
             <button
               onClick={() => { setShowSearch(!showSearch); if (showSearch) setSearchQuery(""); }}
+              aria-label={showSearch ? (lang === "es" ? "Cerrar búsqueda" : "Close search") : (lang === "es" ? "Buscar videos" : "Search videos")}
               className="w-9 h-9 flex items-center justify-center rounded-full transition-all"
               style={{ background: showSearch ? (isLight ? "rgba(0,0,0,0.06)" : AC_BG) : (isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.06)"), border: showSearch ? `1px solid ${isLight ? "rgba(0,0,0,0.15)" : AC_BORDER}` : "1px solid transparent" }}
             >

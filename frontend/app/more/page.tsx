@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { isLightTheme, useTheme, type Theme } from "../lib/useTheme";
 import { t, type Lang } from "../lib/i18n";
-import { getCloudUser, pullFromCloud } from "../lib/cloudSync";
+import { getCloudUser, getSyncStatus, SYNC_STATUS_EVENT, type SyncStatus } from "../lib/cloudSync";
+import { ReadingDataTools } from "../components/ReadingDataTools";
+import { downloadReadingReminder } from "../lib/calendarReminder";
+import { UiIcon } from "../components/UiIcon";
 import type { User } from "@supabase/supabase-js";
 import { AppSectionIcon, type AppSectionIconName } from "../components/AppSectionIcon";
 
@@ -138,7 +141,7 @@ function getPalette(isLight: boolean): Palette {
       cardAlt: "#f1f1f2",
       text: "#050505",
       muted: "rgba(0,0,0,0.58)",
-      faint: "rgba(0,0,0,0.35)",
+      faint: "#62626b",
       border: "rgba(0,0,0,0.08)",
       iconWell: "#ececed",
       primary: "#050505",
@@ -154,7 +157,7 @@ function getPalette(isLight: boolean): Palette {
     cardAlt: "rgba(255,255,255,0.085)",
     text: "#ffffff",
     muted: "rgba(255,255,255,0.66)",
-    faint: "rgba(255,255,255,0.38)",
+    faint: "#b0b1ba",
     border: "rgba(255,255,255,0.10)",
     iconWell: "rgba(211,179,97,0.14)",
     primary: "#d3b361",
@@ -368,59 +371,15 @@ export default function MorePage() {
   const c = copyFor(lang);
 
   const [cloudUser, setCloudUser] = useState<User | null>(null);
-  const [syncStatus, setSyncStatus] = useState<"idle" | "syncing" | "done" | "error">("idle");
-  const [notifEnabled, setNotifEnabled] = useState(false);
-  const [notifStatus, setNotifStatus] = useState<"default" | "granted" | "denied">("default");
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 
   useEffect(() => {
-    getCloudUser().then((user) => {
-      setCloudUser(user);
-      if (!user) return;
-
-      setSyncStatus("syncing");
-      pullFromCloud(user)
-        .then(() => setSyncStatus("done"))
-        .catch(() => setSyncStatus("error"));
-    });
+    getCloudUser().then(setCloudUser).catch(() => setSyncStatus("error"));
+    setSyncStatus(getSyncStatus());
+    const onStatus = (event: Event) => setSyncStatus((event as CustomEvent<{ status: SyncStatus }>).detail.status);
+    window.addEventListener(SYNC_STATUS_EVENT, onStatus);
+    return () => window.removeEventListener(SYNC_STATUS_EVENT, onStatus);
   }, []);
-
-  useEffect(() => {
-    if (typeof Notification !== "undefined") {
-      setNotifStatus(Notification.permission as "default" | "granted" | "denied");
-    }
-    try {
-      setNotifEnabled(localStorage.getItem("tulip_notif_enabled") === "true");
-    } catch {
-      // localStorage can be unavailable in restrictive browsers.
-    }
-  }, []);
-
-  async function handleNotifToggle() {
-    if (notifEnabled) {
-      setNotifEnabled(false);
-      try {
-        localStorage.setItem("tulip_notif_enabled", "false");
-      } catch {}
-      return;
-    }
-
-    if (typeof Notification === "undefined") return;
-    let perm = Notification.permission;
-    if (perm === "default") {
-      perm = await Notification.requestPermission();
-      setNotifStatus(perm as "default" | "granted" | "denied");
-    }
-    if (perm !== "granted") return;
-
-    setNotifEnabled(true);
-    try {
-      localStorage.setItem("tulip_notif_enabled", "true");
-    } catch {}
-    if ("serviceWorker" in navigator) {
-      const reg = await navigator.serviceWorker.ready;
-      reg.active?.postMessage({ type: "SCHEDULE_NOTIFICATIONS" });
-    }
-  }
 
   async function handleShare() {
     const data = {
@@ -607,34 +566,22 @@ export default function MorePage() {
             </SettingRow>
 
             <SettingRow
-              label={t(lang, "more_daily_verse")}
-              sub={
-                notifStatus === "denied"
-                  ? t(lang, "more_notif_blocked")
-                  : notifEnabled
-                    ? t(lang, "more_verse_on")
-                    : t(lang, "more_verse_off")
-              }
+              label={lang === "es" ? "Recordatorio de lectura" : "Reading reminder"}
+              sub={lang === "es" ? "Cada día a las 8 en tu calendario" : "Daily at 8 am in your calendar"}
               palette={palette}
             >
               <button
-                onClick={handleNotifToggle}
-                disabled={notifStatus === "denied"}
-                className="relative h-8 w-14 rounded-full transition-colors disabled:opacity-40"
+                onClick={() => downloadReadingReminder(8, 0)}
+                aria-label={lang === "es" ? "Añadir recordatorio al calendario" : "Add reading reminder to calendar"}
+                title={lang === "es" ? "Añadir al calendario" : "Add to calendar"}
+                className="flex h-12 w-12 items-center justify-center rounded-full transition-colors shrink-0"
                 style={{
-                  background: notifEnabled ? palette.primary : palette.cardAlt,
+                  background: palette.cardAlt,
+                  color: palette.text,
                   border: `1px solid ${palette.border}`,
                 }}
-                aria-pressed={notifEnabled}
               >
-                <span
-                  className="absolute top-1 h-6 w-6 rounded-full transition-transform"
-                  style={{
-                    left: 4,
-                    transform: notifEnabled ? "translateX(22px)" : "translateX(0)",
-                    background: notifEnabled ? palette.primaryText : palette.text,
-                  }}
-                />
+                <UiIcon name="calendar" size={20} />
               </button>
             </SettingRow>
 
@@ -655,6 +602,7 @@ export default function MorePage() {
             </button>
           </div>
         </section>
+        <ReadingDataTools />
       </main>
     </div>
   );

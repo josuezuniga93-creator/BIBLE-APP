@@ -456,7 +456,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
         className="sticky top-0 z-30 flex items-center justify-between px-4 h-12"
         style={{ backgroundColor: th.topBarBg, backdropFilter: "blur(12px)", borderBottom: `1px solid ${th.border}` }}
       >
-        <Link href="/library" className="flex items-center gap-1 min-w-[40px]" style={{ color: th.textMuted }}>
+        <Link href="/library" aria-label={lang === "es" ? "Volver a libros" : "Back to books"} className="flex items-center gap-1 min-w-[40px]" style={{ color: th.textMuted }}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
             <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -470,6 +470,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           {/* TOC */}
           <button
             onClick={() => setShowToc((v) => !v)}
+            aria-label={lang === "es" ? "Tabla de contenido" : "Table of contents"}
             className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
             style={{ color: showToc ? th.iconActive : th.iconInactive }}
           >
@@ -491,6 +492,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
           {/* More */}
           <button
             onClick={() => setShowSettings((v) => !v)}
+            aria-label={lang === "es" ? "Opciones de lectura" : "Reading options"}
             className="w-9 h-9 flex items-center justify-center rounded-lg transition-colors"
             style={{ color: th.iconInactive }}
           >

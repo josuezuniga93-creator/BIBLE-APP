@@ -3,10 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, createContext, useContext } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
-import {
-  getDevotionalForDate,
-  DailyDevotional,
-} from "../lib/devotionalData";
+import type { DailyDevotional } from "../lib/devotionalData";
 import { fetchChapter } from "../lib/api";
 import { BIBLE_BOOKS } from "../lib/bibleBooks";
 import { getHymnLyrics } from "../lib/hymnLyrics";
@@ -20,6 +17,8 @@ import {
 } from "../lib/devotionalProgress";
 import { localizeReference } from "../lib/spanishContent";
 import { UiIcon } from "../components/UiIcon";
+import { useClientReady } from "../lib/useClientReady";
+import { downloadReadingReminder } from "../lib/calendarReminder";
 
 // ─── Theme ─────────────────────────────────────────────────────────────────────
 
@@ -387,8 +386,8 @@ const DEVOTIONAL_MOTION_STYLES = `
     --dev-border: rgba(23, 21, 18, 0.10);
     --dev-border-soft: rgba(23, 21, 18, 0.08);
     --dev-text: #171512;
-    --dev-muted: #716b63;
-    --dev-faint: #9a9389;
+    --dev-muted: #55555e;
+    --dev-faint: #64646d;
     --dev-dim: #8b8379;
     --dev-accent: #171512;
     --dev-accent-soft: #eeeeeb;
@@ -424,7 +423,7 @@ const DEVOTIONAL_MOTION_STYLES = `
     --dev-border-soft: rgba(255, 255, 255, 0.07);
     --dev-text: rgba(255, 255, 255, 0.94);
     --dev-muted: rgba(255, 255, 255, 0.66);
-    --dev-faint: rgba(255, 255, 255, 0.44);
+    --dev-faint: #b3b4bd;
     --dev-dim: rgba(255, 255, 255, 0.34);
     --dev-accent: #c9a961;
     --dev-accent-soft: rgba(201, 169, 97, 0.14);
@@ -1611,43 +1610,18 @@ const REMINDER_KEY = "axiom-fw-reminder";
 
 function ReminderCard() {
   const { lang } = useLanguage();
-  const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState("19:00");
-  const [permissionState, setPermissionState] = useState<NotificationPermission>("default");
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     try {
       const stored = localStorage.getItem(REMINDER_KEY);
       if (stored) {
-        const { enabled: e, time: t } = JSON.parse(stored);
-        setEnabled(!!e);
+        const { time: t } = JSON.parse(stored);
         if (t) setTime(t);
       }
     } catch {}
-    if (typeof Notification !== "undefined") setPermissionState(Notification.permission);
   }, []);
-
-  async function handleToggle() {
-    if (!enabled) {
-      if (typeof Notification !== "undefined" && Notification.permission !== "granted") {
-        const result = await Notification.requestPermission();
-        setPermissionState(result);
-        if (result !== "granted") return;
-      }
-      setEnabled(true); save(true, time);
-    } else {
-      setEnabled(false); save(false, time);
-    }
-  }
-
-  function handleTimeChange(t: string) { setTime(t); if (enabled) save(enabled, t); }
-
-  function save(e: boolean, t: string) {
-    try { localStorage.setItem(REMINDER_KEY, JSON.stringify({ enabled: e, time: t })); } catch {}
-    setSaved(true);
-    setTimeout(() => setSaved(false), 1500);
-  }
 
   const [h, m] = time.split(":").map(Number);
   const ampm = h < 12 ? "AM" : "PM";
@@ -1662,40 +1636,30 @@ function ReminderCard() {
       <div className="flex items-center justify-between">
         <div>
           <p className="devotional-section-label" style={{ color: "var(--dev-label-blue)", marginBottom: 8 }}>{t(lang, "family_daily_reminder")}</p>
-          <p className="text-xs mt-0.5" style={{ color: "var(--dev-muted)" }}>{t(lang, "family_reminder_desc")}</p>
+          <p className="text-xs mt-0.5" style={{ color: "var(--dev-muted)" }}>{lang === "es" ? "Un momento diario en tu calendario." : "A daily moment in your calendar."}</p>
         </div>
-        <button
-          onClick={handleToggle}
-          className="relative w-11 h-6 rounded-full transition-colors flex-shrink-0"
-          style={{ backgroundColor: enabled ? "var(--dev-accent)" : "var(--dev-accent-soft)" }}
-          type="button"
-        >
-          <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform ${enabled ? "translate-x-5" : ""}`} />
-        </button>
+        <UiIcon name="calendar" size={24} />
       </div>
-
-      {enabled && (
         <div className="space-y-2">
           <p style={{ ...LABEL_STYLE, color: "var(--dev-faint)" }}>{t(lang, "family_reminder_time")}</p>
           <div className="flex items-center gap-3">
             <input
               type="time"
+              aria-label={t(lang, "family_reminder_time")}
               value={time}
-              onChange={(e) => handleTimeChange(e.target.value)}
+              onChange={(e) => { setTime(e.target.value); setSaved(false); }}
               className="flex-1 rounded-xl px-3 py-2 text-sm focus:outline-none"
               style={{ backgroundColor: "var(--dev-card-soft)", color: "var(--dev-text)", border: "1px solid var(--dev-border)" }}
             />
             <span className="text-sm font-black flex-shrink-0" style={{ color: "var(--dev-accent)" }}>{displayTime}</span>
           </div>
-          {permissionState === "denied" && (
-            <p className="text-xs" style={{ color: "var(--dev-danger-text)" }}>{t(lang, "family_notif_blocked")}</p>
-          )}
-          {saved && <p className="text-xs" style={{ color: "var(--dev-action-text)" }}>{t(lang, "family_reminder_saved")}</p>}
-          <p className="text-[11px] leading-relaxed" style={{ color: "var(--dev-faint)" }}>
-            {t(lang, "family_notif_note")}
-          </p>
+          <button type="button" className="devotional-step-button w-full justify-center" disabled={!time} onClick={() => {
+            downloadReadingReminder(h, m, true);
+            try { localStorage.setItem(REMINDER_KEY, JSON.stringify({ time })); } catch { /* Calendar download still works. */ }
+            setSaved(true);
+          }}><UiIcon name="calendar" />{lang === "es" ? "Añadir al calendario" : "Add to calendar"}</button>
+          {saved && <p role="status" className="text-xs" style={{ color: "var(--dev-action-text)" }}>{lang === "es" ? "Abre el archivo descargado para añadir el recordatorio." : "Open the downloaded file to add your reminder."}</p>}
         </div>
-      )}
     </div>
   );
 }
@@ -1703,6 +1667,7 @@ function ReminderCard() {
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function FamilyWorshipPage() {
+  const clientReady = useClientReady();
   const { lang } = useLanguage();
   const today = useMemo(() => {
     const d = new Date();
@@ -1753,8 +1718,25 @@ export default function FamilyWorshipPage() {
     selectedDate.getMonth()    === today.getMonth() &&
     selectedDate.getDate()     === today.getDate();
 
-  const dailyEntry = getDevotionalForDate(selectedDate);
   const dateStr    = toDateStr(selectedDate);
+  const [dailyEntry, setDailyEntry] = useState<DailyDevotional | null>(null);
+  const [entryLoading, setEntryLoading] = useState(true);
+  const [entryAttempt, setEntryAttempt] = useState(0);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    setDailyEntry(null);
+    setEntryLoading(true);
+    fetch(`/api/devotional?date=${dateStr}`, { signal: controller.signal })
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Reading unavailable");
+        return response.json() as Promise<DailyDevotional>;
+      })
+      .then((entry) => { if (!controller.signal.aborted) setDailyEntry(entry); })
+      .catch(() => { /* The retry state keeps date navigation available. */ })
+      .finally(() => { if (!controller.signal.aborted) setEntryLoading(false); });
+    return () => controller.abort();
+  }, [dateStr, entryAttempt]);
 
   useEffect(() => {
     setSectionProgress(getDevotionalSectionProgress(dateStr));
@@ -1782,6 +1764,8 @@ export default function FamilyWorshipPage() {
     setShowConfetti(true);
     setTimeout(() => setShowConfetti(false), 2500);
   }, [dateStr]);
+
+  if (!clientReady) return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
 
   return (
     <ThemeCtx.Provider value={tokens}>
@@ -1831,7 +1815,15 @@ export default function FamilyWorshipPage() {
             </p>
           </header>
 
-          {dailyEntry ? (
+          {entryLoading ? (
+            <div className="devotional-motion-card p-6 mt-6" role="status" aria-label={lang === "es" ? "Cargando devocional" : "Loading devotional"}>
+              <div className="scripture-loading-lines" aria-hidden="true">
+                {[92, 100, 87, 95, 70].map((width, index) => (
+                  <span key={index} className="scripture-loading-line" style={{ width: `${width}%`, animationDelay: `${index * 90}ms` }} />
+                ))}
+              </div>
+            </div>
+          ) : dailyEntry ? (
             <>
               <section className="devotional-progress-card" aria-label="Devotional progress">
                 <div
@@ -1919,11 +1911,11 @@ export default function FamilyWorshipPage() {
                 {t(lang, "family_no_devotional_sub")}
               </p>
               <button
-                onClick={goToToday}
+                onClick={() => setEntryAttempt((value) => value + 1)}
                 className="mt-5 devotional-today-chip"
                 type="button"
               >
-                {t(lang, "family_go_today")}
+                {lang === "es" ? "Reintentar" : "Try again"}
               </button>
             </div>
           )}

@@ -8,10 +8,12 @@ import { createClient } from "../../lib/supabase/server";
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
-  const next = searchParams.get("next") ?? "/more";
+  const requestedNext = searchParams.get("next") ?? "/more";
+  const next = requestedNext.startsWith("/") && !requestedNext.startsWith("//") && !requestedNext.includes("\\") ? requestedNext : "/more";
 
   if (code) {
     const supabase = await createClient();
+    if (!supabase) return NextResponse.redirect(`${origin}/auth/login?error=auth_unavailable`);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
       return NextResponse.redirect(`${origin}${next}`);

@@ -3,7 +3,7 @@
 import { BIBLE_BOOKS } from "./bibleBooks";
 import { STATIC_BOOK_CATALOG } from "./bookCatalog";
 import { syncKey } from "./cloudSync";
-import { LEARN_DOCUMENTS } from "./learnData";
+import LEARN_DOCUMENTS from "./learnCatalog.json";
 
 export type UnifiedHighlightSource =
   | "scripture"

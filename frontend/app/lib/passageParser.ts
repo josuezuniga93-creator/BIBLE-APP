@@ -24,7 +24,7 @@ function normalizeBookLabel(value: string) {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/\./g, "")
-    .replace(/\s+/g, " ")
+    .replace(/\s+/g, "")
     .trim();
 }
 
@@ -40,10 +40,10 @@ function parseVersePart(value: string | undefined) {
   if (!value) return {};
   const [startRaw, endRaw] = value.replace(/\s+/g, "").split("-");
   const verseStart = Number(startRaw);
-  const verseEnd = Number(endRaw);
+  const verseEnd = endRaw ? Number(endRaw) : undefined;
   return {
-    verseStart: Number.isFinite(verseStart) && verseStart > 0 ? verseStart : undefined,
-    verseEnd: Number.isFinite(verseEnd) && verseEnd > 0 ? verseEnd : undefined,
+    verseStart: verseEnd ? Math.min(verseStart, verseEnd) : verseStart,
+    verseEnd: verseEnd ? Math.max(verseStart, verseEnd) : undefined,
   };
 }
 
@@ -95,28 +95,22 @@ export function parsePassageInput(input: string, fallbackBookNum: number): Parse
   if (!raw) return null;
 
   const fallbackBook = getFallbackBook(fallbackBookNum);
-  const normalizedRaw = normalizeBookLabel(raw);
   const candidates = buildBookCandidates();
-
-  let book = fallbackBook;
-  let rest = raw;
-
-  const matched = candidates.find(({ key }) => normalizedRaw === key || normalizedRaw.startsWith(`${key} `));
-  if (matched) {
-    book = matched.book;
-    const originalPrefix = raw.match(new RegExp(`^\\s*${matched.label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`, "i"))?.[0];
-    rest = raw.slice(originalPrefix?.length ?? matched.label.length).trim();
+  const bookOnly = candidates.find(({ key }) => normalizeBookLabel(raw) === key);
+  if (bookOnly) {
+    const book = bookOnly.book;
+    return { bookNum: book.num, bookName: book.name, chapter: 1, displayRef: book.name, normalized: book.name, hasExplicitChapter: false };
   }
-
-  const match = rest.match(/^(\d+)(?:(?::|\.)\s*(\d+(?:\s*-\s*\d+)?))?/);
-  if (!match) {
-    if (!matched) return null;
-    const displayRef = book.name;
-    return { bookNum: book.num, bookName: book.name, chapter: 1, displayRef, normalized: displayRef, hasExplicitChapter: false };
-  }
-
-  const chapter = clamp(Number(match[1]) || 1, 1, book.chapters);
-  const { verseStart, verseEnd } = parseVersePart(match[2]);
+  const match = raw.match(/^(.*?)\s*(\d+)\s*(?:[:.]\s*(\d+(?:\s*-\s*\d+)?))?$/);
+  if (!match) return null;
+  const label = normalizeBookLabel(match[1]);
+  const book = label ? candidates.find(({ key }) => key === label)?.book : fallbackBook;
+  if (!book) return null;
+  const chapter = Number(match[2]);
+  if (!Number.isSafeInteger(chapter) || chapter < 1 || chapter > book.chapters) return null;
+  const { verseStart, verseEnd } = parseVersePart(match[3]);
+  if (verseStart !== undefined && (!Number.isSafeInteger(verseStart) || verseStart < 1 || verseStart > 176)) return null;
+  if (verseEnd !== undefined && (!Number.isSafeInteger(verseEnd) || verseEnd < 1 || verseEnd > 176)) return null;
   const displayRef = formatParsedPassage({ bookName: book.name, chapter, verseStart, verseEnd });
 
   return {

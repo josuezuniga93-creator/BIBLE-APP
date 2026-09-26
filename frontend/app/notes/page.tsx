@@ -1185,6 +1185,7 @@ export default function NotesPage() {
 
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [storageError, setStorageError] = useState<string | null>(null);
 
   // Fullscreen note viewer
   const [viewingNote, setViewingNote] = useState<SermonNote | null>(null);
@@ -1276,8 +1277,15 @@ export default function NotesPage() {
   // ── Actions ──────────────────────────────────────────────────────────────────
 
   const persistNotes = (next: SermonNote[]) => {
-    setNotes(next);
-    saveNotes(next);
+    try {
+      saveNotes(next);
+      setNotes(next);
+      setStorageError(null);
+      return true;
+    } catch {
+      setStorageError(lang === "es" ? "No se pudo guardar. Libera espacio e intenta otra vez." : "Could not save. Free up device storage and try again.");
+      return false;
+    }
   };
 
   const openNewNote = (bookNum?: number, chapter?: number) => {
@@ -1302,14 +1310,11 @@ export default function NotesPage() {
 
   const handleSaveNote = (note: SermonNote) => {
     const noteToSave = normalizeNotePassage(note);
-    setNotes((prev) => {
-      const exists = prev.some((n) => n.id === noteToSave.id);
-      const next = exists
-        ? prev.map((n) => (n.id === noteToSave.id ? noteToSave : n))
-        : [noteToSave, ...prev];
-      saveNotes(next);
-      return next;
-    });
+    const exists = notes.some((n) => n.id === noteToSave.id);
+    const next = exists
+      ? notes.map((n) => (n.id === noteToSave.id ? noteToSave : n))
+      : [noteToSave, ...notes];
+    if (!persistNotes(next)) return;
     setEditorOpen(false);
     setEditingNote(null);
     // Navigate to the saved note's book/chapter (sermon notes only)
@@ -1423,6 +1428,20 @@ export default function NotesPage() {
                 <span className="leading-tight">{t(lang, "notes_new")}</span>
               </button>
             </div>
+
+            {storageError && (
+              <div
+                role="alert"
+                className="rounded-2xl px-4 py-3 text-[12px] font-bold"
+                style={{
+                  background: isLight ? "#fff4f4" : "rgba(248, 113, 113, 0.12)",
+                  border: isLight ? "1px solid rgba(185, 28, 28, 0.18)" : "1px solid rgba(248, 113, 113, 0.20)",
+                  color: isLight ? "#991b1b" : "#fecaca",
+                }}
+              >
+                {storageError}
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-2 rounded-[22px] p-1" style={{ border: isLight ? "1px solid rgba(0,0,0,0.09)" : "1px solid rgba(255,255,255,0.07)", background: isLight ? "rgba(0,0,0,0.06)" : "rgba(0,0,0,0.18)" }}>
               {(["sermon", "general"] as const).map((tab) => {

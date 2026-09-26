@@ -441,7 +441,7 @@ export default function ChurchDirectoryPage() {
 
         {/* ── Header ────────────────────────────────────────────────────────── */}
         <div className="flex items-center gap-3">
-          <Link href="/more" className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.07] transition-colors flex-shrink-0">
+          <Link href="/more" aria-label={lang === "es" ? "Volver a Más" : "Back to More"} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/40 hover:text-white/70 hover:bg-white/[0.07] transition-colors flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
               <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>

@@ -196,7 +196,7 @@ export default function LibraryPage() {
     });
   }
 
-  const available = STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon);
+  const available = useMemo(() => STATIC_BOOK_CATALOG.filter((b) => !b.coming_soon), []);
   const featuredBooks = available.slice(0, 3);
   const recentlyAdded = [...available].slice(-3).reverse();
 
@@ -219,7 +219,7 @@ export default function LibraryPage() {
     }
     setInProgress(entries);
     setCompletedSlugs(done);
-  }, []);
+  }, [available]);
 
   // Carousel auto-advance every 4 seconds — pauses permanently once user touches
   useEffect(() => {
@@ -283,7 +283,7 @@ export default function LibraryPage() {
         />
       </label>
 
-      <div className="premium-library-tabs" role="tablist" aria-label={lang === "es" ? "Secciones de libros" : "Book sections"}>
+      <div className="premium-library-tabs" role="group" aria-label={lang === "es" ? "Secciones de libros" : "Book sections"}>
         {([
           ["books", lang === "es" ? "Libros" : "Books"],
           ["reading", lang === "es" ? "Leyendo" : "Reading"],

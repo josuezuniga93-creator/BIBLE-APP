@@ -185,18 +185,17 @@ async function fetchViaTranscriptIo(videoId: string): Promise<{ items: CaptionIt
 async function fetchViaLocalBridge(rawUrl: string): Promise<{ transcript: string; title?: string | null } | null> {
   const bridgeUrl =
     process.env.LOCAL_TRANSCRIPT_BRIDGE_URL ??
-    process.env.TRANSCRIPT_BRIDGE_URL ??
-    "https://recently-bufing-casual-quotations.trycloudflare.com";
+    process.env.TRANSCRIPT_BRIDGE_URL;
   const bridgeToken =
     process.env.LOCAL_TRANSCRIPT_BRIDGE_TOKEN ??
-    process.env.TRANSCRIPT_BRIDGE_TOKEN ??
-    "tulip-local-bridge";
+    process.env.TRANSCRIPT_BRIDGE_TOKEN;
 
   if (!bridgeUrl || !bridgeToken) return null;
 
   try {
     const res = await fetch(`${bridgeUrl.replace(/\/+$/, "")}/transcript`, {
       method: "POST",
+      signal: AbortSignal.timeout(12_000),
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${bridgeToken}`,

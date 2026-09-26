@@ -1,0 +1,650 @@
+[
+  {
+    "id": "jerusalem-council",
+    "title": "The Jerusalem Council",
+    "sections": [
+      {
+        "id": "jc1",
+        "title": "The First Council: Circumcision and the Gentiles"
+      },
+      {
+        "id": "jc2",
+        "title": "Peter's Argument and the Heart of the Decision"
+      },
+      {
+        "id": "jc3",
+        "title": "The Council's Lasting Significance"
+      }
+    ]
+  },
+  {
+    "id": "apostles-creed",
+    "title": "The Apostles' Creed",
+    "sections": [
+      {
+        "id": "ac1",
+        "title": "The Apostles' Creed — Full Text"
+      },
+      {
+        "id": "ac2",
+        "title": "Where the Creed Came From"
+      },
+      {
+        "id": "ac3",
+        "title": "Theological Exposition"
+      }
+    ]
+  },
+  {
+    "id": "council-nicaea",
+    "title": "Council of Nicaea",
+    "sections": [
+      {
+        "id": "ni1",
+        "title": "Arius, Alexander, and the Nicene Question"
+      },
+      {
+        "id": "ni2",
+        "title": "The Nicene Decision and Anathemas"
+      }
+    ]
+  },
+  {
+    "id": "nicene-creed",
+    "title": "The Nicene Creed",
+    "sections": [
+      {
+        "id": "nc1",
+        "title": "The Nicene-Constantinopolitan Creed (381 AD)"
+      },
+      {
+        "id": "nc2",
+        "title": "Why This Creed Was Necessary"
+      },
+      {
+        "id": "nc3",
+        "title": "Homoousios and the Filioque"
+      }
+    ]
+  },
+  {
+    "id": "athanasian-creed",
+    "title": "Athanasian Creed",
+    "sections": [
+      {
+        "id": "ath1",
+        "title": "The Athanasian Creed: On the Trinity"
+      },
+      {
+        "id": "ath2",
+        "title": "The Athanasian Creed: On the Incarnation"
+      }
+    ]
+  },
+  {
+    "id": "council-chalcedon",
+    "title": "Council of Chalcedon",
+    "sections": [
+      {
+        "id": "ch1",
+        "title": "The Chalcedonian Definition — Full Text"
+      },
+      {
+        "id": "ch2",
+        "title": "Without Confusion, Without Change, Without Division, Without Separation"
+      },
+      {
+        "id": "ch3",
+        "title": "Why Chalcedon Still Matters"
+      }
+    ]
+  },
+  {
+    "id": "augustine-grace",
+    "title": "Augustine on Grace & Election",
+    "sections": [
+      {
+        "id": "ag1",
+        "title": "Augustine of Hippo: Doctor of Grace"
+      },
+      {
+        "id": "ag2",
+        "title": "The Pelagian Controversy and Total Grace"
+      },
+      {
+        "id": "ag3",
+        "title": "Augustine's Theology of Grace in Summary"
+      }
+    ]
+  },
+  {
+    "id": "council-carthage",
+    "title": "Council of Carthage",
+    "sections": [
+      {
+        "id": "car1",
+        "title": "Pelagius, Augustine, and the Grace Controversy"
+      },
+      {
+        "id": "car2",
+        "title": "Carthage's Nine Canons Against Pelagianism"
+      }
+    ]
+  },
+  {
+    "id": "council-orange",
+    "title": "Second Council of Orange",
+    "sections": [
+      {
+        "id": "or1",
+        "title": "The Problem That Remained: Semi-Pelagianism"
+      },
+      {
+        "id": "or2",
+        "title": "Orange 529: Against Semi-Pelagianism"
+      }
+    ]
+  },
+  {
+    "id": "wycliffe",
+    "title": "Wycliffe & the Pre-Reformation",
+    "sections": [
+      {
+        "id": "wy1",
+        "title": "John Wycliffe: Reformer Before the Reformation"
+      },
+      {
+        "id": "wy2",
+        "title": "The Wycliffite Movement and Its Legacy"
+      }
+    ]
+  },
+  {
+    "id": "jan-hus",
+    "title": "Jan Hus — Martyr of Bohemia",
+    "sections": [
+      {
+        "id": "jh1",
+        "title": "Jan Hus: Reformer, Preacher, Martyr"
+      },
+      {
+        "id": "jh2",
+        "title": "The Fire That Lit a Continent"
+      }
+    ]
+  },
+  {
+    "id": "gutenberg",
+    "title": "Gutenberg Bible & the Printing Press",
+    "sections": [
+      {
+        "id": "gb1",
+        "title": "Gutenberg's Press and the Spread of Scripture"
+      },
+      {
+        "id": "gb2",
+        "title": "Print, Scripture, and the Protestant Reformation"
+      }
+    ]
+  },
+  {
+    "id": "95theses",
+    "title": "The 95 Theses",
+    "sections": [
+      {
+        "id": "t1",
+        "title": "Repentance and Penance"
+      },
+      {
+        "id": "t2",
+        "title": "Purgatory and Canonical Penalties"
+      },
+      {
+        "id": "t3",
+        "title": "Indulgences Cannot Save"
+      },
+      {
+        "id": "t4",
+        "title": "True Repentance vs. Letters of Pardon"
+      },
+      {
+        "id": "t5",
+        "title": "Works of Love Over Pardons"
+      },
+      {
+        "id": "t6",
+        "title": "The True Treasure of the Church"
+      },
+      {
+        "id": "t7",
+        "title": "Hard Questions and the Call to the Cross"
+      }
+    ]
+  },
+  {
+    "id": "diet-of-worms",
+    "title": "Diet of Worms",
+    "sections": [
+      {
+        "id": "dw1",
+        "title": "Luther Before Emperor and Empire"
+      },
+      {
+        "id": "dw2",
+        "title": "What Worms Established and Why It Still Matters"
+      }
+    ]
+  },
+  {
+    "id": "tyndale",
+    "title": "Tyndale's New Testament",
+    "sections": [
+      {
+        "id": "tn1",
+        "title": "William Tyndale: Father of the English Bible"
+      },
+      {
+        "id": "tn2",
+        "title": "Betrayed, Strangled, and Burned"
+      }
+    ]
+  },
+  {
+    "id": "calvins-institutes",
+    "title": "Calvin's Institutes of the Christian Religion",
+    "sections": [
+      {
+        "id": "ci1",
+        "title": "Institutes of the Christian Religion: The Masterwork of Reformed Theology"
+      },
+      {
+        "id": "ci2",
+        "title": "What the Institutes Teach: Sovereignty, Grace, and Scripture"
+      }
+    ]
+  },
+  {
+    "id": "augsburg-confession",
+    "title": "Augsburg Confession",
+    "sections": [
+      {
+        "id": "aug1",
+        "title": "God, Sin, Christ, Justification, and the Church"
+      },
+      {
+        "id": "aug2",
+        "title": "Sacraments, Confession, and Ministry"
+      },
+      {
+        "id": "aug3",
+        "title": "Civil Life, Christ's Return, and Good Works"
+      },
+      {
+        "id": "aug4",
+        "title": "The Abuses That Were Corrected"
+      }
+    ]
+  },
+  {
+    "id": "smalcald-articles",
+    "title": "Smalcald Articles",
+    "sections": [
+      {
+        "id": "sm1",
+        "title": "The High Articles: Trinity and Incarnation"
+      },
+      {
+        "id": "sm2",
+        "title": "Christ and Faith: The Non-Negotiable Core"
+      },
+      {
+        "id": "sm3",
+        "title": "Articles Open for Discussion"
+      }
+    ]
+  },
+  {
+    "id": "geneva-bible",
+    "title": "The Geneva Bible",
+    "sections": [
+      {
+        "id": "gv1",
+        "title": "The Geneva Bible: Scripture for the People"
+      },
+      {
+        "id": "gv2",
+        "title": "The Bible of the Puritans and Baptists"
+      }
+    ]
+  },
+  {
+    "id": "belgic-confession",
+    "title": "Belgic Confession",
+    "sections": [
+      {
+        "id": "bc1",
+        "title": "God and the Trinity"
+      },
+      {
+        "id": "bc2",
+        "title": "Christ and the Atonement"
+      },
+      {
+        "id": "bc3",
+        "title": "Salvation, the Church, and the Last Things"
+      }
+    ]
+  },
+  {
+    "id": "heidelberg",
+    "title": "Heidelberg Catechism",
+    "sections": [
+      {
+        "id": "hc1",
+        "title": "Our Only Comfort"
+      },
+      {
+        "id": "hc2",
+        "title": "Our Sin and Misery"
+      },
+      {
+        "id": "hc3",
+        "title": "Our Deliverance"
+      },
+      {
+        "id": "hc4",
+        "title": "Faith and the Creed"
+      },
+      {
+        "id": "hc5",
+        "title": "God the Father and Creation"
+      },
+      {
+        "id": "hc6",
+        "title": "Jesus Christ: His Person and Work"
+      },
+      {
+        "id": "hc7",
+        "title": "The Holy Spirit and the Church"
+      },
+      {
+        "id": "hc8",
+        "title": "Justification and the Sacraments"
+      },
+      {
+        "id": "hc9",
+        "title": "Gratitude: The Law"
+      },
+      {
+        "id": "hc10",
+        "title": "Prayer and the Lord's Prayer"
+      }
+    ]
+  },
+  {
+    "id": "thirty-nine-articles",
+    "title": "Thirty-Nine Articles",
+    "sections": [
+      {
+        "id": "ta1",
+        "title": "Of Faith: God, Scripture, and the Creeds"
+      },
+      {
+        "id": "ta2",
+        "title": "Of Sin and Salvation: The Reformed Core"
+      },
+      {
+        "id": "ta3",
+        "title": "Of the Church, Ministry, and Practical Matters"
+      }
+    ]
+  },
+  {
+    "id": "canons-of-dort",
+    "title": "Canons of Dort",
+    "sections": [
+      {
+        "id": "cd1",
+        "title": "Divine Election and Reprobation"
+      },
+      {
+        "id": "cd2",
+        "title": "Christ's Death and Human Redemption"
+      },
+      {
+        "id": "cd3",
+        "title": "Human Corruption and Conversion"
+      },
+      {
+        "id": "cd4",
+        "title": "The Perseverance of the Saints"
+      }
+    ]
+  },
+  {
+    "id": "king-james-bible",
+    "title": "King James Bible",
+    "sections": [
+      {
+        "id": "kjv1",
+        "title": "The Authorized Version: A Bible for an Empire"
+      },
+      {
+        "id": "kjv2",
+        "title": "The KJV and Reformed Baptist Heritage"
+      }
+    ]
+  },
+  {
+    "id": "five-solas",
+    "title": "The Five Solas of the Reformation",
+    "sections": [
+      {
+        "id": "s1",
+        "title": "Scripture Alone"
+      },
+      {
+        "id": "s2",
+        "title": "Faith Alone"
+      },
+      {
+        "id": "s3",
+        "title": "Grace Alone"
+      },
+      {
+        "id": "s4",
+        "title": "Christ Alone"
+      },
+      {
+        "id": "s5",
+        "title": "To God Alone Be the Glory"
+      }
+    ]
+  },
+  {
+    "id": "first-london-baptist",
+    "title": "First London Baptist Confession",
+    "sections": [
+      {
+        "id": "fl1",
+        "title": "The First London Baptist Confession (1644)"
+      },
+      {
+        "id": "fl2",
+        "title": "Believer's Baptism: The Defining Baptist Conviction"
+      },
+      {
+        "id": "fl3",
+        "title": "From First London to Second London"
+      }
+    ]
+  },
+  {
+    "id": "westminster-confession",
+    "title": "Westminster Confession of Faith",
+    "sections": [
+      {
+        "id": "wcf1",
+        "title": "Of the Holy Scripture"
+      },
+      {
+        "id": "wcf2",
+        "title": "Of God, the Holy Trinity, and God's Eternal Decree"
+      },
+      {
+        "id": "wcf3",
+        "title": "Of Creation and Providence"
+      },
+      {
+        "id": "wcf4",
+        "title": "Of the Fall of Man and God's Covenant with Man"
+      },
+      {
+        "id": "wcf5",
+        "title": "Of Christ the Mediator"
+      },
+      {
+        "id": "wcf6",
+        "title": "Of Free Will, Effectual Calling, and Justification"
+      },
+      {
+        "id": "wcf7",
+        "title": "Of Adoption, Sanctification, Faith, Repentance, and Good Works"
+      },
+      {
+        "id": "wcf8",
+        "title": "Of Perseverance, Assurance, the Law, and Christian Liberty"
+      },
+      {
+        "id": "wcf9",
+        "title": "Of Worship, Oaths, the Magistrate, and Marriage"
+      },
+      {
+        "id": "wcf10",
+        "title": "Of the Church, Communion of Saints, and Sacraments"
+      },
+      {
+        "id": "wcf11",
+        "title": "Of Church Censures, Synods, Death, and the Last Judgment"
+      }
+    ]
+  },
+  {
+    "id": "westminster-shorter",
+    "title": "Westminster Shorter Catechism",
+    "sections": [
+      {
+        "id": "wsc1",
+        "title": "God, Scripture, and the Fall"
+      },
+      {
+        "id": "wsc2",
+        "title": "The Covenant and the Fall"
+      },
+      {
+        "id": "wsc3",
+        "title": "The Redeemer and His Work"
+      },
+      {
+        "id": "wsc4",
+        "title": "Effectual Calling, Justification, and Sanctification"
+      },
+      {
+        "id": "wsc5",
+        "title": "The Ten Commandments: Summary and First Table"
+      },
+      {
+        "id": "wsc6",
+        "title": "Second through Fifth Commandments"
+      },
+      {
+        "id": "wsc7",
+        "title": "Fifth through Ninth Commandments"
+      },
+      {
+        "id": "wsc8",
+        "title": "Tenth Commandment, Prayer, and the Lord's Prayer"
+      }
+    ]
+  },
+  {
+    "id": "westminster-larger",
+    "title": "Westminster Larger Catechism",
+    "sections": [
+      {
+        "id": "wlc1",
+        "title": "God, Scripture, Creation, and the Fall"
+      },
+      {
+        "id": "wlc2",
+        "title": "The Mediator: His Person, Work, and Benefits"
+      },
+      {
+        "id": "wlc3",
+        "title": "The Moral Law: The Ten Commandments Expounded"
+      },
+      {
+        "id": "wlc4",
+        "title": "Man's Misery and the Means of Grace"
+      }
+    ]
+  },
+  {
+    "id": "1689-lbc",
+    "title": "Second London Baptist Confession of Faith",
+    "sections": [
+      {
+        "id": "sl1",
+        "title": "Scripture, God, Decrees, and Providence"
+      },
+      {
+        "id": "sl2",
+        "title": "The Fall, Grace, and Election"
+      },
+      {
+        "id": "sl3",
+        "title": "Justification, the Church, and the Sacraments"
+      },
+      {
+        "id": "sl4",
+        "title": "The Sabbath, Marriage, and the Last Things"
+      }
+    ]
+  },
+  {
+    "id": "sinners-in-hands",
+    "title": "Sinners in the Hands of an Angry God",
+    "sections": [
+      {
+        "id": "sih1",
+        "title": "Sinners in the Hands of an Angry God — Overview"
+      },
+      {
+        "id": "sih2",
+        "title": "Enfield, Connecticut — July 8, 1741"
+      },
+      {
+        "id": "sih3",
+        "title": "The Doctrine Behind the Sermon"
+      }
+    ]
+  },
+  {
+    "id": "monergism-debate",
+    "title": "Monergism vs. Synergism",
+    "sections": [
+      {
+        "id": "md1",
+        "title": "Monergism and Synergism: What Is at Stake"
+      },
+      {
+        "id": "md2",
+        "title": "The Monergist Argument: Salvation Is of the Lord"
+      },
+      {
+        "id": "md3",
+        "title": "The Synergist Argument: God's Universal Love and Human Responsibility"
+      }
+    ]
+  }
+]

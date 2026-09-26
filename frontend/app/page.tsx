@@ -15,6 +15,7 @@ import { localizeReference } from "./lib/spanishContent";
 import { getRotatingArticle, daysUntilNextRotation } from "./lib/graceGemsArticles";
 import { getDailyGreeting } from "./lib/greetings";
 import { getTodaysEntry } from "./lib/churchHistory";
+import { useClientReady } from "./lib/useClientReady";
 import QuoteOfWeek from "./components/QuoteOfWeek";
 import BookOfMonth from "./components/BookOfMonth";
 import { BadgeShelf } from "./components/BadgeShelf";
@@ -930,6 +931,7 @@ function VerseMemorizationWidget({
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export default function Home() {
+  const clientReady = useClientReady();
   const today = new Date();
   const { lang } = useLanguage();
   const todayHV = getTodaysEntry();
@@ -1221,6 +1223,8 @@ export default function Home() {
     : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const streak    = streakData?.streak ?? 0;
   const dayUpper  = today.toLocaleDateString(lang === "es" ? "es-ES" : "en-US", { weekday: "long" }).toUpperCase();
+
+  if (!clientReady) return <div className="min-h-screen" style={{ background: "var(--bg)" }} />;
 
   // Two-line hero headline
   const heroHeadline = todayHV.title === "Diet of Worms"

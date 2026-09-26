@@ -147,13 +147,13 @@ const RYLE_JOHN_SECTIONS: RyleJohnSection[] = [
 const RYLE_JOHN_PLAN_START = new Date(2026, 4, 29);
 
 function ryleJohnPlanIndex(date: Date): number {
-  const selected = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const start = new Date(
+  const selected = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const start = Date.UTC(
     RYLE_JOHN_PLAN_START.getFullYear(),
     RYLE_JOHN_PLAN_START.getMonth(),
     RYLE_JOHN_PLAN_START.getDate()
   );
-  const days = Math.floor((selected.getTime() - start.getTime()) / 86_400_000);
+  const days = Math.floor((selected - start) / 86_400_000);
   return ((days % RYLE_JOHN_SECTIONS.length) + RYLE_JOHN_SECTIONS.length) % RYLE_JOHN_SECTIONS.length;
 }
 

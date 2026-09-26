@@ -345,6 +345,7 @@ export default function NewAnalysisPage() {
         <div className="flex items-center gap-3 mb-5">
           <button
             onClick={() => router.back()}
+            aria-label={lang === "es" ? "Volver" : "Go back"}
             className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 active:opacity-60 transition-opacity"
             style={{ background: cardBg }}
           >

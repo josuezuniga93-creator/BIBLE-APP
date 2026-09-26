@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Cormorant_Garamond, Inter, Lora, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
@@ -7,37 +7,37 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { BadgeRuntime } from "./components/BadgeRuntime";
 import { BackgroundCloudSync } from "./components/BackgroundCloudSync";
 
-const inter = Inter({
-  subsets: ["latin"],
+const inter = localFont({
+  src: "../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
   variable: "--font-inter",
   display: "swap",
 });
 
-const playfair = Playfair_Display({
-  subsets: ["latin"],
+const playfair = localFont({
+  src: [
+    { path: "../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2", style: "normal" },
+    { path: "../node_modules/@fontsource-variable/playfair-display/files/playfair-display-latin-wght-italic.woff2", style: "italic" },
+  ],
   variable: "--font-playfair",
-  style: ["normal", "italic"],
   display: "swap",
 });
 
-const verseDisplay = Cormorant_Garamond({
-  subsets: ["latin"],
+const verseDisplay = localFont({
+  src: "../node_modules/@fontsource-variable/cormorant-garamond/files/cormorant-garamond-latin-wght-normal.woff2",
   variable: "--font-verse-display",
-  weight: ["500", "600"],
   display: "swap",
 });
 
-const lora = Lora({
-  subsets: ["latin"],
+const lora = localFont({
+  src: "../node_modules/@fontsource-variable/lora/files/lora-latin-wght-normal.woff2",
   variable: "--font-lora",
-  weight: ["500", "600"],
   display: "swap",
 });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tulip-bible-app.vercel.app"),
-  title: "Bible",
-  applicationName: "Bible",
+  title: "Tulip Bible",
+  applicationName: "Tulip Bible",
   description:
     "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   keywords: [
@@ -56,7 +56,7 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Bible",
+    title: "Tulip Bible",
     description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
     url: "/",
     siteName: "Tulip Bible App",
@@ -64,14 +64,14 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "Bible",
+    title: "Tulip Bible",
     description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Bible",
+    title: "Tulip Bible",
   },
   icons: {
     icon: [
@@ -85,7 +85,6 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover",
   themeColor: "#0f0f0f",
 };
@@ -120,18 +119,7 @@ export default function RootLayout({
             __html: `
               if ('serviceWorker' in navigator) {
                 window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    // Re-schedule notifications if previously enabled
-                    try {
-                      if (localStorage.getItem('tulip_notif_enabled') === 'true' &&
-                          typeof Notification !== 'undefined' &&
-                          Notification.permission === 'granted') {
-                        navigator.serviceWorker.ready.then(function(r) {
-                          if (r.active) r.active.postMessage({ type: 'SCHEDULE_NOTIFICATIONS' });
-                        });
-                      }
-                    } catch(e) {}
-                  }).catch(function() {});
+                  navigator.serviceWorker.register('/sw.js').catch(function() {});
                 });
               }
             `,
