@@ -226,7 +226,7 @@ function IconWell({
 }) {
   return (
     <span
-      className="flex shrink-0 items-center justify-center"
+      className="more-icon-well flex shrink-0 items-center justify-center"
       style={{
         width: large ? 48 : 42,
         height: large ? 48 : 42,
@@ -255,7 +255,7 @@ function FeatureCard({
   return (
     <Link
       href={tile.href}
-      className={`group relative flex min-h-[168px] overflow-hidden rounded-[28px] p-5 text-center transition-transform active:scale-[0.985] ${isVideoTile ? "more-video-motion-card" : ""}`}
+      className="more-tool-tile group relative flex min-h-[168px] overflow-hidden rounded-[28px] p-5 text-center transition-transform active:scale-[0.985]"
       style={{
         color: palette.text,
         background: palette.card,
@@ -273,7 +273,7 @@ function FeatureCard({
       <span className="relative z-10 flex min-h-full w-full flex-col items-center justify-center gap-4">
         <IconWell name={tile.icon} palette={palette} large />
         <span className="flex flex-col items-center">
-          <span className="block max-w-[9ch] text-[20px] font-black leading-[1.04] tracking-[-0.04em]">
+          <span className="more-tool-title block max-w-[9ch] text-[20px] font-black leading-[1.04]">
             {t(lang, tile.labelKey)}
           </span>
           <span className="mt-2 block max-w-[15ch] text-[13px] font-semibold leading-snug" style={{ color: palette.muted }}>
@@ -309,7 +309,7 @@ function RowLink({
   return (
     <Link
       href={tile.href}
-      className="flex items-center gap-4 rounded-[24px] px-4 py-4 transition-transform active:scale-[0.99]"
+      className="more-tool-row flex items-center gap-4 rounded-[24px] px-4 py-4 transition-transform active:scale-[0.99]"
       style={{
         color: palette.text,
         background: palette.card,
@@ -345,7 +345,7 @@ function SettingRow({
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-4 rounded-[24px] px-4 py-4"
+      className="more-setting-row flex items-center justify-between gap-4 rounded-[24px] px-4 py-4"
       style={{
         background: palette.card,
         border: `1px solid ${palette.border}`,
@@ -400,7 +400,7 @@ export default function MorePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ background: palette.bg, color: palette.text }}>
+    <div className="more-refined min-h-screen" style={{ background: palette.bg, color: palette.text }}>
       <main className="mx-auto max-w-lg px-5 pb-10 pt-6">
         <section className="space-y-3">
           <SectionLabel label={c.account} palette={palette} />

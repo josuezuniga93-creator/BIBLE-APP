@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import "./mobile-refinement.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
 import { ThemeProvider } from "./components/ThemeProvider";
@@ -109,7 +110,7 @@ export default function RootLayout({
         <ThemeProvider />
         <BackgroundCloudSync />
         <AppNav />
-        {/* Phone/tablet keeps the floating bottom nav; desktop gets a dedicated sidebar shell. */}
+        {/* Mobile content reserves space for the attached bottom navigation. */}
         <div className="layout-children pb-36 lg:pb-0 lg:pl-72">{children}</div>
         <BadgeRuntime />
         <BottomNav />
