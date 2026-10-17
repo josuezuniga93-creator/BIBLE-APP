@@ -15,7 +15,7 @@ import {
   Plus,
   X,
   Copy,
-  Bookmark,
+  Eraser,
   Heart,
   Type,
   SlidersHorizontal,
@@ -65,7 +65,10 @@ import {
 import { useScriptureResource as useResource } from "./useScriptureResource";
 import { useReaderStore as useStore } from "./useReaderStore";
 import { parsePassageInput } from "../../lib/passageParser";
-import { mirrorScriptureHighlight } from "../../lib/unifiedHighlights";
+import {
+  mirrorScriptureHighlight,
+  removeMirroredScriptureHighlight,
+} from "../../lib/unifiedHighlights";
 import { syncKey } from "../../lib/cloudSync";
 function Scripture() {
   const a = useApp();
@@ -306,11 +309,28 @@ function Scripture() {
               onClick={() => a.open("note-editor", { reference })}
             />
             <IconButton
-              icon={Bookmark}
-              label="Bookmark verse"
+              icon={Eraser}
+              label="Remove highlight"
+              disabled={!marks[`${book}:${chapter}:${selected}`]}
               onClick={() => {
-                a.toggleSaved(reference, selectedText);
-                a.notify("Bookmark updated");
+                const markKey = `${book}:${chapter}:${selected}`;
+                const nextMarks = { ...marks };
+                delete nextMarks[markKey];
+                setMarks(nextMarks);
+
+                const storageKey = `ryc-vcolor-${book}-${chapter}`;
+                let chapterMarks = {};
+                try {
+                  chapterMarks = JSON.parse(
+                    localStorage.getItem(storageKey) || "{}",
+                  );
+                } catch {}
+                delete chapterMarks[selected];
+                const value = JSON.stringify(chapterMarks);
+                localStorage.setItem(storageKey, value);
+                syncKey(storageKey, value).catch(() => {});
+                removeMirroredScriptureHighlight(book, chapter, selected);
+                a.notify("Highlight removed");
               }}
             />
             <IconButton
