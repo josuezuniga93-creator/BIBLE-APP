@@ -406,51 +406,47 @@ function ScriptureSearch({ book = 43 }) {
     a.go("scripture", {
       book: p.bookNum,
       chapter: p.chapter,
-      ...(p.verseStart ? { select: p.verseStart } : {}),
+      ...(p.verseStart
+        ? {
+            select: p.verseEnd
+              ? Array.from(
+                  { length: p.verseEnd - p.verseStart + 1 },
+                  (_, index) => p.verseStart + index,
+                ).join(",")
+              : p.verseStart,
+          }
+        : {}),
     });
     a.close();
-    if (p.verseStart)
-      setTimeout(
-        () =>
-          document.getElementById("verse-" + p.verseStart)?.scrollIntoView({
-            block: "center",
-            behavior: a.motion ? "smooth" : "auto",
-          }),
-        800,
-      );
   };
   return (
-    <>
-      <form className="passage-search-form" onSubmit={submit}>
+    <form className="passage-search-form" onSubmit={submit}>
+      <p className="passage-search-copy">
+        Enter a book, chapter, or verse range.
+      </p>
+      <div className="passage-search-control">
         <SearchField
           value={query}
-          onChange={setQuery}
-          placeholder="John 3: 5–7"
+          onChange={(value) => {
+            setQuery(value);
+            if (error) setError("");
+          }}
+          placeholder="John 3:5-7"
           label="Passage reference"
         />
-        <Action onClick={submit} disabled={!query}>
-          Go to passage
+      </div>
+      <p className="passage-search-example">Try John 3, Psalm 23, or Romans 8:1-4</p>
+      {error && (
+        <p role="alert" className="field-error">
+          {error}
+        </p>
+      )}
+      <div className="passage-search-actions">
+        <Action type="submit" disabled={!query.trim()}>
+          Open passage
         </Action>
-        {error && (
-          <p role="alert" className="field-error">
-            {error}
-          </p>
-        )}
-      </form>
-      <p className="eyebrow search-recent-label">RETURN TO</p>
-      {["John 15", "Psalm 23", "Romans 8"].map((ref) => (
-        <Row
-          icon={Clock3}
-          title={ref}
-          key={ref}
-          onClick={() => {
-            const p = parsePassageInput(ref);
-            a.go("scripture", { book: p.bookNum, chapter: p.chapter });
-            a.close();
-          }}
-        />
-      ))}
-    </>
+      </div>
+    </form>
   );
 }
 

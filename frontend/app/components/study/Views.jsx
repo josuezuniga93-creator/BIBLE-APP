@@ -149,9 +149,11 @@ function Action({
   icon: Icon = ArrowRight,
   secondary = false,
   disabled = false,
+  type = "button",
 }) {
   return (
     <button
+      type={type}
       className={"action " + (secondary ? "secondary" : "")}
       onClick={onClick}
       disabled={disabled}
@@ -263,7 +265,7 @@ function SearchField({
         placeholder={placeholder}
       />
       {value && (
-        <button aria-label="Clear search" onClick={() => onChange("")}>
+        <button type="button" aria-label="Clear search" onClick={() => onChange("")}>
           <X size={16} />
         </button>
       )}
@@ -989,7 +991,7 @@ function More() {
   );
 }
 
-function Sheet({ title, children, full = false, onClose }) {
+function Sheet({ title, children, full = false, centered = false, onClose }) {
   const dialog = useRef(null),
     start = useRef(0),
     [closing, setClosing] = useState(false);
@@ -1009,7 +1011,10 @@ function Sheet({ title, children, full = false, onClose }) {
     <dialog
       ref={dialog}
       className={
-        "study-design sheet " + (full ? "full-sheet " : "") + (closing ? "closing" : "")
+        "study-design sheet " +
+        (full ? "full-sheet " : "") +
+        (centered ? "centered-sheet " : "") +
+        (closing ? "closing" : "")
       }
       onCancel={(e) => {
         e.preventDefault();
@@ -1020,28 +1025,30 @@ function Sheet({ title, children, full = false, onClose }) {
       }}
     >
       <div className="sheet-surface">
-        <div
-          className="sheet-handle"
-          aria-label="Drag down to close"
-          onPointerDown={(e) => {
-            start.current = e.clientY;
-            e.currentTarget.setPointerCapture(e.pointerId);
-          }}
-          onPointerMove={(e) => {
-            if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
-            dialog.current.style.setProperty(
-              "--drag",
-              Math.max(0, e.clientY - start.current) + "px",
-            );
-          }}
-          onPointerUp={(e) => {
-            const delta = e.clientY - start.current;
-            dialog.current.style.setProperty("--drag", "0px");
-            if (delta > 85) close();
-          }}
-        >
-          <span />
-        </div>
+        {!centered && (
+          <div
+            className="sheet-handle"
+            aria-label="Drag down to close"
+            onPointerDown={(e) => {
+              start.current = e.clientY;
+              e.currentTarget.setPointerCapture(e.pointerId);
+            }}
+            onPointerMove={(e) => {
+              if (!e.currentTarget.hasPointerCapture(e.pointerId)) return;
+              dialog.current.style.setProperty(
+                "--drag",
+                Math.max(0, e.clientY - start.current) + "px",
+              );
+            }}
+            onPointerUp={(e) => {
+              const delta = e.clientY - start.current;
+              dialog.current.style.setProperty("--drag", "0px");
+              if (delta > 85) close();
+            }}
+          >
+            <span />
+          </div>
+        )}
         <header className="sheet-header">
           <h2>{title}</h2>
           <IconButton icon={X} label="Close panel" onClick={close} />

@@ -122,6 +122,7 @@ export default function StudyModals({ modal }) {
     <Sheet
       title={titles[type] || "Study"}
       full={type === "book-picker" || type === "video"}
+      centered={type === "search"}
       onClose={a.close}
     >
       {type === "book-picker" ? (
