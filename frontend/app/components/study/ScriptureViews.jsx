@@ -7,7 +7,6 @@ import {
   BookHeart,
   Grid2X2,
   ArrowUpRight,
-  ArrowRight,
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
@@ -15,7 +14,6 @@ import {
   Search,
   Plus,
   X,
-  Check,
   Copy,
   Bookmark,
   Heart,
@@ -234,7 +232,7 @@ function Scripture() {
                 </button>
               );
             })}
-            {isPassageView ? (
+            {isPassageView && (
               <div className="passage-full-chapter">
                 <Action
                   secondary
@@ -244,91 +242,83 @@ function Scripture() {
                   Read Full Chapter
                 </Action>
               </div>
-            ) : (
-              <button
-                className="reader-end"
-                onClick={() => {
-                  a.markChapter(book, chapter);
-                  a.notify("Chapter marked as read");
-                  change(1);
-                }}
-              >
-                <Check size={18} />
-                <span>Mark chapter as read</span>
-                <ArrowRight size={18} />
-              </button>
             )}
           </div>
         )}
       </div>
       {selected && (
         <div className="annotation-dock" aria-label="Verse actions">
-          <div className="swatches">
-            {["light", "medium", "underline"].map((tone) => (
-              <button
-                key={tone}
-                className={"swatch " + tone}
-                aria-label={"Highlight " + tone}
-                onClick={() => {
-                  setMarks({
-                    ...marks,
-                    [`${book}:${chapter}:${selected}`]: tone,
-                  });
-                  const storageKey = `ryc-vcolor-${book}-${chapter}`;
-                  let existing = {};
-                  try {
-                    existing = JSON.parse(
-                      localStorage.getItem(storageKey) || "{}",
-                    );
-                  } catch {}
-                  const value = JSON.stringify({
-                    ...existing,
-                    [selected]: tone,
-                  });
-                  localStorage.setItem(storageKey, value);
-                  syncKey(storageKey, value).catch(() => {});
-                  mirrorScriptureHighlight({
-                    bookName: current.name,
-                    bookNum: book,
-                    chapter,
-                    verseNum: selected,
-                    verseText: selectedText,
-                    color: tone,
-                  });
-                  a.notify("Highlight saved");
-                }}
-              />
-            ))}
+          <div className="highlight-strip">
+            <span>Highlight</span>
+            <div className="swatches">
+              {["yellow", "blue", "pink", "green"].map((tone) => (
+                <button
+                  key={tone}
+                  className={"swatch " + tone}
+                  aria-label={"Highlight " + tone}
+                  aria-pressed={marks[`${book}:${chapter}:${selected}`] === tone}
+                  onClick={() => {
+                    setMarks({
+                      ...marks,
+                      [`${book}:${chapter}:${selected}`]: tone,
+                    });
+                    const storageKey = `ryc-vcolor-${book}-${chapter}`;
+                    let existing = {};
+                    try {
+                      existing = JSON.parse(
+                        localStorage.getItem(storageKey) || "{}",
+                      );
+                    } catch {}
+                    const value = JSON.stringify({
+                      ...existing,
+                      [selected]: tone,
+                    });
+                    localStorage.setItem(storageKey, value);
+                    syncKey(storageKey, value).catch(() => {});
+                    mirrorScriptureHighlight({
+                      bookName: current.name,
+                      bookNum: book,
+                      chapter,
+                      verseNum: selected,
+                      verseText: selectedText,
+                      color: tone,
+                    });
+                    a.notify("Highlight saved");
+                  }}
+                />
+              ))}
+            </div>
           </div>
-          <span className="dock-divider" />
-          <IconButton
-            icon={Copy}
-            label="Copy verse"
-            onClick={() =>
-              navigator.clipboard
-                .writeText(`${reference} — ${selectedText}`)
-                .then(() => a.notify("Copied"))
-                .catch(() => a.notify("Copy is unavailable"))
-            }
-          />
-          <IconButton
-            icon={NotebookPen}
-            label="Note on verse"
-            onClick={() => a.open("note-editor", { reference })}
-          />
-          <IconButton
-            icon={Bookmark}
-            label="Bookmark verse"
-            onClick={() => {
-              a.toggleSaved(reference, selectedText);
-              a.notify("Bookmark updated");
-            }}
-          />
-          <IconButton
-            icon={X}
-            label="Close verse actions"
-            onClick={() => setSelected(null)}
-          />
+          <div className="annotation-actions">
+            <IconButton
+              icon={Copy}
+              label="Copy verse"
+              onClick={() =>
+                navigator.clipboard
+                  .writeText(`${reference} — ${selectedText}`)
+                  .then(() => a.notify("Copied"))
+                  .catch(() => a.notify("Copy is unavailable"))
+              }
+            />
+            <IconButton
+              icon={NotebookPen}
+              label="Note on verse"
+              onClick={() => a.open("note-editor", { reference })}
+            />
+            <IconButton
+              icon={Bookmark}
+              label="Bookmark verse"
+              onClick={() => {
+                a.toggleSaved(reference, selectedText);
+                a.notify("Bookmark updated");
+              }}
+            />
+            <IconButton
+              icon={X}
+              label="Close verse actions"
+              onClick={() => setSelected(null)}
+            />
+          </div>
         </div>
       )}
       {!isPassageView && <div className="chapter-controls">
