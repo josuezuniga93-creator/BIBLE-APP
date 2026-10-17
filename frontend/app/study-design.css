@@ -2674,6 +2674,12 @@ html[data-theme-mode="light"] {
   margin: 0;
   border: 0;
 }
+html[data-theme="gold-navy"] .study-design .passage-search-control input:focus,
+html[data-theme="light-elegant"] .study-design .passage-search-control input:focus,
+.study-design .passage-search-control input:focus {
+  outline: 0 !important;
+  box-shadow: none !important;
+}
 :where(.study-design) .passage-search-example {
   margin: 10px 1px 0;
   color: var(--muted);
