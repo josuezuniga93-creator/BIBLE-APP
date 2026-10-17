@@ -2527,6 +2527,11 @@ html[data-theme-mode="light"] {
   margin: auto;
   transform: none;
 }
+.study-design.sheet.centered-sheet::backdrop {
+  background: rgba(0, 0, 0, 0.58);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
 .study-design.sheet.centered-sheet .sheet-surface {
   height: auto;
   border: 1px solid var(--line);
