@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function KidsBooksPage() { return <StudyRoute screen="kids" legacy={FullKidsBooksPage}/>; }
+
 /**
  * Kids Books — Editorial Reading Room layout
  *
@@ -915,7 +918,7 @@ function SectionHeader({ section, count, isLight }: { section: SectionMeta; coun
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function KidsBooksPage() {
+function FullKidsBooksPage() {
   const { theme } = useTheme();
   const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";
 

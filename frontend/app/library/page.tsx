@@ -12,6 +12,9 @@ import { useLanguage } from "../lib/useLanguage";
 import { bookTitle } from "../lib/spanishContent";
 import { UiIcon } from "../components/UiIcon";
 import { isFavorite, setFavorite } from "../lib/favorites";
+import StudyScreen from "../components/study/StudyScreen";
+
+export default function LibraryPage() { return <StudyScreen screen="library" />; }
 
 // ─── Book cover palette ────────────────────────────────────────────────────────
 
@@ -67,7 +70,7 @@ function entryPercent(entry: ProgressEntry): number {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function LibraryPage() {
+function LegacyLibraryPage() {
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const isLight = theme === "white-noir";

@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function StudyToolsPage() { return <StudyRoute screen="study-tools" legacy={FullStudyToolsPage}/>; }
+
 import { type PointerEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
@@ -275,7 +278,7 @@ function categoryLabel(entry: DictionaryEntry, lang: "en" | "es") {
   return map[entry.category];
 }
 
-export default function StudyToolsPage() {
+function FullStudyToolsPage() {
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const isLight = theme === "white-noir";

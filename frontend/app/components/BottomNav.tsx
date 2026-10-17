@@ -3,16 +3,16 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { BookOpen, BookHeart, Grid2X2, Home, NotebookPen } from "lucide-react";
 import { useLanguage } from "../lib/useLanguage";
 import type { TranslationKey } from "../lib/i18n";
-import { AppSectionIcon, type AppSectionIconName } from "./AppSectionIcon";
 
-const TABS: Array<{ href: string; label: TranslationKey; icon: AppSectionIconName }> = [
-  { href: "/", label: "nav_home", icon: "home" },
-  { href: "/lexicon", label: "nav_mobile_scripture", icon: "bible" },
-  { href: "/notes", label: "nav_notes", icon: "notes" },
-  { href: "/family-worship", label: "nav_mobile_devotional", icon: "worship" },
-  { href: "/more", label: "nav_extras", icon: "extras" },
+const TABS: Array<{ href: string; label: TranslationKey; icon: typeof Home }> = [
+  { href: "/", label: "nav_home", icon: Home },
+  { href: "/lexicon", label: "nav_mobile_scripture", icon: BookOpen },
+  { href: "/notes", label: "nav_notes", icon: NotebookPen },
+  { href: "/family-worship", label: "nav_mobile_devotional", icon: BookHeart },
+  { href: "/more", label: "nav_extras", icon: Grid2X2 },
 ];
 
 export function BottomNav() {
@@ -36,9 +36,10 @@ export function BottomNav() {
       <div className="mobile-tab-bar-inner">
         {TABS.map(tab => {
           const active = primaryActive ? tab.href === primaryActive.href : tab.href === "/more";
+          const Icon = tab.icon;
           return (
             <Link key={tab.href} href={tab.href} className="mobile-tab" aria-current={active ? "page" : undefined}>
-              <AppSectionIcon name={tab.icon} size={23} active={active} />
+              <span className="mobile-tab-icon"><Icon size={22} strokeWidth={active ? 2 : 1.45} /></span>
               <span>{t(tab.label)}</span>
             </Link>
           );

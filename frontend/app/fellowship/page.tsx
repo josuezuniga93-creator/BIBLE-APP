@@ -1,5 +1,8 @@
 "use client";
 
+import FeatureFrame from "../components/study/FeatureFrame";
+export default function FellowshipPage() { return <FeatureFrame title="Fellowship" screen="fellowship"><FellowshipContent/></FeatureFrame>; }
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
@@ -391,7 +394,7 @@ function GatheringCard({
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function FellowshipPage() {
+function FellowshipContent() {
   const { lang, t } = useLanguage();
   const { theme } = useTheme();
   const isLight = (typeof window !== "undefined" ? document.documentElement.getAttribute("data-theme") : null) === "white-noir" || theme === "white-noir";

@@ -4,6 +4,7 @@ import LEARN_DOCUMENTS from "./learnCatalog.json";
 import { loadDevotionalProgress } from "./devotionalProgress";
 import { loadNotes } from "./notesData";
 import { loadStreak } from "./streakData";
+import { mergeReadingValue } from "./readingMerge";
 
 export type BadgeCategory =
   | "daily-devotions"
@@ -188,17 +189,20 @@ export function collectBadgeStats(): BadgeStats {
 export function loadEarnedBadges(): EarnedBadge[] {
   if (typeof window === "undefined") return [];
   const parsed = parseArray(localStorage.getItem(EARNED_KEY));
-  return parsed.filter((item): item is EarnedBadge => {
+  const valid = parsed.filter((item): item is EarnedBadge => {
     return !!item && typeof item === "object" && typeof (item as EarnedBadge).id === "string";
   });
+  return JSON.parse(mergeReadingValue(EARNED_KEY, JSON.stringify(valid), null)!) as EarnedBadge[];
 }
 
 export function saveEarnedBadges(earned: EarnedBadge[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(EARNED_KEY, JSON.stringify(earned));
+    const value = mergeReadingValue(EARNED_KEY, localStorage.getItem(EARNED_KEY), JSON.stringify(earned))!;
+    localStorage.setItem(EARNED_KEY, value);
     window.dispatchEvent(new Event("tulip-badges-change"));
-  } catch {}
+    return true;
+  } catch { return false; }
 }
 
 export function getBadgeById(id: string) {
@@ -226,11 +230,14 @@ export function evaluateBadgeUnlocks(): BadgeDefinition[] {
   const stats = collectBadgeStats();
   const earned = loadEarnedBadges();
   const earnedIds = new Set(earned.map((item) => item.id));
+  for (const id of parseArray(localStorage.getItem("tulip_badges_shown_v1"))) {
+    if (typeof id === "string") earnedIds.add(id);
+  }
   const newlyEarned = BADGE_DEFINITIONS.filter((badge) => !earnedIds.has(badge.id) && stats[badge.metric] >= badge.threshold);
   if (newlyEarned.length === 0) return [];
 
   const now = new Date().toISOString();
-  saveEarnedBadges([...earned, ...newlyEarned.map((badge) => ({ id: badge.id, earnedAt: now }))]);
+  if (!saveEarnedBadges([...earned, ...newlyEarned.map((badge) => ({ id: badge.id, earnedAt: now }))])) return [];
   return newlyEarned.sort((a, b) => b.rank - a.rank);
 }
 

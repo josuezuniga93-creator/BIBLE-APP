@@ -1,5 +1,20 @@
 "use client";
 
+import StudyScreen from "../components/study/StudyScreen";
+
+export default function BibleTrackerPage() {
+  const [readMap, setReadMap] = useState<ReadMap>({});
+  useEffect(() => { setReadMap(loadReadMap()); }, []);
+  const toggle = (book: number, chapter: number) => {
+    const key = chapterKey(book, chapter);
+    const next = { ...readMap, [key]: !readMap[key] };
+    if (!next[key]) delete next[key];
+    saveReadMap(next);
+    setReadMap(next);
+  };
+  return <StudyScreen screen="tracker" readChapters={readMap} markChapter={toggle}/>;
+}
+
 import { useState, useEffect, useMemo } from "react";
 import {
   BIBLE_BOOKS,
@@ -363,7 +378,7 @@ function WhatsNext({ readMap }: { readMap: ReadMap }) {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function BibleTrackerPage() {
+function LegacyBibleTrackerPage() {
   const { lang, t } = useLanguage();
   const [readMap, setReadMap] = useState<ReadMap>({});
   const [mounted, setMounted] = useState(false);

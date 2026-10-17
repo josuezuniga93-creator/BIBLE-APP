@@ -1,5 +1,7 @@
 "use client";
 
+export { default } from "../components/study/DailyDevotional";
+
 import { useState, useMemo, useEffect, useCallback, createContext, useContext } from "react";
 import { useLanguage } from "../lib/useLanguage";
 import { t } from "../lib/i18n";
@@ -1666,7 +1668,7 @@ function ReminderCard() {
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function FamilyWorshipPage() {
+function LegacyFamilyWorshipPage() {
   const clientReady = useClientReady();
   const { lang } = useLanguage();
   const today = useMemo(() => {

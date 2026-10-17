@@ -1,6 +1,7 @@
 "use client";
 
-import { type CSSProperties, type ReactNode, type Ref, type UIEventHandler, useEffect, useRef } from "react";
+import { type CSSProperties, type ReactNode, type Ref, type UIEventHandler, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ChevronLeft, ChevronRight, List, Type } from "lucide-react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, type Theme } from "../lib/useTheme";
 import { BracketHighlightReader, type ReaderHighlightAdapter } from "./BracketHighlightReader";
@@ -102,12 +103,12 @@ function getTone(theme: Theme): AppReaderTone {
   }
 
   return {
-    pageBg: "#0b101d",
+    pageBg: "var(--page)",
     textPrimary: "rgba(255,255,255,0.95)",
-    textContent: "rgba(255,255,255,0.82)",
+    textContent: "var(--ink)",
     textMuted: "rgba(255,255,255,0.62)",
     textFaint: "rgba(255,255,255,0.36)",
-    accent: "#c9a961",
+    accent: "var(--secondary)",
     border: "rgba(255,255,255,0.08)",
     progressTrack: "rgba(255,255,255,0.08)",
     progressBar: "linear-gradient(90deg,#c9a961,#d4b878)",
@@ -152,11 +153,12 @@ export function AppReaderShell({
   const displayPercent = pagePercent ?? readingPercent(currentPage, totalPages);
   const safeProgress = Math.max(0, Math.min(100, progressPercent));
   const hasMultiplePages = totalPages > 1;
+  const [readerSize, setReaderSize] = useState(20);
 
   useEffect(() => {
-    document.documentElement.setAttribute("data-app-reader-open", "true");
+    document.documentElement.setAttribute("data-app-book-reader-open", "true");
     return () => {
-      document.documentElement.removeAttribute("data-app-reader-open");
+      document.documentElement.removeAttribute("data-app-book-reader-open");
     };
   }, []);
 
@@ -170,72 +172,27 @@ export function AppReaderShell({
 
   return (
     <div
-      className={`fixed inset-0 ${zIndexClassName} app-reader-shell motion-app-reader-enter flex flex-col`}
-      style={{ backgroundColor: tone.pageBg, color: tone.textPrimary }}
-      role="dialog"
-      aria-modal="true"
+      className={`study-design fixed inset-0 ${zIndexClassName} app-reader-shell study-book-reader motion-app-reader-enter flex flex-col`}
+      style={{ backgroundColor: "var(--page)", color: "var(--ink)", "--reader-size": `${readerSize}px` } as CSSProperties}
+      role="region"
       aria-label={title}
     >
-      <div
-        className="motion-top-sheet-enter flex-shrink-0 flex items-center justify-between gap-3 px-5 pb-3"
-        style={{ backgroundColor: tone.pageBg, borderBottom: `1px solid ${tone.border}` }}
-      >
-        <div className="min-w-0" style={{ paddingTop: "max(env(safe-area-inset-top), 10px)" }}>
-          <h1 className="text-lg leading-tight font-black line-clamp-2" style={{ color: tone.textPrimary }}>
-            {title}
-          </h1>
-          {eyebrow && (
-            <p className="mt-1 text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: tone.accent }}>
-              {eyebrow}
-            </p>
-          )}
-        </div>
-        <button
-          onClick={onClose}
-          className="motion-pressable tap-target ui-interactive flex-shrink-0 rounded-full flex items-center justify-center"
-          style={{ color: tone.textMuted, background: resolvedTheme === "white-noir" ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.07)", border: `1px solid ${tone.border}` }}
-          aria-label={lang === "es" ? "Volver" : "Back"}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-      </div>
+      <header className="reader-topbar">
+        <button className="icon-button" onClick={onClose} aria-label={lang === "es" ? "Volver" : "Back to book"}><ArrowLeft size={20}/></button>
+        <span className="reading-title">{title}</span>
+        <button className="icon-button" aria-label="Reader font size" onClick={()=>setReaderSize(readerSize>=26?18:readerSize+2)}><Type size={20}/></button>
+        <button className="icon-button" aria-label="Table of contents" onClick={onClose}><List size={20}/></button>
+      </header>
 
       <div ref={contentRef} className={contentClassName} style={contentStyle} onScroll={contentOnScroll}>
         {children}
       </div>
 
       {showBottomControls && (
-        <div
-          className="motion-sheet-enter flex-shrink-0 px-5 py-3"
-          style={{ backgroundColor: tone.pageBg, borderTop: `1px solid ${tone.border}`, paddingBottom: "max(env(safe-area-inset-bottom), 14px)" }}
-        >
-          <div className="flex items-center justify-between text-[11px] font-bold mb-2" style={{ color: tone.textMuted }}>
-            <span>{lang === "es" ? "Página" : "Page"} {currentPage} {lang === "es" ? "de" : "of"} {totalPages}</span>
-            <span>{safeProgress}%</span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden mb-3" style={{ backgroundColor: tone.progressTrack }}>
-            <div className="h-full rounded-full transition-all" style={{ width: `${safeProgress}%`, background: tone.progressBar }} />
-          </div>
-          <div className="grid grid-cols-2 items-center gap-3">
-            <button
-              disabled={previousDisabled}
-              onClick={onPrevious}
-              className="motion-pressable tap-target ui-interactive h-11 rounded-2xl text-sm font-black disabled:opacity-30"
-              style={{ background: previousDisabled ? "transparent" : tone.prevBg, border: `1px solid ${tone.prevBorder}`, color: previousDisabled ? tone.textFaint : tone.prevText }}
-            >
-              ← {lang === "es" ? "Anterior" : "Prev"}
-            </button>
-            <button
-              disabled={nextDisabled && !finishLabel}
-              onClick={onNext}
-              className="motion-pressable tap-target ui-interactive h-11 rounded-2xl text-sm font-black disabled:opacity-30"
-              style={{ background: nextDisabled && !finishLabel ? "transparent" : tone.nextBg, color: nextDisabled && !finishLabel ? tone.textFaint : tone.nextText }}
-            >
-              {finishLabel ?? (lang === "es" ? "Siguiente" : "Next")} {!finishLabel ? "→" : ""}
-            </button>
-          </div>
+        <div className="chapter-controls study-book-controls">
+          <button className="icon-button" disabled={previousDisabled} onClick={onPrevious} aria-label="Previous section"><ChevronLeft size={20}/></button>
+          <span>{currentPage} <small>/ {totalPages}</small></span>
+          <button className="icon-button" disabled={nextDisabled && !finishLabel} onClick={onNext} aria-label={finishLabel || "Next section"}><ChevronRight size={20}/></button>
           {hasMultiplePages && (
             <p className="sr-only">
               {lang === "es" ? "Progreso de página" : "Page progress"}: {displayPercent}%
@@ -303,7 +260,7 @@ export function AppReader({
       onClose={onClose}
       contentRef={scrollRef}
     >
-        <main className="max-w-lg mx-auto px-7 pt-5 pb-8">
+        <main className="study-book-content prose book-prose max-w-lg mx-auto px-7 pt-5 pb-8">
           {sectionLabel && (
             <p className="text-xs font-black uppercase tracking-widest mb-1.5" style={{ color: tone.accent }}>
               {sectionLabel}

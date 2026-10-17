@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import "./mobile-refinement.css";
+import "./study-design.css";
 import { AppNav } from "./components/AppNav";
 import { BottomNav } from "./components/BottomNav";
 import { ThemeProvider } from "./components/ThemeProvider";

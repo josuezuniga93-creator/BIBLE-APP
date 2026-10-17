@@ -930,7 +930,7 @@ function VerseMemorizationWidget({
 
 // ─── Main Component ────────────────────────────────────────────────────────────
 
-export default function Home() {
+function LegacyHome() {
   const clientReady = useClientReady();
   const today = new Date();
   const { lang } = useLanguage();
@@ -1930,3 +1930,6 @@ export default function Home() {
     </div>
   );
 }
+
+import StudyScreen from "./components/study/StudyScreen";
+export default function Home() { return <StudyScreen screen="home" />; }

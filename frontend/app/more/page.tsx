@@ -1,4 +1,6 @@
 "use client";
+import StudyScreen from "../components/study/StudyScreen";
+export default function MorePage() { return <StudyScreen screen="more" />; }
 
 import Link from "next/link";
 import Image from "next/image";
@@ -363,7 +365,7 @@ function SettingRow({
   );
 }
 
-export default function MorePage() {
+function LegacyMorePage() {
   const { lang, setLang } = useLanguage();
   const { theme, setTheme } = useTheme();
   const isLight = isLightTheme(theme);

@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function VideosPage() { return <StudyRoute screen="videos" legacy={FullVideosPage}/>; }
+
 /**
  * Tulip Bible App — Videos Section
  *
@@ -1242,7 +1245,7 @@ type Screen =
   | { id: "fundamentals-home" }
   | { id: "fundamentals-detail"; section: FundamentalsSection; focusTopicId?: string };
 
-export default function VideosPage() {
+function FullVideosPage() {
   const { lang, t } = useLanguage();
   const { theme } = useTheme();
   const isLight =

@@ -1,5 +1,8 @@
 "use client";
 
+import FeatureFrame from "../components/study/FeatureFrame";
+export default function ChurchAnalysisPage() { return <FeatureFrame title="Church analysis" screen="church-analysis"><ChurchAnalysisContent/></FeatureFrame>; }
+
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useTheme } from "../lib/useTheme";
@@ -69,7 +72,7 @@ function ChurchAnalysisIcon({ size = 24 }: { size?: number }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ChurchAnalysisPage() {
+function ChurchAnalysisContent() {
   const { theme } = useTheme();
   const [isLight, setIsLight] = useState(false);
   const [analyses, setAnalyses] = useState<ChurchAnalysis[]>([]);

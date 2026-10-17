@@ -1,5 +1,8 @@
 "use client";
 
+import FeatureFrame from "../components/study/FeatureFrame";
+export default function ChurchDirectoryPage() { return <FeatureFrame title="Find a church" screen="churches"><ChurchDirectoryContent/></FeatureFrame>; }
+
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "../lib/useLanguage";
@@ -369,7 +372,7 @@ function SubmitChurchForm({ onClose }: { onClose: () => void }) {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function ChurchDirectoryPage() {
+function ChurchDirectoryContent() {
   const { lang } = useLanguage();
   const [cityInput, setCityInput] = useState("");
   const [radius, setRadius] = useState<number>(50);

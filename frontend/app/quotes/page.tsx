@@ -1,4 +1,6 @@
 "use client";
+import StudyRoute from "../components/study/StudyRoute";
+export default function QuotesArchivePage() { return <StudyRoute screen="quotes" legacy={FullQuotesArchivePage}/>; }
 import { QUOTES, type Quote } from "../data/quotes";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme } from "../lib/useTheme";
@@ -133,7 +135,7 @@ async function generateQuoteImage(quote: Quote, lang: string): Promise<Blob | nu
   return new Promise((resolve) => canvas.toBlob((blob) => resolve(blob), "image/jpeg", 0.93));
 }
 
-export default function QuotesArchivePage() {
+function FullQuotesArchivePage() {
   const { lang } = useLanguage();
   const { theme } = useTheme();
   const router = useRouter();

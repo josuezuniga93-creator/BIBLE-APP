@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "../../lib/supabase/client";
 import { isLightTheme } from "../../lib/useTheme";
 import { Suspense } from "react";
+import { safeAuthDestination } from "../../lib/authRedirect";
 
 function GoogleIcon() {
   return (
@@ -55,6 +56,7 @@ function LoginHelp({ color, linkColor }: { color: string; linkColor: string }) {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const destination = safeAuthDestination(searchParams.get("next"));
   const supabase = createClient();
 
   const [view, setView] = useState<"gate" | "email">("gate");
@@ -96,7 +98,7 @@ function LoginContent() {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=/more`,
+        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
       },
     });
     if (error) {
@@ -116,7 +118,7 @@ function LoginContent() {
         email,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?next=/more`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(destination)}`,
         },
       });
       if (error) {
@@ -129,7 +131,7 @@ function LoginContent() {
       if (error) {
         setMessage({ type: "error", text: error.message });
       } else {
-        router.push("/more");
+        router.push(destination);
         router.refresh();
       }
     }

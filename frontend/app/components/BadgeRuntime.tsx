@@ -199,6 +199,8 @@ function markShown(id: string) {
   _shownThisRuntime.add(id);
   if (typeof window === "undefined") return;
   try {
+    const stored = JSON.parse(localStorage.getItem(SHOWN_KEY) || "[]");
+    if (Array.isArray(stored)) stored.forEach(value => { if (typeof value === "string") _shownThisRuntime.add(value); });
     localStorage.setItem(SHOWN_KEY, JSON.stringify([..._shownThisRuntime]));
   } catch {}
 }
@@ -210,6 +212,7 @@ export function BadgeRuntime() {
   const [queue, setQueue] = useState<BadgeDefinition[]>([]);
   const [active, setActive] = useState<BadgeDefinition | null>(null);
   const activeRef = useRef<BadgeDefinition | null>(null);
+  const checkingRef = useRef(false);
 
   useEffect(() => {
     activeRef.current = active;
@@ -217,6 +220,13 @@ export function BadgeRuntime() {
 
   useEffect(() => {
     function check() {
+      if (checkingRef.current) return;
+      checkingRef.current = true;
+      const evaluate = () => {
+      try {
+        const shown = JSON.parse(localStorage.getItem(SHOWN_KEY) || "[]");
+        if (Array.isArray(shown)) shown.forEach(id => { if (typeof id === "string") _shownThisRuntime.add(id); });
+      } catch { /* Runtime claims still prevent repeated notifications. */ }
       const unlocked = evaluateBadgeUnlocks();
       if (unlocked.length === 0) return;
       // Filter out any badge already shown this runtime (module-level — survives navigation)
@@ -228,6 +238,11 @@ export function BadgeRuntime() {
         const existingIds = new Set([...prev.map((b) => b.id), activeRef.current?.id].filter(Boolean) as string[]);
         return [...prev, ...newOnes.filter((b) => !existingIds.has(b.id))];
       });
+      };
+      const work = navigator.locks
+        ? navigator.locks.request("tulip-badge-notifications", evaluate)
+        : Promise.resolve().then(evaluate);
+      work.catch(() => {}).finally(() => { checkingRef.current = false; });
     }
 
     const timer = window.setInterval(check, 2500);
@@ -244,11 +259,11 @@ export function BadgeRuntime() {
   }, []);
 
   useEffect(() => {
-    if (activeRef.current || queue.length === 0) return;
+    if (active || queue.length === 0) return;
     const [next, ...rest] = queue;
     setActive(next);
     setQueue(rest);
-  }, [queue]);
+  }, [queue, active]);
 
   useEffect(() => {
     if (!active) return;

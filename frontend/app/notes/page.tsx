@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import StudyScreen from "../components/study/StudyScreen";
+import NoteComposer from "../components/study/NoteComposer";
+import { PageHeading } from "../components/study/Views";
 import { useLanguage } from "../lib/useLanguage";
 import { isLightTheme, useTheme } from "../lib/useTheme";
 import { t } from "../lib/i18n";
@@ -18,7 +21,9 @@ import {
 } from "../lib/notesData";
 import { AppSectionIcon } from "../components/AppSectionIcon";
 import { UiIcon } from "../components/UiIcon";
-import { SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
+import { getCloudUser, SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
+import { AUTH_CHANGE_EVENT } from "../lib/authSession";
+import type { User } from "@supabase/supabase-js";
 import { formatParsedPassage, parsePassageInput } from "../lib/passageParser";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -496,8 +501,8 @@ function PassagePicker({
       {showRequiredError && (
         <p className="mt-2 rounded-xl px-3 py-2 text-[11px] font-bold leading-relaxed" style={{ background: "rgba(239,68,68,0.09)", color: "#ef4444" }}>
           {lang === "es"
-            ? "Agrega un versículo para guardar esta nota, por ejemplo Proverbios 4:5."
-            : "Add a verse before saving this note, for example Proverbs 4:5."}
+            ? "Escribe una referencia valida, por ejemplo Proverbios 4 o Proverbios 4:5."
+            : "Enter a valid reference, such as Proverbs 4 or Proverbs 4:5."}
         </p>
       )}
       <div className="mt-2 px-1">
@@ -576,11 +581,15 @@ function NoteEditorModal({
   isNew,
   onSave,
   onCancel,
+  saveError,
+  userId,
 }: {
   initial: SermonNote;
   isNew: boolean;
-  onSave: (note: SermonNote) => void;
+  onSave: (note: SermonNote) => Promise<boolean>;
   onCancel: () => void;
+  saveError: string | null;
+  userId: string;
 }) {
   const { lang } = useLanguage();
   const { theme } = useTheme();
@@ -591,6 +600,8 @@ function NoteEditorModal({
   const [fullscreenWrite, setFullscreenWrite] = useState(false);
   const [isLandscapeWriting, setIsLandscapeWriting] = useState(false);
   const [saveAttempted, setSaveAttempted] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const bodyRef = useRef<HTMLTextAreaElement>(null);
   const fullscreenBodyRef = useRef<HTMLTextAreaElement>(null);
@@ -602,6 +613,11 @@ function NoteEditorModal({
   const isEditorLight = isLightTheme(editorTheme);
 
   const patch = useCallback((p: Partial<SermonNote>) => setDraft((d) => ({ ...d, ...p })), []);
+
+  useEffect(() => {
+    try { sessionStorage.setItem(`tulip-note-draft:${userId}`, JSON.stringify(draft)); }
+    catch { /* The editor keeps its in-memory draft if browser storage is blocked. */ }
+  }, [draft, userId]);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-app-reader-open", "true");
@@ -769,13 +785,17 @@ function NoteEditorModal({
   };
 
   const normalizedDraft = normalizeNotePassage(draft);
-  const passageMissingVerse = normalizedDraft.noteType !== "general" && !normalizedDraft.verseStart;
-  const handleSave = () => {
-    if (passageMissingVerse) {
+  const passageInvalid = normalizedDraft.noteType !== "general" && !parsePassageInput(draft.passage, draft.bookNum);
+  const handleSave = async () => {
+    if (savingRef.current) return;
+    if (passageInvalid) {
       setSaveAttempted(true);
       return;
     }
-    onSave({ ...normalizedDraft, updatedAt: new Date().toISOString() });
+    savingRef.current = true;
+    setSaving(true);
+    try { await onSave({ ...normalizedDraft, updatedAt: new Date().toISOString() }); }
+    finally { savingRef.current = false; setSaving(false); }
   };
 
   const dateDisplay = (() => {
@@ -796,6 +816,15 @@ function NoteEditorModal({
   return (
     <>
       {/* ── Fullscreen Writing Overlay ── */}
+      {saveError && (
+        <div role="alert" className="fixed inset-x-4 top-14 z-[10001] rounded-xl border p-3 text-sm"
+          style={{ background: fsBg, color: fsFg, borderColor: fsBorder }}>
+          <p>{saveError}</p>
+          <Link href="/auth/login?next=%2Fnotes" className="mt-2 inline-block underline">
+            {lang === "es" ? "Iniciar sesión" : "Sign in"}
+          </Link>
+        </div>
+      )}
       {writingModeActive && (
         <div
           className="fixed inset-x-0 top-0 flex h-[100dvh] flex-col"
@@ -827,14 +856,15 @@ function NoteEditorModal({
               {/* Save */}
               <button
                 type="button"
-                onClick={() => { handleSave(); setFullscreenWrite(false); }}
+                onClick={handleSave}
+                disabled={saving}
                 className="px-4 py-1.5 rounded-xl text-[13px] font-bold transition-all active:scale-[0.96]"
                 style={{
                   background: isEditorLight ? "#111111" : "var(--accent)",
                   color: "#fff",
                 }}
               >
-                {t(lang, "notes_save")}
+                {saving ? (lang === "es" ? "Guardando…" : "Saving…") : t(lang, "notes_save")}
               </button>
 
               {!isLandscapeWriting && (
@@ -896,6 +926,7 @@ function NoteEditorModal({
           </span>
           <button
             onClick={handleSave}
+            disabled={saving}
             className="px-4 py-1.5 rounded-xl text-sm font-bold transition-all active:scale-[0.96]"
             style={{
               background: isEditorLight ? "#111111" : "var(--accent)",
@@ -903,7 +934,7 @@ function NoteEditorModal({
               boxShadow: isEditorLight ? "none" : "0 2px 8px color-mix(in srgb, var(--accent) 40%, transparent)",
             }}
           >
-            {t(lang, "notes_save")}
+            {saving ? (lang === "es" ? "Guardando…" : "Saving…") : t(lang, "notes_save")}
           </button>
         </div>
 
@@ -1070,7 +1101,7 @@ function NoteEditorModal({
                   onBookChange={handleBookChange}
                   onChapterChange={handleChapterChange}
                   onVerseChange={handleVerseChange}
-                  showRequiredError={saveAttempted && passageMissingVerse}
+                  showRequiredError={saveAttempted && passageInvalid}
                 />
               </div>
             )}
@@ -1186,6 +1217,35 @@ export default function NotesPage() {
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [storageError, setStorageError] = useState<string | null>(null);
+  const [accountUser, setAccountUser] = useState<User | null | undefined>(undefined);
+  const [accountError, setAccountError] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<string | null>(null);
+
+  const refreshAccount = useCallback(() => {
+    setAccountError(false);
+    getCloudUser().then(setAccountUser).catch(() => setAccountError(true));
+  }, []);
+
+  useEffect(() => {
+    refreshAccount();
+    const changed = (event: Event) => setAccountUser((event as CustomEvent<User | null>).detail);
+    window.addEventListener(AUTH_CHANGE_EVENT, changed);
+    return () => window.removeEventListener(AUTH_CHANGE_EVENT, changed);
+  }, [refreshAccount]);
+
+  const accountId = accountUser?.id;
+  useEffect(() => {
+    if (!accountId) return;
+    try {
+      const raw = sessionStorage.getItem(`tulip-note-draft:${accountId}`);
+      if (!raw) return;
+      const draft = JSON.parse(raw) as SermonNote;
+      if (!draft.id || typeof draft.notes !== "string") return;
+      setEditingNote(draft);
+      setIsNewNote(!loadNotes().some(note => note.id === draft.id));
+      setEditorOpen(true);
+    } catch { /* A corrupt draft does not replace saved notes. */ }
+  }, [accountId]);
 
   // Fullscreen note viewer
   const [viewingNote, setViewingNote] = useState<SermonNote | null>(null);
@@ -1276,14 +1336,18 @@ export default function NotesPage() {
 
   // ── Actions ──────────────────────────────────────────────────────────────────
 
-  const persistNotes = (next: SermonNote[]) => {
+  const persistNotes = async (next: SermonNote[]) => {
     try {
-      saveNotes(next);
-      setNotes(next);
+      setSaveStatus(lang === "es" ? "Guardando en tu cuenta…" : "Saving to your account…");
+      await saveNotes(next);
+      setNotes(loadNotes());
       setStorageError(null);
+      setSaveStatus(lang === "es" ? "Guardado en tu cuenta" : "Saved to your account");
       return true;
     } catch {
-      setStorageError(lang === "es" ? "No se pudo guardar. Libera espacio e intenta otra vez." : "Could not save. Free up device storage and try again.");
+      setNotes(loadNotes());
+      setSaveStatus(null);
+      setStorageError(lang === "es" ? "No se pudo completar el respaldo. Tu borrador sigue abierto. Revisa tu conexion o inicia sesion e intenta otra vez." : "Account backup did not complete. Your draft is still open. Check your connection or sign in, then try again.");
       return false;
     }
   };
@@ -1308,13 +1372,15 @@ export default function NotesPage() {
     setEditorOpen(true);
   };
 
-  const handleSaveNote = (note: SermonNote) => {
+  const handleSaveNote = async (note: SermonNote) => {
     const noteToSave = normalizeNotePassage(note);
-    const exists = notes.some((n) => n.id === noteToSave.id);
+    const current = loadNotes();
+    const exists = current.some((n) => n.id === noteToSave.id);
     const next = exists
-      ? notes.map((n) => (n.id === noteToSave.id ? noteToSave : n))
-      : [noteToSave, ...notes];
-    if (!persistNotes(next)) return;
+      ? current.map((n) => (n.id === noteToSave.id ? noteToSave : n))
+      : [noteToSave, ...current];
+    if (!await persistNotes(next)) return false;
+    if (accountUser) sessionStorage.removeItem(`tulip-note-draft:${accountUser.id}`);
     setEditorOpen(false);
     setEditingNote(null);
     // Navigate to the saved note's book/chapter (sermon notes only)
@@ -1322,11 +1388,12 @@ export default function NotesPage() {
       setSelectedBookNum(noteToSave.bookNum);
       setExpandedChapters((prev) => new Set([...prev, noteToSave.chapter]));
     }
+    return true;
   };
 
-  const handleDeleteNote = (id: string) => {
-    const next = notes.filter((n) => n.id !== id);
-    persistNotes(next);
+  const handleDeleteNote = async (id: string) => {
+    const next = loadNotes().filter((n) => n.id !== id);
+    if (!await persistNotes(next)) return;
     // If selected book now empty, return to library
     if (selectedBookNum && !next.some((n) => n.bookNum === selectedBookNum)) {
       setSelectedBookNum(null);
@@ -1349,11 +1416,25 @@ export default function NotesPage() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
 
-  if (!mounted) {
+  if (!mounted || (accountUser === undefined && !accountError)) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--bg)" }}>
         <span className="text-sm" style={{ color: "var(--fg-dim)" }}>Loading…</span>
       </div>
+    );
+  }
+
+  if (!accountUser) {
+    return (
+      <StudyScreen screen="notes"><PageHeading back={false} kicker="PERSONAL STUDY"/><div className="page-heading compact-heading"><div><p className="eyebrow">YOUR NOTEBOOK</p><h1>Study notes<span className="count-label">{notes.length}</span></h1></div></div><main className="page-pad" style={{ color: "var(--ink)" }}>
+        <p className="mt-4 text-sm leading-6" style={{ color: "var(--fg-lo)" }}>
+          {accountError
+            ? (lang === "es" ? "No se pudo comprobar tu sesion. Intenta de nuevo." : "We could not check your session. Try again before signing in again.")
+            : (lang === "es" ? "Inicia sesion para guardar y respaldar tus notas en tu cuenta. Las notas existentes en este dispositivo se conservaran." : "Sign in to save and back up notes to your account. Existing notes on this device will be kept.")}
+        </p>
+        {accountError ? <button onClick={refreshAccount} className="mt-6 min-h-12 rounded-lg border px-5">{lang === "es" ? "Reintentar" : "Retry"}</button>
+          : <Link href="/auth/login?next=%2Fnotes" className="mt-6 inline-flex min-h-12 items-center rounded-lg px-5 text-sm font-semibold" style={{ background: "var(--fg)", color: "var(--bg)" }}>{lang === "es" ? "Iniciar sesion para guardar notas" : "Sign in to save notes"}</Link>}
+      </main></StudyScreen>
     );
   }
 
@@ -1369,11 +1450,12 @@ export default function NotesPage() {
       )}
 
       {editorOpen && editingNote && (
-        <NoteEditorModal
+        <NoteComposer
           initial={editingNote}
-          isNew={isNewNote}
           onSave={handleSaveNote}
-          onCancel={() => { setEditorOpen(false); setEditingNote(null); }}
+          saveError={storageError}
+          userId={accountUser.id}
+          onCancel={() => { sessionStorage.removeItem(`tulip-note-draft:${accountUser.id}`); setEditorOpen(false); setEditingNote(null); }}
         />
       )}
 
@@ -1386,676 +1468,7 @@ export default function NotesPage() {
         />
       )}
 
-      <div className="min-h-screen" style={{ background: "var(--bg)", color: "var(--fg)" }}>
-        {/* ── Premium Header + Controls ───────────────────────────────────────── */}
-        <div className="relative overflow-hidden" style={{ borderBottom: "1px solid var(--border)", background: "var(--bg)" }}>
-          {!isLight && <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-[radial-gradient(circle_at_20%_0%,rgba(201,169,97,0.14),transparent_42%),radial-gradient(circle_at_92%_14%,rgba(201,169,97,0.10),transparent_38%)]" />}
-          <div className="relative max-w-screen-xl mx-auto px-4 pt-5 pb-4 space-y-4">
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="grid h-10 w-10 flex-shrink-0 place-items-center rounded-2xl"
-                  style={{
-                    border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
-                    background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.045)",
-                    color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.55)",
-                  }}>
-                  <NotesIcon />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: isLight ? "var(--fg-dim)" : "var(--accent)" }}>
-                    {lang === "es" ? "Archivo personal" : "Personal archive"}
-                  </p>
-                  <h1 className="mt-0.5 text-[24px] font-black leading-none tracking-tight" style={{ color: "var(--fg)" }}>
-                    {t(lang, "notes_title")}
-                  </h1>
-                  <p className="mt-1 text-[12px]" style={{ color: "var(--fg-dim)" }}>
-                    {activeCount} {lang === "es" ? (activeCount === 1 ? "nota" : "notas") : `note${activeCount !== 1 ? "s" : ""}`}
-                    {selectedBook && activeTab === "sermon" ? ` · ${bibleBookName(selectedBook, lang)}` : ""}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                onClick={() => openNewNote(activeTab === "sermon" ? (selectedBookNum ?? undefined) : undefined)}
-                className="flex min-h-12 flex-shrink-0 items-center gap-2 rounded-2xl px-4 text-[12px] font-black transition-all active:scale-[0.97]"
-                style={{
-                  background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 74%, #ffffff 26%))",
-                  color: isLight ? "#0a0a0a" : "#08090f",
-                  boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 20%, transparent)",
-                }}
-              >
-                <span className="text-lg leading-none">+</span>
-                <span className="leading-tight">{t(lang, "notes_new")}</span>
-              </button>
-            </div>
-
-            {storageError && (
-              <div
-                role="alert"
-                className="rounded-2xl px-4 py-3 text-[12px] font-bold"
-                style={{
-                  background: isLight ? "#fff4f4" : "rgba(248, 113, 113, 0.12)",
-                  border: isLight ? "1px solid rgba(185, 28, 28, 0.18)" : "1px solid rgba(248, 113, 113, 0.20)",
-                  color: isLight ? "#991b1b" : "#fecaca",
-                }}
-              >
-                {storageError}
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-2 rounded-[22px] p-1" style={{ border: isLight ? "1px solid rgba(0,0,0,0.09)" : "1px solid rgba(255,255,255,0.07)", background: isLight ? "rgba(0,0,0,0.06)" : "rgba(0,0,0,0.18)" }}>
-              {(["sermon", "general"] as const).map((tab) => {
-                const active = activeTab === tab;
-                const count = tab === "sermon" ? sermonNoteCount : generalNoteCount;
-                return (
-                  <button
-                    key={tab}
-                    onClick={() => { setActiveTab(tab); if (tab === "general") setSelectedBookNum(null); }}
-                    className="rounded-[18px] px-3 py-3 text-left transition-all active:scale-[0.98]"
-                    style={{
-                      background: active ? (isLight ? "#ffffff" : "rgba(255,255,255,0.09)") : "transparent",
-                      border: active ? (isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(255,255,255,0.08)") : "1px solid transparent",
-                      boxShadow: active ? (isLight ? "0 2px 12px rgba(0,0,0,0.10)" : "0 10px 26px rgba(0,0,0,0.18)") : "none",
-                    }}
-                  >
-                    <span className="block text-[13px] font-black" style={{ color: active ? "var(--fg)" : "var(--fg-lo)" }}>
-                      {tab === "sermon" ? t(lang, "notes_tab_sermon") : t(lang, "notes_tab_general")}
-                    </span>
-                    <span className="mt-0.5 block text-[10px] font-bold" style={{ color: active ? (isLight ? "var(--fg-lo)" : "var(--accent)") : "var(--fg-dim)" }}>
-                      {count} {lang === "es" ? (count === 1 ? "nota" : "notas") : `note${count !== 1 ? "s" : ""}`}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="rounded-[24px] p-2" style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)", background: isLight ? "#f3f4f6" : "rgba(255,255,255,0.035)", boxShadow: isLight ? "0 6px 20px rgba(0,0,0,0.05)" : "0 18px 48px rgba(0,0,0,0.18)" }}>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--fg-dim)" }}><SearchIcon size={16} /></span>
-                <input
-                  type="text"
-                  placeholder={t(lang, "notes_search")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full rounded-2xl border py-3 pl-10 pr-4 text-[14px] focus:outline-none"
-                  style={{ borderColor: "var(--border)", color: "var(--fg)", caretColor: "var(--accent)", background: isLight ? "rgba(255,255,255,0.85)" : "rgba(0,0,0,0.14)" }}
-                />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowFilters((value) => !value)}
-                  aria-expanded={showFilters}
-                  aria-label={lang === "es" ? "Filtros" : "Filters"}
-                  className="relative grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl"
-                  style={{ background: showFilters ? (isLight ? "#111111" : "var(--accent)") : "var(--bg)", color: showFilters ? "#ffffff" : "var(--fg-lo)", border: "1px solid var(--border)" }}
-                >
-                  <SlidersIcon size={17} />
-                  {hasActiveFilters && <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full" style={{ background: isLight ? "#111111" : "var(--accent)" }} />}
-                </button>
-              </div>
-              {showFilters && <div className="mt-2 flex gap-2 overflow-x-auto px-1 pb-1 scrollbar-none">
-              <select
-                value={filterTestament}
-                onChange={(e) => setFilterTestament(e.target.value as "all" | "OT" | "NT")}
-                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
-              >
-                <option value="all">{t(lang, "notes_filter_all_books")}</option>
-                <option value="OT">{t(lang, "notes_filter_ot")}</option>
-                <option value="NT">{t(lang, "notes_filter_nt")}</option>
-              </select>
-              {allTags.length > 0 && (
-                <select
-                  value={filterTag}
-                  onChange={(e) => setFilterTag(e.target.value)}
-                  className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
-                  style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
-                >
-                  <option value="">All Tags</option>
-                  {allTags.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-              )}
-              <select
-                value={filterDate}
-                onChange={(e) => setFilterDate(e.target.value as "all" | "this-year" | "last-year")}
-                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
-              >
-                <option value="all">{t(lang, "notes_filter_all_time")}</option>
-                <option value="this-year">{t(lang, "notes_filter_this_year")}</option>
-                <option value="last-year">{t(lang, "notes_filter_last_year")}</option>
-              </select>
-              <select
-                value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as "newest" | "oldest" | "by-book")}
-                className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-bold focus:outline-none [color-scheme:inherit]"
-                style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.045)", borderColor: "var(--border)", color: "var(--fg-lo)" }}
-              >
-                <option value="newest">{t(lang, "notes_sort_newest")}</option>
-                <option value="oldest">{t(lang, "notes_sort_oldest")}</option>
-                <option value="by-book">{t(lang, "notes_sort_by_book")}</option>
-              </select>
-              {hasActiveFilters && (
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilterTestament("all");
-                    setFilterTag("");
-                    setFilterDate("all");
-                    setSortOrder("newest");
-                  }}
-                  className="flex-shrink-0 rounded-full border px-3.5 py-2 text-[12px] font-black transition-opacity active:opacity-70"
-                  style={{ background: "var(--accent-soft)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)", color: "var(--accent-text)" }}
-                >
-                  {lang === "es" ? "Limpiar" : "Clear"}
-                </button>
-              )}
-              </div>}
-            </div>
-          </div>
-        </div>
-
-        {/* ── Layout ──────────────────────────────────────────────────────────── */}
-        <div className="max-w-screen-xl mx-auto flex">
-
-          {/* ── Sidebar (sermon tab only) ────────────────────────────────────── */}
-          <aside
-            className={`${activeTab === "general" ? "hidden" : "hidden md:flex"} flex-col w-60 lg:w-68 flex-shrink-0 min-h-[calc(100vh-56px)] sticky top-14 self-start max-h-[calc(100vh-56px)]`}
-            style={{ borderRight: "1px solid var(--border)", background: "var(--bg)" }}
-          >
-            <div className="flex-1 overflow-y-auto py-2">
-              {notes.length === 0 || booksWithNotes.length === 0 ? (
-                <div className="px-4 py-10 text-center">
-                  <p className="text-xs" style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.15)" }}>
-                    {notes.length === 0
-                      ? (lang === "es" ? "Aún no hay notas" : "No notes yet")
-                      : (lang === "es" ? "No hay resultados para estos filtros" : "No matches for these filters")}
-                  </p>
-                </div>
-              ) : (
-                <>
-                  {/* Old Testament section */}
-                  {otBooks.length > 0 && (
-                    <div>
-                      <button
-                        onClick={() => setOtExpanded((v) => !v)}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-[0.12em] transition-colors"
-                      style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}
-                      >
-                        <span className="text-[8px]">{otExpanded ? "▾" : "▸"}</span>
-                        {lang === "es" ? "Antiguo Testamento" : "Old Testament"}
-                        <span className="ml-auto" style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.15)" }}>{otBooks.length}</span>
-                      </button>
-                      {otExpanded &&
-                        otBooks.map((book) => {
-                          const cnt = sorted.filter((n) => n.bookNum === book.num);
-                          const chCnt = new Set(cnt.map((n) => n.chapter)).size;
-                          const active = selectedBookNum === book.num;
-                          const sclr = getThemeNoteColor(book.num, isLight);
-                          return (
-                            <button
-                              key={book.num}
-                              onClick={() => selectBook(book.num)}
-                              className={`w-full flex items-center gap-2 px-4 py-2 text-left border-l-2 transition-all ${
-                                active
-                                  ? sclr.sideActive
-                                  : isLight ? "border-l-transparent hover:bg-black/[0.04]" : "border-l-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
-                              }`}
-                              style={!(selectedBookNum === book.num) && isLight ? { color: "rgba(0,0,0,0.55)" } : undefined}
-                            >
-                              <span className="text-xs font-semibold flex-1 truncate">{bibleBookName(book, lang)}</span>
-                              <span
-                                className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                                  active
-                                    ? sclr.sideBadge
-                                    : isLight ? "bg-black/[0.07] text-black/30" : "bg-white/[0.06] text-white/20"
-                                }`}
-                              >
-                                {chCnt}{lang === "es" ? "cap" : "ch"}
-                              </span>
-                            </button>
-                          );
-                        })}
-                    </div>
-                  )}
-
-                  {/* New Testament section */}
-                  {ntBooks.length > 0 && (
-                    <div className="mt-1">
-                      <button
-                        onClick={() => setNtExpanded((v) => !v)}
-                        className="w-full flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-[0.12em] transition-colors"
-                      style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}
-                      >
-                        <span className="text-[8px]">{ntExpanded ? "▾" : "▸"}</span>
-                        {lang === "es" ? "Nuevo Testamento" : "New Testament"}
-                        <span className="ml-auto" style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.15)" }}>{ntBooks.length}</span>
-                      </button>
-                      {ntExpanded &&
-                        ntBooks.map((book) => {
-                          const cnt = sorted.filter((n) => n.bookNum === book.num);
-                          const chCnt = new Set(cnt.map((n) => n.chapter)).size;
-                          const active = selectedBookNum === book.num;
-                          const sclr = getThemeNoteColor(book.num, isLight);
-                          return (
-                            <button
-                              key={book.num}
-                              onClick={() => selectBook(book.num)}
-                              className={`w-full flex items-center gap-2 px-4 py-2 text-left border-l-2 transition-all ${
-                                active
-                                  ? sclr.sideActive
-                                  : isLight ? "border-l-transparent hover:bg-black/[0.04]" : "border-l-transparent text-white/40 hover:text-white/65 hover:bg-white/[0.03]"
-                              }`}
-                              style={!(selectedBookNum === book.num) && isLight ? { color: "rgba(0,0,0,0.55)" } : undefined}
-                            >
-                              <span className="text-xs font-semibold flex-1 truncate">{bibleBookName(book, lang)}</span>
-                              <span
-                                className={`text-[9px] font-mono px-1.5 py-0.5 rounded ${
-                                  active
-                                    ? sclr.sideBadge
-                                    : isLight ? "bg-black/[0.07] text-black/30" : "bg-white/[0.06] text-white/20"
-                                }`}
-                              >
-                                {chCnt}{lang === "es" ? "cap" : "ch"}
-                              </span>
-                            </button>
-                          );
-                        })}
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-            <div className="px-4 py-2.5" style={{ borderTop: "1px solid var(--border)" }}>
-              <p className="text-[9px] font-mono" style={{ color: "var(--fg-dim)" }}>
-                {notes.length} note{notes.length !== 1 ? "s" : ""} · saved locally
-              </p>
-            </div>
-          </aside>
-
-          {/* ── Main content ─────────────────────────────────────────────────── */}
-          <main className="flex-1 min-w-0 px-4 md:px-6 py-6">
-
-            {/* ── General Notes tab ──────────────────────────────────────────── */}
-            {activeTab === "general" && (
-              <div>
-                {sorted.length === 0 ? (
-                  <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
-                    <div className="w-full rounded-[32px] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]"
-                      style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "#f9fafb" : "rgba(255,255,255,0.035)" }}>
-                      <div className="relative mx-auto mb-5 w-fit">
-                        <div
-                          className="w-24 h-24 rounded-[30px] flex items-center justify-center shadow-2xl"
-                          style={{
-                            border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
-                            background: isLight ? "rgba(0,0,0,0.07)" : "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))",
-                          }}
-                        >
-                          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "var(--fg-lo)" }}>
-                          <path d="M12 20h9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          </svg>
-                        </div>
-                      </div>
-                      <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>{t(lang, "notes_general_empty_title")}</h2>
-                      <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>{t(lang, "notes_general_empty_sub")}</p>
-                      <div className="mt-5 flex justify-center gap-2">
-                        <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Ideas" : "Ideas"}</span>
-                        <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Oración" : "Prayer"}</span>
-                      </div>
-                      <button
-                        onClick={() => openNewNote()}
-                        className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all"
-                        style={{
-                          background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
-                          color: "#0a0a0a",
-                          boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
-                        }}
-                      >
-                        <span className="text-base font-black">+</span>
-                        {t(lang, "notes_add_first")}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {sorted.map((note) => (
-                      <NoteCard
-                        key={note.id}
-                        note={note}
-                        onView={() => setViewingNote(note)}
-                        onEdit={() => openEditNote(note)}
-                        onDelete={() => setConfirmDeleteId(note.id)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* ── Sermon Notes tab content below ─────────────────────────────── */}
-            {activeTab === "sermon" && (
-            <>
-
-            {/* ── Empty state (no sermon notes) ──────────────────────────────── */}
-            {sermonNoteCount === 0 && (
-              <div className="mx-auto flex min-h-[48vh] max-w-sm items-center justify-center">
-                <div className="w-full rounded-[32px] p-6 text-center shadow-[0_24px_80px_rgba(0,0,0,0.22)]"
-                  style={{ border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.08)", background: isLight ? "#f9fafb" : "rgba(255,255,255,0.035)" }}>
-                  <div className="relative mx-auto mb-5 w-fit">
-                    <div
-                      className="w-24 h-24 rounded-[30px] flex items-center justify-center shadow-2xl"
-                      style={{
-                        border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.09)",
-                        background: isLight ? "rgba(0,0,0,0.07)" : "linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, transparent), rgba(255,255,255,0.035))",
-                      }}
-                    >
-                      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" style={{ color: isLight ? "#c9a961" : "var(--fg-lo)" }}>
-                      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      <line x1="9" y1="7" x2="15" y2="7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <line x1="9" y1="11" x2="15" y2="11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      <line x1="9" y1="15" x2="12" y2="15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                      </svg>
-                    </div>
-                  </div>
-                  <h2 className="text-[20px] font-black tracking-tight" style={{ color: "var(--fg)" }}>
-                    {t(lang, "notes_sermon_empty_title")}
-                  </h2>
-                  <p className="mx-auto mt-2 max-w-[280px] text-[13px] leading-relaxed" style={{ color: "var(--fg-lo)" }}>
-                    {t(lang, "notes_sermon_empty_sub")}
-                  </p>
-                  <div className="mt-5 flex justify-center gap-2">
-                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Libro" : "Book"}</span>
-                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Capítulo" : "Chapter"}</span>
-                    <span className="rounded-full border px-3 py-1 text-[10px] font-black uppercase tracking-wider" style={{ borderColor: "var(--border)", color: "var(--fg-dim)" }}>{lang === "es" ? "Pasaje" : "Passage"}</span>
-                  </div>
-                  <button
-                    onClick={() => openNewNote()}
-                    className="mt-6 inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl font-bold text-sm active:scale-[0.97] transition-all"
-                    style={{
-                      background: isLight ? "#e5e7eb" : "linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 76%, #ffffff 24%))",
-                      color: "#0a0a0a",
-                      boxShadow: isLight ? "none" : "0 18px 36px color-mix(in srgb, var(--accent) 22%, transparent)",
-                    }}
-                  >
-                    <span className="text-base font-black">+</span>
-                    {t(lang, "notes_add_first")}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* ── Library view (no book selected, has sermon notes) ──────────── */}
-            {sermonNoteCount > 0 && !selectedBook && (
-              <div>
-                {/* Mobile: book grid */}
-                <div className="md:hidden space-y-4 mb-4">
-                  {sorted.length > 0 && (
-                    <section>
-                      <div className="mb-3 flex items-end justify-between px-1">
-                        <div>
-                          <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "var(--fg-dim)" }}>{lang === "es" ? "Últimas" : "Latest"}</p>
-                          <h2 className="mt-0.5 text-xl font-black tracking-tight" style={{ color: "var(--fg)" }}>{lang === "es" ? "Notas recientes" : "Recent notes"}</h2>
-                        </div>
-                        <span className="text-[11px]" style={{ color: "var(--fg-dim)" }}>{sorted.length} {lang === "es" ? "en total" : "total"}</span>
-                      </div>
-                      <div className="space-y-2">
-                        {sorted.slice(0, 3).map((note) => (
-                          <button
-                            key={note.id}
-                            onClick={() => setViewingNote(note)}
-                            className="flex min-h-20 w-full items-center gap-3 rounded-2xl p-3 text-left transition-transform active:scale-[0.99]"
-                            style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}
-                          >
-                            <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl" style={{ background: isLight ? "#e5e7eb" : "rgba(255,255,255,0.06)", color: "var(--fg-lo)" }}><NotesIcon /></div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[14px] font-black" style={{ color: "var(--fg)" }}>{note.title || t(lang, "notes_untitled")}</p>
-                              <p className="mt-1 truncate text-[11px]" style={{ color: "var(--fg-dim)" }}>{getNoteDisplayRef(note)} · {formatDate(note.date, lang)}</p>
-                            </div>
-                            <span style={{ color: "var(--fg-dim)" }}>›</span>
-                          </button>
-                        ))}
-                      </div>
-                    </section>
-                  )}
-                  <div className="flex items-end justify-between px-1 pt-2">
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.18em]" style={{ color: "var(--fg-dim)" }}>{lang === "es" ? "Archivo" : "Archive"}</p>
-                      <h2 className="mt-0.5 text-xl font-black tracking-tight" style={{ color: "var(--fg)" }}>{lang === "es" ? "Explorar por libro" : "Browse by book"}</h2>
-                    </div>
-                    <span className="text-[11px]" style={{ color: "var(--fg-dim)" }}>{booksWithNotes.length} {lang === "es" ? "libros" : "books"}</span>
-                  </div>
-                  {[
-                    { label: lang === "es" ? "Antiguo Testamento" : "Old Testament", books: otBooks },
-                    { label: lang === "es" ? "Nuevo Testamento" : "New Testament", books: ntBooks },
-                  ].map(
-                    ({ label, books }) =>
-                      books.length > 0 && (
-                        <div key={label}>
-                          <h3 className="text-[9px] font-black uppercase tracking-widest px-1 mb-2" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}>
-                            {label}
-                          </h3>
-                          <div className="space-y-1.5">
-                            {books.map((book) => {
-                              const cnt = sorted.filter((n) => n.bookNum === book.num);
-                              const chCnt = new Set(cnt.map((n) => n.chapter)).size;
-                              const bclr = getThemeNoteColor(book.num, isLight);
-                              return (
-                                <button
-                                  key={book.num}
-                                  onClick={() => selectBook(book.num)}
-                                  className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left"
-                                  style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.03)", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.07)" }}
-                                >
-                                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${bclr.dot}`} />
-                                  <span className="flex-1 text-sm font-semibold" style={{ color: isLight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.6)" }}>
-                                    {bibleBookName(book, lang)}
-                                  </span>
-                                  <span className="text-[11px]" style={{ color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.2)" }}>
-                                    {chCnt} {lang === "es" ? "cap." : "ch."} · {cnt.length} {lang === "es" ? (cnt.length === 1 ? "nota" : "notas") : `note${cnt.length !== 1 ? "s" : ""}`}
-                                  </span>
-                                  <span className="text-xs" style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.15)" }}>→</span>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )
-                  )}
-                  {booksWithNotes.length === 0 && (
-                    <p className="text-sm text-center py-8" style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.2)" }}>
-                      No notes match your current filters
-                    </p>
-                  )}
-                </div>
-
-                {/* Desktop: recent notes overview */}
-                <div className="hidden md:block">
-                  <div className="flex items-baseline gap-3 mb-5">
-                    <h2 className="text-base font-bold" style={{ color: isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.45)" }}>Study Library</h2>
-                    <span className="text-xs" style={{ color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.2)" }}>
-                      {sorted.length} note{sorted.length !== 1 ? "s" : ""} across{" "}
-                      {booksWithNotes.length} book{booksWithNotes.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
-
-                  {sorted.length === 0 ? (
-                    <p className="text-sm py-10 text-center" style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.2)" }}>
-                      No notes match your current filters
-                    </p>
-                  ) : (
-                    <div>
-                      <p className="text-[9px] font-black uppercase tracking-widest mb-3" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.2)" }}>
-                        Recent Notes
-                      </p>
-                      <div className="space-y-2">
-                        {sorted.slice(0, 8).map((note) => {
-                          const nclr = getThemeNoteColor(note.bookNum, isLight);
-                          return (
-                            <button
-                              key={note.id}
-                              onClick={() => {
-                                setSelectedBookNum(note.bookNum);
-                                setExpandedChapters(new Set([note.chapter]));
-                              }}
-                              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left group"
-                              style={{ background: isLight ? "rgba(0,0,0,0.02)" : "rgba(255,255,255,0.02)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.06)" }}
-                            >
-                              <div className={`w-2 h-2 rounded-full flex-shrink-0 ${nclr.dot}`} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold truncate transition-colors" style={{ color: isLight ? "rgba(0,0,0,0.65)" : "rgba(255,255,255,0.6)" }}>
-                                  {note.title || t(lang, "notes_untitled")}
-                                </p>
-                                <p className="text-[11px] truncate mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)" }}>
-                                  {note.bookName} {note.chapter} · {formatDate(note.date, lang)}
-                                  {note.pastor && ` · ${note.pastor}`}
-                                </p>
-                              </div>
-                              {getNoteDisplayRef(note) && (
-                                <span className={`text-[10px] px-2 py-0.5 rounded-full border flex-shrink-0 hidden sm:inline ${nclr.pill}`}>
-                                  {getNoteDisplayRef(note)}
-                                </span>
-                              )}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      {sorted.length > 8 && (
-                        <p className="text-xs mt-4 text-center" style={{ color: isLight ? "rgba(0,0,0,0.2)" : "rgba(255,255,255,0.15)" }}>
-                          Select a book in the sidebar to browse all notes
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* ── Book Detail view ──────────────────────────────────────────── */}
-            {activeTab === "sermon" && selectedBook && (
-              <div>
-                {/* Back button (mobile) */}
-                <button
-                  onClick={() => setSelectedBookNum(null)}
-                  className="mb-4 flex min-h-10 items-center gap-1.5 text-xs font-semibold transition-opacity active:opacity-60 md:hidden"
-                  style={{ color: "var(--fg-lo)" }}
-                >
-                  ← {lang === "es" ? "Biblioteca" : "Library"}
-                </button>
-
-                {/* Book heading */}
-                <div className="flex items-start justify-between gap-3 mb-6">
-                  <div>
-                    <h2 className="text-xl font-bold" style={{ color: isLight ? "rgba(0,0,0,0.85)" : "rgba(255,255,255,0.8)" }}>{bibleBookName(selectedBook, lang)}</h2>
-                    <p className="text-xs mt-1" style={{ color: isLight ? "rgba(0,0,0,0.3)" : "rgba(255,255,255,0.25)" }}>
-                      {chaptersWithNotes.length} {lang === "es" ? (chaptersWithNotes.length === 1 ? "capítulo" : "capítulos") : `chapter${chaptersWithNotes.length !== 1 ? "s" : ""}`} ·{" "}
-                      {bookNotes.length} {lang === "es" ? (bookNotes.length === 1 ? "nota" : "notas") : `note${bookNotes.length !== 1 ? "s" : ""}`}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => openNewNote(selectedBook.num)}
-                    className="flex min-h-11 flex-shrink-0 items-center gap-1.5 rounded-xl px-4 text-xs font-black transition-opacity active:opacity-60"
-                    style={{ background: isLight ? "#111111" : "var(--accent)", color: "#ffffff" }}
-                  >
-                    + {lang === "es" ? "Agregar nota" : "Add Note"}
-                  </button>
-                </div>
-
-                {/* No notes after filter */}
-                {chaptersWithNotes.length === 0 && (
-                  <p className="text-sm text-center py-12" style={{ color: isLight ? "rgba(0,0,0,0.25)" : "rgba(255,255,255,0.2)" }}>
-                    {lang === "es"
-                      ? `No hay notas que coincidan con los filtros para ${bibleBookName(selectedBook, lang)}`
-                      : `No notes match your current filters for ${selectedBook.name}`}
-                  </p>
-                )}
-
-                {/* Chapter list */}
-                {(() => {
-                  const bookClr = getThemeNoteColor(selectedBook.num, isLight);
-                  return (
-                    <div className="space-y-2.5">
-                      {chaptersWithNotes.map((ch) => {
-                        const chNotes = bookNotes
-                          .filter((n) => n.chapter === ch)
-                          .sort((a, b) =>
-                            sortOrder === "oldest"
-                              ? a.date.localeCompare(b.date)
-                              : b.date.localeCompare(a.date)
-                          );
-                        const mostRecent = chNotes[0];
-                        const isExp = expandedChapters.has(ch);
-
-                        return (
-                          <div
-                            key={ch}
-                            className="rounded-2xl overflow-hidden"
-                            style={{ border: "1px solid var(--border)", background: "var(--bg-2)" }}
-                          >
-                            {/* Chapter header toggle */}
-                            <button
-                              onClick={() => toggleChapter(ch)}
-                              className="w-full flex items-center gap-3.5 px-5 py-4 hover:bg-white/[0.03] transition-colors text-left"
-                            >
-                              <span
-                                className={`${bookClr.accent} opacity-60 text-[10px] transition-transform flex-shrink-0 ${
-                                  isExp ? "rotate-90" : ""
-                                }`}
-                              >
-                                ▸
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold tracking-tight" style={{ color: isLight ? "rgba(0,0,0,0.75)" : "rgba(255,255,255,0.7)" }}>
-                                  {lang === "es" ? "Capítulo" : "Chapter"} {ch}
-                                </p>
-                                {!isExp && mostRecent && (
-                                  <p className="text-[11px] truncate mt-0.5" style={{ color: isLight ? "rgba(0,0,0,0.35)" : "rgba(255,255,255,0.3)" }}>
-                                    {mostRecent.title || t(lang, "notes_untitled")} · {formatDate(mostRecent.date)}
-                                  </p>
-                                )}
-                              </div>
-                              <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border flex-shrink-0 ${bookClr.sideBadge}`} style={{ borderColor: isLight ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.07)" }}>
-                                {chNotes.length} {lang === "es" ? (chNotes.length === 1 ? "nota" : "notas") : `note${chNotes.length !== 1 ? "s" : ""}`}
-                              </span>
-                            </button>
-
-                            {/* Expanded: note cards */}
-                            {isExp && (
-                              <div className="p-3.5 pt-0 space-y-3">
-                                <div className="pt-3.5 space-y-3" style={{ borderTop: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.05)" }}>
-                                  {chNotes.map((note) => (
-                                    <NoteCard
-                                      key={note.id}
-                                      note={note}
-                                      onView={() => setViewingNote(note)}
-                                      onEdit={() => openEditNote(note)}
-                                      onDelete={() => setConfirmDeleteId(note.id)}
-                                    />
-                                  ))}
-                                  <button
-                                    onClick={() => openNewNote(selectedBook.num, ch)}
-                                    className={`w-full py-3 rounded-xl border border-dashed text-xs font-semibold transition-all ${bookClr.accent} opacity-40 hover:opacity-70 border-current hover:bg-white/[0.02]`}
-                                  >
-                                    + {lang === "es" ? `Agregar otra nota al capítulo ${ch}` : `Add another note for Chapter ${ch}`}
-                                  </button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-            </> /* end sermon tab */
-            )} {/* end activeTab === "sermon" */}
-          </main>
-        </div>
-      </div>
+      <StudyScreen screen="notes" notes={notes.map(note => ({ ...note, body: note.notes, reference: note.noteType === "general" ? "" : getNoteDisplayRef(note), updatedAt: note.updatedAt || note.date }))} onNoteAction={(type: string, data: {note?: SermonNote}) => { if (type === "note-view" && data.note) setViewingNote(data.note); else openNewNote(); }}/>
 
     </>
   );

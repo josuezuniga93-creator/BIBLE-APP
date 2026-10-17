@@ -2,7 +2,7 @@
 // localStorage key: "tulip_notes_v1"
 // Accent color for the Notes section: emerald green
 
-import { syncKey } from "./cloudSync";
+import { assertAccount, getCloudUser, syncKeyToCloud } from "./cloudSync";
 import { BIBLE_BOOKS } from "./bibleBooks";
 import { formatParsedPassage, parsePassageInput } from "./passageParser";
 
@@ -26,6 +26,7 @@ export interface SermonNote {
   scriptureRefs: string[]; // e.g. ["John 3:16", "Romans 8:28"]
   createdAt: string;     // ISO timestamp
   updatedAt: string;     // ISO timestamp
+  deletedAt?: string;    // Tombstones prevent deleted notes returning from another device.
 }
 
 export const NOTES_STORAGE_KEY = "tulip_notes_v1";
@@ -43,7 +44,7 @@ export const PRESET_TAGS = [
 
 // ─── Storage Helpers ──────────────────────────────────────────────────────────
 
-export function loadNotes(): SermonNote[] {
+function loadStoredNotes(): SermonNote[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = localStorage.getItem(NOTES_STORAGE_KEY);
@@ -54,12 +55,21 @@ export function loadNotes(): SermonNote[] {
   }
 }
 
-export function saveNotes(notes: SermonNote[]): boolean {
-  if (typeof window === "undefined") return true;
-  const value = JSON.stringify(notes);
+export function loadNotes(): SermonNote[] {
+  return loadStoredNotes().filter(note => !note.deletedAt);
+}
+
+export async function saveNotes(notes: SermonNote[]): Promise<void> {
+  if (typeof window === "undefined") throw new Error("Notes can only be saved in the app.");
+  const user = await getCloudUser();
+  if (!user) throw new Error("Sign in to save your notes to your account.");
+  assertAccount(user);
+  const now = new Date().toISOString();
+  const ids = new Set(notes.map(note => note.id));
+  const deleted = loadStoredNotes().filter(note => !ids.has(note.id)).map(note => note.deletedAt ? note : { ...note, deletedAt: now, updatedAt: now });
+  const value = JSON.stringify([...notes, ...deleted]);
   localStorage.setItem(NOTES_STORAGE_KEY, value);
-  syncKey(NOTES_STORAGE_KEY, value).catch(() => {});
-  return true;
+  await syncKeyToCloud(NOTES_STORAGE_KEY, value);
 }
 
 // ─── Note Factory ─────────────────────────────────────────────────────────────

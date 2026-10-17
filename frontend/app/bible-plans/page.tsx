@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function BiblePlansPage() { return <StudyRoute screen="plans" legacy={FullBiblePlansPage}/>; }
+
 import { useState, useEffect, useMemo } from "react";
 import {
   BIBLE_PLANS,
@@ -502,7 +505,7 @@ function StartPlanModal({
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
-export default function BiblePlansPage() {
+function FullBiblePlansPage() {
   const { lang, t } = useLanguage();
   const [savedPlans, setSavedPlans] = useState<SavedPlan[]>([]);
   const [mounted, setMounted] = useState(false);

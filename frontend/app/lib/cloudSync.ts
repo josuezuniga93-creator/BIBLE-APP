@@ -7,6 +7,8 @@
 
 import { createClient } from "./supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { getSessionUser, AUTH_CHANGE_EVENT } from "./authSession";
+import { mergeReadingValue } from "./readingMerge";
 import { isSyncableStorageKey as isSyncKey } from "./storageKeys";
 export { isSyncableStorageKey } from "./storageKeys";
 
@@ -32,7 +34,7 @@ let currentStatus: SyncStatus = "idle";
 
 export function getSyncStatus(): SyncStatus { return currentStatus; }
 
-function assertAccount(user: User) {
+export function assertAccount(user: User) {
   const owner = localStorage.getItem(SYNC_OWNER_KEY);
   if (owner && owner !== user.id) {
     throw new Error("This device has reading data from another account. Export a backup before switching accounts.");
@@ -250,6 +252,22 @@ export async function pullFromCloud(user: User): Promise<void> {
 
       const localValue = localStorage.getItem(row.storage_key);
       const pending = readPendingSync()[row.storage_key];
+      const merged = mergeReadingValue(row.storage_key, localValue, row.value);
+      if (merged !== undefined) {
+        if (merged !== localValue) {
+          if (localValue && localValue !== row.value) preserveConflict(row.storage_key, localValue);
+          applyCloudValue(row.storage_key, merged);
+          filledMissingLocalData = true;
+        }
+        if (merged !== row.value) queuePendingSync(row.storage_key, merged);
+        else {
+          rememberSynced(row.storage_key, merged);
+          const latestPending = readPendingSync();
+          delete latestPending[row.storage_key];
+          writePendingSync(latestPending);
+        }
+        continue;
+      }
       if (pending) {
         if (localValue !== row.value) preserveConflict(row.storage_key, row.value);
         continue;
@@ -269,7 +287,9 @@ export async function pullFromCloud(user: User): Promise<void> {
     const localData = getAllSyncableLocalStorage();
     for (const [storageKey, value] of Object.entries(localData)) {
       if (cloudKeys.has(storageKey) || readPendingSync()[storageKey]) continue;
-      if (baseline[storageKey] === fingerprint(value)) {
+      if (mergeReadingValue(storageKey, value, null) !== undefined) {
+        queuePendingSync(storageKey, value);
+      } else if (baseline[storageKey] === fingerprint(value)) {
         applyCloudValue(storageKey, null);
         filledMissingLocalData = true;
       } else {
@@ -323,6 +343,7 @@ export function startBackgroundCloudSync(): void {
 
   window.setTimeout(() => { syncReadingData().catch(() => {}); }, 300);
   window.addEventListener("online", () => scheduleCloudFlush(250));
+  window.addEventListener(AUTH_CHANGE_EVENT, () => scheduleCloudFlush(250));
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) scheduleCloudFlush(250);
   });
@@ -347,6 +368,7 @@ export function syncReadingData(): Promise<void> {
     } catch (err) {
       console.error("[cloudSync] background sync error:", err);
       emitSyncStatus("error");
+      throw err;
     }
   })().finally(() => {
     activeSync = null;
@@ -356,11 +378,17 @@ export function syncReadingData(): Promise<void> {
 }
 
 export async function getCloudUser(): Promise<User | null> {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
+  return getSessionUser();
+}
+
+export async function syncKeyToCloud(storageKey: string, value: string): Promise<void> {
+  await syncKey(storageKey, value);
+  await syncReadingData();
+  // An already-running sync may have read its queue before this save.
+  if (readPendingSync()[storageKey]) await syncReadingData();
+  if (getSyncStatus() !== "done" || readPendingSync()[storageKey]) {
+    throw new Error("Your note is on this device, but account backup has not completed. Please retry.");
+  }
 }
 
 export async function signOut(): Promise<void> {

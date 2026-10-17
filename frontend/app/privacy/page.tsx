@@ -1,4 +1,6 @@
 "use client";
+import StudyScreen from "../components/study/StudyScreen";
+import {PageHeading} from "../components/study/Views";
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -52,59 +54,5 @@ export default function PrivacyPage() {
     },
   ];
 
-  return (
-    <div
-      className="min-h-screen"
-      style={{ background: bg, color: fg }}
-    >
-      <div className="max-w-lg mx-auto px-5 pt-6 pb-28">
-
-        {/* Back button + header */}
-        <div className="flex items-center gap-3 mb-8">
-          <button
-            onClick={() => router.back()}
-            aria-label="Go back"
-            className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition-all active:scale-90"
-            style={{ background: backBg }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={fg} strokeWidth="2.2" strokeLinecap="round">
-              <path d="M19 12H5M12 5l-7 7 7 7"/>
-            </svg>
-          </button>
-          <div>
-            <p className="text-[10px] font-black tracking-[0.20em] uppercase" style={{ color: fgFaint }}>
-              Tulip Bible App
-            </p>
-            <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>
-              Privacy Policy
-            </h1>
-          </div>
-        </div>
-
-        <p className="text-xs mb-6" style={{ color: fgFaint }}>Last updated: July 2026</p>
-
-        <p className="text-sm leading-relaxed mb-8" style={{ color: fgMuted }}>
-          Tulip Bible App is a free Reformed study app. We built it to serve the church, not to profit from your data. This policy explains plainly what we do and don&apos;t do with your information.
-        </p>
-
-        <div className="space-y-3">
-          {sections.map((s) => (
-            <div
-              key={s.title}
-              className="rounded-2xl p-5"
-              style={{ background: cardBg, border: `1px solid ${border}` }}
-            >
-              <p className="text-sm font-bold mb-2" style={{ color: fg }}>{s.title}</p>
-              <p className="text-sm leading-relaxed" style={{ color: fgMuted }}>{s.body}</p>
-            </div>
-          ))}
-        </div>
-
-        <p className="text-xs text-center mt-10" style={{ color: fgFaint }}>
-          Tulip Bible App · josuezuniga93@gmail.com
-        </p>
-
-      </div>
-    </div>
-  );
+  return <StudyScreen screen="privacy"><PageHeading title={<>Quietly<br/>private.</>} kicker="PRIVACY"/><div className="page-pad prose">{sections.map(section=><section key={section.title}><h2>{section.title}</h2><p>{section.body}</p></section>)}</div></StudyScreen>;
 }

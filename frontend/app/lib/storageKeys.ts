@@ -5,7 +5,7 @@ const EXACT_KEYS = new Set([
   "tulip-matthew-henry-highlights", "tulip-unified-highlights-v1",
   "tulip-study-tools-continue-reading", "tulip_notes_v1", "tulip_devotional_v1",
   "tulip_bible_plans_v1", "tulip_plans_completion_v1", "tulip_streak_v1",
-  "tulip_badges_earned_v1", "tulip_scripture_shares_v1", "tulip_bible_tracker_v1",
+  "tulip_badges_earned_v1", "tulip_badges_shown_v1", "tulip_scripture_shares_v1", "tulip_bible_tracker_v1",
   "tulip_user_name", "ryc-lang", "tulip_onboarded", "ryc-android-mode",
 ]);
 const PREFIXES = [

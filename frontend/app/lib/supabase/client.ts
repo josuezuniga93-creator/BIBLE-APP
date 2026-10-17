@@ -18,8 +18,12 @@ function createDisabledClient() {
   return {
     auth: {
       getUser: async () => ({ data: { user: null }, error: null }),
+      getSession: async () => ({ data: { session: null }, error: null }),
+      onAuthStateChange: () => ({ data: { subscription: { unsubscribe() {} } } }),
       signOut: async () => ({ error: null }),
       signInWithOAuth: async () => ({ data: null, error: disabledError }),
+      signInWithPassword: async () => ({ data: null, error: disabledError }),
+      signUp: async () => ({ data: null, error: disabledError }),
     },
     from: () => ({
       ...emptyQuery,
@@ -42,6 +46,8 @@ function createDisabledClient() {
   } as unknown as ReturnType<typeof createBrowserClient>;
 }
 
+let browserClient: ReturnType<typeof createBrowserClient> | undefined;
+
 export function createClient() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -50,8 +56,12 @@ export function createClient() {
     return createDisabledClient();
   }
 
-  return createBrowserClient(
+  if (typeof window !== "undefined" && browserClient) return browserClient;
+  const client = createBrowserClient(
     supabaseUrl,
-    supabaseAnonKey
+    supabaseAnonKey,
+    { auth: { persistSession: true, autoRefreshToken: true } }
   );
+  if (typeof window !== "undefined") browserClient = client;
+  return client;
 }

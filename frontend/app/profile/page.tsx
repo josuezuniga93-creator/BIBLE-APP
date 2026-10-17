@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function ProfilePage() { return <StudyRoute screen="profile" legacy={FullProfilePage}/>; }
+
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -285,7 +288,7 @@ async function uploadAvatarToCloudinary(file: File): Promise<string> {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-export default function ProfilePage() {
+function FullProfilePage() {
   const router = useRouter();
   const { theme } = useTheme();
   const isLight =

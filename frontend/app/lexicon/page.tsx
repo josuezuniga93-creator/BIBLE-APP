@@ -28,6 +28,7 @@ import {
   removeMirroredScriptureHighlight,
 } from "../lib/unifiedHighlights";
 import { UiIcon } from "../components/UiIcon";
+import { BookOpen, ChevronDown, Search, Type } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ type FontSize = "sm" | "base" | "lg" | "xl" | "2xl" | "3xl" | "4xl" | "5xl" | "6
 const FONT_SIZES: FontSize[] = ["sm", "base", "lg", "xl", "2xl", "3xl", "4xl", "5xl", "6xl"];
 const FONT_SIZE_CLASSES: Record<FontSize, string> = {
   sm:   "text-base",
-  base: "text-lg",
+  base: "text-[21px]",
   lg:   "text-xl",
   xl:   "text-2xl",
   "2xl":"text-[30px]",
@@ -69,6 +70,7 @@ const FONT_SIZE_LABELS: Record<FontSize, string> = {
 };
 
 type ScriptureFont =
+  | "lora"
   | "georgia"
   | "playfair"
   | "cormorant"
@@ -90,6 +92,7 @@ const SCRIPTURE_FONTS: {
   category: ScriptureFontCategory;
   mood: string;
 }[] = [
+  { key: "lora", label: "Lora", family: "var(--font-lora), Georgia, serif", desc: "Editorial reading", category: "classic", mood: "Balanced" },
   { key: "georgia",     label: "Georgia",     family: "'Georgia', 'Times New Roman', serif",                                      desc: "Classic & warm",           category: "classic",  mood: "Traditional" },
   { key: "charter",     label: "Charter",     family: "Charter, 'Bitstream Charter', 'Iowan Old Style', Georgia, serif",           desc: "Calm long-form reading",    category: "classic",  mood: "Readable" },
   { key: "palatino",    label: "Palatino",    family: "'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif",             desc: "Wide & graceful",           category: "classic",  mood: "Open" },
@@ -109,6 +112,7 @@ const SCRIPTURE_FONT_GROUPS: { key: ScriptureFontCategory; en: string; es: strin
   { key: "special", en: "Study Style", es: "Estilo de estudio" },
 ];
 const SCRIPTURE_FONT_ES_COPY: Record<ScriptureFont, string> = {
+  lora: "Lectura editorial",
   georgia: "Clasica y calida",
   charter: "Comoda para lectura larga",
   palatino: "Amplia y elegante",
@@ -937,7 +941,7 @@ function LexiconInner() {
     try { const s = localStorage.getItem(FONT_SIZE_KEY) as FontSize; return FONT_SIZES.includes(s) ? s : "base"; } catch { return "base"; }
   });
   const [scriptureFont, setScriptureFont]     = useState<ScriptureFont>(() => {
-    try { const s = localStorage.getItem(SCRIPTURE_FONT_KEY) as ScriptureFont; return SCRIPTURE_FONTS.some(f => f.key === s) ? s : "georgia"; } catch { return "georgia"; }
+    try { const s = localStorage.getItem(SCRIPTURE_FONT_KEY) as ScriptureFont; return SCRIPTURE_FONTS.some(f => f.key === s) ? s : "lora"; } catch { return "lora"; }
   });
   const [showFontPicker, setShowFontPicker]   = useState(false);
   const [presentationMode, setPresentationMode] = useState(false);
@@ -1135,11 +1139,11 @@ function LexiconInner() {
         // If URL params specify a book, navigate there; otherwise default to John 3.
         if (bookParam) {
           const target = bks.find(
-            (b) => b.name.toLowerCase() === bookParam.toLowerCase()
+            (b) => b.name.toLowerCase() === bookParam.toLowerCase() || b.num === Number(bookParam)
           );
           if (target) {
             setSelectedBook(target);
-            setSelectedChapter(chapterParam ? Math.max(1, Number(chapterParam)) : 1);
+            setSelectedChapter(chapterParam ? Math.max(1, Math.min(target.chapters, Number(chapterParam) || 1)) : 1);
             // If specific verses requested, queue them for selection once chapter loads
             if (selectParam) {
               const nums = selectParam.split(",").map(Number).filter((n) => !isNaN(n) && n > 0);
@@ -1163,7 +1167,7 @@ function LexiconInner() {
       })
       .catch(() => { setBooksError(true); setBooksLoading(false); });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchParams]);
 
   useEffect(() => {
     if (!selectedBook) return;
@@ -1382,10 +1386,10 @@ function LexiconInner() {
   // ── Normal view ───────────────────────────────────────────────────────────
   return (
     <div
-      className="min-h-screen bg-[#0f0f0f] text-white"
+      className="study-design study-scripture min-h-screen"
       style={{
-        background: isLight ? "#ffffff" : "#0b0d13",
-        color: isLight ? "#0a0a0a" : "#ffffff",
+        background: "var(--page)",
+        color: "var(--ink)",
       }}
     >
       {/* ── Books error banner ── */}
@@ -1546,7 +1550,7 @@ function LexiconInner() {
       {/* ── Scripture toolbar ── */}
       <header
         ref={scriptureToolbarRef}
-        className="fixed left-0 right-0 top-0 md:sticky md:top-14 z-50 print:hidden"
+        className="study-scripture-toolbar fixed left-0 right-0 top-0 md:sticky md:top-14 z-50 print:hidden"
         style={{
           paddingTop: "env(safe-area-inset-top)",
           borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.06)",
@@ -1556,13 +1560,16 @@ function LexiconInner() {
       >
         <div className="relative max-w-screen-xl mx-auto px-4 py-2">
           <div
-            className="flex items-center gap-2 rounded-[26px] border p-1.5"
+            className="reader-topbar"
             style={{
               background: isLight ? "#f4f5f6" : "rgba(255,255,255,0.055)",
               borderColor: isLight ? "#e2e4e7" : "rgba(255,255,255,0.10)",
               boxShadow: isLight ? "inset 0 1px 0 rgba(255,255,255,0.85)" : "inset 0 1px 0 rgba(255,255,255,0.045)",
             }}
           >
+            <button className="book-picker-command" onClick={() => { setPickerView("books"); setPickerBook(selectedBook); setTestamentFilter("ALL"); setPickerBookSearch(""); setShowBookPicker(true); }}>
+              <BookOpen size={18}/><strong>{getBookDisplayName(selectedBook, translation)} {selectedChapter}</strong><ChevronDown size={14}/>
+            </button>
             <button
               type="button"
               onClick={() => setShowFontPicker((v) => !v)}
@@ -1574,10 +1581,7 @@ function LexiconInner() {
               }}
               title={lang === "es" ? "Texto y fuente bíblica" : "Text and scripture font"}
             >
-              <span className="text-[15px]">Aa</span>
-              <span className="hidden min-[360px]:inline text-[10px] font-black tracking-[0.08em] opacity-55">
-                {FONT_SIZE_LABELS[fontSize]}
-              </span>
+              <Type size={20}/>
             </button>
 
             <button
@@ -1610,7 +1614,6 @@ function LexiconInner() {
                   <circle cx="10" cy="10" r="7" stroke="currentColor" strokeWidth="2"/>
                   <path d="M15.5 15.5L21 21" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/>
                 </svg>
-                <span className="hidden min-[360px]:inline">{lang === "es" ? "Buscar" : "Search"}</span>
               </button>
             )}
           </div>
@@ -2055,22 +2058,22 @@ function LexiconInner() {
 
       {/* ── Reader tab ── */}
       {activeTab === "reader" && (
-        <div className="max-w-screen-xl mx-auto px-4 py-8 pb-[17rem] sm:pb-48">
+        <div className="study-scripture-body max-w-screen-xl mx-auto px-4 py-8 pb-[17rem] sm:pb-48">
 
           {/* Chapter hero */}
           {selectedBook && (
-            <div className="text-center mb-10">
+            <div className="reader-chapter-intro">
               <p
                 className="pn-book-name text-sm font-semibold tracking-widest uppercase mb-2"
                 style={{ color: isLight ? "rgba(0,0,0,0.32)" : "rgba(255,255,255,0.25)" }}
               >
-                {getBookDisplayName(selectedBook, translation)}
+                {selectedBook.num < 40 ? "OLD TESTAMENT" : "NEW TESTAMENT"} / {getBookDisplayName(selectedBook, translation)}
               </p>
               <p
                 className="pn-chapter-num text-8xl font-black leading-none mb-3"
                 style={{ color: isLight ? "#050505" : "#ffffff" }}
               >
-                {selectedChapter}
+                {getBookDisplayName(selectedBook, translation)} {selectedChapter}
               </p>
               <p
                 className="pn-chapter-subtitle text-[11px] tracking-wide"
@@ -2200,7 +2203,7 @@ function LexiconInner() {
                           <span
                             key={verse.verse}
                             ref={(el) => { if (el) verseRefs.current[verse.verse] = el as unknown as HTMLDivElement; }}
-                            className="relative inline cursor-pointer"
+                            className="study-verse relative block cursor-pointer"
                             style={{
                               ...(colorCfg ? {
                                 backgroundColor: `rgba(${colorCfg.bgRgb},0.78)`,

@@ -1,5 +1,8 @@
 "use client";
 
+import FeatureFrame from "../components/study/FeatureFrame";
+export default function GivePage() { return <FeatureFrame title="Give" screen="give"><GiveContent/></FeatureFrame>; }
+
 import { useState, useEffect } from "react";
 import { useLanguage } from "../lib/useLanguage";
 
@@ -53,7 +56,7 @@ function GlobeIcon() {
   );
 }
 
-export default function GivePage() {
+function GiveContent() {
   const { t } = useLanguage();
   const [isLight, setIsLight] = useState(false);
 

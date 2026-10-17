@@ -1,0 +1,2505 @@
+[
+  {
+    "id": "jerusalem-council",
+    "title": "The Jerusalem Council",
+    "shortTitle": "Jerusalem Council",
+    "year": 49,
+    "origin": "Jerusalem — Acts 15",
+    "category": "council",
+    "section": "B",
+    "description": "The first church council, settling whether Gentiles must be circumcised. Peter, James, and Paul establish that salvation is by grace alone through faith.",
+    "icon": "landmark",
+    "color": "teal",
+    "sections": [
+      {
+        "id": "jc-full-1",
+        "title": "The Question Before the Council",
+        "label": "Acts 15:1-5"
+      },
+      {
+        "id": "jc-full-2",
+        "title": "Peter, Barnabas, Paul, and James Speak",
+        "label": "Acts 15:6-21"
+      },
+      {
+        "id": "jc-full-3",
+        "title": "The Apostolic Letter to the Gentiles",
+        "label": "Acts 15:22-35"
+      }
+    ]
+  },
+  {
+    "id": "apostles-creed",
+    "title": "The Apostles' Creed",
+    "shortTitle": "Apostles' Creed",
+    "year": 140,
+    "origin": "Rome — Baptismal Symbol",
+    "category": "creed",
+    "section": "A",
+    "description": "The oldest summary of Christian faith still in common use — a Trinitarian baptismal confession affirming Father, Son, and Holy Spirit.",
+    "icon": "sparkle",
+    "color": "blue",
+    "sections": [
+      {
+        "id": "ac1",
+        "title": "The Apostles' Creed — Full Text",
+        "label": "The Text"
+      },
+      {
+        "id": "ac2",
+        "title": "Where the Creed Came From",
+        "label": "Historical Origin"
+      },
+      {
+        "id": "ac3",
+        "title": "Theological Exposition",
+        "label": "Article by Article"
+      }
+    ]
+  },
+  {
+    "id": "council-nicaea",
+    "title": "Council of Nicaea",
+    "shortTitle": "Nicaea 325",
+    "year": 325,
+    "origin": "Nicaea, Asia Minor — Emperor Constantine",
+    "category": "council",
+    "section": "B",
+    "description": "The first ecumenical council, convened to answer Arius. It affirmed that the Son is homoousios — of the same substance as the Father.",
+    "icon": "sparkle",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "ni1",
+        "title": "Arius, Alexander, and the Nicene Question",
+        "label": "The Crisis"
+      },
+      {
+        "id": "ni2",
+        "title": "The Nicene Decision and Anathemas",
+        "label": "The Decisions"
+      }
+    ]
+  },
+  {
+    "id": "nicene-creed",
+    "title": "The Nicene Creed",
+    "shortTitle": "Nicene Creed",
+    "year": 381,
+    "origin": "Constantinople — Ecumenical Council",
+    "category": "creed",
+    "section": "A",
+    "description": "The most universally affirmed statement of Christian faith — defining the full deity of Christ and the Holy Spirit against Arianism.",
+    "icon": "sparkle",
+    "color": "green",
+    "sections": [
+      {
+        "id": "nc1",
+        "title": "The Nicene-Constantinopolitan Creed (381 AD)",
+        "label": "The Text"
+      },
+      {
+        "id": "nc2",
+        "title": "Why This Creed Was Necessary",
+        "label": "The Arian Crisis"
+      },
+      {
+        "id": "nc3",
+        "title": "Homoousios and the Filioque",
+        "label": "Key Terms"
+      }
+    ]
+  },
+  {
+    "id": "athanasian-creed",
+    "title": "Athanasian Creed",
+    "shortTitle": "Athanasian Creed",
+    "year": 500,
+    "origin": "Western Church — c. 5th Century",
+    "category": "creed",
+    "section": "A",
+    "description": "The most detailed and precise statement of Trinitarian doctrine, opening: 'Whoever desires to be saved must above all things hold the catholic faith.'",
+    "icon": "α",
+    "color": "purple",
+    "sections": [
+      {
+        "id": "ath-full-01",
+        "title": "Opening Warning",
+        "label": "Opening"
+      },
+      {
+        "id": "ath-full-02",
+        "title": "Concerning the Trinity",
+        "label": "Concerning the Trinity"
+      },
+      {
+        "id": "ath-full-03",
+        "title": "Concerning the Incarnation",
+        "label": "Concerning the Incarnation"
+      }
+    ]
+  },
+  {
+    "id": "council-chalcedon",
+    "title": "Council of Chalcedon",
+    "shortTitle": "Chalcedon 451",
+    "year": 451,
+    "origin": "Chalcedon, Asia Minor — Emperor Marcian",
+    "category": "council",
+    "section": "B",
+    "description": "The fourth ecumenical council, defining Christ as one Person in two natures — fully God and fully man — without confusion, change, division, or separation.",
+    "icon": "landmark",
+    "color": "violet",
+    "sections": [
+      {
+        "id": "ch1",
+        "title": "The Chalcedonian Definition — Full Text",
+        "label": "The Definition"
+      },
+      {
+        "id": "ch2",
+        "title": "Without Confusion, Without Change, Without Division, Without Separation",
+        "label": "The Four Fences"
+      },
+      {
+        "id": "ch3",
+        "title": "Why Chalcedon Still Matters",
+        "label": "Significance"
+      }
+    ]
+  },
+  {
+    "id": "augustine-grace",
+    "title": "Augustine on Grace & Election",
+    "shortTitle": "Augustine: Grace",
+    "year": 397,
+    "origin": "Hippo, North Africa — Bishop Augustine",
+    "category": "history",
+    "section": "C",
+    "description": "Augustine's anti-Pelagian theology established the doctrines of total depravity, sovereign grace, and unconditional election that the Reformation would recover.",
+    "icon": "scale",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "ag-full-1",
+        "title": "Augustine's Prayer of Restless Grace",
+        "label": "Confessions"
+      },
+      {
+        "id": "ag-full-2",
+        "title": "Against Pelagius: Grace Is Necessary",
+        "label": "Nature and Grace"
+      },
+      {
+        "id": "ag-full-3",
+        "title": "Predestination and the Gift of Faith",
+        "label": "Predestination"
+      }
+    ]
+  },
+  {
+    "id": "council-carthage",
+    "title": "Council of Carthage",
+    "shortTitle": "Carthage 418",
+    "year": 418,
+    "origin": "Carthage, North Africa",
+    "category": "council",
+    "section": "C",
+    "description": "Formally condemned Pelagianism, affirming Augustine's doctrines of original sin, total depravity, and the necessity of prevenient grace.",
+    "icon": "scale",
+    "color": "teal",
+    "sections": [
+      {
+        "id": "carthage-full-1",
+        "title": "Council of Carthage to Investigate Pelagianism",
+        "label": "Context"
+      },
+      {
+        "id": "carthage-full-2",
+        "title": "Anti-Pelagian Canons on Sin, Baptism, and Grace",
+        "label": "Canons 1-8"
+      },
+      {
+        "id": "carthage-full-3",
+        "title": "Discipline, Donatist Questions, Appeals, and Council Administration",
+        "label": "Canons 9-19"
+      }
+    ]
+  },
+  {
+    "id": "council-orange",
+    "title": "Second Council of Orange",
+    "shortTitle": "Orange 529",
+    "year": 529,
+    "origin": "Orange, Gaul — Church Council",
+    "category": "council",
+    "section": "C",
+    "description": "Decisively condemned semi-Pelagianism, affirming that even the beginning of faith is God's gift — a vindication of Augustinian grace.",
+    "icon": "scale",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "orange-full-1",
+        "title": "Original Sin, Prayer, Faith, and Free Will",
+        "label": "Canons 1-8"
+      },
+      {
+        "id": "orange-full-2",
+        "title": "Grace, Prayer, Restored Will, and Christian Courage",
+        "label": "Canons 9-17"
+      },
+      {
+        "id": "orange-full-3",
+        "title": "Merit, Nature, Grace, and the Love of God",
+        "label": "Canons 18-25"
+      },
+      {
+        "id": "orange-full-4",
+        "title": "The Council's Conclusion",
+        "label": "Conclusion"
+      }
+    ]
+  },
+  {
+    "id": "wycliffe",
+    "title": "Wycliffe & the Pre-Reformation",
+    "shortTitle": "Wycliffe",
+    "year": 1378,
+    "origin": "Oxford, England — John Wycliffe",
+    "category": "history",
+    "section": "D",
+    "description": "The 'Morning Star of the Reformation' — Wycliffe translated the Bible into English and challenged papal authority, planting the seeds of reform 140 years before Luther.",
+    "icon": "file",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "wy-full-1",
+        "title": "Wycliffe's Principle: Scripture Above Human Authority",
+        "label": "Scripture"
+      },
+      {
+        "id": "wy-full-2",
+        "title": "The Twelve Conclusions of the Lollards",
+        "label": "Twelve Conclusions"
+      },
+      {
+        "id": "wy-full-3",
+        "title": "Condemnation, Translation, and the Road to Reform",
+        "label": "Legacy"
+      }
+    ]
+  },
+  {
+    "id": "jan-hus",
+    "title": "Jan Hus — Martyr of Bohemia",
+    "shortTitle": "Jan Hus",
+    "year": 1415,
+    "origin": "Constance, Germany — Council of Constance",
+    "category": "history",
+    "section": "D",
+    "description": "Burned at the stake for preaching Scripture's authority over the papacy, Hus was the direct theological link between Wycliffe and Luther.",
+    "icon": "flame",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "jh-full-1",
+        "title": "Christ Alone Is Head of the Church",
+        "label": "On the Church"
+      },
+      {
+        "id": "jh-full-2",
+        "title": "Hus's Appeal to Christ",
+        "label": "Appeal"
+      },
+      {
+        "id": "jh-full-3",
+        "title": "Letters, Trial, and Martyrdom",
+        "label": "Constance"
+      }
+    ]
+  },
+  {
+    "id": "gutenberg",
+    "title": "Gutenberg Bible & the Printing Press",
+    "shortTitle": "Gutenberg Bible",
+    "year": 1455,
+    "origin": "Mainz, Germany — Johannes Gutenberg",
+    "category": "history",
+    "section": "D",
+    "description": "The movable-type press that made mass Bible distribution possible — the technological revolution without which the Protestant Reformation could not have succeeded.",
+    "icon": "book",
+    "color": "teal",
+    "sections": [
+      {
+        "id": "gb-full-1",
+        "title": "The Gutenberg Bible as a Historical Document",
+        "label": "The Bible"
+      },
+      {
+        "id": "gb-full-2",
+        "title": "Genesis 1 as the Bible's Printed Beginning",
+        "label": "Opening Text"
+      },
+      {
+        "id": "gb-full-3",
+        "title": "What the Press Made Possible",
+        "label": "Print Revolution"
+      }
+    ]
+  },
+  {
+    "id": "95theses",
+    "title": "The 95 Theses",
+    "shortTitle": "95 Theses",
+    "year": 1517,
+    "origin": "Martin Luther — Wittenberg, Germany",
+    "category": "theses",
+    "section": "D",
+    "description": "Luther's challenge to the Roman Catholic Church's sale of indulgences, sparking the Protestant Reformation.",
+    "icon": "file",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "theses-full-preface",
+        "title": "Disputation on the Power and Efficacy of Indulgences",
+        "label": "Preface"
+      },
+      {
+        "id": "theses-full-1-20",
+        "title": "The 95 Theses: 1-20",
+        "label": "Theses 1-20"
+      },
+      {
+        "id": "theses-full-21-40",
+        "title": "The 95 Theses: 21-40",
+        "label": "Theses 21-40"
+      },
+      {
+        "id": "theses-full-41-60",
+        "title": "The 95 Theses: 41-60",
+        "label": "Theses 41-60"
+      },
+      {
+        "id": "theses-full-61-80",
+        "title": "The 95 Theses: 61-80",
+        "label": "Theses 61-80"
+      },
+      {
+        "id": "theses-full-81-95",
+        "title": "The 95 Theses: 81-95",
+        "label": "Theses 81-95"
+      }
+    ]
+  },
+  {
+    "id": "diet-of-worms",
+    "title": "Diet of Worms",
+    "shortTitle": "Diet of Worms",
+    "year": 1521,
+    "origin": "Worms, Germany — Emperor Charles V",
+    "category": "history",
+    "section": "D",
+    "description": "'Here I stand.' Luther refuses to recant before the Emperor, establishing Scripture and conscience as supreme over pope and council.",
+    "icon": "sword",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "dw-full-1",
+        "title": "The Question Put to Luther",
+        "label": "Summons"
+      },
+      {
+        "id": "dw-full-2",
+        "title": "Unless I Am Convinced by Scripture",
+        "label": "Answer"
+      },
+      {
+        "id": "dw-full-3",
+        "title": "The Edict of Worms and Its Consequences",
+        "label": "Edict"
+      }
+    ]
+  },
+  {
+    "id": "tyndale",
+    "title": "Tyndale's New Testament",
+    "shortTitle": "Tyndale NT",
+    "year": 1526,
+    "origin": "Worms, Germany — William Tyndale",
+    "category": "history",
+    "section": "D",
+    "description": "The first English New Testament translated from Greek — 83% of the King James Bible comes from Tyndale's wording. He died for it.",
+    "icon": "book",
+    "color": "blue",
+    "sections": [
+      {
+        "id": "tn-full-1",
+        "title": "Tyndale's New Testament: Purpose and Method",
+        "label": "New Testament"
+      },
+      {
+        "id": "tn-full-2",
+        "title": "John 1:1-14 in the English Bible Tradition",
+        "label": "Sample Text"
+      },
+      {
+        "id": "tn-full-3",
+        "title": "Betrayal, Execution, and Last Prayer",
+        "label": "Martyrdom"
+      }
+    ]
+  },
+  {
+    "id": "calvins-institutes",
+    "title": "Calvin's Institutes of the Christian Religion",
+    "shortTitle": "Institutes",
+    "year": 1536,
+    "origin": "Basel, Switzerland — John Calvin",
+    "category": "history",
+    "section": "D",
+    "description": "The masterwork of Reformed theology — the systematic foundation for the Westminster Confession, the Canons of Dort, and the 1689 Baptist Confession.",
+    "icon": "library",
+    "color": "purple",
+    "sections": [
+      {
+        "id": "ci-full-1",
+        "title": "The Knowledge of God the Creator",
+        "label": "Book I"
+      },
+      {
+        "id": "ci-full-2",
+        "title": "The Knowledge of God the Redeemer in Christ",
+        "label": "Book II"
+      },
+      {
+        "id": "ci-full-3",
+        "title": "Receiving the Grace of Christ",
+        "label": "Book III"
+      },
+      {
+        "id": "ci-full-4",
+        "title": "The External Means of Grace",
+        "label": "Book IV"
+      }
+    ]
+  },
+  {
+    "id": "augsburg-confession",
+    "title": "Augsburg Confession",
+    "shortTitle": "Augsburg",
+    "year": 1530,
+    "origin": "Augsburg, Germany — Philip Melanchthon",
+    "category": "confession",
+    "section": "E",
+    "description": "The primary confession of the Lutheran Reformation — presented to Emperor Charles V, affirming justification by faith alone and Scripture's authority.",
+    "icon": "sparkle",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "aug-full-01",
+        "title": "Preface to the Emperor Charles V",
+        "label": "Preface to the Emperor Charles V"
+      },
+      {
+        "id": "aug-full-02",
+        "title": "Article 1 - Of God",
+        "label": "Article 1 - Of God"
+      },
+      {
+        "id": "aug-full-03",
+        "title": "Article 2 - Of Original Sin",
+        "label": "Article 2 - Of Original Sin"
+      },
+      {
+        "id": "aug-full-04",
+        "title": "Article 3 - Of the Son of God",
+        "label": "Article 3 - Of the Son of God"
+      },
+      {
+        "id": "aug-full-05",
+        "title": "Article 4 - Of Justification",
+        "label": "Article 4 - Of Justification"
+      },
+      {
+        "id": "aug-full-06",
+        "title": "Article 5 - Of the Ministry",
+        "label": "Article 5 - Of the Ministry"
+      },
+      {
+        "id": "aug-full-07",
+        "title": "Article 6 - Of New Obedience",
+        "label": "Article 6 - Of New Obedience"
+      },
+      {
+        "id": "aug-full-08",
+        "title": "Article 7 - Of the Church",
+        "label": "Article 7 - Of the Church"
+      },
+      {
+        "id": "aug-full-09",
+        "title": "Article 8 - What the Church Is",
+        "label": "Article 8 - What the Church Is"
+      },
+      {
+        "id": "aug-full-10",
+        "title": "Article 9 - Of Baptism",
+        "label": "Article 9 - Of Baptism"
+      },
+      {
+        "id": "aug-full-11",
+        "title": "Article 10 - Of the Lord's Supper",
+        "label": "Article 10 - Of the Lord's Supper"
+      },
+      {
+        "id": "aug-full-12",
+        "title": "Article 11 - Of Confession",
+        "label": "Article 11 - Of Confession"
+      },
+      {
+        "id": "aug-full-13",
+        "title": "Article 12 - Of Repentance",
+        "label": "Article 12 - Of Repentance"
+      },
+      {
+        "id": "aug-full-14",
+        "title": "Article 13 - Of the Use of the Sacraments",
+        "label": "Article 13 - Of the Use of the Sacraments"
+      },
+      {
+        "id": "aug-full-15",
+        "title": "Article 14 - Of Ecclesiastical Order",
+        "label": "Article 14 - Of Ecclesiastical Order"
+      },
+      {
+        "id": "aug-full-16",
+        "title": "Article 15 - Of Ecclesiastical Usages",
+        "label": "Article 15 - Of Ecclesiastical Usages"
+      },
+      {
+        "id": "aug-full-17",
+        "title": "Article 16 - Of Civil Affairs",
+        "label": "Article 16 - Of Civil Affairs"
+      },
+      {
+        "id": "aug-full-18",
+        "title": "Article 17 - Of Christ's Return to Judgment",
+        "label": "Article 17 - Of Christ's Return to Judgment"
+      },
+      {
+        "id": "aug-full-19",
+        "title": "Article 18 - Of Free Will",
+        "label": "Article 18 - Of Free Will"
+      },
+      {
+        "id": "aug-full-20",
+        "title": "Article 19 - Of the Cause of Sin",
+        "label": "Article 19 - Of the Cause of Sin"
+      },
+      {
+        "id": "aug-full-21",
+        "title": "Article 20 - Of Good Works",
+        "label": "Article 20 - Of Good Works"
+      },
+      {
+        "id": "aug-full-22",
+        "title": "Article 21 - Of the Worship of the Saints",
+        "label": "Article 21 - Of the Worship of the Saints"
+      },
+      {
+        "id": "aug-full-23",
+        "title": "Articles in Which Are Reviewed the Abuses Which Have Been Corrected",
+        "label": "Articles in Which Are Reviewed the Abuses Which Have Been Corrected"
+      },
+      {
+        "id": "aug-full-24",
+        "title": "Article 22 - Of Both Kinds in the Sacrament",
+        "label": "Article 22 - Of Both Kinds in the Sacrament"
+      },
+      {
+        "id": "aug-full-25",
+        "title": "Article 23 - Of the Marriage of Priests",
+        "label": "Article 23 - Of the Marriage of Priests"
+      },
+      {
+        "id": "aug-full-26",
+        "title": "Article 24 - Of the Mass",
+        "label": "Article 24 - Of the Mass"
+      },
+      {
+        "id": "aug-full-27",
+        "title": "Article 25 - Of Confession",
+        "label": "Article 25 - Of Confession"
+      },
+      {
+        "id": "aug-full-28",
+        "title": "Article 26 - Of the Distinction of Meats",
+        "label": "Article 26 - Of the Distinction of Meats"
+      },
+      {
+        "id": "aug-full-29",
+        "title": "Article 27 - Of Monastic Vows",
+        "label": "Article 27 - Of Monastic Vows"
+      },
+      {
+        "id": "aug-full-30",
+        "title": "Article 28 - Of Ecclesiastical Power",
+        "label": "Article 28 - Of Ecclesiastical Power"
+      },
+      {
+        "id": "aug-full-31",
+        "title": "Conclusion",
+        "label": "Conclusion"
+      }
+    ]
+  },
+  {
+    "id": "smalcald-articles",
+    "title": "Smalcald Articles",
+    "shortTitle": "Smalcald Articles",
+    "year": 1537,
+    "origin": "Wittenberg, Germany — Martin Luther",
+    "category": "confession",
+    "section": "E",
+    "description": "Luther's final theological testament — identifying justification as 'the first and chief article' and the mass as the great offense against it.",
+    "icon": "sparkle",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "sa-preface",
+        "title": "Preface",
+        "label": "Preface"
+      },
+      {
+        "id": "sa-part-1",
+        "title": "Section",
+        "label": "Part I"
+      },
+      {
+        "id": "sa-part-1-article-1",
+        "title": "Article I - The Nature of God",
+        "label": "Part I, Article I"
+      },
+      {
+        "id": "sa-part-1-article-2",
+        "title": "Article II - The Father",
+        "label": "Part I, Article II"
+      },
+      {
+        "id": "sa-part-1-article-3",
+        "title": "Article III - The Son",
+        "label": "Part I, Article III"
+      },
+      {
+        "id": "sa-part-1-article-4",
+        "title": "Article IV - The Work of Salvation",
+        "label": "Part I, Article IV"
+      },
+      {
+        "id": "sa-part-2",
+        "title": "Section",
+        "label": "Part II"
+      },
+      {
+        "id": "sa-part-2-article-1",
+        "title": "Article I - First and Chief Article",
+        "label": "Part II, Article I"
+      },
+      {
+        "id": "sa-part-2-article-2",
+        "title": "Article II - Of the Mass.",
+        "label": "Part II, Article II"
+      },
+      {
+        "id": "sa-part-2-article-3",
+        "title": "Article III - Of Chapters and Cloisters.",
+        "label": "Part II, Article III"
+      },
+      {
+        "id": "sa-part-2-article-4",
+        "title": "Article IV - Of the Papacy.",
+        "label": "Part II, Article IV"
+      },
+      {
+        "id": "sa-part-3",
+        "title": "Section",
+        "label": "Part III"
+      },
+      {
+        "id": "sa-part-3-article-1",
+        "title": "Article I - Of Sin.",
+        "label": "Part III, Article I"
+      },
+      {
+        "id": "sa-part-3-article-2",
+        "title": "Article II - Of the Law.",
+        "label": "Part III, Article II"
+      },
+      {
+        "id": "sa-part-3-article-3",
+        "title": "Article III - Of Repentance.",
+        "label": "Part III, Article III"
+      },
+      {
+        "id": "sa-part-3-article-4",
+        "title": "Article IV - Of the Gospel.",
+        "label": "Part III, Article IV"
+      },
+      {
+        "id": "sa-part-3-article-5",
+        "title": "Article V - Of Baptism.",
+        "label": "Part III, Article V"
+      },
+      {
+        "id": "sa-part-3-article-6",
+        "title": "Article VI - Of the Sacrament of the Altar.",
+        "label": "Part III, Article VI"
+      },
+      {
+        "id": "sa-part-3-article-7",
+        "title": "Article VII - Of the Keys.",
+        "label": "Part III, Article VII"
+      },
+      {
+        "id": "sa-part-3-article-8",
+        "title": "Article VIII - Of Confession.",
+        "label": "Part III, Article VIII"
+      },
+      {
+        "id": "sa-part-3-article-9",
+        "title": "Article IX - Of Excommunication.",
+        "label": "Part III, Article IX"
+      },
+      {
+        "id": "sa-part-3-article-10",
+        "title": "Article X - Of Ordination.",
+        "label": "Part III, Article X"
+      },
+      {
+        "id": "sa-part-3-article-11",
+        "title": "Article XI - Of the Marriage of Priests.",
+        "label": "Part III, Article XI"
+      },
+      {
+        "id": "sa-part-3-article-12",
+        "title": "Article XII - Of the Church.",
+        "label": "Part III, Article XII"
+      },
+      {
+        "id": "sa-part-3-article-13",
+        "title": "Article XIII - Of Good Works.",
+        "label": "Part III, Article XIII"
+      },
+      {
+        "id": "sa-part-3-article-14",
+        "title": "Article XIV - Of Monastic Vows .",
+        "label": "Part III, Article XIV"
+      },
+      {
+        "id": "sa-part-3-article-15",
+        "title": "Article XV - Of Human Tradition.",
+        "label": "Part III, Article XV"
+      },
+      {
+        "id": "sa-signatures",
+        "title": "Signatures.",
+        "label": "Signatures"
+      }
+    ]
+  },
+  {
+    "id": "geneva-bible",
+    "title": "The Geneva Bible",
+    "shortTitle": "Geneva Bible",
+    "year": 1560,
+    "origin": "Geneva, Switzerland — English Exiles",
+    "category": "history",
+    "section": "D",
+    "description": "The Bible of the Puritans and early Baptists — the first English Bible with verse numbers and marginal notes, shaping Reformed theology in English.",
+    "icon": "book",
+    "color": "green",
+    "sections": [
+      {
+        "id": "gv-full-1",
+        "title": "The Geneva Bible: A Bible for Exiles",
+        "label": "Preface"
+      },
+      {
+        "id": "gv-full-2",
+        "title": "Romans 8:28-39 in the English Bible Tradition",
+        "label": "Sample Text"
+      },
+      {
+        "id": "gv-full-3",
+        "title": "The Marginal Notes and Reformed Reading",
+        "label": "Notes"
+      }
+    ]
+  },
+  {
+    "id": "belgic-confession",
+    "title": "Belgic Confession",
+    "shortTitle": "Belgic Confession",
+    "year": 1561,
+    "origin": "Guido de Brès — Southern Netherlands (Belgium)",
+    "category": "confession",
+    "section": "E",
+    "description": "Written under persecution, this 37-article confession presents the Reformed faith with clarity and warmth.",
+    "icon": "dove",
+    "color": "teal",
+    "sections": [
+      {
+        "id": "belgic-full-01",
+        "title": "Article 1 - There Is Only One God",
+        "label": "Article 1 - There Is Only One God"
+      },
+      {
+        "id": "belgic-full-02",
+        "title": "Article 2 - By What Means God Is Made Known Unto Us",
+        "label": "Article 2 - By What Means God Is Made Known Unto Us"
+      },
+      {
+        "id": "belgic-full-03",
+        "title": "Article 3 - The Written Word of God",
+        "label": "Article 3 - The Written Word of God"
+      },
+      {
+        "id": "belgic-full-04",
+        "title": "Article 4 - Canonical Books of the Holy Scripture",
+        "label": "Article 4 - Canonical Books of the Holy Scripture"
+      },
+      {
+        "id": "belgic-full-05",
+        "title": "Article 5 - Whence the Holy Scriptures Derive Their Dignity and Authority",
+        "label": "Article 5 - Whence the Holy Scriptures Derive Their Dignity and Authority"
+      },
+      {
+        "id": "belgic-full-06",
+        "title": "Article 6 - The Difference Between the Canonical and Apocryphal Books",
+        "label": "Article 6 - The Difference Between the Canonical and Apocryphal Books"
+      },
+      {
+        "id": "belgic-full-07",
+        "title": "Article 7 - The Sufficiency of the Holy Scriptures to Be the Only Rule of Faith",
+        "label": "Article 7 - The Sufficiency of the Holy Scriptures to Be the Only Rule of Faith"
+      },
+      {
+        "id": "belgic-full-08",
+        "title": "Article 8 - God Is One in Essence, Yet Distinguished in Three Persons",
+        "label": "Article 8 - God Is One in Essence, Yet Distinguished in Three Persons"
+      },
+      {
+        "id": "belgic-full-09",
+        "title": "Article 9 - The Proof of the Foregoing Article of the Trinity of Persons in One God",
+        "label": "Article 9 - The Proof of the Foregoing Article of the Trinity of Persons in One God"
+      },
+      {
+        "id": "belgic-full-10",
+        "title": "Article 10 - Jesus Christ Is True and Eternal God",
+        "label": "Article 10 - Jesus Christ Is True and Eternal God"
+      },
+      {
+        "id": "belgic-full-11",
+        "title": "Article 11 - The Holy Spirit Is True and Eternal God",
+        "label": "Article 11 - The Holy Spirit Is True and Eternal God"
+      },
+      {
+        "id": "belgic-full-12",
+        "title": "Article 12 - The Creation of All Things, Especially the Angels",
+        "label": "Article 12 - The Creation of All Things, Especially the Angels"
+      },
+      {
+        "id": "belgic-full-13",
+        "title": "Article 13 - The Providence of God and His Government of All Things",
+        "label": "Article 13 - The Providence of God and His Government of All Things"
+      },
+      {
+        "id": "belgic-full-14",
+        "title": "Article 14 - The Creation and Fall of Man, and His Incapacity to Perform What Is Truly Good",
+        "label": "Article 14 - The Creation and Fall of Man, and His Incapacity to Perform What Is Truly Good"
+      },
+      {
+        "id": "belgic-full-15",
+        "title": "Article 15 - Original Sin",
+        "label": "Article 15 - Original Sin"
+      },
+      {
+        "id": "belgic-full-16",
+        "title": "Article 16 - Eternal Election",
+        "label": "Article 16 - Eternal Election"
+      },
+      {
+        "id": "belgic-full-17",
+        "title": "Article 17 - The Recovery of Fallen Man",
+        "label": "Article 17 - The Recovery of Fallen Man"
+      },
+      {
+        "id": "belgic-full-18",
+        "title": "Article 18 - The Incarnation of Jesus Christ",
+        "label": "Article 18 - The Incarnation of Jesus Christ"
+      },
+      {
+        "id": "belgic-full-19",
+        "title": "Article 19 - The Union and Distinction of the Two Natures in the Person of Christ",
+        "label": "Article 19 - The Union and Distinction of the Two Natures in the Person of Christ"
+      },
+      {
+        "id": "belgic-full-20",
+        "title": "Article 20 - God Has Manifested His Justice and Mercy in Christ",
+        "label": "Article 20 - God Has Manifested His Justice and Mercy in Christ"
+      },
+      {
+        "id": "belgic-full-21",
+        "title": "Article 21 - The Satisfaction of Christ, Our Only High Priest, for Us",
+        "label": "Article 21 - The Satisfaction of Christ, Our Only High Priest, for Us"
+      },
+      {
+        "id": "belgic-full-22",
+        "title": "Article 22 - Our Justification Through Faith in Jesus Christ",
+        "label": "Article 22 - Our Justification Through Faith in Jesus Christ"
+      },
+      {
+        "id": "belgic-full-23",
+        "title": "Article 23 - Wherein Our Justification Before God Consists",
+        "label": "Article 23 - Wherein Our Justification Before God Consists"
+      },
+      {
+        "id": "belgic-full-24",
+        "title": "Article 24 - Man's Sanctification and Good Works",
+        "label": "Article 24 - Man's Sanctification and Good Works"
+      },
+      {
+        "id": "belgic-full-25",
+        "title": "Article 25 - The Abolishing of the Ceremonial Law",
+        "label": "Article 25 - The Abolishing of the Ceremonial Law"
+      },
+      {
+        "id": "belgic-full-26",
+        "title": "Article 26 - Christ's Intercession",
+        "label": "Article 26 - Christ's Intercession"
+      },
+      {
+        "id": "belgic-full-27",
+        "title": "Article 27 - The Catholic Christian Church",
+        "label": "Article 27 - The Catholic Christian Church"
+      },
+      {
+        "id": "belgic-full-28",
+        "title": "Article 28 - Every One Is Bound to Join Himself to the True Church",
+        "label": "Article 28 - Every One Is Bound to Join Himself to the True Church"
+      },
+      {
+        "id": "belgic-full-29",
+        "title": "Article 29 - The Marks of the True Church, And Wherein It Differs from the False Church",
+        "label": "Article 29 - The Marks of the True Church, And Wherein It Differs from the False Church"
+      },
+      {
+        "id": "belgic-full-30",
+        "title": "Article 30 - The Government of the Church And Its Offices",
+        "label": "Article 30 - The Government of the Church And Its Offices"
+      },
+      {
+        "id": "belgic-full-31",
+        "title": "Article 31 - The Ministers, Elders, and Deacons",
+        "label": "Article 31 - The Ministers, Elders, and Deacons"
+      },
+      {
+        "id": "belgic-full-32",
+        "title": "Article 32 - The Order and Discipline of the Church",
+        "label": "Article 32 - The Order and Discipline of the Church"
+      },
+      {
+        "id": "belgic-full-33",
+        "title": "Article 33 - The Sacraments",
+        "label": "Article 33 - The Sacraments"
+      },
+      {
+        "id": "belgic-full-34",
+        "title": "Article 34 - Holy Baptism",
+        "label": "Article 34 - Holy Baptism"
+      },
+      {
+        "id": "belgic-full-35",
+        "title": "Article 35 - The Holy Supper of Our Lord Jesus Christ",
+        "label": "Article 35 - The Holy Supper of Our Lord Jesus Christ"
+      },
+      {
+        "id": "belgic-full-36",
+        "title": "Article 36 - The Magistracy (Civil Government)",
+        "label": "Article 36 - The Magistracy (Civil Government)"
+      },
+      {
+        "id": "belgic-full-37",
+        "title": "Article 37 - The Last Judgement",
+        "label": "Article 37 - The Last Judgement"
+      }
+    ]
+  },
+  {
+    "id": "heidelberg",
+    "title": "Heidelberg Catechism",
+    "shortTitle": "Heidelberg",
+    "year": 1563,
+    "origin": "Zacharias Ursinus & Caspar Olevianus — Heidelberg, Germany",
+    "category": "catechism",
+    "section": "E",
+    "description": "One of the most beloved catechisms of the Reformation, organized around comfort, misery, and gratitude.",
+    "icon": "book",
+    "color": "green",
+    "sections": [
+      {
+        "id": "heid-full-01",
+        "title": "The First Part : Of The Misery Of Man",
+        "label": "The First Part : Of The Misery Of Man"
+      },
+      {
+        "id": "heid-full-02",
+        "title": "The Second Part : Of Man's Deliverance",
+        "label": "The Second Part : Of Man's Deliverance"
+      },
+      {
+        "id": "heid-full-03",
+        "title": "Of God The Father",
+        "label": "Of God The Father"
+      },
+      {
+        "id": "heid-full-04",
+        "title": "Of God The Son",
+        "label": "Of God The Son"
+      },
+      {
+        "id": "heid-full-05",
+        "title": "Of God The Holy Ghost",
+        "label": "Of God The Holy Ghost"
+      },
+      {
+        "id": "heid-full-06",
+        "title": "Of The Sacraments",
+        "label": "Of The Sacraments"
+      },
+      {
+        "id": "heid-full-07",
+        "title": "Of Holy Baptism",
+        "label": "Of Holy Baptism"
+      },
+      {
+        "id": "heid-full-08",
+        "title": "Of The Holy Supper Of Our Lord Jesus Christ",
+        "label": "Of The Holy Supper Of Our Lord Jesus Christ"
+      },
+      {
+        "id": "heid-full-09",
+        "title": "The Third Part : Of Man's Gratitude",
+        "label": "The Third Part : Of Man's Gratitude"
+      },
+      {
+        "id": "heid-full-10",
+        "title": "Of Prayer",
+        "label": "Of Prayer"
+      }
+    ]
+  },
+  {
+    "id": "thirty-nine-articles",
+    "title": "Thirty-Nine Articles",
+    "shortTitle": "39 Articles",
+    "year": 1563,
+    "origin": "Church of England — Archbishop Matthew Parker",
+    "category": "confession",
+    "section": "E",
+    "description": "The doctrinal standard of the Church of England — strongly Reformed in its doctrine of justification, predestination, and the authority of Scripture.",
+    "icon": "sparkle",
+    "color": "blue",
+    "sections": [
+      {
+        "id": "ta-full-01",
+        "title": "Article 1 - Of Faith in the Holy Trinity",
+        "label": "Article 1 - Of Faith in the Holy Trinity"
+      },
+      {
+        "id": "ta-full-02",
+        "title": "Article 2 - Of the Word or Son of God, which was made very Man",
+        "label": "Article 2 - Of the Word or Son of God, which was made very Man"
+      },
+      {
+        "id": "ta-full-03",
+        "title": "Article 3 - Of the going down of Christ into Hell",
+        "label": "Article 3 - Of the going down of Christ into Hell"
+      },
+      {
+        "id": "ta-full-04",
+        "title": "Article 4 - Of the Resurrection of Christ",
+        "label": "Article 4 - Of the Resurrection of Christ"
+      },
+      {
+        "id": "ta-full-05",
+        "title": "Article 5 - Of the Holy Ghost",
+        "label": "Article 5 - Of the Holy Ghost"
+      },
+      {
+        "id": "ta-full-06",
+        "title": "Article 6 - Of the Sufficiency of the holy Scriptures for salvation",
+        "label": "Article 6 - Of the Sufficiency of the holy Scriptures for salvation"
+      },
+      {
+        "id": "ta-full-07",
+        "title": "Article 7 - Of the Old Testament",
+        "label": "Article 7 - Of the Old Testament"
+      },
+      {
+        "id": "ta-full-08",
+        "title": "Article 8 - Of the Three Creeds",
+        "label": "Article 8 - Of the Three Creeds"
+      },
+      {
+        "id": "ta-full-09",
+        "title": "Article 9 - Of Original or Birth-sin",
+        "label": "Article 9 - Of Original or Birth-sin"
+      },
+      {
+        "id": "ta-full-10",
+        "title": "Article 10 - Of Free-Will",
+        "label": "Article 10 - Of Free-Will"
+      },
+      {
+        "id": "ta-full-11",
+        "title": "Article 11 - Of the Justification of Man",
+        "label": "Article 11 - Of the Justification of Man"
+      },
+      {
+        "id": "ta-full-12",
+        "title": "Article 12 - Of Good Works",
+        "label": "Article 12 - Of Good Works"
+      },
+      {
+        "id": "ta-full-13",
+        "title": "Article 13 - Of Works before Justification",
+        "label": "Article 13 - Of Works before Justification"
+      },
+      {
+        "id": "ta-full-14",
+        "title": "Article 14 - Of Works of Supererogation",
+        "label": "Article 14 - Of Works of Supererogation"
+      },
+      {
+        "id": "ta-full-15",
+        "title": "Article 15 - Of Christ alone without Sin",
+        "label": "Article 15 - Of Christ alone without Sin"
+      },
+      {
+        "id": "ta-full-16",
+        "title": "Article 16 - Of Sin after Baptism",
+        "label": "Article 16 - Of Sin after Baptism"
+      },
+      {
+        "id": "ta-full-17",
+        "title": "Article 17 - Of Predestination and Election",
+        "label": "Article 17 - Of Predestination and Election"
+      },
+      {
+        "id": "ta-full-18",
+        "title": "Article 18 - Of obtaining eternal Salvation only by the Name of Christ",
+        "label": "Article 18 - Of obtaining eternal Salvation only by the Name of Christ"
+      },
+      {
+        "id": "ta-full-19",
+        "title": "Article 19 - Of the Church",
+        "label": "Article 19 - Of the Church"
+      },
+      {
+        "id": "ta-full-20",
+        "title": "Article 20 - Of the Authority of the Church",
+        "label": "Article 20 - Of the Authority of the Church"
+      },
+      {
+        "id": "ta-full-21",
+        "title": "Article 21 - Of the Authority of General Councils",
+        "label": "Article 21 - Of the Authority of General Councils"
+      },
+      {
+        "id": "ta-full-22",
+        "title": "Article 22 - Of Purgatory",
+        "label": "Article 22 - Of Purgatory"
+      },
+      {
+        "id": "ta-full-23",
+        "title": "Article 23 - Of Ministering in the Congregation",
+        "label": "Article 23 - Of Ministering in the Congregation"
+      },
+      {
+        "id": "ta-full-24",
+        "title": "Article 24 - Of speaking in the Congregation in such a tongue as the people understandeth",
+        "label": "Article 24 - Of speaking in the Congregation in such a tongue as the people understandeth"
+      },
+      {
+        "id": "ta-full-25",
+        "title": "Article 25 - Of the Sacraments",
+        "label": "Article 25 - Of the Sacraments"
+      },
+      {
+        "id": "ta-full-26",
+        "title": "Article 26 - Of the Unworthiness of the Ministers, which hinders not the effect of the Sacrament",
+        "label": "Article 26 - Of the Unworthiness of the Ministers, which hinders not the effect of the Sacrament"
+      },
+      {
+        "id": "ta-full-27",
+        "title": "Article 27 - Of Baptism",
+        "label": "Article 27 - Of Baptism"
+      },
+      {
+        "id": "ta-full-28",
+        "title": "Article 28 - Of the Lord's Supper",
+        "label": "Article 28 - Of the Lord's Supper"
+      },
+      {
+        "id": "ta-full-29",
+        "title": "Article 29 - Of the Wicked which eat not the Body of Christ in the use of the Lord's Supper",
+        "label": "Article 29 - Of the Wicked which eat not the Body of Christ in the use of the Lord's Supper"
+      },
+      {
+        "id": "ta-full-30",
+        "title": "Article 30 - Of both kinds",
+        "label": "Article 30 - Of both kinds"
+      },
+      {
+        "id": "ta-full-31",
+        "title": "Article 31 - Of the one Oblation of Christ finished upon the Cross",
+        "label": "Article 31 - Of the one Oblation of Christ finished upon the Cross"
+      },
+      {
+        "id": "ta-full-32",
+        "title": "Article 32 - Of the Marriage of Priests",
+        "label": "Article 32 - Of the Marriage of Priests"
+      },
+      {
+        "id": "ta-full-33",
+        "title": "Article 33 - Of Excommunicate Persons, how they are to be avoided",
+        "label": "Article 33 - Of Excommunicate Persons, how they are to be avoided"
+      },
+      {
+        "id": "ta-full-34",
+        "title": "Article 34 - Of the Traditions of the Church",
+        "label": "Article 34 - Of the Traditions of the Church"
+      },
+      {
+        "id": "ta-full-35",
+        "title": "Article 35 - Of the Homilies",
+        "label": "Article 35 - Of the Homilies"
+      },
+      {
+        "id": "ta-full-36",
+        "title": "Article 36 - Of Consecration of Bishops and Ministers",
+        "label": "Article 36 - Of Consecration of Bishops and Ministers"
+      },
+      {
+        "id": "ta-full-37",
+        "title": "Article 37 - Of the Civil Magistrates",
+        "label": "Article 37 - Of the Civil Magistrates"
+      },
+      {
+        "id": "ta-full-38",
+        "title": "Article 38 - Of Christian men's Goods, which are not common",
+        "label": "Article 38 - Of Christian men's Goods, which are not common"
+      },
+      {
+        "id": "ta-full-39",
+        "title": "Article 39 - Of a Christian man's Oath",
+        "label": "Article 39 - Of a Christian man's Oath"
+      }
+    ]
+  },
+  {
+    "id": "canons-of-dort",
+    "title": "Canons of Dort",
+    "shortTitle": "Canons of Dort",
+    "year": 1619,
+    "origin": "Synod of Dort — Dordrecht, Netherlands",
+    "category": "confession",
+    "section": "E",
+    "description": "The Reformed response to Arminianism, articulating the five points of Calvinist soteriology (TULIP).",
+    "icon": "anchor",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "dort-full-01",
+        "title": "First Head of Doctrine - Divine Election and Reprobation",
+        "label": "First Head of Doctrine - Divine Election and Reprobation"
+      },
+      {
+        "id": "dort-full-02",
+        "title": "Rejection of Errors",
+        "label": "Rejection of Errors"
+      },
+      {
+        "id": "dort-full-03",
+        "title": "Second Head of Doctrine - The Death of Christ, and the Redemption of Men Thereby",
+        "label": "Second Head of Doctrine - The Death of Christ, and the Redemption of Men Thereby"
+      },
+      {
+        "id": "dort-full-04",
+        "title": "Rejection of Errors",
+        "label": "Rejection of Errors"
+      },
+      {
+        "id": "dort-full-05",
+        "title": "Third and Fourth Heads of Doctrine - The Corruption of Man, His Conversion To God, and the Manner Thereof",
+        "label": "Third and Fourth Heads of Doctrine - The Corruption of Man, His Conversion To God, and the Manner Thereof"
+      },
+      {
+        "id": "dort-full-06",
+        "title": "Rejection of Errors",
+        "label": "Rejection of Errors"
+      },
+      {
+        "id": "dort-full-07",
+        "title": "Fifth Head of Doctrine - The Perseverance of the Saints",
+        "label": "Fifth Head of Doctrine - The Perseverance of the Saints"
+      },
+      {
+        "id": "dort-full-08",
+        "title": "Rejection of Errors",
+        "label": "Rejection of Errors"
+      },
+      {
+        "id": "dort-full-09",
+        "title": "Conclusion",
+        "label": "Conclusion"
+      }
+    ]
+  },
+  {
+    "id": "king-james-bible",
+    "title": "King James Bible",
+    "shortTitle": "KJV 1611",
+    "year": 1611,
+    "origin": "London, England — King James I",
+    "category": "history",
+    "section": "D",
+    "description": "The Authorized Version — the Bible of the Westminster Assembly, the Puritans, and the Particular Baptists who wrote the 1689 Confession.",
+    "icon": "book",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "kjv-full-1",
+        "title": "The King James Bible as an Authorized Translation",
+        "label": "Commission"
+      },
+      {
+        "id": "kjv-full-2",
+        "title": "Romans 3:21-28: Justification in English",
+        "label": "Sample Text"
+      },
+      {
+        "id": "kjv-full-3",
+        "title": "The Translators to the Reader",
+        "label": "Translators"
+      }
+    ]
+  },
+  {
+    "id": "five-solas",
+    "title": "The Five Solas of the Reformation",
+    "shortTitle": "Five Solas",
+    "year": 1517,
+    "origin": "Protestant Reformers — 16th Century",
+    "category": "solas",
+    "section": "D",
+    "description": "The five Latin phrases that summarize the core theological convictions of the Protestant Reformation.",
+    "icon": "cross",
+    "color": "violet",
+    "sections": [
+      {
+        "id": "sola-full-1",
+        "title": "Scripture Alone as the Formal Principle",
+        "label": "Sola Scriptura"
+      },
+      {
+        "id": "sola-full-2",
+        "title": "Sola Gratia and Sola Fide",
+        "label": "Grace and Faith"
+      },
+      {
+        "id": "sola-full-3",
+        "title": "Solus Christus and Soli Deo Gloria",
+        "label": "Christ and Glory"
+      }
+    ]
+  },
+  {
+    "id": "first-london-baptist",
+    "title": "First London Baptist Confession",
+    "shortTitle": "1LBC 1644",
+    "year": 1644,
+    "origin": "Seven Particular Baptist Churches — London, England",
+    "category": "confession",
+    "section": "E",
+    "description": "The founding document of the Particular Baptist movement — fully Calvinist in soteriology, affirming believer's baptism by immersion.",
+    "icon": "shield",
+    "color": "teal",
+    "sections": [
+      {
+        "id": "fl-full-00",
+        "title": "Preface to the Churches",
+        "label": "Preface"
+      },
+      {
+        "id": "fl-full-01",
+        "title": "Articles 1-10",
+        "label": "Articles 1-10"
+      },
+      {
+        "id": "fl-full-02",
+        "title": "Articles 11-20",
+        "label": "Articles 11-20"
+      },
+      {
+        "id": "fl-full-03",
+        "title": "Articles 21-30",
+        "label": "Articles 21-30"
+      },
+      {
+        "id": "fl-full-04",
+        "title": "Articles 31-40",
+        "label": "Articles 31-40"
+      },
+      {
+        "id": "fl-full-05",
+        "title": "Articles 41-52",
+        "label": "Articles 41-52"
+      }
+    ]
+  },
+  {
+    "id": "westminster-confession",
+    "title": "Westminster Confession of Faith",
+    "shortTitle": "WCF",
+    "year": 1646,
+    "origin": "Westminster Assembly — London, England",
+    "category": "confession",
+    "section": "E",
+    "description": "The most comprehensive Reformed confession, covering all major loci of systematic theology in 33 chapters.",
+    "icon": "landmark",
+    "color": "purple",
+    "sections": [
+      {
+        "id": "wcf1",
+        "title": "Of the Holy Scripture",
+        "label": "Chapter I"
+      },
+      {
+        "id": "wcf2",
+        "title": "Of God, the Holy Trinity, and God's Eternal Decree",
+        "label": "Chapters II–III"
+      },
+      {
+        "id": "wcf3",
+        "title": "Of Creation and Providence",
+        "label": "Chapters IV–V"
+      },
+      {
+        "id": "wcf4",
+        "title": "Of the Fall of Man and God's Covenant with Man",
+        "label": "Chapters VI–VII"
+      },
+      {
+        "id": "wcf5",
+        "title": "Of Christ the Mediator",
+        "label": "Chapter VIII"
+      },
+      {
+        "id": "wcf6",
+        "title": "Of Free Will, Effectual Calling, and Justification",
+        "label": "Chapters IX–XI"
+      },
+      {
+        "id": "wcf7",
+        "title": "Of Adoption, Sanctification, Faith, Repentance, and Good Works",
+        "label": "Chapters XII–XVI"
+      },
+      {
+        "id": "wcf8",
+        "title": "Of Perseverance, Assurance, the Law, and Christian Liberty",
+        "label": "Chapters XVII–XX"
+      },
+      {
+        "id": "wcf9",
+        "title": "Of Worship, Oaths, the Magistrate, and Marriage",
+        "label": "Chapters XXI–XXIV"
+      },
+      {
+        "id": "wcf10",
+        "title": "Of the Church, Communion of Saints, and Sacraments",
+        "label": "Chapters XXV–XXIX"
+      },
+      {
+        "id": "wcf11",
+        "title": "Of Church Censures, Synods, Death, and the Last Judgment",
+        "label": "Chapters XXX–XXXIII"
+      }
+    ]
+  },
+  {
+    "id": "westminster-shorter",
+    "title": "Westminster Shorter Catechism",
+    "shortTitle": "WSC",
+    "year": 1647,
+    "origin": "Westminster Assembly — London, England",
+    "category": "catechism",
+    "section": "E",
+    "description": "107 questions and answers covering the chief doctrines of the Christian faith, written for children and new believers.",
+    "icon": "note",
+    "color": "blue",
+    "sections": [
+      {
+        "id": "wsc1",
+        "title": "God, Scripture, and the Fall",
+        "label": "Q. 1–10"
+      },
+      {
+        "id": "wsc2",
+        "title": "The Covenant and the Fall",
+        "label": "Q. 11–20"
+      },
+      {
+        "id": "wsc3",
+        "title": "The Redeemer and His Work",
+        "label": "Q. 21–30"
+      },
+      {
+        "id": "wsc4",
+        "title": "Effectual Calling, Justification, and Sanctification",
+        "label": "Q. 31–40"
+      },
+      {
+        "id": "wsc5",
+        "title": "The Ten Commandments: Summary and First Table",
+        "label": "Q. 41–50"
+      },
+      {
+        "id": "wsc6",
+        "title": "Second through Fifth Commandments",
+        "label": "Q. 51–62"
+      },
+      {
+        "id": "wsc7",
+        "title": "Fifth through Ninth Commandments",
+        "label": "Q. 63–78"
+      },
+      {
+        "id": "wsc8",
+        "title": "Tenth Commandment, Prayer, and the Lord's Prayer",
+        "label": "Q. 79–107"
+      }
+    ]
+  },
+  {
+    "id": "westminster-larger",
+    "title": "Westminster Larger Catechism",
+    "shortTitle": "WLC",
+    "year": 1648,
+    "origin": "Westminster Assembly — London, England",
+    "category": "catechism",
+    "section": "E",
+    "description": "The comprehensive companion to the Shorter Catechism — 196 questions expounding the Ten Commandments, the Apostles' Creed, and the Lord's Prayer in depth.",
+    "icon": "note",
+    "color": "violet",
+    "sections": [
+      {
+        "id": "wlc-full-01",
+        "title": "Q. 1-50",
+        "label": "Q. 1-50"
+      },
+      {
+        "id": "wlc-full-02",
+        "title": "Q. 51-100",
+        "label": "Q. 51-100"
+      },
+      {
+        "id": "wlc-full-03",
+        "title": "Q. 101-150",
+        "label": "Q. 101-150"
+      },
+      {
+        "id": "wlc-full-04",
+        "title": "Q. 151-196",
+        "label": "Q. 151-196"
+      }
+    ]
+  },
+  {
+    "id": "1689-lbc",
+    "title": "Second London Baptist Confession of Faith",
+    "shortTitle": "1689 LBC",
+    "year": 1689,
+    "origin": "107 Particular Baptist Churches — London, England",
+    "category": "confession",
+    "section": "E",
+    "description": "The definitive confession of Reformed Baptist theology — affirming sovereign grace, Scripture alone, and believer's baptism by immersion. The crown of the Reformation's Baptist line.",
+    "icon": "sparkle",
+    "color": "amber",
+    "sections": [
+      {
+        "id": "lbc1689-full-01",
+        "title": "Chapters 1-4",
+        "label": "Ch. 1-4"
+      },
+      {
+        "id": "lbc1689-full-02",
+        "title": "Chapters 5-8",
+        "label": "Ch. 5-8"
+      },
+      {
+        "id": "lbc1689-full-03",
+        "title": "Chapters 9-12",
+        "label": "Ch. 9-12"
+      },
+      {
+        "id": "lbc1689-full-04",
+        "title": "Chapters 13-16",
+        "label": "Ch. 13-16"
+      },
+      {
+        "id": "lbc1689-full-05",
+        "title": "Chapters 17-20",
+        "label": "Ch. 17-20"
+      },
+      {
+        "id": "lbc1689-full-06",
+        "title": "Chapters 21-24",
+        "label": "Ch. 21-24"
+      },
+      {
+        "id": "lbc1689-full-07",
+        "title": "Chapters 25-28",
+        "label": "Ch. 25-28"
+      },
+      {
+        "id": "lbc1689-full-08",
+        "title": "Chapters 29-32",
+        "label": "Ch. 29-32"
+      }
+    ]
+  },
+  {
+    "id": "sinners-in-hands",
+    "title": "Sinners in the Hands of an Angry God",
+    "shortTitle": "Sinners in God's Hands",
+    "year": 1741,
+    "origin": "Jonathan Edwards — Enfield, Connecticut",
+    "category": "history",
+    "section": "D",
+    "description": "The most famous sermon in American history — Jonathan Edwards's thundering call to repentance that ignited the First Great Awakening.",
+    "icon": "flame",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "sih-full-1",
+        "title": "Doctrine: Sinners Preserved by God's Pleasure",
+        "label": "Part 1"
+      },
+      {
+        "id": "sih-full-2",
+        "title": "Considerations Continued",
+        "label": "Part 2"
+      },
+      {
+        "id": "sih-full-3",
+        "title": "Application: The Danger of the Unconverted",
+        "label": "Part 3"
+      },
+      {
+        "id": "sih-full-4",
+        "title": "The Fierceness and Duration of Wrath",
+        "label": "Part 4"
+      },
+      {
+        "id": "sih-full-5",
+        "title": "The Urgent Call to Flee to Christ",
+        "label": "Part 5"
+      },
+      {
+        "id": "sih-full-6",
+        "title": "The Urgent Call to Flee to Christ",
+        "label": "Part 6"
+      }
+    ]
+  },
+  {
+    "id": "monergism-debate",
+    "title": "Monergism vs. Synergism",
+    "shortTitle": "Monergism Debate",
+    "year": 1525,
+    "origin": "Luther vs. Erasmus — and every century since",
+    "category": "debate",
+    "section": "F",
+    "description": "Is salvation the work of God alone, or does it require human cooperation? The most important debate in Protestant history, from Augustine to Dort to today.",
+    "icon": "sword",
+    "color": "orange",
+    "sections": [
+      {
+        "id": "md-full-1",
+        "title": "How to Read the Full Monergism vs. Synergism Debate",
+        "label": "Guide"
+      },
+      {
+        "id": "md-full-2",
+        "title": "The Reformation Debate: Erasmus and Luther",
+        "label": "Erasmus/Luther"
+      },
+      {
+        "id": "md-remonstrance-1",
+        "title": "The Five Arminian Articles: Conditional Predestination",
+        "label": "Remonstrance 1"
+      },
+      {
+        "id": "md-remonstrance-2",
+        "title": "The Five Arminian Articles: Universal Atonement",
+        "label": "Remonstrance 2"
+      },
+      {
+        "id": "md-remonstrance-3",
+        "title": "The Five Arminian Articles: Human Inability and New Birth",
+        "label": "Remonstrance 3"
+      },
+      {
+        "id": "md-remonstrance-4",
+        "title": "The Five Arminian Articles: Resistible Grace",
+        "label": "Remonstrance 4"
+      },
+      {
+        "id": "md-remonstrance-5",
+        "title": "The Five Arminian Articles: Perseverance Question",
+        "label": "Remonstrance 5"
+      },
+      {
+        "id": "md-dort-guide",
+        "title": "The Dutch Debate: Remonstrance and Dort",
+        "label": "Dort Guide"
+      },
+      {
+        "id": "md-dort-dort-full-01",
+        "title": "Canons of Dort: First Head of Doctrine - Divine Election and Reprobation",
+        "label": "Dort 1"
+      },
+      {
+        "id": "md-dort-dort-full-02",
+        "title": "Canons of Dort: Rejection of Errors",
+        "label": "Dort 2"
+      },
+      {
+        "id": "md-dort-dort-full-03",
+        "title": "Canons of Dort: Second Head of Doctrine - The Death of Christ, and the Redemption of Men Thereby",
+        "label": "Dort 3"
+      },
+      {
+        "id": "md-dort-dort-full-04",
+        "title": "Canons of Dort: Rejection of Errors",
+        "label": "Dort 4"
+      },
+      {
+        "id": "md-dort-dort-full-05",
+        "title": "Canons of Dort: Third and Fourth Heads of Doctrine - The Corruption of Man, His Conversion To God, and the Manner Thereof",
+        "label": "Dort 5"
+      },
+      {
+        "id": "md-dort-dort-full-06",
+        "title": "Canons of Dort: Rejection of Errors",
+        "label": "Dort 6"
+      },
+      {
+        "id": "md-dort-dort-full-07",
+        "title": "Canons of Dort: Fifth Head of Doctrine - The Perseverance of the Saints",
+        "label": "Dort 7"
+      },
+      {
+        "id": "md-dort-dort-full-08",
+        "title": "Canons of Dort: Rejection of Errors",
+        "label": "Dort 8"
+      },
+      {
+        "id": "md-dort-dort-full-09",
+        "title": "Canons of Dort: Conclusion",
+        "label": "Dort 9"
+      },
+      {
+        "id": "md-luther-guide",
+        "title": "Full Source: Luther's The Bondage of the Will",
+        "label": "Luther Guide"
+      },
+      {
+        "id": "md-luther-1",
+        "title": "The Bondage of the Will: Prefatory Note",
+        "label": "Luther 1"
+      },
+      {
+        "id": "md-luther-2",
+        "title": "The Bondage of the Will: Preface -- Part 1",
+        "label": "Luther 2"
+      },
+      {
+        "id": "md-luther-3",
+        "title": "The Bondage of the Will: Preface -- Part 2",
+        "label": "Luther 3"
+      },
+      {
+        "id": "md-luther-4",
+        "title": "The Bondage of the Will: Preface -- Part 3",
+        "label": "Luther 4"
+      },
+      {
+        "id": "md-luther-5",
+        "title": "The Bondage of the Will: Preface -- Part 4",
+        "label": "Luther 5"
+      },
+      {
+        "id": "md-luther-6",
+        "title": "The Bondage of the Will: Preface -- Part 5",
+        "label": "Luther 6"
+      },
+      {
+        "id": "md-luther-7",
+        "title": "The Bondage of the Will: Preface -- Part 6",
+        "label": "Luther 7"
+      },
+      {
+        "id": "md-luther-8",
+        "title": "The Bondage of the Will: Preface -- Part 7",
+        "label": "Luther 8"
+      },
+      {
+        "id": "md-luther-9",
+        "title": "The Bondage of the Will: Preface -- Part 8",
+        "label": "Luther 9"
+      },
+      {
+        "id": "md-luther-10",
+        "title": "The Bondage of the Will: Preface -- Part 9",
+        "label": "Luther 10"
+      },
+      {
+        "id": "md-luther-11",
+        "title": "The Bondage of the Will: Preface -- Part 10",
+        "label": "Luther 11"
+      },
+      {
+        "id": "md-luther-12",
+        "title": "The Bondage of the Will: Preface -- Part 11",
+        "label": "Luther 12"
+      },
+      {
+        "id": "md-luther-13",
+        "title": "The Bondage of the Will: Preface -- Part 12",
+        "label": "Luther 13"
+      },
+      {
+        "id": "md-luther-14",
+        "title": "The Bondage of the Will: Preface -- Part 13",
+        "label": "Luther 14"
+      },
+      {
+        "id": "md-luther-15",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 1",
+        "label": "Luther 15"
+      },
+      {
+        "id": "md-luther-16",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 2",
+        "label": "Luther 16"
+      },
+      {
+        "id": "md-luther-17",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 3",
+        "label": "Luther 17"
+      },
+      {
+        "id": "md-luther-18",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 4",
+        "label": "Luther 18"
+      },
+      {
+        "id": "md-luther-19",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 5",
+        "label": "Luther 19"
+      },
+      {
+        "id": "md-luther-20",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 6",
+        "label": "Luther 20"
+      },
+      {
+        "id": "md-luther-21",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 7",
+        "label": "Luther 21"
+      },
+      {
+        "id": "md-luther-22",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 8",
+        "label": "Luther 22"
+      },
+      {
+        "id": "md-luther-23",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 9",
+        "label": "Luther 23"
+      },
+      {
+        "id": "md-luther-24",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 10",
+        "label": "Luther 24"
+      },
+      {
+        "id": "md-luther-25",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 11",
+        "label": "Luther 25"
+      },
+      {
+        "id": "md-luther-26",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 12",
+        "label": "Luther 26"
+      },
+      {
+        "id": "md-luther-27",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 13",
+        "label": "Luther 27"
+      },
+      {
+        "id": "md-luther-28",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 14",
+        "label": "Luther 28"
+      },
+      {
+        "id": "md-luther-29",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 15",
+        "label": "Luther 29"
+      },
+      {
+        "id": "md-luther-30",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 16",
+        "label": "Luther 30"
+      },
+      {
+        "id": "md-luther-31",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 17",
+        "label": "Luther 31"
+      },
+      {
+        "id": "md-luther-32",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 18",
+        "label": "Luther 32"
+      },
+      {
+        "id": "md-luther-33",
+        "title": "The Bondage of the Will: Swine; But Which, (As The Scripture Expresses It,) He Keeps Hidden, -- Part 19",
+        "label": "Luther 33"
+      },
+      {
+        "id": "md-luther-34",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 1",
+        "label": "Luther 34"
+      },
+      {
+        "id": "md-luther-35",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 2",
+        "label": "Luther 35"
+      },
+      {
+        "id": "md-luther-36",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 3",
+        "label": "Luther 36"
+      },
+      {
+        "id": "md-luther-37",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 4",
+        "label": "Luther 37"
+      },
+      {
+        "id": "md-luther-38",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 5",
+        "label": "Luther 38"
+      },
+      {
+        "id": "md-luther-39",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 6",
+        "label": "Luther 39"
+      },
+      {
+        "id": "md-luther-40",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 7",
+        "label": "Luther 40"
+      },
+      {
+        "id": "md-luther-41",
+        "title": "The Bondage of the Will: God Be Not Deceived In That Which He Foreknows, That Which He Foreknows -- Part 8",
+        "label": "Luther 41"
+      },
+      {
+        "id": "md-luther-42",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 1",
+        "label": "Luther 42"
+      },
+      {
+        "id": "md-luther-43",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 2",
+        "label": "Luther 43"
+      },
+      {
+        "id": "md-luther-44",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 3",
+        "label": "Luther 44"
+      },
+      {
+        "id": "md-luther-45",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 4",
+        "label": "Luther 45"
+      },
+      {
+        "id": "md-luther-46",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 5",
+        "label": "Luther 46"
+      },
+      {
+        "id": "md-luther-47",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 6",
+        "label": "Luther 47"
+      },
+      {
+        "id": "md-luther-48",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 7",
+        "label": "Luther 48"
+      },
+      {
+        "id": "md-luther-49",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 8",
+        "label": "Luther 49"
+      },
+      {
+        "id": "md-luther-50",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 9",
+        "label": "Luther 50"
+      },
+      {
+        "id": "md-luther-51",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 10",
+        "label": "Luther 51"
+      },
+      {
+        "id": "md-luther-52",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 11",
+        "label": "Luther 52"
+      },
+      {
+        "id": "md-luther-53",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 12",
+        "label": "Luther 53"
+      },
+      {
+        "id": "md-luther-54",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 13",
+        "label": "Luther 54"
+      },
+      {
+        "id": "md-luther-55",
+        "title": "The Bondage of the Will: M. Regulus, and others. But what can you point out in all those men, -- Part 14",
+        "label": "Luther 55"
+      },
+      {
+        "id": "md-luther-56",
+        "title": "The Bondage of the Will: Conclusion",
+        "label": "Luther 56"
+      },
+      {
+        "id": "md-luther-57",
+        "title": "The Bondage of the Will: Martin Luther'S Judgment",
+        "label": "Luther 57"
+      },
+      {
+        "id": "md-luther-58",
+        "title": "The Bondage of the Will: Concerning -- Part 1",
+        "label": "Luther 58"
+      },
+      {
+        "id": "md-luther-59",
+        "title": "The Bondage of the Will: Concerning -- Part 2",
+        "label": "Luther 59"
+      },
+      {
+        "id": "md-luther-60",
+        "title": "The Bondage of the Will: Concerning -- Part 3",
+        "label": "Luther 60"
+      },
+      {
+        "id": "md-luther-61",
+        "title": "The Bondage of the Will: Concerning -- Part 4",
+        "label": "Luther 61"
+      },
+      {
+        "id": "md-edwards-guide",
+        "title": "Full Source: Edwards's The Freedom of the Will",
+        "label": "Edwards Guide"
+      },
+      {
+        "id": "md-edwards-1",
+        "title": "The Freedom of the Will: Section I.",
+        "label": "Edwards 1"
+      },
+      {
+        "id": "md-edwards-2",
+        "title": "The Freedom of the Will: Section II.",
+        "label": "Edwards 2"
+      },
+      {
+        "id": "md-edwards-3",
+        "title": "The Freedom of the Will: I. One thing that makes an object proposed to choice agreeable, is the",
+        "label": "Edwards 3"
+      },
+      {
+        "id": "md-edwards-4",
+        "title": "The Freedom of the Will: II. Another thing that contributes to the agreeableness of an object of",
+        "label": "Edwards 4"
+      },
+      {
+        "id": "md-edwards-5",
+        "title": "The Freedom of the Will: Section III.",
+        "label": "Edwards 5"
+      },
+      {
+        "id": "md-edwards-6",
+        "title": "The Freedom of the Will: Connection Between The Things Signified By The Subject And Predicate Of",
+        "label": "Edwards 6"
+      },
+      {
+        "id": "md-edwards-7",
+        "title": "The Freedom of the Will: Section IV. -- Part 1",
+        "label": "Edwards 7"
+      },
+      {
+        "id": "md-edwards-8",
+        "title": "The Freedom of the Will: Section IV. -- Part 2",
+        "label": "Edwards 8"
+      },
+      {
+        "id": "md-edwards-9",
+        "title": "The Freedom of the Will: Section V.",
+        "label": "Edwards 9"
+      },
+      {
+        "id": "md-edwards-10",
+        "title": "The Freedom of the Will: Section I.",
+        "label": "Edwards 10"
+      },
+      {
+        "id": "md-edwards-11",
+        "title": "The Freedom of the Will: Section II. -- Part 1",
+        "label": "Edwards 11"
+      },
+      {
+        "id": "md-edwards-12",
+        "title": "The Freedom of the Will: Section II. -- Part 2",
+        "label": "Edwards 12"
+      },
+      {
+        "id": "md-edwards-13",
+        "title": "The Freedom of the Will: Section III. -- Part 1",
+        "label": "Edwards 13"
+      },
+      {
+        "id": "md-edwards-14",
+        "title": "The Freedom of the Will: Section III. -- Part 2",
+        "label": "Edwards 14"
+      },
+      {
+        "id": "md-edwards-15",
+        "title": "The Freedom of the Will: Section IV.",
+        "label": "Edwards 15"
+      },
+      {
+        "id": "md-edwards-16",
+        "title": "The Freedom of the Will: Section V.",
+        "label": "Edwards 16"
+      },
+      {
+        "id": "md-edwards-17",
+        "title": "The Freedom of the Will: Section VI. -- Part 1",
+        "label": "Edwards 17"
+      },
+      {
+        "id": "md-edwards-18",
+        "title": "The Freedom of the Will: Section VI. -- Part 2",
+        "label": "Edwards 18"
+      },
+      {
+        "id": "md-edwards-19",
+        "title": "The Freedom of the Will: Section VII. -- Part 1",
+        "label": "Edwards 19"
+      },
+      {
+        "id": "md-edwards-20",
+        "title": "The Freedom of the Will: Section VII. -- Part 2",
+        "label": "Edwards 20"
+      },
+      {
+        "id": "md-edwards-21",
+        "title": "The Freedom of the Will: Section VIII.",
+        "label": "Edwards 21"
+      },
+      {
+        "id": "md-edwards-22",
+        "title": "The Freedom of the Will: I. I would consider whether volition is a thing that ever does or can",
+        "label": "Edwards 22"
+      },
+      {
+        "id": "md-edwards-23",
+        "title": "The Freedom of the Will: Section IX. -- Part 1",
+        "label": "Edwards 23"
+      },
+      {
+        "id": "md-edwards-24",
+        "title": "The Freedom of the Will: Section IX. -- Part 2",
+        "label": "Edwards 24"
+      },
+      {
+        "id": "md-edwards-25",
+        "title": "The Freedom of the Will: Section X.",
+        "label": "Edwards 25"
+      },
+      {
+        "id": "md-edwards-26",
+        "title": "The Freedom of the Will: II. Agreeable to the aforementioned inconsistent notion of the Will",
+        "label": "Edwards 26"
+      },
+      {
+        "id": "md-edwards-27",
+        "title": "The Freedom of the Will: III. Though Mr. Chubb asserts, as above, that every volition has some",
+        "label": "Edwards 27"
+      },
+      {
+        "id": "md-edwards-28",
+        "title": "The Freedom of the Will: IV. Mr. Chubb supposes necessity to be utterly inconsistent with",
+        "label": "Edwards 28"
+      },
+      {
+        "id": "md-edwards-29",
+        "title": "The Freedom of the Will: V. Mr. Chubb most strenuously denies, that Motives are causes of the",
+        "label": "Edwards 29"
+      },
+      {
+        "id": "md-edwards-30",
+        "title": "The Freedom of the Will: Section XI. -- Part 1",
+        "label": "Edwards 30"
+      },
+      {
+        "id": "md-edwards-31",
+        "title": "The Freedom of the Will: Section XI. -- Part 2",
+        "label": "Edwards 31"
+      },
+      {
+        "id": "md-edwards-32",
+        "title": "The Freedom of the Will: Section XI. -- Part 3",
+        "label": "Edwards 32"
+      },
+      {
+        "id": "md-edwards-33",
+        "title": "The Freedom of the Will: Section XI. -- Part 4",
+        "label": "Edwards 33"
+      },
+      {
+        "id": "md-edwards-34",
+        "title": "The Freedom of the Will: Section XII.",
+        "label": "Edwards 34"
+      },
+      {
+        "id": "md-edwards-35",
+        "title": "The Freedom of the Will: II. That no future event can be certainly foreknown, whose existence is",
+        "label": "Edwards 35"
+      },
+      {
+        "id": "md-edwards-36",
+        "title": "The Freedom of the Will: III. To suppose the future volitions of moral agents not to be -- Part 1",
+        "label": "Edwards 36"
+      },
+      {
+        "id": "md-edwards-37",
+        "title": "The Freedom of the Will: III. To suppose the future volitions of moral agents not to be -- Part 2",
+        "label": "Edwards 37"
+      },
+      {
+        "id": "md-edwards-38",
+        "title": "The Freedom of the Will: Section XIII.",
+        "label": "Edwards 38"
+      },
+      {
+        "id": "md-edwards-39",
+        "title": "The Freedom of the Will: Section I.",
+        "label": "Edwards 39"
+      },
+      {
+        "id": "md-edwards-40",
+        "title": "The Freedom of the Will: Section II.",
+        "label": "Edwards 40"
+      },
+      {
+        "id": "md-edwards-41",
+        "title": "The Freedom of the Will: I. It was impossible, that the Acts of the will of Christ's human soul -- Part 1",
+        "label": "Edwards 41"
+      },
+      {
+        "id": "md-edwards-42",
+        "title": "The Freedom of the Will: I. It was impossible, that the Acts of the will of Christ's human soul -- Part 2",
+        "label": "Edwards 42"
+      },
+      {
+        "id": "md-edwards-43",
+        "title": "The Freedom of the Will: II. To consider whether CHRIST, in his holy behaviour on earth, was not",
+        "label": "Edwards 43"
+      },
+      {
+        "id": "md-edwards-44",
+        "title": "The Freedom of the Will: Section III. -- Part 1",
+        "label": "Edwards 44"
+      },
+      {
+        "id": "md-edwards-45",
+        "title": "The Freedom of the Will: Section III. -- Part 2",
+        "label": "Edwards 45"
+      },
+      {
+        "id": "md-edwards-46",
+        "title": "The Freedom of the Will: Section IV.",
+        "label": "Edwards 46"
+      },
+      {
+        "id": "md-edwards-47",
+        "title": "The Freedom of the Will: I. The Will itself, and not only those actions which are the effects of",
+        "label": "Edwards 47"
+      },
+      {
+        "id": "md-edwards-48",
+        "title": "The Freedom of the Will: II. Having shown that the Will itself, especially in those acts which",
+        "label": "Edwards 48"
+      },
+      {
+        "id": "md-edwards-49",
+        "title": "The Freedom of the Will: III. Though the opposition of the Will itself, or the very want of Will",
+        "label": "Edwards 49"
+      },
+      {
+        "id": "md-edwards-50",
+        "title": "The Freedom of the Will: Section V. -- Part 1",
+        "label": "Edwards 50"
+      },
+      {
+        "id": "md-edwards-51",
+        "title": "The Freedom of the Will: Section V. -- Part 2",
+        "label": "Edwards 51"
+      },
+      {
+        "id": "md-edwards-52",
+        "title": "The Freedom of the Will: Section VI. -- Part 1",
+        "label": "Edwards 52"
+      },
+      {
+        "id": "md-edwards-53",
+        "title": "The Freedom of the Will: Section VI. -- Part 2",
+        "label": "Edwards 53"
+      },
+      {
+        "id": "md-edwards-54",
+        "title": "The Freedom of the Will: Section VII. -- Part 1",
+        "label": "Edwards 54"
+      },
+      {
+        "id": "md-edwards-55",
+        "title": "The Freedom of the Will: Section VII. -- Part 2",
+        "label": "Edwards 55"
+      },
+      {
+        "id": "md-edwards-56",
+        "title": "The Freedom of the Will: Section I. -- Part 1",
+        "label": "Edwards 56"
+      },
+      {
+        "id": "md-edwards-57",
+        "title": "The Freedom of the Will: Section I. -- Part 2",
+        "label": "Edwards 57"
+      },
+      {
+        "id": "md-edwards-58",
+        "title": "The Freedom of the Will: Section II. -- Part 1",
+        "label": "Edwards 58"
+      },
+      {
+        "id": "md-edwards-59",
+        "title": "The Freedom of the Will: Section II. -- Part 2",
+        "label": "Edwards 59"
+      },
+      {
+        "id": "md-edwards-60",
+        "title": "The Freedom of the Will: Section III.",
+        "label": "Edwards 60"
+      },
+      {
+        "id": "md-edwards-61",
+        "title": "The Freedom of the Will: I. It is indeed a very plain dictate of common sense, that natural",
+        "label": "Edwards 61"
+      },
+      {
+        "id": "md-edwards-62",
+        "title": "The Freedom of the Will: II. Men, in their first use of such phrases as these, must, cannot,",
+        "label": "Edwards 62"
+      },
+      {
+        "id": "md-edwards-63",
+        "title": "The Freedom of the Will: III. When men, after they had been so habituated to connect ideas of",
+        "label": "Edwards 63"
+      },
+      {
+        "id": "md-edwards-64",
+        "title": "The Freedom of the Will: IV. Another reason why it appears difficult to reconcile it with",
+        "label": "Edwards 64"
+      },
+      {
+        "id": "md-edwards-65",
+        "title": "The Freedom of the Will: V. Another thing, which makes persons more ready to suppose it to be",
+        "label": "Edwards 65"
+      },
+      {
+        "id": "md-edwards-66",
+        "title": "The Freedom of the Will: Section IV.",
+        "label": "Edwards 66"
+      },
+      {
+        "id": "md-edwards-67",
+        "title": "The Freedom of the Will: II. If it were inconsistent with the common sense of mankind, that men -- Part 1",
+        "label": "Edwards 67"
+      },
+      {
+        "id": "md-edwards-68",
+        "title": "The Freedom of the Will: II. If it were inconsistent with the common sense of mankind, that men -- Part 2",
+        "label": "Edwards 68"
+      },
+      {
+        "id": "md-edwards-69",
+        "title": "The Freedom of the Will: Section V. -- Part 1",
+        "label": "Edwards 69"
+      },
+      {
+        "id": "md-edwards-70",
+        "title": "The Freedom of the Will: Section V. -- Part 2",
+        "label": "Edwards 70"
+      },
+      {
+        "id": "md-edwards-71",
+        "title": "The Freedom of the Will: Section VI.",
+        "label": "Edwards 71"
+      },
+      {
+        "id": "md-edwards-72",
+        "title": "The Freedom of the Will: Section VII. -- Part 1",
+        "label": "Edwards 72"
+      },
+      {
+        "id": "md-edwards-73",
+        "title": "The Freedom of the Will: Section VII. -- Part 2",
+        "label": "Edwards 73"
+      }
+    ]
+  }
+]

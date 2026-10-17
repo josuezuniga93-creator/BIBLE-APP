@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function TimelinePage() { return <StudyRoute screen="history" legacy={FullTimelinePage}/>; }
+
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useTheme } from "../lib/useTheme";
@@ -396,7 +399,7 @@ function HighlightPocket({
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function TimelinePage() {
+function FullTimelinePage() {
   const { theme } = useTheme();
   const { lang } = useLanguage();
   const isLight   = theme === "white-noir";

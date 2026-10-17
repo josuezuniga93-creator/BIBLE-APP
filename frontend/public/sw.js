@@ -1,6 +1,6 @@
 // Cache public reading screens and their assets. Account/API writes are never cached.
-const SHELL_CACHE = 'tulip-shell-v9';
-const ASSET_CACHE = 'tulip-assets-v9';
+const SHELL_CACHE = 'tulip-shell-v10';
+const ASSET_CACHE = 'tulip-assets-v10';
 const CONTENT_CACHE = 'tulip-content-v1';
 const OFFLINE_URL = '/offline.html';
 const PUBLIC_SCREENS = new Set(['/', '/lexicon', '/notes', '/library', '/learn', '/family-worship', '/more', '/bible-tracker', '/bible-plans', '/study-tools', '/timeline']);

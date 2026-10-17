@@ -681,7 +681,7 @@ export function BracketHighlightReader({
 
       <button
         onClick={openUnifiedHighlights}
-        className="mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
+        className="reader-saved-command mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
         style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.14)", color: isLight ? "#0a0a0a" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
       >
         {highlights.length > 0

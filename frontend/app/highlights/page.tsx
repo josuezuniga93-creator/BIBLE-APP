@@ -1,5 +1,8 @@
 "use client";
 
+import StudyRoute from "../components/study/StudyRoute";
+export default function HighlightsPage() { return <StudyRoute screen="highlights" legacy={FullHighlightsPage}/>; }
+
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
@@ -97,7 +100,7 @@ function HighlightCard({
   );
 }
 
-export default function HighlightsPage() {
+function FullHighlightsPage() {
   const router = useRouter();
   const { lang } = useLanguage();
   const { theme } = useTheme();
