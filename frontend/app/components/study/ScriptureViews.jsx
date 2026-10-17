@@ -88,6 +88,13 @@ function Scripture() {
   const current =
     a.catalog.bibleBooks.find((b) => b.num === book) ||
     a.catalog.bibleBooks[42];
+  const passageVerses = String(a.params.select || "")
+    .split(",")
+    .map(Number)
+    .filter((verse) => Number.isSafeInteger(verse) && verse > 0);
+  const isPassageView = passageVerses.length > 0;
+  const passageStart = passageVerses[0];
+  const passageEnd = passageVerses[passageVerses.length - 1];
   const start = useRef(null);
   const ref = useRef(null);
   const [progress, setProgress] = useState(0);
@@ -113,21 +120,8 @@ function Scripture() {
     syncKey("ryc-last-position", value).catch(() => {});
   }, [book, chapter]);
   useEffect(() => {
-    const verse = Number(String(a.params.select || "").split(",")[0]);
-    if (
-      !data.loading &&
-      verse &&
-      data.data?.verses?.some((v) => v.verse === verse)
-    ) {
-      setSelected(verse);
-      document
-        .getElementById("verse-" + verse)
-        ?.scrollIntoView({
-          block: "center",
-          behavior: a.motion ? "smooth" : "auto",
-        });
-    }
-  }, [a.params.select, data.loading, data.data, a.motion]);
+    if (isPassageView) setSelected(null);
+  }, [a.params.select, isPassageView]);
   const chooseVerse = (verse, event) => {
     setSelected(selected === verse.verse ? null : verse.verse);
     event.currentTarget.scrollIntoView({
@@ -197,7 +191,12 @@ function Scripture() {
       >
         <div className="reader-chapter-intro">
           <h1>
-            {current.name} <span>{chapter}</span>
+            {current.name}{" "}
+            <span>
+              {isPassageView
+                ? `${chapter}:${passageStart}${passageEnd !== passageStart ? `-${passageEnd}` : ""}`
+                : chapter}
+            </span>
           </h1>
         </div>
         {data.loading ? (
@@ -210,7 +209,12 @@ function Scripture() {
             className={"verse-content " + (!settings.serif ? "sans" : "")}
             style={{ fontSize: settings.size, lineHeight: settings.line }}
           >
-            {data.data.verses.map((verse) => {
+            {data.data.verses
+              .filter(
+                (verse) =>
+                  !isPassageView || passageVerses.includes(verse.verse),
+              )
+              .map((verse) => {
               const key = `${book}:${chapter}:${verse.verse}`;
               return (
                 <button
@@ -230,18 +234,30 @@ function Scripture() {
                 </button>
               );
             })}
-            <button
-              className="reader-end"
-              onClick={() => {
-                a.markChapter(book, chapter);
-                a.notify("Chapter marked as read");
-                change(1);
-              }}
-            >
-              <Check size={18} />
-              <span>Mark chapter as read</span>
-              <ArrowRight size={18} />
-            </button>
+            {isPassageView ? (
+              <div className="passage-full-chapter">
+                <Action
+                  secondary
+                  icon={BookOpen}
+                  onClick={() => a.go("scripture", { book, chapter })}
+                >
+                  Read Full Chapter
+                </Action>
+              </div>
+            ) : (
+              <button
+                className="reader-end"
+                onClick={() => {
+                  a.markChapter(book, chapter);
+                  a.notify("Chapter marked as read");
+                  change(1);
+                }}
+              >
+                <Check size={18} />
+                <span>Mark chapter as read</span>
+                <ArrowRight size={18} />
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -315,7 +331,7 @@ function Scripture() {
           />
         </div>
       )}
-      <div className="chapter-controls">
+      {!isPassageView && <div className="chapter-controls">
         <IconButton
           icon={ChevronLeft}
           label="Previous chapter"
@@ -334,7 +350,7 @@ function Scripture() {
           onClick={() => change(1)}
           disabled={book === 66 && chapter === 22}
         />
-      </div>
+      </div>}
     </div>
   );
 }
