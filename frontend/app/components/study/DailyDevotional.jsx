@@ -14,6 +14,7 @@ export default function DailyDevotional() {
   const router = useRouter();
   const [day, setDay] = useState(0), [step, setStep] = useState(0), [timer, setTimer] = useState(null);
   const [completed, setCompleted] = useState([]), [dateOpen, setDateOpen] = useState(false);
+  useEffect(()=>{const selected=Number(new URLSearchParams(window.location.search).get("step"));if(Number.isInteger(selected)&&selected>=0&&selected<4)setStep(selected);},[]);
   const date = new Date(); date.setDate(date.getDate() + day);
   const dateKey = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
   const dev = useResource(`/api/devotional?date=${dateKey}`);
