@@ -1,9 +1,11 @@
 "use client";
+import {Sheet,Action} from "../components/study/Views";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import StudyScreen from "../components/study/StudyScreen";
 import NoteComposer from "../components/study/NoteComposer";
+import StudyNoteView from "../components/study/NoteView";
 import { PageHeading } from "../components/study/Views";
 import { useLanguage } from "../lib/useLanguage";
 import { isLightTheme, useTheme } from "../lib/useTheme";
@@ -163,29 +165,7 @@ function ConfirmModal({
   onCancel: () => void;
   lang?: "en" | "es";
 }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div className="rounded-2xl p-6 max-w-sm w-full shadow-2xl"
-        style={{ background: "var(--bg-2)", border: "1px solid var(--border)" }}>
-        <p className="text-sm leading-relaxed mb-6" style={{ color: "var(--fg-mid)" }}>{message}</p>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg text-sm font-semibold hover:opacity-80 transition-opacity"
-            style={{ border: "1px solid var(--border)", color: "var(--fg-lo)" }}
-          >
-            {t(lang, "notes_cancel")}
-          </button>
-          <button
-            onClick={onConfirm}
-            className="px-4 py-2 rounded-lg bg-red-600/80 text-white text-sm font-semibold hover:bg-red-500 transition-colors"
-          >
-            {t(lang, "notes_delete")}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
+  return (<Sheet title="Delete this note?" onClose={onCancel}><p className="body-copy">{message}</p><Action onClick={onConfirm}>Delete note</Action><Action secondary onClick={onCancel}>Keep note</Action></Sheet>);
 }
 
 // ─── Note Detail (fullscreen modal) ──────────────────────────────────────────
@@ -1460,7 +1440,7 @@ export default function NotesPage() {
       )}
 
       {viewingNote && (
-        <NoteDetail
+        <StudyNoteView
           note={viewingNote}
           onClose={() => setViewingNote(null)}
           onEdit={() => { setViewingNote(null); openEditNote(viewingNote); }}

@@ -1,4 +1,5 @@
 const EXACT_KEYS = new Set([
+  "tulip-reader-settings-v1", "tulip-scripture-marks-v1", "tulip-prayer-journal-v1",
   "ryc-bookmarks", "tulip_bookmarks", "tulip_bookmark_categories", "ryc-collections",
   "ryc-last-position", "ryc-translation", "ryc-history", "ryc-mem-verse-state-v2",
   "tulip-church-analyses", "axiom-fw-prayers", "axiom-fw-date",

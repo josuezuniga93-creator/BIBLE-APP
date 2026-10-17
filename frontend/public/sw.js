@@ -1,6 +1,6 @@
 // Cache public reading screens and their assets. Account/API writes are never cached.
-const SHELL_CACHE = 'tulip-shell-v10';
-const ASSET_CACHE = 'tulip-assets-v10';
+const SHELL_CACHE = 'tulip-shell-v11';
+const ASSET_CACHE = 'tulip-assets-v11';
 const CONTENT_CACHE = 'tulip-content-v1';
 const OFFLINE_URL = '/offline.html';
 const PUBLIC_SCREENS = new Set(['/', '/lexicon', '/notes', '/library', '/learn', '/family-worship', '/more', '/bible-tracker', '/bible-plans', '/study-tools', '/timeline']);
@@ -28,6 +28,8 @@ self.addEventListener('fetch', event => {
   const request = event.request;
   const url = new URL(request.url);
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Development chunk URLs are reused across edits, unlike production assets.
+  if (['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)) return;
   const publicScreen = PUBLIC_SCREENS.has(url.pathname) || /^\/library\/[^/]+$/.test(url.pathname);
 
   if (request.mode === 'navigate') {

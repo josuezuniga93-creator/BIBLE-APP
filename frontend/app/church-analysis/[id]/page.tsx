@@ -20,7 +20,7 @@ function verdictColor(verdict: string): string {
   if (v.includes("HETERODOX")) return "#f97316";
   if (v.includes("CONCERNING")) return "#eab308";
   if (v.includes("BROADLY")) return "#22c55e";
-  return "#c9a961";
+  return "#a3a3a3";
 }
 
 function verdictBg(verdict: string): string {
@@ -34,7 +34,7 @@ function verdictBg(verdict: string): string {
   if (v.includes("HETERODOX")) return "rgba(249,115,22,0.13)";
   if (v.includes("CONCERNING")) return "rgba(234,179,8,0.13)";
   if (v.includes("BROADLY")) return "rgba(34,197,94,0.13)";
-  return "rgba(201,169,97,0.13)";
+  return "rgba(163,163,163,0.13)";
 }
 
 function verdictBorder(verdict: string): string {
@@ -48,7 +48,7 @@ function verdictBorder(verdict: string): string {
   if (v.includes("HETERODOX")) return "rgba(249,115,22,0.30)";
   if (v.includes("CONCERNING")) return "rgba(234,179,8,0.30)";
   if (v.includes("BROADLY")) return "rgba(34,197,94,0.30)";
-  return "rgba(201,169,97,0.30)";
+  return "rgba(163,163,163,0.30)";
 }
 
 // ─── Design helpers ───────────────────────────────────────────────────────────
@@ -96,10 +96,10 @@ function getSectionColor(title: string): string {
   if (t.includes("MAJOR CONCERN") || t.includes("CONCERNS")) return "#ef4444";
   if (t.includes("POSITIVE")) return "#22c55e";
   if (t.includes("COMPARISON") || t.includes("HISTORIC CHRISTIAN C")) return "#60a5fa";
-  if (t.includes("VERDICT")) return "#c9a961";
+  if (t.includes("VERDICT")) return "#a3a3a3";
   if (t.includes("RECOMMENDATION")) return "#a78bfa";
   if (t.includes("SUMMARY")) return "#f97316";
-  return "#c9a961";
+  return "#a3a3a3";
 }
 
 function tableResultColor(val: string): string {
@@ -107,7 +107,7 @@ function tableResultColor(val: string): string {
   if (v.includes("ORTHODOX")) return "#22c55e";
   if (v.includes("MIXED") || v.includes("CONCERNING")) return "#eab308";
   if (v.includes("DIVERGENT")) return "#ef4444";
-  return "#c9a961";
+  return "#a3a3a3";
 }
 
 function getRecColor(rec: string): string {
@@ -529,15 +529,15 @@ export default function AnalysisDetailPage() {
   const [loadingEs, setLoadingEs] = useState(false);
 
   const isLight = isLightTheme(theme);
-  const bg = isLight ? "#ffffff" : "#0f0f0f";
-  const fg = isLight ? "#0a0a0a" : "#ffffff";
-  const cardBg = isLight ? "#f3f4f6" : "rgba(255,255,255,0.04)";
-  const borderColor = isLight ? "rgba(10,10,10,0.10)" : "rgba(255,255,255,0.08)";
-  const mutedFg = isLight ? "rgba(10,10,10,0.55)" : "rgba(255,255,255,0.38)";
-  const accent = isLight ? "#0a0a0a" : "#c9a961";
-  const accentSoftBg = isLight ? "#eef0f3" : "rgba(201,169,97,0.09)";
-  const actionBg = isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)";
-  const actionFg = isLight ? "#0a0a0a" : "#0e1018";
+  const bg = isLight ? "#fafafa" : "#111111";
+  const fg = isLight ? "#171717" : "#ededed";
+  const cardBg = isLight ? "#ffffff" : "#191919";
+  const borderColor = isLight ? "rgba(23,23,23,0.12)" : "rgba(237,237,237,0.12)";
+  const mutedFg = isLight ? "rgba(23,23,23,0.58)" : "rgba(237,237,237,0.55)";
+  const accent = fg;
+  const accentSoftBg = isLight ? "#f0f0f0" : "#222222";
+  const actionBg = fg;
+  const actionFg = bg;
 
   useEffect(() => {
     try {
@@ -647,7 +647,7 @@ export default function AnalysisDetailPage() {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: bg }}>
         <div className="w-8 h-8 rounded-full border-4 animate-spin"
-          style={{ borderColor: isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.3)", borderTopColor: accent }} />
+          style={{ borderColor, borderTopColor: accent }} />
       </div>
     );
   }
@@ -706,7 +706,7 @@ export default function AnalysisDetailPage() {
         }
       `}</style>
 
-      <div id="print-root" className="min-h-screen" style={{ background: bg, color: fg }}>
+      <div id="print-root" className="study-design analysis-result min-h-screen" style={{ background: bg, color: fg }}>
 
         {/* ── Print-only header (hidden on screen) ─────────────────────────── */}
         <div className="print-only" style={{ marginBottom: 8 }}>
@@ -737,7 +737,7 @@ export default function AnalysisDetailPage() {
           <div className="no-print rounded-2xl border px-4 py-4 mb-4" style={{ borderColor, background: cardBg }}>
             <div className="flex items-start justify-between gap-3 mb-3">
               <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-1" style={{ color: isLight ? "rgba(10,10,10,0.42)" : "rgba(201,169,97,0.75)" }}>
+                <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-1" style={{ color: mutedFg }}>
                   Church Analysis
                 </p>
                 <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>
@@ -775,7 +775,7 @@ export default function AnalysisDetailPage() {
             style={{
               background: showEs ? accentSoftBg : cardBg,
               color: showEs ? accent : mutedFg,
-              border: `1px solid ${showEs ? (isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.35)") : borderColor}`,
+              border: `1px solid ${showEs ? fg : borderColor}`,
               opacity: loadingEs ? 0.6 : 1,
             }}
           >
@@ -808,7 +808,7 @@ export default function AnalysisDetailPage() {
               style={{
                 background: actionBg,
                 color: actionFg,
-                boxShadow: isLight ? "none" : "0 3px 14px rgba(201,169,97,0.28)",
+                boxShadow: "none",
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -842,7 +842,7 @@ export default function AnalysisDetailPage() {
 
           {/* ── Analysis result ───────────────────────────────────────────────── */}
           <div className="rounded-2xl border px-4 py-4" style={{ borderColor, background: cardBg }}>
-            <p className="no-print text-[10px] font-black uppercase tracking-[0.20em] mb-4" style={{ color: isLight ? "rgba(10,10,10,0.42)" : "rgba(201,169,97,0.75)" }}>
+            <p className="no-print text-[10px] font-black uppercase tracking-[0.20em] mb-4" style={{ color: mutedFg }}>
               {showEs ? "Análisis Completo" : "Full Analysis"}
             </p>
             {renderAnalysis(

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { isLightTheme, useTheme } from "../../lib/useTheme";
 import { useLanguage } from "../../lib/useLanguage";
 import type { ChurchAnalysis, SermonRecord } from "../page";
+import StudyScreen from "../../components/study/StudyScreen";
+import { PageHeading } from "../../components/study/Views";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -138,16 +140,16 @@ export default function NewAnalysisPage() {
   const [phase, setPhase] = useState<"form" | "fetching" | "analyzing">("form");
 
   // ── Theme ────────────────────────────────────────────────────────────────────
-  const bg = isLight ? "#ffffff" : "#0f0f0f";
-  const fg = isLight ? "#0a0a0a" : "#ffffff";
-  const cardBg = isLight ? "#f3f4f6" : "rgba(255,255,255,0.04)";
+  const bg = isLight ? "#fafafa" : "#111111";
+  const fg = isLight ? "#171717" : "#ededed";
+  const cardBg = isLight ? "#ffffff" : "#191919";
   const inputBg = isLight ? "#eef0f3" : "rgba(255,255,255,0.06)";
-  const borderColor = isLight ? "rgba(0,0,0,0.10)" : "rgba(255,255,255,0.10)";
-  const mutedFg = isLight ? "rgba(0,0,0,0.55)" : "rgba(255,255,255,0.38)";
-  const accent = isLight ? "#0a0a0a" : "#c9a961";
-  const accentSoftBg = isLight ? "#eef0f3" : "rgba(201,169,97,0.08)";
-  const actionBg = isLight ? "#eef0f3" : "linear-gradient(135deg, #d9b970, #c9a961)";
-  const actionFg = isLight ? "#0a0a0a" : "#0e1018";
+  const borderColor = isLight ? "rgba(23,23,23,0.12)" : "rgba(237,237,237,0.12)";
+  const mutedFg = isLight ? "rgba(23,23,23,0.58)" : "rgba(237,237,237,0.55)";
+  const accent = fg;
+  const accentSoftBg = isLight ? "#f0f0f0" : "#222222";
+  const actionBg = fg;
+  const actionFg = bg;
 
   // ── Sermon field helpers ──────────────────────────────────────────────────────
   function updateSermon(idx: number, patch: Partial<SermonField>) {
@@ -305,10 +307,10 @@ export default function NewAnalysisPage() {
   // ── Loading overlay ──────────────────────────────────────────────────────────
   if (analyzing) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center px-6 text-center" style={{ background: bg }}>
+      <StudyScreen screen="church-analysis"><div className="analysis-loading flex flex-col items-center justify-center px-6 text-center" style={{ background: bg }}>
         <div
-          className="w-16 h-16 rounded-full border-4 border-t-transparent animate-spin mb-6"
-          style={{ borderColor: isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.3)", borderTopColor: accent }}
+          className="w-12 h-12 rounded-full border-2 border-t-transparent animate-spin mb-6"
+          style={{ borderColor, borderTopColor: accent }}
         />
         <p className="font-bold text-lg mb-2" style={{ color: fg }}>
           {phase === "fetching" ? "Fetching Transcripts…" : "Analyzing Sermons…"}
@@ -332,17 +334,17 @@ export default function NewAnalysisPage() {
               </div>
             ))}
         </div>
-      </div>
+      </div></StudyScreen>
     );
   }
 
   // ── Form ────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen" style={{ background: bg, color: fg }}>
-      <main className="max-w-lg mx-auto px-4 pt-5 pb-12">
+    <StudyScreen screen="church-analysis"><PageHeading title="Analyze teaching" kicker="CHURCH ANALYSIS"/><div className="page-pad analysis-workflow" style={{ background: bg, color: fg }}>
+      <div>
 
         {/* ── Back + Header ──────────────────────────────────────────────── */}
-        <div className="flex items-center gap-3 mb-5">
+        <div className="analysis-legacy-header flex items-center gap-3 mb-5">
           <button
             onClick={() => router.back()}
             aria-label={lang === "es" ? "Volver" : "Go back"}
@@ -354,7 +356,7 @@ export default function NewAnalysisPage() {
             </svg>
           </button>
           <div>
-            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: isLight ? "rgba(0,0,0,0.42)" : "rgba(201,169,97,0.75)" }}>New Analysis</p>
+            <p className="text-[10px] font-black tracking-[0.22em] uppercase" style={{ color: mutedFg }}>New Analysis</p>
             <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>Church Analysis</h1>
           </div>
         </div>
@@ -507,7 +509,7 @@ export default function NewAnalysisPage() {
                         style={{
                           background: (sermon.manualText ?? "").trim() ? accentSoftBg : inputBg,
                           color: (sermon.manualText ?? "").trim() ? accent : mutedFg,
-                          border: `1px solid ${(sermon.manualText ?? "").trim() ? (isLight ? "rgba(10,10,10,0.14)" : "rgba(201,169,97,0.35)") : borderColor}`,
+                          border: `1px solid ${(sermon.manualText ?? "").trim() ? fg : borderColor}`,
                         }}
                       >
                         Use this transcript
@@ -529,7 +531,7 @@ export default function NewAnalysisPage() {
           <button
             onClick={addSermon}
             className="mt-3 w-full flex items-center justify-center gap-2 py-3 rounded-xl border text-sm font-semibold active:scale-[0.98] transition-transform"
-            style={{ borderColor: isLight ? "rgba(10,10,10,0.12)" : "rgba(201,169,97,0.35)", color: accent, background: accentSoftBg }}
+            style={{ borderColor, color: accent, background: accentSoftBg }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
               <path d="M12 5v14M5 12h14"/>
@@ -552,7 +554,7 @@ export default function NewAnalysisPage() {
           style={{
             background: actionBg,
             color: actionFg,
-            boxShadow: isLight ? "none" : "0 4px 20px rgba(201,169,97,0.30)",
+            boxShadow: "none",
             opacity: analyzing ? 0.6 : 1,
           }}
         >
@@ -565,7 +567,7 @@ export default function NewAnalysisPage() {
         <p className="text-[10px] text-center mt-3 leading-relaxed" style={{ color: mutedFg }}>
           Analysis uses Claude AI. Results reflect the historic Christian faith as expressed in the ecumenical creeds and confessions.
         </p>
-      </main>
-    </div>
+      </div>
+    </div></StudyScreen>
   );
 }

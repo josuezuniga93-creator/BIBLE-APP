@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, List, Type } from "lucide-react";
 import { useLanguage } from "../lib/useLanguage";
 import { useTheme, type Theme } from "../lib/useTheme";
 import { BracketHighlightReader, type ReaderHighlightAdapter } from "./BracketHighlightReader";
+import BookReading from "./study/BookReading";
 
 type AppReaderTone = {
   pageBg: string;
@@ -73,6 +74,8 @@ export type AppReaderProps = {
   onPageOpen?: () => void;
   highlightAdapter?: ReaderHighlightAdapter;
 };
+
+export function AppReader(props:AppReaderProps){return <BookReading {...props}/>;}
 
 function activeTheme(fallback: Theme): Theme {
   if (typeof window === "undefined") return fallback;
@@ -204,7 +207,7 @@ export function AppReaderShell({
   );
 }
 
-export function AppReader({
+function LegacyAppReader({
   title,
   eyebrow,
   sectionLabel,

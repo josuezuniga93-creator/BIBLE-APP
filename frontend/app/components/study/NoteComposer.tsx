@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Bold, BookOpen, Check, CheckSquare, Italic, List } from "lucide-react";
-import StudyScreen from "./StudyScreen";
 import { Sheet, IconButton } from "./Views";
 import { getNoteDisplayRef, type SermonNote } from "../../lib/notesData";
 import { parsePassageInput } from "../../lib/passageParser";
@@ -38,12 +37,12 @@ export default function NoteComposer({initial,userId,onSave,onCancel,saveError}:
     setBody(body.slice(0,start)+marker+body.slice(start,end)+marker+body.slice(end));
     requestAnimationFrame(()=>{el.focus();el.setSelectionRange(start+marker.length,end+marker.length);});
   };
-  return <StudyScreen screen="notes"><Sheet title="Your notebook" full onClose={()=>{if(!saving)onCancel();}}><div className="note-editor">
+  return <div className="study-design"><Sheet title="Your notebook" full onClose={()=>{if(!saving)onCancel();}}><div className="note-editor">
     <div className="editor-meta"><span>{new Intl.DateTimeFormat("en",{month:"long",day:"numeric",year:"numeric"}).format(new Date())}</span><button className="save-command" disabled={saving} onClick={save}>{saving?<span className="save-spinner"/>:<Check size={17}/>}<span>{saving?"Saving":"Save note"}</span></button></div>
     <input className="note-title-input" aria-label="Note title" placeholder="An untitled thought" value={title} onChange={e=>setTitle(e.target.value)} autoFocus/>
     <label className="reference-input"><BookOpen size={15}/><input ref={referenceInput} aria-label="Scripture reference" placeholder="Link a passage, e.g. John 15" value={reference} onChange={e=>setReference(e.target.value)}/></label>
     <textarea ref={text} className="note-body-input" aria-label="Note content" placeholder="Let your thoughts take shape..." value={body} onChange={e=>setBody(e.target.value)}/>
     {(saveError||status)&&<p role="status" className="editor-status">{saveError||status}</p>}
     <div className="writing-tools"><IconButton icon={Bold} label="Bold" onClick={()=>insert("**")}/><IconButton icon={Italic} label="Italic" onClick={()=>insert("*")}/><IconButton icon={List} label="Bullet point" onClick={()=>setBody(body+"\n- ")}/><IconButton icon={CheckSquare} label="Checklist" onClick={()=>setBody(body+"\n- [ ] ")}/><IconButton icon={BookOpen} label="Add scripture reference" onClick={()=>referenceInput.current?.focus()}/></div>
-  </div></Sheet></StudyScreen>;
+  </div></Sheet></div>;
 }

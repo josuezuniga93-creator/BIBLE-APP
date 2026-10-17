@@ -65,6 +65,9 @@ const BOOK_BY_NUM = new Map(BIBLE_BOOKS.map((book) => [book.num, book]));
 const BOOK_TITLE_BY_SLUG = new Map(STATIC_BOOK_CATALOG.map((book) => [book.slug, book.title]));
 
 const COLOR_DOT: Record<string, string> = {
+  light: "#b5b5b5",
+  medium: "#777777",
+  underline: "#999999",
   yellow: "#facc15",
   gold: "#c9a961",
   blue: "#60a5fa",
@@ -426,6 +429,11 @@ export function deleteUnifiedHighlight(highlight: UnifiedHighlight) {
     const bookNum = Number(match[1]);
     const chapter = Number(match[2]);
     const verse = Number(match[3]);
+    const marks = parseJson<Record<string, string>>(localStorage.getItem("tulip-scripture-marks-v1"), {});
+    delete marks[`${bookNum}:${chapter}:${verse}`];
+    const marksValue = JSON.stringify(marks);
+    localStorage.setItem("tulip-scripture-marks-v1", marksValue);
+    syncKey("tulip-scripture-marks-v1", marksValue).catch(() => {});
     const book = BOOK_BY_NUM.get(bookNum);
     if (!book) return;
 

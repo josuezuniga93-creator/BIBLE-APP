@@ -6,7 +6,7 @@ import StudyScreen from "./StudyScreen";
 
 function Route({screen, legacy: Legacy}: {screen: string; legacy: ComponentType}) {
   const query = useSearchParams();
-  return query.get("view") ? <Legacy/> : <StudyScreen screen={screen}/>;
+  return <StudyScreen screen={screen} params={Object.fromEntries(query.entries())}/>;
 }
 
 export default function StudyRoute(props: {screen: string; legacy: ComponentType}) {

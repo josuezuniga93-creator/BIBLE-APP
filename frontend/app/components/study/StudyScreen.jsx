@@ -15,6 +15,11 @@ import Plans from "./Plans";
 import PersonalViews from "./PersonalViews";
 import HistoryView from "./HistoryView";
 import { BIBLE_PLANS } from "../../lib/biblePlansData";
+import {Scripture} from "./ScriptureViews";
+import StudyModals from "./StudyModals";
+import {getBookmarks,saveBookmark,removeBookmark} from "../../lib/bookmarks";
+import {syncKey} from "../../lib/cloudSync";
+import ExpandedViews from "./ExpandedViews";
 
 const catalog = { books: STATIC_BOOK_CATALOG.filter(b => !b.coming_soon), documents: documentCatalog, bibleBooks: BIBLE_BOOKS, dictionary: DICTIONARY_ENTRIES, plans: BIBLE_PLANS };
 const destinations = { home: "/", scripture: "/lexicon", notes: "/notes", devotional: "/family-worship", more: "/more", library: "/library", documents: "/learn", tracker: "/bible-tracker", plans: "/bible-plans", kids: "/kids-books", churches: "/church-directory", history: "/timeline" };
@@ -67,12 +72,18 @@ export default function StudyScreen({ screen = "home", params = {}, onRead = nul
     const split=key.indexOf(":"), kind=key.slice(0,split),id=key.slice(split+1),next=!favorites.includes(key);
     try {setFavorite(kind==="doc"?"learn":"book",id,next);setFavorites(next?[...favorites,key]:favorites.filter(x=>x!==key));}catch{setToast("Unable to save this favorite. Please try again.");}
   };
-  const context={screen,catalog,params,notes,resume,readChapters,markChapter,daySteps:steps,favorites,progress,go,toggleFavorite,theme:themeState.theme==="white-noir"?"light":"dark",setTheme:(value)=>themeState.setTheme(value==="light"?"white-noir":"gold-navy"),motion:motionRequested&&!reduced,motionRequested,setMotionRequested:(next)=>{setMotionRequested(next);localStorage.setItem("tulip-interface-motion",next?"on":"off");},open:(type,data={})=>{if(type.startsWith("note-")&&onNoteAction){onNoteAction(type,data);return;}setModal({type,data});},close:()=>setModal(null),notify:setToast};
-  return <AppContext.Provider value={context}><div className="study-design" data-study-screen={screen}>
-    {children || (screen==="home"?<Home/>:screen==="library"?<LibraryPage/>:screen==="documents"?<LibraryPage documents/>:screen==="detail"?<Detail/>:screen==="more"?<More/>:screen==="notes"?<Notes/>:screen==="tracker"?<Tracker/>:screen==="plans"?<Plans/>:screen==="history"?<HistoryView/>:["profile","highlights"].includes(screen)?<PersonalViews/>:<AdditionalViews/>)}
+  const completeChapter=(book,chapter,toggle=false)=>{
+    try{const map=JSON.parse(localStorage.getItem("tulip_bible_tracker_v1")||"{}");const key=`${book}:${chapter}`;map[key]=toggle?!map[key]:true;if(!map[key])delete map[key];const value=JSON.stringify(map);localStorage.setItem("tulip_bible_tracker_v1",value);syncKey("tulip_bible_tracker_v1",value).catch(()=>{});}catch{setToast("Unable to save reading progress. Please try again.");}
+  };
+  const toggleSaved=(reference,text="")=>{
+    const existing=getBookmarks().find(b=>b.ref===reference);
+    if(existing)removeBookmark(existing.id);else saveBookmark({ref:reference,text,category:"General",date:new Date().toISOString()});
+    syncKey("tulip_bookmarks",JSON.stringify(getBookmarks())).catch(()=>{});
+  };
+  const context={screen,catalog,params,notes,resume,readChapters,markChapter:markChapter||completeChapter,toggleSaved,daySteps:steps,favorites,progress,go,toggleFavorite,theme:themeState.theme==="white-noir"?"light":"dark",setTheme:(value)=>themeState.setTheme(value==="light"?"white-noir":"gold-navy"),motion:motionRequested&&!reduced,motionRequested,setMotionRequested:(next)=>{setMotionRequested(next);localStorage.setItem("tulip-interface-motion",next?"on":"off");},open:(type,data={})=>{if(type.startsWith("note-")&&onNoteAction){onNoteAction(type,data);return;}setModal({type,data});},close:()=>setModal(null),notify:setToast};
+  return <AppContext.Provider value={context}><main className="study-design viewport" data-study-screen={screen}>
+    {children || ((params.view||screen==="study-tools"&&params.highlight)&&screen!=="highlights"?<ExpandedViews/>:screen==="home"?<Home/>:screen==="scripture"?<Scripture/>:screen==="library"?<LibraryPage/>:screen==="documents"?<LibraryPage documents/>:screen==="detail"?<Detail/>:screen==="more"?<More/>:screen==="notes"?<Notes/>:screen==="tracker"?<Tracker/>:screen==="plans"?<Plans/>:screen==="history"?<HistoryView/>:["profile","highlights"].includes(screen)?<PersonalViews/>:<AdditionalViews/>)}
     {toast&&<div className="toast" role="status">{toast}</div>}
-    {modal&&<Sheet title={modal.type==="memory"?"Keep the Word close":modal.type==="video"?modal.data.title:"Reading options"} onClose={()=>setModal(null)}>
-      {modal.type==="memory"?<Memory/>:modal.type==="video"?<video controls autoPlay playsInline src={modal.data.src}/>:<><Row title="Read now" onClick={()=>{setModal(null);go("reader",{kind:modal.data.kind,id:modal.data.item.slug||modal.data.item.id,chapter:1});}}/><Row title="Favorites" onClick={()=>toggleFavorite(modal.data.kind+":"+(modal.data.item.slug||modal.data.item.id))}/></>}
-    </Sheet>}
-  </div></AppContext.Provider>;
+    {modal&&<StudyModals modal={modal}/>}
+  </main></AppContext.Provider>;
 }

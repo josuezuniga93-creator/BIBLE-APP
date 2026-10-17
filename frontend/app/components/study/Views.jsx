@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from "react";
 
 import { createPortal } from "react-dom";
+import { useLanguage } from "../../lib/useLanguage";
 
 import {
   House,
@@ -201,6 +202,7 @@ function PageHeading({ title = null, kicker = "", back = true, action = null }) 
   );
 }
 
+/** @param {{children: React.ReactNode, action?: string, onClick?: React.MouseEventHandler<HTMLButtonElement>}} props */
 function SectionTitle({ children, action, onClick }) {
   return (
     <div className="section-title">
@@ -269,6 +271,7 @@ function SearchField({
   );
 }
 
+/** @param {{icon?: React.ElementType, title: React.ReactNode, sub?: React.ReactNode, onClick?: React.MouseEventHandler<HTMLButtonElement>, after?: React.ReactNode, muted?: boolean}} props */
 function Row({ icon: Icon, title, sub, onClick, after, muted = false }) {
   return (
     <button className={"list-row " + (muted ? "muted" : "")} onClick={onClick}>
@@ -510,7 +513,7 @@ function Home() {
         <SectionTitle action="Explore" onClick={() => a.go("videos")}>
           Featured
         </SectionTitle>
-        <div className="media-rail">
+        <div className="media-rail featured-video-only">
           <button
             className="media-item"
             onClick={() =>
@@ -532,28 +535,10 @@ function Home() {
             <small>MEDITATION</small>
             <h3>A life given to the gospel</h3>
           </button>
-          <button
-            className="media-item"
-            onClick={() => a.go("detail", { kind: "book", id: "holiness-ryle" })}
-          >
-            <div className="media-photo">
-              <img
-                src="/quotes/jc-ryle.jpg"
-                alt="J.C. Ryle"
-              />
-              <span className="play-well">
-                <ArrowUpRight size={18} />
-              </span>
-            </div>
-            <small>CLASSIC READING / J.C. RYLE</small>
-            <h3>The pursuit of holiness</h3>
-          </button>
         </div>
       </section>
       <section className="memory-preview">
-        <SectionTitle action="Practice" onClick={() => a.open("memory")}>
-          Keep the Word close
-        </SectionTitle>
+        <SectionTitle>Keep the Word close</SectionTitle>
         <p className="reading-serif">
           “Thy word have I hid in mine heart, that I might not sin against
           thee.”
@@ -886,6 +871,7 @@ const tools = [
 
 function More() {
   const a = useApp();
+  const { lang, setLang } = useLanguage();
   return (
     <>
       <PageHeading back={false} kicker="YOUR STUDY SPACE" />
@@ -981,6 +967,13 @@ function More() {
           >
             <i />
           </button>
+        </div>
+        <div className="setting-row">
+          <span>Language</span>
+          <div className="language-switch" role="group" aria-label="App language">
+            <button aria-pressed={lang === "en"} onClick={() => setLang("en")}>EN</button>
+            <button aria-pressed={lang === "es"} onClick={() => setLang("es")}>ES</button>
+          </div>
         </div>
         <Row
           title="Privacy"
@@ -1118,10 +1111,10 @@ function Memory() {
         onClick={() => {
           a.setDaySteps(a.daySteps.map((v, i) => (i === 1 ? true : v)));
           a.close();
-          a.notify("Practice complete");
+          a.notify("Memorization complete");
         }}
       >
-        Finish practice
+        Finish memorizing
       </Action>
     </div>
   );

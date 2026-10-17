@@ -1,5 +1,6 @@
 "use client";
 import React, {useState} from "react";
+import Markdown from "react-markdown";
 import {
   House,
   BookOpen,
@@ -55,7 +56,6 @@ import {
   PanelBottomClose,
 } from "lucide-react";
 import { useApp, PageHeading, SearchField, SectionTitle, Row, Action } from "./Views";
-function Markdown({children}) {return String(children || "").split(/\n\n/).map((p,i)=><p key={i}>{p}</p>);}
 export default function AdditionalViews(){
 const a = useApp(),
     screen = a.screen;
