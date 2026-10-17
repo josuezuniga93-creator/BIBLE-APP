@@ -2690,6 +2690,12 @@ html[data-theme="light-elegant"] .study-design .passage-search-control input:foc
   outline: 0 !important;
   box-shadow: none !important;
 }
+html[data-theme="gold-navy"] .study-design :is(input, textarea, select):focus,
+html[data-theme="light-elegant"] .study-design :is(input, textarea, select):focus,
+.study-design :is(input, textarea, select):focus {
+  box-shadow: none !important;
+  outline-color: var(--ink) !important;
+}
 :where(.study-design) .passage-search-example {
   margin: 10px 1px 0;
   color: var(--muted);
