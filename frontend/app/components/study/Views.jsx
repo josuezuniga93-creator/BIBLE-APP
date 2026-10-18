@@ -178,7 +178,7 @@ function PageHeading({ title = null, kicker = "", back = true, action = null }) 
               onClick={() => a.go(a.screen === "detail" ? (a.params.kind === "doc" ? "documents" : "library") : "more")}
             />
           ) : (
-            <span className="wordmark">
+            <span className="wordmark notranslate" translate="no">
               TULIP<span className="wordmark-period">.</span>
             </span>
           )}
@@ -971,10 +971,10 @@ function More() {
           </button>
         </div>
         <div className="setting-row">
-          <span>Language</span>
-          <div className="language-switch" role="group" aria-label="App language">
-            <button aria-pressed={lang === "en"} onClick={() => setLang("en")}>EN</button>
-            <button aria-pressed={lang === "es"} onClick={() => setLang("es")}>ES</button>
+          <span>{lang === "es" ? "Idioma" : "Language"}</span>
+          <div className="language-switch notranslate" translate="no" role="group" aria-label={lang === "es" ? "Idioma de la aplicación" : "App language"}>
+            <button aria-pressed={lang === "en"} onClick={() => setLang("en")}>English</button>
+            <button aria-pressed={lang === "es"} onClick={() => setLang("es")}>Español</button>
           </div>
         </div>
         <Row
@@ -983,7 +983,7 @@ function More() {
           onClick={() => a.go("privacy")}
         />
         <footer className="app-footer">
-          <span>TULIP</span>
+          <span className="notranslate" translate="no">TULIP</span>
           <span>Read. Reflect. Remain.</span>
         </footer>
       </div>

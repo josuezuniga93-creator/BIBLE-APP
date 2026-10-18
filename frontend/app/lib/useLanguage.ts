@@ -62,6 +62,11 @@ export function useLanguage() {
     };
   }, []);
 
+  useEffect(() => {
+    document.documentElement.lang = lang;
+    document.documentElement.dataset.language = lang;
+  }, [lang]);
+
   // Re-trigger translation after every client-side navigation (Next.js SPA)
   // Fire multiple times to catch async-loaded content (API data, lazy sections)
   useEffect(() => {

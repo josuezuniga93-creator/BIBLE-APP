@@ -14,6 +14,7 @@ import {
   saveNotes,
 } from "../../lib/notesData";
 import { parsePassageInput } from "../../lib/passageParser";
+import { useLanguage } from "../../lib/useLanguage";
 
 function AccountNote({ data }) {
   const a = useApp(),
@@ -107,8 +108,18 @@ function AccountNote({ data }) {
 export default function StudyModals({ modal }) {
   const a = useApp(),
     { type, data = {} } = modal;
+  const { lang } = useLanguage();
   if (type === "note-editor") return <AccountNote data={data} />;
-  const titles = {
+  const titles = lang === "es" ? {
+    "book-picker": "Libro y capítulo",
+    search: "Buscar un pasaje",
+    "reader-settings": "Tu vista de lectura",
+    version: "Versión de la Biblia",
+    memory: "Guárdalo en tu corazón",
+    video: "Mira y reflexiona",
+    "date-picker": "Tu lectura diaria",
+    "detail-options": "Opciones de lectura",
+  } : {
     "book-picker": "Book & chapter",
     search: "Find a passage",
     "reader-settings": "Your reading view",
@@ -133,7 +144,12 @@ export default function StudyModals({ modal }) {
         <ReaderSettings {...data} />
       ) : type === "version" ? (
         <>
-          {[
+          {(lang === "es" ? [
+            ["rv1960", "Reina-Valera 1960"],
+            ["ntv", "Nueva Traducción Viviente"],
+            ["nvi", "Nueva Versión Internacional"],
+            ["lbla", "La Biblia de las Américas"],
+          ] : [
             ["kjv", "King James Version"],
             ["esv", "English Standard Version"],
             ["nkjv", "New King James Version"],
@@ -142,11 +158,7 @@ export default function StudyModals({ modal }) {
             ["csb", "Christian Standard Bible"],
             ["niv", "New International Version"],
             ["lsb", "Legacy Standard Bible"],
-            ["rv1960", "Reina-Valera 1960"],
-            ["ntv", "Nueva Traduccion Viviente"],
-            ["nvi", "Nueva Version Internacional"],
-            ["lbla", "La Biblia de las Americas"],
-          ].map(([v, name]) => (
+          ]).map(([v, name]) => (
             <Row
               key={v}
               icon={BookOpen}

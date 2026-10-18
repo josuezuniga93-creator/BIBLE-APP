@@ -8,6 +8,7 @@ import { BottomNav } from "./components/BottomNav";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { BadgeRuntime } from "./components/BadgeRuntime";
 import { BackgroundCloudSync } from "./components/BackgroundCloudSync";
+import { GoogleTranslate } from "./components/GoogleTranslate";
 
 const inter = localFont({
   src: "../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
@@ -108,6 +109,7 @@ export default function RootLayout({
         />
       </head>
       <body className="antialiased">
+        <GoogleTranslate />
         <ThemeProvider />
         <BackgroundCloudSync />
         <AppNav />

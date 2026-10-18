@@ -65,13 +65,17 @@ import {
 import { useScriptureResource as useResource } from "./useScriptureResource";
 import { useReaderStore as useStore } from "./useReaderStore";
 import { parsePassageInput } from "../../lib/passageParser";
+import { useLanguage } from "../../lib/useLanguage";
+import { bibleBookName } from "../../lib/spanishContent";
 import {
   mirrorScriptureHighlight,
   removeMirroredScriptureHighlight,
 } from "../../lib/unifiedHighlights";
 import { syncKey } from "../../lib/cloudSync";
+const SPANISH_VERSIONS = ["rv1960", "ntv", "nvi", "lbla"];
 function Scripture() {
   const a = useApp();
+  const { lang } = useLanguage();
   const book = Number(a.params.book) || 43,
     chapter = Number(a.params.chapter) || 15;
   const [version, setVersion] = useStore("version", "kjv");
@@ -83,12 +87,17 @@ function Scripture() {
   });
   const [selected, setSelected] = useState(null);
   const [marks, setMarks] = useStore("marks", {});
+  useEffect(() => {
+    if (lang === "es" && !SPANISH_VERSIONS.includes(version)) setVersion("lbla");
+    if (lang === "en" && SPANISH_VERSIONS.includes(version)) setVersion("esv");
+  }, [lang, version]);
   const data = useResource(
     `/api/bible/chapter?book=${book}&chapter=${chapter}&translation=${version}`,
   );
   const current =
     a.catalog.bibleBooks.find((b) => b.num === book) ||
     a.catalog.bibleBooks[42];
+  const currentName = bibleBookName(current, lang);
   const passageVerses = String(a.params.select || "")
     .split(",")
     .map(Number)
@@ -130,38 +139,40 @@ function Scripture() {
       behavior: a.motion ? "smooth" : "auto",
     });
   };
-  const reference = `${current.name} ${chapter}${selected ? ":" + selected : ""}`;
+  const reference = `${currentName} ${chapter}${selected ? ":" + selected : ""}`;
   const selectedText =
     data.data?.verses?.find((v) => v.verse === selected)?.text || "";
   return (
     <div className="scripture-page">
       <header className="reader-topbar">
         <button
-          className="book-picker-command"
+          className="book-picker-command notranslate"
+          translate="no"
           onClick={() => a.open("book-picker", { book, chapter })}
         >
           <BookOpen size={18} />
           <strong>
-            {current.name} {chapter}
+            {currentName} {chapter}
           </strong>
           <ChevronDown size={14} />
         </button>
         <button
-          className="version-command"
+          className="version-command notranslate"
+          translate="no"
           onClick={() => a.open("version", { version, onChange: setVersion })}
         >
           {version.toUpperCase()}
         </button>
         <IconButton
           icon={Type}
-          label="Reading settings"
+          label={lang === "es" ? "Configuración de lectura" : "Reading settings"}
           onClick={() =>
             a.open("reader-settings", { settings, onChange: setSettings })
           }
         />
         <IconButton
           icon={Search}
-          label="Search Scripture"
+          label={lang === "es" ? "Buscar en la Biblia" : "Search Scripture"}
           onClick={() => a.open("search", { book })}
         />
       </header>
@@ -190,9 +201,9 @@ function Scripture() {
           start.current = null;
         }}
       >
-        <div className="reader-chapter-intro">
+        <div className="reader-chapter-intro notranslate" translate="no">
           <h1>
-            {current.name}{" "}
+            {currentName}{" "}
             <span>
               {isPassageView
                 ? `${chapter}:${passageStart}${passageEnd !== passageStart ? `-${passageEnd}` : ""}`
@@ -207,7 +218,8 @@ function Scripture() {
         ) : (
           <div
             key={`${book}-${chapter}-${version}`}
-            className={"verse-content " + (!settings.serif ? "sans" : "")}
+            className={"verse-content notranslate " + (!settings.serif ? "sans" : "")}
+            translate="no"
             style={{ fontSize: settings.size, lineHeight: settings.line }}
           >
             {data.data.verses
@@ -221,7 +233,7 @@ function Scripture() {
                 <button
                   id={"verse-" + verse.verse}
                   key={verse.verse}
-                  aria-label={`${current.name} ${chapter}:${verse.verse}`}
+                  aria-label={`${currentName} ${chapter}:${verse.verse}`}
                   aria-pressed={selected === verse.verse}
                   className={
                     "verse " +
@@ -242,7 +254,7 @@ function Scripture() {
                   icon={BookOpen}
                   onClick={() => a.go("scripture", { book, chapter })}
                 >
-                  Read Full Chapter
+                  {lang === "es" ? "Leer el capítulo completo" : "Read Full Chapter"}
                 </Action>
               </div>
             )}
@@ -250,15 +262,15 @@ function Scripture() {
         )}
       </div>
       {selected && (
-        <div className="annotation-dock" aria-label="Verse actions">
+        <div className="annotation-dock" aria-label={lang === "es" ? "Acciones del versículo" : "Verse actions"}>
           <div className="highlight-strip">
-            <span>Highlight</span>
+            <span>{lang === "es" ? "Resaltar" : "Highlight"}</span>
             <div className="swatches">
               {["yellow", "blue", "pink", "green"].map((tone) => (
                 <button
                   key={tone}
                   className={"swatch " + tone}
-                  aria-label={"Highlight " + tone}
+                  aria-label={(lang === "es" ? "Resaltar " : "Highlight ") + tone}
                   aria-pressed={marks[`${book}:${chapter}:${selected}`] === tone}
                   onClick={() => {
                     setMarks({
@@ -286,7 +298,7 @@ function Scripture() {
                       verseText: selectedText,
                       color: tone,
                     });
-                    a.notify("Highlight saved");
+                    a.notify(lang === "es" ? "Resaltado guardado" : "Highlight saved");
                   }}
                 />
               ))}
@@ -295,22 +307,22 @@ function Scripture() {
           <div className="annotation-actions">
             <IconButton
               icon={Copy}
-              label="Copy verse"
+              label={lang === "es" ? "Copiar versículo" : "Copy verse"}
               onClick={() =>
                 navigator.clipboard
                   .writeText(`${reference} — ${selectedText}`)
-                  .then(() => a.notify("Copied"))
-                  .catch(() => a.notify("Copy is unavailable"))
+                  .then(() => a.notify(lang === "es" ? "Copiado" : "Copied"))
+                  .catch(() => a.notify(lang === "es" ? "No se puede copiar" : "Copy is unavailable"))
               }
             />
             <IconButton
               icon={NotebookPen}
-              label="Note on verse"
+              label={lang === "es" ? "Nota del versículo" : "Note on verse"}
               onClick={() => a.open("note-editor", { reference })}
             />
             <IconButton
               icon={Eraser}
-              label="Remove highlight"
+              label={lang === "es" ? "Quitar resaltado" : "Remove highlight"}
               disabled={!marks[`${book}:${chapter}:${selected}`]}
               onClick={() => {
                 const markKey = `${book}:${chapter}:${selected}`;
@@ -330,33 +342,33 @@ function Scripture() {
                 localStorage.setItem(storageKey, value);
                 syncKey(storageKey, value).catch(() => {});
                 removeMirroredScriptureHighlight(book, chapter, selected);
-                a.notify("Highlight removed");
+                a.notify(lang === "es" ? "Resaltado eliminado" : "Highlight removed");
               }}
             />
             <IconButton
               icon={X}
-              label="Close verse actions"
+              label={lang === "es" ? "Cerrar acciones" : "Close verse actions"}
               onClick={() => setSelected(null)}
             />
           </div>
         </div>
       )}
-      {!isPassageView && <div className="chapter-controls">
+      {!isPassageView && <div className="chapter-controls notranslate" translate="no">
         <IconButton
           icon={ChevronLeft}
-          label="Previous chapter"
+          label={lang === "es" ? "Capítulo anterior" : "Previous chapter"}
           onClick={() => change(-1)}
           disabled={book === 1 && chapter === 1}
         />
         <button onClick={() => a.open("book-picker", { book, chapter })}>
           <span>
-            {current.name} {chapter}
+            {currentName} {chapter}
           </span>
           <ChevronDown size={13} />
         </button>
         <IconButton
           icon={ChevronRight}
-          label="Next chapter"
+          label={lang === "es" ? "Capítulo siguiente" : "Next chapter"}
           onClick={() => change(1)}
           disabled={book === 66 && chapter === 22}
         />
@@ -369,18 +381,19 @@ function BookPicker({ book = 43, chapter = 15 }) {
   const a = useApp(),
     [selected, setSelected] = useState(book),
     [query, setQuery] = useState("");
+  const { lang } = useLanguage();
   const current = a.catalog.bibleBooks.find((b) => b.num === selected);
   return (
     <div className="book-picker">
       <SearchField
         value={query}
         onChange={setQuery}
-        placeholder="Find a book of the Bible"
+        placeholder={lang === "es" ? "Busca un libro de la Biblia" : "Find a book of the Bible"}
       />
-      <div className="book-picker-columns">
+      <div className="book-picker-columns notranslate" translate="no">
         <div className="bible-book-list">
           {a.catalog.bibleBooks
-            .filter((b) => b.name.toLowerCase().includes(query.toLowerCase()))
+            .filter((b) => bibleBookName(b, lang).toLowerCase().includes(query.toLowerCase()))
             .map((b) => (
               <button
                 className={selected === b.num ? "active" : ""}
@@ -388,13 +401,13 @@ function BookPicker({ book = 43, chapter = 15 }) {
                 key={b.num}
                 onClick={() => setSelected(b.num)}
               >
-                {b.name}
+                {bibleBookName(b, lang)}
                 <span>{b.chapters}</span>
               </button>
             ))}
         </div>
         <div className="picker-chapters">
-          <p>{current.name}</p>
+          <p>{bibleBookName(current, lang)}</p>
           <div>
             {Array.from({ length: current.chapters }, (_, i) => (
               <button
@@ -402,7 +415,7 @@ function BookPicker({ book = 43, chapter = 15 }) {
                   selected === book && chapter === i + 1 ? "active" : ""
                 }
                 key={i}
-                aria-label={`${current.name} ${i + 1}`}
+                aria-label={`${bibleBookName(current, lang)} ${i + 1}`}
                 onClick={() => {
                   a.go("scripture", { book: selected, chapter: i + 1 });
                   a.close();
@@ -422,11 +435,12 @@ function ScriptureSearch({ book = 43 }) {
   const a = useApp(),
     [query, setQuery] = useState(""),
     [error, setError] = useState("");
+  const { lang } = useLanguage();
   const submit = (e) => {
     e.preventDefault();
     const p = parsePassageInput(query, book);
     if (!p) {
-      setError("Enter a book and chapter, such as John 3:5-7.");
+      setError(lang === "es" ? "Escribe un libro y capítulo, por ejemplo Juan 3:5-7." : "Enter a book and chapter, such as John 3:5-7.");
       return;
     }
     a.go("scripture", {
@@ -448,7 +462,7 @@ function ScriptureSearch({ book = 43 }) {
   return (
     <form className="passage-search-form" onSubmit={submit}>
       <p className="passage-search-copy">
-        Enter a book, chapter, or verse range.
+        {lang === "es" ? "Escribe un libro, capítulo o rango de versículos." : "Enter a book, chapter, or verse range."}
       </p>
       <div className="passage-search-control">
         <SearchField
@@ -457,11 +471,11 @@ function ScriptureSearch({ book = 43 }) {
             setQuery(value);
             if (error) setError("");
           }}
-          placeholder="John 3:5-7"
-          label="Passage reference"
+          placeholder={lang === "es" ? "Juan 3:5-7" : "John 3:5-7"}
+          label={lang === "es" ? "Referencia bíblica" : "Passage reference"}
         />
       </div>
-      <p className="passage-search-example">Try John 3, Psalm 23, or Romans 8:1-4</p>
+      <p className="passage-search-example">{lang === "es" ? "Prueba Juan 3, Salmo 23 o Romanos 8:1-4" : "Try John 3, Psalm 23, or Romans 8:1-4"}</p>
       {error && (
         <p role="alert" className="field-error">
           {error}
@@ -469,7 +483,7 @@ function ScriptureSearch({ book = 43 }) {
       )}
       <div className="passage-search-actions">
         <Action type="submit" disabled={!query.trim()}>
-          Open passage
+          {lang === "es" ? "Abrir pasaje" : "Open passage"}
         </Action>
       </div>
     </form>
@@ -477,6 +491,7 @@ function ScriptureSearch({ book = 43 }) {
 }
 
 function ReaderSettings({ settings: initialSettings, onChange }) {
+  const { lang } = useLanguage();
   const [settings, setSettings] = useState(initialSettings);
   const update = (next) => {
     const updated = { ...settings, ...next };
@@ -495,12 +510,12 @@ function ReaderSettings({ settings: initialSettings, onChange }) {
             : "var(--font-inter),sans-serif",
         }}
       >
-        In the beginning was the Word.
+        {lang === "es" ? "En el principio era el Verbo." : "In the beginning was the Word."}
       </p>
       <label>
-        Text size<span>{settings.size}</span>
+        {lang === "es" ? "Tamaño del texto" : "Text size"}<span>{settings.size}</span>
         <input
-          aria-label="Text size"
+          aria-label={lang === "es" ? "Tamaño del texto" : "Text size"}
           type="range"
           min="17"
           max="29"
@@ -509,9 +524,9 @@ function ReaderSettings({ settings: initialSettings, onChange }) {
         />
       </label>
       <label>
-        Line spacing<span>{settings.line.toFixed(1)}</span>
+        {lang === "es" ? "Espaciado de líneas" : "Line spacing"}<span>{settings.line.toFixed(1)}</span>
         <input
-          aria-label="Line spacing"
+          aria-label={lang === "es" ? "Espaciado de líneas" : "Line spacing"}
           type="range"
           min="1.4"
           max="2.2"
@@ -522,19 +537,19 @@ function ReaderSettings({ settings: initialSettings, onChange }) {
       </label>
       <Tabs
         items={[
-          { id: "serif", label: "Serif" },
-          { id: "sans", label: "Sans" },
+          { id: "serif", label: lang === "es" ? "Con serifas" : "Serif" },
+          { id: "sans", label: lang === "es" ? "Sin serifas" : "Sans" },
         ]}
         value={settings.serif ? "serif" : "sans"}
         onChange={(v) => update({ serif: v === "serif" })}
       />
       <div className="setting-row">
-        <span>Verse numbers</span>
+        <span>{lang === "es" ? "Números de versículo" : "Verse numbers"}</span>
         <button
           className={"switch " + (settings.numbers ? "on" : "")}
           role="switch"
           aria-checked={settings.numbers}
-          aria-label="Verse numbers"
+          aria-label={lang === "es" ? "Números de versículo" : "Verse numbers"}
           onClick={() => update({ numbers: !settings.numbers })}
         >
           <i />
