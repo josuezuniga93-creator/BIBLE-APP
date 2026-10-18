@@ -573,32 +573,15 @@ html[data-theme-mode="light"] {
   background: var(--surface);
   box-shadow: 0 12px 34px rgb(20 24 30 / 8%);
 }
-:where(.study-design) .daily-word::before {
-  content: "";
-  position: absolute;
-  z-index: -2;
-  inset: -10%;
-  background-image: url("/daily-mission-map-v1.jpg");
-  background-position: center 34%;
-  background-size: cover;
-  filter: grayscale(1) contrast(0.9);
-  opacity: 0.29;
-  transform: scale(1.04);
-  animation: mission-map-drift 22s ease-in-out infinite alternate;
-}
-:where(.study-design) .daily-word::after {
-  content: "";
+:where(.study-design) .verse-motion {
   position: absolute;
   z-index: -1;
   inset: 0;
-  background: linear-gradient(100deg, rgb(248 249 250 / 94%) 0%, rgb(248 249 250 / 84%) 64%, rgb(248 249 250 / 70%) 100%);
-}
-[data-theme="gold-navy"] :where(.study-design) .daily-word::before {
-  opacity: 0.22;
-  filter: grayscale(1) brightness(0.55) contrast(1.15);
-}
-[data-theme="gold-navy"] :where(.study-design) .daily-word::after {
-  background: linear-gradient(100deg, rgb(15 17 20 / 95%) 0%, rgb(15 17 20 / 87%) 66%, rgb(15 17 20 / 72%) 100%);
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  filter: blur(16px);
+  transform: scale(1.12);
 }
 :where(.study-design) .daily-word .eyebrow {
   margin-bottom: 14px;
@@ -634,7 +617,7 @@ html[data-theme-mode="light"] {
   margin: 0;
   color: var(--text);
   font-family: var(--font-lora), Georgia, serif;
-  font-size: clamp(1.35rem, 5.8vw, 1.9rem);
+  font-size: 24px;
   font-weight: 400;
   line-height: 1.3;
   letter-spacing: 0;

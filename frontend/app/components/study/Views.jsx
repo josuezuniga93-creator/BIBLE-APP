@@ -5,6 +5,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 import { createPortal } from "react-dom";
 import { useLanguage } from "../../lib/useLanguage";
 import { getTodaysEntry } from "../../lib/churchHistory";
+import VerseMotion from "./VerseMotion";
 import { translateToSpanish } from "../../lib/googleTranslate";
 import { localizeReference } from "../../lib/spanishContent";
 
@@ -477,6 +478,7 @@ function Home() {
         }).format(new Date())}
       />
       <section className="daily-word">
+        <VerseMotion dark={a.theme === "dark"} motion={a.motion} />
         <div className="eyebrow">
           <span className="live-tick" />
           {lang === "es" ? "VERSÍCULO DEL DÍA" : "VERSE OF THE DAY"}
