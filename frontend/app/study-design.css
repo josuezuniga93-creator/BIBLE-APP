@@ -3273,7 +3273,10 @@ html[data-motion="off"] *::after {
 .study-design .badge-row-neutral.locked { opacity: .48; }
 .scripture-loading-screen {
   position: fixed;
-  inset: 0 0 var(--mobile-tab-total);
+  top: env(safe-area-inset-top, 0px);
+  right: 0;
+  bottom: var(--mobile-tab-total);
+  left: 0;
   overflow: hidden;
   background: var(--page);
 }
@@ -3311,7 +3314,20 @@ html[data-motion="off"] *::after {
 .analysis-result [class*="rounded-2xl"],
 .analysis-result [class*="rounded-xl"] { border-radius: 4px !important; }
 .analysis-result { padding-bottom: var(--mobile-tab-total); }
-.study-design.viewport { position: fixed; inset: 0 0 var(--mobile-tab-total); height: auto; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; scrollbar-width: none; padding-bottom: 28px; }
+.study-design.viewport {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  right: 0;
+  bottom: var(--mobile-tab-total);
+  left: 0;
+  height: auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  padding-bottom: 28px;
+}
 .study-design.viewport::-webkit-scrollbar { display: none; }
 .study-design.viewport > .toast { position: fixed; bottom: calc(var(--mobile-tab-total) + 16px); }
 .study-design .home-page { padding: 0; }
@@ -3339,7 +3355,7 @@ html[data-theme-mode] {
 .layout-children { background: var(--page); }
 .study-design[data-study-screen="scripture"] { height: calc(100dvh - var(--mobile-tab-total)); min-height: 0; padding: 0; overflow: hidden; }
 .study-design[data-study-screen="scripture"] .reader-topbar { position: static; }
-.study-reference-reader { position: fixed; inset: 0 0 var(--mobile-tab-total); height: auto; min-height: 0; padding: 0; z-index: 220; }
+.study-reference-reader { position: fixed; top: env(safe-area-inset-top, 0px); right: 0; bottom: var(--mobile-tab-total); left: 0; height: auto; min-height: 0; padding: 0; z-index: 220; }
 .study-book-reader { position: fixed; bottom: var(--mobile-tab-total); padding: 0; min-height: 0; height: auto; max-width: 440px; }
 .study-book-reader .reader-topbar { flex-shrink: 0; background: var(--page); }
 .study-book-reader .reading-title { font-size: 11px; font-weight: 500; }

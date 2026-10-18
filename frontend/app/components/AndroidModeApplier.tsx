@@ -2,19 +2,23 @@
 
 import { useEffect } from "react";
 
-// Runs on the client after hydration to ensure data-android-mode is correct.
-// Belt-and-suspenders alongside the inline script in layout.tsx.
+// Device layout is derived from the browser, never from a user-facing toggle.
 export function AndroidModeApplier() {
   useEffect(() => {
     try {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-      if (!isIOS) {
+      const ua = navigator.userAgent;
+      const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+        (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+      const isAndroid = /Android/.test(ua);
+      const device = isIOS ? "ios" : isAndroid ? "android" : "other";
+
+      document.documentElement.dataset.device = device;
+      if (isAndroid) {
         document.documentElement.setAttribute("data-android-mode", "true");
-        localStorage.setItem("ryc-android-mode", "true");
       } else {
         document.documentElement.removeAttribute("data-android-mode");
-        localStorage.setItem("ryc-android-mode", "false");
       }
+      localStorage.removeItem("ryc-android-mode");
     } catch { /**/ }
   }, []);
 

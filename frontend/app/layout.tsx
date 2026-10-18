@@ -9,6 +9,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { BadgeRuntime } from "./components/BadgeRuntime";
 import { BackgroundCloudSync } from "./components/BackgroundCloudSync";
 import { GoogleTranslate } from "./components/GoogleTranslate";
+import { AndroidModeApplier } from "./components/AndroidModeApplier";
 
 const inter = localFont({
   src: "../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2",
@@ -110,6 +111,7 @@ export default function RootLayout({
       </head>
       <body className="antialiased">
         <GoogleTranslate />
+        <AndroidModeApplier />
         <ThemeProvider />
         <BackgroundCloudSync />
         <AppNav />
