@@ -78,5 +78,5 @@ function ChurchAnalysisContent() {
     setAnalyses(loadAnalyses());
   }, []);
 
-  return (<><p className="body-copy">Compare a pastor or church&apos;s teaching with historic Christian doctrine. Add sermon links or paste a transcript to begin.</p><Action onClick={()=>window.location.assign('/church-analysis/new')}>Start a sermon analysis</Action>{analyses.length>0&&<><SectionTitle>Saved analyses</SectionTitle>{analyses.map(analysis=><Row key={analysis.id} title={analysis.churchName} sub={analysis.verdict} onClick={()=>window.location.assign('/church-analysis/'+analysis.id)}/>)}</>}</>);
+  return (<><p className="body-copy">Compare a pastor or church&apos;s teaching with historic Christian doctrine. Add sermon links or paste a transcript to begin.</p><Action onClick={()=>window.location.assign('/church-analysis/new')}>Start a sermon analysis</Action>{analyses.length>0&&<><SectionTitle>Saved analyses</SectionTitle>{analyses.map(analysis=><Row key={analysis.id} title={analysis.churchName} sub={/heretical|outside historic christianity/i.test(analysis.verdict)?"RED FLAG":analysis.verdict} onClick={()=>window.location.assign('/church-analysis/'+analysis.id)}/>)}</>}</>);
 }

@@ -25,8 +25,8 @@ const catalog = { books: STATIC_BOOK_CATALOG.filter(b => !b.coming_soon), docume
 const destinations = { home: "/", scripture: "/lexicon", notes: "/notes", devotional: "/family-worship", more: "/more", library: "/library", documents: "/learn", tracker: "/bible-tracker", plans: "/bible-plans", kids: "/kids-books", churches: "/church-directory", history: "/timeline" };
 const dateKey = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; };
 
-/** @param {{screen?: string, params?: Record<string, unknown>, onRead?: ((chapter: number) => void) | null, children?: React.ReactNode, notes?: any[], onNoteAction?: Function, readChapters?: Record<string, boolean>, markChapter?: Function}} props */
-export default function StudyScreen({ screen = "home", params = {}, onRead = null, children = null, notes = [], onNoteAction, readChapters = {}, markChapter }) {
+/** @param {{screen?: string, params?: Record<string, unknown>, onRead?: ((chapter: number) => void) | null, onBack?: (() => void) | null, children?: React.ReactNode, notes?: any[], onNoteAction?: Function, readChapters?: Record<string, boolean>, markChapter?: Function}} props */
+export default function StudyScreen({ screen = "home", params = {}, onRead = null, onBack = null, children = null, notes = [], onNoteAction, readChapters = {}, markChapter }) {
   const router = useRouter();
   const themeState = useTheme();
   const [favorites, setFavorites] = useState([]);
@@ -80,7 +80,7 @@ export default function StudyScreen({ screen = "home", params = {}, onRead = nul
     if(existing)removeBookmark(existing.id);else saveBookmark({ref:reference,text,category:"General",date:new Date().toISOString()});
     syncKey("tulip_bookmarks",JSON.stringify(getBookmarks())).catch(()=>{});
   };
-  const context={screen,catalog,params,notes,resume,readChapters,markChapter:markChapter||completeChapter,toggleSaved,daySteps:steps,favorites,progress,go,toggleFavorite,theme:themeState.theme==="white-noir"?"light":"dark",setTheme:(value)=>themeState.setTheme(value==="light"?"white-noir":"gold-navy"),motion:motionRequested&&!reduced,motionRequested,setMotionRequested:(next)=>{setMotionRequested(next);localStorage.setItem("tulip-interface-motion",next?"on":"off");},open:(type,data={})=>{if(type.startsWith("note-")&&onNoteAction){onNoteAction(type,data);return;}setModal({type,data});},close:()=>setModal(null),notify:setToast};
+  const context={screen,catalog,params,notes,resume,readChapters,markChapter:markChapter||completeChapter,toggleSaved,daySteps:steps,favorites,progress,go,back:onBack,toggleFavorite,theme:themeState.theme==="white-noir"?"light":"dark",setTheme:(value)=>themeState.setTheme(value==="light"?"white-noir":"gold-navy"),motion:motionRequested&&!reduced,motionRequested,setMotionRequested:(next)=>{setMotionRequested(next);localStorage.setItem("tulip-interface-motion",next?"on":"off");},open:(type,data={})=>{if(type.startsWith("note-")&&onNoteAction){onNoteAction(type,data);return;}setModal({type,data});},close:()=>setModal(null),notify:setToast};
   return <AppContext.Provider value={context}><main className="study-design viewport" data-study-screen={screen}>
     {children || ((params.view||screen==="study-tools"&&params.highlight)&&screen!=="highlights"?<ExpandedViews/>:screen==="home"?<Home/>:screen==="scripture"?<Scripture/>:screen==="library"?<LibraryPage/>:screen==="documents"?<LibraryPage documents/>:screen==="detail"?<Detail/>:screen==="more"?<More/>:screen==="notes"?<Notes/>:screen==="tracker"?<Tracker/>:screen==="plans"?<Plans/>:screen==="history"?<HistoryView/>:["profile","highlights"].includes(screen)?<PersonalViews/>:<AdditionalViews/>)}
     {toast&&<div className="toast" role="status">{toast}</div>}

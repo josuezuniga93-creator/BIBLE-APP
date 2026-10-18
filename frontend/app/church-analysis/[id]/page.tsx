@@ -62,11 +62,15 @@ function formatInline(text: string): string {
 
 function getSeverity(lines: string[]): { label: string; color: string; bg: string; border: string } {
   for (const l of lines) {
-    if (l.includes("Serious Concern") || l.includes("SERIOUS CONCERN")) return { label: "SERIOUS CONCERN", color: "#ef4444", bg: "rgba(239,68,68,0.07)", border: "#ef4444" };
-    if (l.includes("Significant Concern") || l.includes("SIGNIFICANT CONCERN")) return { label: "SIGNIFICANT CONCERN", color: "#f97316", bg: "rgba(249,115,22,0.07)", border: "#f97316" };
-    if (l.includes("Minor Concern") || l.includes("MINOR CONCERN")) return { label: "MINOR CONCERN", color: "#eab308", bg: "rgba(234,179,8,0.07)", border: "#eab308" };
+    if (l.includes("Serious Concern") || l.includes("SERIOUS CONCERN") || l.includes("Significant Concern") || l.includes("SIGNIFICANT CONCERN")) {
+      return { label: "RED FLAG", color: "#b91c1c", bg: "rgba(220,38,38,0.12)", border: "#dc2626" };
+    }
   }
-  return { label: "MINOR CONCERN", color: "#eab308", bg: "rgba(234,179,8,0.07)", border: "#eab308" };
+  return { label: "CONCERNING", color: "#a16207", bg: "rgba(234,179,8,0.15)", border: "#ca8a04" };
+}
+
+function displayVerdict(verdict: string): string {
+  return /heretical|outside historic christianity/i.test(verdict) ? "RED FLAG" : verdict;
 }
 
 function extractAfterHeading(lines: string[], heading: string): string {
@@ -178,11 +182,11 @@ function renderAnalysis(
 
       elements.push(
         <div key={key++} className="rounded-2xl mb-3 overflow-hidden"
-          style={{ border: `1px solid ${sev.border}33`, borderLeft: `3px solid ${sev.border}`, background: sev.bg }}>
+          style={{ border: `1px solid ${sev.border}66`, background: sev.bg }}>
           {/* Severity badge */}
           <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-            <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
-              style={{ color: sev.color, background: sev.color + "22", border: `1px solid ${sev.color}44` }}>
+            <span className="text-[11px] font-black uppercase tracking-wider"
+              style={{ color: sev.color }}>
               {sev.label}
             </span>
           </div>
@@ -341,7 +345,7 @@ function renderAnalysis(
           {/* Verdict label */}
           <div className="px-5 py-4 text-center" style={{ background: vBg }}>
             <p className="text-[11px] font-black uppercase tracking-[0.20em] mb-1" style={{ color: vColor, opacity: 0.7 }}>Verdict</p>
-            <p className="text-lg font-black uppercase tracking-wide" style={{ color: vColor }}>{verdictLine}</p>
+            <p className="text-lg font-black uppercase tracking-wide break-words" style={{ color: vColor, overflowWrap: "anywhere" }}>{displayVerdict(verdictLine)}</p>
           </div>
           {/* Verdict summary */}
           {summary && (
@@ -506,7 +510,7 @@ function buildShareText(analysis: ChurchAnalysis): string {
     `Church/Pastor: ${analysis.churchName}`,
     analysis.denomination ? `Tradition: ${analysis.denomination}` : "",
     `Date: ${date}`,
-    `Verdict: ${analysis.verdict}`,
+    `Verdict: ${displayVerdict(analysis.verdict)}`,
     "",
     "─".repeat(40),
     "",
@@ -716,7 +720,7 @@ export default function AnalysisDetailPage() {
           <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{analysis.churchName}</h1>
           {analysis.denomination && <p className="print-meta">{analysis.denomination}</p>}
           <p className="print-meta">{dateStr} · {analysis.sermons.length} sermon{analysis.sermons.length !== 1 ? "s" : ""} analyzed</p>
-          <div className="print-verdict">{analysis.verdict}</div>
+          <div className="print-verdict">{displayVerdict(analysis.verdict)}</div>
         </div>
 
         <main className="max-w-lg mx-auto px-4 pt-5 pb-14">
@@ -734,13 +738,13 @@ export default function AnalysisDetailPage() {
           </button>
 
           {/* ── Header card ──────────────────────────────────────────────────── */}
-          <div className="no-print rounded-2xl border px-4 py-4 mb-4" style={{ borderColor, background: cardBg }}>
-            <div className="flex items-start justify-between gap-3 mb-3">
-              <div className="flex-1 min-w-0">
+          <div className="no-print rounded-2xl border px-4 py-4 mb-4 min-w-0 overflow-hidden" style={{ borderColor, background: cardBg }}>
+            <div className="flex flex-col items-start gap-3 mb-3 min-w-0">
+              <div className="w-full min-w-0">
                 <p className="text-[10px] font-black tracking-[0.20em] uppercase mb-1" style={{ color: mutedFg }}>
                   Church Analysis
                 </p>
-                <h1 className="text-xl font-bold leading-tight" style={{ color: fg }}>
+                <h1 className="text-xl font-bold leading-tight break-words" style={{ color: fg, overflowWrap: "anywhere" }}>
                   {analysis.churchName}
                 </h1>
                 {analysis.denomination && (
@@ -749,14 +753,14 @@ export default function AnalysisDetailPage() {
               </div>
               {/* Verdict badge */}
               <div
-                className="flex-shrink-0 px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wide border"
+                className="max-w-full px-3 py-1.5 rounded-xl text-[11px] font-black uppercase tracking-wide border whitespace-normal break-words"
                 style={{
                   color: verdictColor(analysis.verdict),
                   background: verdictBg(analysis.verdict),
                   borderColor: verdictBorder(analysis.verdict),
                 }}
               >
-                {analysis.verdict}
+                {displayVerdict(analysis.verdict)}
               </div>
             </div>
             {/* Meta */}

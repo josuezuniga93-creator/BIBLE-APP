@@ -175,7 +175,7 @@ function PageHeading({ title = null, kicker = "", back = true, action = null }) 
             <IconButton
               icon={ArrowLeft}
               label="Back"
-              onClick={() => a.go(a.screen === "detail" ? (a.params.kind === "doc" ? "documents" : "library") : "more")}
+              onClick={() => a.back ? a.back() : a.go(a.screen === "detail" ? (a.params.kind === "doc" ? "documents" : "library") : "more")}
             />
           ) : (
             <span className="wordmark notranslate" translate="no">

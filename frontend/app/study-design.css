@@ -45,18 +45,18 @@ html, body { background: var(--page); color: var(--ink); }
 .study-scripture .le-chapter-nav button span { font-size: 12px !important; font-weight: 500 !important; color: var(--ink) !important; }
 .study-scripture .le-chapter-nav button svg { width: 19px; height: 19px; }
 html[data-theme-mode="light"] {
-  --page: #fafafa;
+  --page: #f2f3f5;
   --surface: #fff;
-  --surface-2: #f2f2f2;
-  --soft: #e9e9e9;
+  --surface-2: #e9ebee;
+  --soft: #e4e6e9;
   --ink: #171717;
   --secondary: #626262;
   --muted: #6b6b6b;
-  --line: #dedede;
-  --strong-line: #999;
+  --line: #d4d7db;
+  --strong-line: #8d9299;
   --inverse: #fff;
   --control: #191919;
-  --nav: #fafafa;
+  --nav: #f8f9fa;
   color-scheme: light;
 }
 :where(.study-design) * {
@@ -3320,6 +3320,13 @@ html[data-motion="off"] *::after {
 .analysis-result [class*="rounded-2xl"],
 .analysis-result [class*="rounded-xl"] { border-radius: 4px !important; }
 .analysis-result { padding-bottom: var(--mobile-tab-total); }
+.analysis-result,
+.analysis-result main,
+.analysis-result section,
+.analysis-result article,
+.analysis-result div { min-width: 0; max-width: 100%; }
+.analysis-result { overflow-x: hidden; }
+.analysis-result :where(h1, h2, h3, p, span) { overflow-wrap: anywhere; }
 .study-design.viewport {
   position: fixed;
   top: env(safe-area-inset-top, 0px);
@@ -3414,6 +3421,41 @@ html[data-device="ios"] .mobile-tab-bar-inner {
 }
 html[data-device="ios"] .study-design.viewport {
   background: var(--page);
+}
+
+/* Light mode uses restrained gray structure so sections remain scannable. */
+html[data-theme-mode="light"] .study-design .topbar {
+  background: var(--nav);
+  border-bottom: 1px solid var(--line);
+}
+html[data-theme-mode="light"] .study-design .section-title {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+}
+html[data-theme-mode="light"] .study-design .tool-list {
+  overflow: hidden;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+html[data-theme-mode="light"] .study-design .setting-row {
+  margin-top: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+}
+html[data-theme-mode="light"] .study-design .account-row,
+html[data-theme-mode="light"] .study-design .search-field,
+html[data-theme-mode="light"] .study-design .tabs {
+  background: color-mix(in srgb, var(--surface) 82%, var(--page));
+}
+html[data-theme-mode="light"] .study-design .account-row {
+  padding-right: 14px;
+  padding-left: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
 }
 .feature-content input, .feature-content select, .feature-content textarea { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; }
 .feature-church-analysis main > div:first-child, .feature-churches main > div:first-child, .feature-give main > section:first-child { display: none; }

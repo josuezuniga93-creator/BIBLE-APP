@@ -503,7 +503,7 @@ function DocumentDetail({
   }
 
   const related = allDocs.filter((d) => d.id !== doc.id && (d.category === doc.category || d.year === doc.year)).slice(0, 5);
-  return <StudyScreen screen="detail" params={{kind:"doc",id:doc.id}} onRead={(number: number)=>setReading(readerSections[Math.max(0,Math.min(number-1,readerSections.length-1))].id)} />;
+  return <StudyScreen screen="detail" params={{kind:"doc",id:doc.id}} onBack={onClose} onRead={(number: number)=>setReading(readerSections[Math.max(0,Math.min(number-1,readerSections.length-1))].id)} />;
 }
 
 // ─── Main page ────────────────────────────────────────────────────────────────
