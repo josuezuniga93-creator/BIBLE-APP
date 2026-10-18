@@ -456,15 +456,13 @@ function Home() {
     Promise.all([
       translateToSpanish(dailyMission.verseText, `home_mission_verse_${dailyMission.id}`),
       translateToSpanish(dailyMission.title, `home_mission_title_${dailyMission.id}`),
-      translateToSpanish(dailyMission.keyTakeaway, `home_mission_takeaway_${dailyMission.id}`),
-    ]).then(([verseText, title, keyTakeaway]) => {
-      if (!cancelled) setDailySpanish({ verseText, title, keyTakeaway });
+    ]).then(([verseText, title]) => {
+      if (!cancelled) setDailySpanish({ verseText, title });
     }).catch(() => {});
     return () => { cancelled = true; };
-  }, [dailyMission.id, dailyMission.keyTakeaway, dailyMission.title, dailyMission.verseText, lang]);
+  }, [dailyMission.id, dailyMission.title, dailyMission.verseText, lang]);
   const missionVerse = dailySpanish?.verseText || dailyMission.verseText;
   const missionTitle = dailySpanish?.title || dailyMission.title;
-  const missionTakeaway = dailySpanish?.keyTakeaway || dailyMission.keyTakeaway;
   const today = a.catalog.today;
   const steps = a.daySteps;
   const completed = steps.filter(Boolean).length;
@@ -488,15 +486,14 @@ function Home() {
         </blockquote>
         <p className="daily-mission-reference">{lang === "es" ? localizeReference(dailyMission.verseReference) : dailyMission.verseReference}</p>
         <div className="daily-mission-connection">
-          <span>{lang === "es" ? "EN LA MISIÓN" : "IN THE MISSION"}</span>
+          <span>{lang === "es" ? "HISTORIA MISIONERA" : "MISSIONARY STORY"}</span>
           <strong>{missionTitle}</strong>
-          <p>{missionTakeaway}</p>
         </div>
         <button
           className="daily-mission-action"
           onClick={() => window.location.assign(`/church-history/${dailyMission.id}`)}
         >
-          <span>{lang === "es" ? "Leer ahora" : "Read Now"}</span>
+          <span>{lang === "es" ? "Leer historia misionera" : "Read Missionary Story"}</span>
           <ArrowRight size={18} />
         </button>
       </section>
