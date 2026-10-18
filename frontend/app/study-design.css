@@ -581,21 +581,22 @@ html[data-theme-mode="light"] {
   height: 100%;
   pointer-events: none;
   transform: scale(1.03);
+  filter: blur(3px);
 }
 :where(.study-design) .daily-word .live-tick {
-  border-color: #86a94d;
+  border-color: #969ba2;
 }
 :where(.study-design) .daily-word .live-tick::after {
-  background: #99c957;
+  background: #a5abb3;
 }
 :where(.study-design) .daily-word .daily-mission-action svg {
-  color: #c2e995;
+  color: #d6d9de;
 }
 :where(.study-design) .daily-word .daily-mission-verse {
-  text-shadow: 0 1px 8px #f5f7f0;
+  text-shadow: 0 1px 8px #f5f6f7;
 }
 [data-theme="gold-navy"] :where(.study-design) .daily-word .daily-mission-verse {
-  text-shadow: 0 1px 8px #141714;
+  text-shadow: 0 1px 8px #161719;
 }
 :where(.study-design) .daily-word .eyebrow {
   margin-bottom: 14px;

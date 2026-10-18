@@ -15,16 +15,16 @@ export default function VerseMotion({ dark, motion }) {
     let width = 1;
     let height = 1;
     const draw = () => {
-      context.fillStyle = dark ? "#141714" : "#f5f7f0";
+      context.fillStyle = dark ? "#161719" : "#f5f6f7";
       context.fillRect(0, 0, width, height);
       // Fine threads rotate around one continuous wave, like the reference ribbon.
       for (let strand = 0; strand < 54; strand++) {
         const turn = strand / 54 * Math.PI * 2;
         const depth = (Math.cos(turn + phase) + 1) / 2;
         const shade = context.createLinearGradient(0, 0, width, height * .5);
-        shade.addColorStop(0, dark ? `rgba(194,236,125,${.08 + depth * .17})` : `rgba(83,103,62,${.04 + depth * .09})`);
-        shade.addColorStop(.55, dark ? `rgba(196,245,120,${.12 + depth * .3})` : `rgba(145,195,60,${.13 + depth * .25})`);
-        shade.addColorStop(1, dark ? "rgba(177,220,120,.05)" : "rgba(91,119,62,.05)");
+        shade.addColorStop(0, dark ? `rgba(199,203,209,${.06 + depth * .12})` : `rgba(139,145,153,${.04 + depth * .08})`);
+        shade.addColorStop(.55, dark ? `rgba(215,219,224,${.10 + depth * .20})` : `rgba(156,162,170,${.10 + depth * .18})`);
+        shade.addColorStop(1, dark ? "rgba(195,201,208,.04)" : "rgba(144,150,158,.04)");
         context.strokeStyle = shade;
         context.lineWidth = depth > .8 ? 1.2 : .7;
         context.beginPath();
