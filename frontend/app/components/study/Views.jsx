@@ -4,6 +4,9 @@ import React, { createContext, useContext, useState, useEffect, useRef, useCallb
 
 import { createPortal } from "react-dom";
 import { useLanguage } from "../../lib/useLanguage";
+import { getTodaysEntry } from "../../lib/churchHistory";
+import { translateToSpanish } from "../../lib/googleTranslate";
+import { localizeReference } from "../../lib/spanishContent";
 
 import {
   House,
@@ -441,6 +444,27 @@ function Jacket({ book, document = false, large = false, index = 0 }) {
 
 function Home() {
   const a = useApp();
+  const { lang } = useLanguage();
+  const dailyMission = getTodaysEntry();
+  const [dailySpanish, setDailySpanish] = useState(null);
+  useEffect(() => {
+    if (lang !== "es") {
+      setDailySpanish(null);
+      return;
+    }
+    let cancelled = false;
+    Promise.all([
+      translateToSpanish(dailyMission.verseText, `home_mission_verse_${dailyMission.id}`),
+      translateToSpanish(dailyMission.title, `home_mission_title_${dailyMission.id}`),
+      translateToSpanish(dailyMission.keyTakeaway, `home_mission_takeaway_${dailyMission.id}`),
+    ]).then(([verseText, title, keyTakeaway]) => {
+      if (!cancelled) setDailySpanish({ verseText, title, keyTakeaway });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [dailyMission.id, dailyMission.keyTakeaway, dailyMission.title, dailyMission.verseText, lang]);
+  const missionVerse = dailySpanish?.verseText || dailyMission.verseText;
+  const missionTitle = dailySpanish?.title || dailyMission.title;
+  const missionTakeaway = dailySpanish?.keyTakeaway || dailyMission.keyTakeaway;
   const today = a.catalog.today;
   const steps = a.daySteps;
   const completed = steps.filter(Boolean).length;
@@ -457,18 +481,23 @@ function Home() {
       <section className="daily-word">
         <div className="eyebrow">
           <span className="live-tick" />
-          THE DAILY WORD
+          {lang === "es" ? "VERSÍCULO DEL DÍA" : "VERSE OF THE DAY"}
         </div>
-        <h1>
-          Abide in me.
-          <br />
-          <em>And I in you.</em>
-        </h1>
+        <blockquote className="daily-mission-verse">
+          &ldquo;{missionVerse}&rdquo;
+        </blockquote>
+        <p className="daily-mission-reference">{lang === "es" ? localizeReference(dailyMission.verseReference) : dailyMission.verseReference}</p>
+        <div className="daily-mission-connection">
+          <span>{lang === "es" ? "EN LA MISIÓN" : "IN THE MISSION"}</span>
+          <strong>{missionTitle}</strong>
+          <p>{missionTakeaway}</p>
+        </div>
         <button
-          className="verse-reference"
-          onClick={() => a.go("scripture", { book: 43, chapter: 15 })}
+          className="daily-mission-action"
+          onClick={() => window.location.assign(`/church-history/${dailyMission.id}`)}
         >
-          John 15:4 <ArrowUpRight size={16} />
+          <span>{lang === "es" ? "Leer ahora" : "Read Now"}</span>
+          <ArrowRight size={18} />
         </button>
       </section>
       <button
