@@ -128,6 +128,35 @@ interface HelloAOItem {
   content?: AnyContent[];
 }
 
+const CHAPTER_CACHE_HEADERS = {
+  "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+};
+
+function chapterResponse(payload: Record<string, unknown>) {
+  return NextResponse.json(payload, { headers: CHAPTER_CACHE_HEADERS });
+}
+
+async function fetchWithRateLimitRetry(url: string, headers: Record<string, string>) {
+  let response: Response | null = null;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), 8_000);
+    try {
+      response = await fetch(url, {
+        signal: ctrl.signal,
+        headers,
+        next: { revalidate: 86_400 },
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+    if (response.status !== 429) return response;
+    await response.body?.cancel().catch(() => {});
+    await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+  }
+  return response as Response;
+}
+
 function collectVerses(items: HelloAOItem[]): HelloAOItem[] {
   const result: HelloAOItem[] = [];
   for (const item of items) {
@@ -204,13 +233,14 @@ export async function GET(req: NextRequest) {
   if (bollsId) {
     try {
       const url = `https://bolls.life/get-chapter/${bollsId}/${bookNum}/${chapter}/`;
-      const ctrl = new AbortController();
-      const t = setTimeout(() => ctrl.abort(), 8_000);
-      const res = await fetch(url, { signal: ctrl.signal, headers: H });
-      clearTimeout(t);
+      const res = await fetchWithRateLimitRetry(url, H);
 
       if (!res.ok) {
-        return NextResponse.json({ error: `bolls.life returned ${res.status}` }, { status: 502 });
+        const busy = res.status === 429;
+        return NextResponse.json(
+          { error: busy ? "This Bible translation is temporarily busy." : "This Bible translation is temporarily unavailable." },
+          { status: busy ? 503 : 502, headers: busy ? { "Retry-After": "3" } : undefined },
+        );
       }
 
       interface BollsVerse { pk: number; verse: number; text: string; }
@@ -236,7 +266,7 @@ export async function GET(req: NextRequest) {
           };
         });
 
-      return NextResponse.json({
+      return chapterResponse({
         book: bookNum,
         bookName: meta.name,
         chapter,
@@ -261,13 +291,10 @@ export async function GET(req: NextRequest) {
 
   try {
     const url = `https://bible.helloao.org/api/${helloaoId}/${bookCode}/${chapter}.json`;
-    const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), 8_000);
-    const res = await fetch(url, { signal: ctrl.signal, headers: H });
-    clearTimeout(t);
+    const res = await fetchWithRateLimitRetry(url, H);
 
     if (!res.ok) {
-      return NextResponse.json({ error: `helloao.org returned ${res.status}` }, { status: 502 });
+      return NextResponse.json({ error: "This Bible translation is temporarily unavailable." }, { status: 502 });
     }
 
     const bodyText = await res.text();
@@ -291,7 +318,7 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({
+    return chapterResponse({
       book: bookNum,
       bookName: data.book?.name ?? data.book?.shortName ?? meta.name,
       chapter,

@@ -14,21 +14,37 @@ export function useScriptureResource(url) {
     let active = true;
     const query = new URLSearchParams(url.split("?")[1]);
     setState({ loading: true, data: null, error: null });
-    fetchChapter(
-      Number(query.get("book")),
-      Number(query.get("chapter")),
-      query.get("translation") || "kjv",
-    )
+    const load = async () => {
+      let lastError;
+      for (let retry = 0; retry < 3; retry++) {
+        try {
+          return await fetchChapter(
+            Number(query.get("book")),
+            Number(query.get("chapter")),
+            query.get("translation") || "kjv",
+          );
+        } catch (error) {
+          lastError = error;
+          if (retry < 2) await new Promise((resolve) => setTimeout(resolve, 700 * (retry + 1)));
+        }
+      }
+      throw lastError;
+    };
+    load()
       .then((data) => {
         if (active) setState({ loading: false, data, error: null });
       })
       .catch((error) => {
-        if (active)
+        if (active) {
+          const technical = /429|bolls|helloao|proxy|fetch|network|abort/i.test(error?.message || "");
           setState({
             loading: false,
             data: null,
-            error: error.message || "Unable to load this reading.",
+            error: technical
+              ? "This Bible translation is taking longer than expected. Please try again."
+              : error.message || "Unable to load this reading.",
           });
+        }
       });
     return () => {
       active = false;

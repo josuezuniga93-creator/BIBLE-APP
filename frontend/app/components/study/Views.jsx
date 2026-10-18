@@ -293,10 +293,11 @@ function Row({ icon: Icon, title, sub, onClick, after, muted = false }) {
   );
 }
 
-function Loading() {
+function Loading({ label = "Loading reading" }) {
   return (
-    <div className="loading-state" role="status" aria-label="Loading content">
+    <div className="loading-state" role="status" aria-label={label}>
       <span className="loading-track" />
+      <p className="loading-label">{label}</p>
       <span className="skeleton" />
       <span className="skeleton short" />
       <span className="skeleton" />

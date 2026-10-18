@@ -212,7 +212,7 @@ function Scripture() {
           </h1>
         </div>
         {data.loading ? (
-          <Loading />
+          <Loading label={lang === "es" ? `Cargando ${version.toUpperCase()}` : `Loading ${version.toUpperCase()}`} />
         ) : data.error ? (
           <ErrorState message={data.error} retry={data.retry} />
         ) : (
