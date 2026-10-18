@@ -3347,7 +3347,7 @@ html[data-theme-mode] {
   --mobile-tab-height: 70px;
 }
 .mobile-tab-bar { background: var(--nav); border-color: var(--line); }
-.mobile-tab-bar-inner { height: 69px; padding: 0 8px; }
+.mobile-tab-bar-inner { height: var(--mobile-tab-height); padding: 0 8px; }
 .mobile-tab { color: var(--muted); }
 .mobile-tab[aria-current="page"] { color: var(--ink); }
 .mobile-tab[aria-current="page"] .mobile-tab-icon { transform: none; }
@@ -3384,6 +3384,31 @@ html[data-app-book-reader-open="true"] .mobile-tab-bar { z-index: 230; }
 .feature-content [class*="text-white"], .feature-content [style*="color:"] { color: var(--ink) !important; }
 .feature-content button, .feature-content a { font-weight: 500; box-shadow: none !important; }
 .feature-content button { background: var(--soft) !important; color: var(--ink) !important; border-color: var(--line) !important; }
+
+/* iOS keeps its protected gesture areas, but the app chrome fills them edge to edge. */
+html[data-device="ios"] {
+  --mobile-tab-height: 60px;
+  background: var(--nav);
+}
+html[data-device="ios"] body {
+  background: linear-gradient(
+    to bottom,
+    var(--page) 0,
+    var(--page) calc(100% - var(--mobile-tab-total)),
+    var(--nav) calc(100% - var(--mobile-tab-total)),
+    var(--nav) 100%
+  );
+}
+html[data-device="ios"] .mobile-tab-bar {
+  min-height: var(--mobile-tab-total);
+  background: var(--nav);
+}
+html[data-device="ios"] .mobile-tab-bar-inner {
+  align-items: stretch;
+}
+html[data-device="ios"] .study-design.viewport {
+  background: var(--page);
+}
 .feature-content input, .feature-content select, .feature-content textarea { background: var(--surface) !important; color: var(--ink) !important; border: 1px solid var(--line) !important; }
 .feature-church-analysis main > div:first-child, .feature-churches main > div:first-child, .feature-give main > section:first-child { display: none; }
 .feature-fellowship main > div:first-child > div { display: none; }
