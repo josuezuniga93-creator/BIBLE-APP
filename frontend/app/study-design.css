@@ -3353,7 +3353,12 @@ html[data-theme-mode] {
 .mobile-tab[aria-current="page"] .mobile-tab-icon { transform: none; }
 .mobile-tab[aria-current="page"] span { font-weight: 550; }
 .layout-children { background: var(--page); }
-.study-design[data-study-screen="scripture"] { height: calc(100dvh - var(--mobile-tab-total)); min-height: 0; padding: 0; overflow: hidden; }
+.study-design[data-study-screen="scripture"] {
+  height: auto;
+  min-height: 0;
+  padding: 0;
+  overflow: hidden;
+}
 .study-design[data-study-screen="scripture"] .reader-topbar { position: static; }
 .study-reference-reader { position: fixed; top: env(safe-area-inset-top, 0px); right: 0; bottom: var(--mobile-tab-total); left: 0; height: auto; min-height: 0; padding: 0; z-index: 220; }
 .study-book-reader { position: fixed; bottom: var(--mobile-tab-total); padding: 0; min-height: 0; height: auto; max-width: 440px; }
