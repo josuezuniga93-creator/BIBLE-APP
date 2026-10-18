@@ -15,32 +15,32 @@ export default function VerseMotion({ dark, motion }) {
     let width = 1;
     let height = 1;
     const draw = () => {
-      context.fillStyle = dark ? "#151719" : "#f4f5f6";
+      context.fillStyle = dark ? "#141714" : "#f5f7f0";
       context.fillRect(0, 0, width, height);
-      // Broad, layered ribbons keep the motion continuous without bright flashes.
-      for (let band = -2; band < 7; band++) {
-        const center = (band / 5) * height;
-        const shade = context.createLinearGradient(0, center - height * .15, 0, center + height * .22);
-        shade.addColorStop(0, "transparent");
-        shade.addColorStop(.52, dark ? "rgba(192,199,204,.12)" : "rgba(75,85,93,.12)");
-        shade.addColorStop(1, "transparent");
-        context.fillStyle = shade;
+      // Fine threads rotate around one continuous wave, like the reference ribbon.
+      for (let strand = 0; strand < 54; strand++) {
+        const turn = strand / 54 * Math.PI * 2;
+        const depth = (Math.cos(turn + phase) + 1) / 2;
+        const shade = context.createLinearGradient(0, 0, width, height * .5);
+        shade.addColorStop(0, dark ? `rgba(194,236,125,${.08 + depth * .17})` : `rgba(83,103,62,${.04 + depth * .09})`);
+        shade.addColorStop(.55, dark ? `rgba(196,245,120,${.12 + depth * .3})` : `rgba(145,195,60,${.13 + depth * .25})`);
+        shade.addColorStop(1, dark ? "rgba(177,220,120,.05)" : "rgba(91,119,62,.05)");
+        context.strokeStyle = shade;
+        context.lineWidth = depth > .8 ? 1.2 : .7;
         context.beginPath();
-        for (let x = 0; x <= width + 6; x += 6) {
-          const y = center + Math.sin(x / width * 4 + phase + band * .55) * height * .085 + x * .16;
-          if (x === 0) context.moveTo(x, y); else context.lineTo(x, y);
+        for (let x = -4; x <= width + 4; x += 4) {
+          const u = x / width;
+          const envelope = .55 + .45 * Math.sin(u * Math.PI);
+          const y = height * .39 + Math.sin(u * 6.5 + phase) * height * .13
+            + Math.cos(turn + u * 5 - phase * .6) * height * .095 * envelope;
+          if (x === -4) context.moveTo(x, y); else context.lineTo(x, y);
         }
-        for (let x = width + 6; x >= 0; x -= 6) {
-          const y = center + Math.sin(x / width * 4 + phase + band * .55 + .65) * height * .085 + x * .16 + height * .24;
-          context.lineTo(x, y);
-        }
-        context.closePath();
-        context.fill();
+        context.stroke();
       }
     };
     const tick = (now) => {
       if (now - previous >= 50) {
-        phase += Math.min(now - previous, 100) * .00016;
+        phase += Math.min(now - previous, 100) * .00032;
         previous = now;
         draw();
       }
