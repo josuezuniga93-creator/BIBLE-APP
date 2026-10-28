@@ -1,5 +1,7 @@
 import { BIBLE_BOOKS } from "./bibleBooks";
 import type { CommentaryEntry } from "./types";
+import { REFORMED_DICTIONARY_ENTRIES, type ReformedDictionaryEntry } from "./reformedDictionary";
+export type { ReformedDictionaryEntry, DictionaryLanguageNote } from "./reformedDictionary";
 
 export type StudyLang = "en" | "es";
 
@@ -243,7 +245,7 @@ const COMMENTARY_CHAPTERS: CommentaryChapter[] = [
   },
 ];
 
-export const DICTIONARY_ENTRIES: DictionaryEntry[] = [
+export const LEGACY_DICTIONARY_ENTRIES: DictionaryEntry[] = [
   {
     id: "atonement",
     term: "Atonement",
@@ -351,6 +353,8 @@ export const DICTIONARY_ENTRIES: DictionaryEntry[] = [
   },
 ];
 
+export const DICTIONARY_ENTRIES = REFORMED_DICTIONARY_ENTRIES;
+
 export function getCommentaryChapter(book: number, chapter: number): CommentaryChapter | null {
   return COMMENTARY_CHAPTERS.find((item) => item.book === book && item.chapter === chapter) ?? null;
 }
@@ -363,7 +367,7 @@ export function getBookName(book: number): string {
   return BIBLE_BOOKS.find((item) => item.num === book)?.name ?? `Book ${book}`;
 }
 
-export function searchDictionary(query: string): DictionaryEntry[] {
+export function searchDictionary(query: string): ReformedDictionaryEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return DICTIONARY_ENTRIES;
   return DICTIONARY_ENTRIES.filter((entry) =>

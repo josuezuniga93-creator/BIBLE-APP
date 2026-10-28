@@ -1,6 +1,5 @@
 "use client";
 import React, {useState} from "react";
-import Markdown from "react-markdown";
 import { searchScore } from "../../lib/searchSuggestions";
 import { useLanguage } from "../../lib/useLanguage";
 import { parsePassageInput } from "../../lib/passageParser";
@@ -64,7 +63,10 @@ const a = useApp(),
     screen = a.screen;
 const [query, setQuery] = useState("");
 const { lang } = useLanguage();
-const dictionaryResults = a.catalog.dictionary.map(entry => ({entry, score: Math.min(searchScore(query, entry.term), searchScore(query, entry.termEs || entry.term))})).filter(item => Number.isFinite(item.score)).sort((a,b) => a.score - b.score);
+const dictionaryResults = a.catalog.dictionary.map(entry => {
+  const searchTerms = [entry.term, entry.termEs, ...(entry.aliases || []), ...entry.originalLanguages.flatMap(note => [note.script, note.lemma, note.transliteration, note.strongs])];
+  return {entry, score: Math.min(...searchTerms.map(term => searchScore(query, term)))};
+}).filter(item => Number.isFinite(item.score)).sort((a,b) => a.score - b.score || a.entry.term.localeCompare(b.entry.term));
 const meta = null;
 const title =
     meta?.[1] ||
@@ -80,26 +82,44 @@ if (screen === "study-tools" || screen === "dictionary")
         <PageHeading title={screen === "dictionary" ? (lang === "es" ? "Diccionario bíblico" : "Bible dictionary") : "Commentary"} kicker="RESOURCES" />
         <div className="page-pad">
           {screen === "dictionary" && <div className="dictionary-resource">
+          <section className="dictionary-intro" aria-label={lang === "es" ? "Acerca del diccionario" : "About this dictionary"}>
+            <div className="dictionary-language-mark" aria-hidden="true"><span>א</span><span>Ω</span></div>
+            <div>
+              <p className="eyebrow">{lang === "es" ? "HEBREO · GRIEGO · TEOLOGIA REFORMADA" : "HEBREW · GREEK · REFORMED THEOLOGY"}</p>
+              <h2>{lang === "es" ? "Las palabras detrás de la Palabra." : "The words behind the Word."}</h2>
+              <p>{lang === "es" ? "Definiciones originales arraigadas en la Escritura y guiadas por las confesiones historicas reformadas." : "Original definitions rooted in Scripture and guided by the historic Reformed confessions."}</p>
+            </div>
+          </section>
           <SearchField
             value={query}
             onChange={setQuery}
-            placeholder={lang === "es" ? "Buscar en el diccionario" : "Search the dictionary"}
+            placeholder={lang === "es" ? "Gracia, pacto, δικαιόω..." : "Grace, covenant, δικαιόω..."}
           />
-          <SectionTitle>{query ? (lang === "es" ? "Resultados" : "Matches") : (lang === "es" ? "Palabras de la fe" : "Words of the faith")} <small className="dictionary-count">{dictionaryResults.length}</small></SectionTitle>
+          <SectionTitle>{query ? (lang === "es" ? "Resultados" : "Matches") : (lang === "es" ? "Teologia biblica" : "Biblical theology")} <small className="dictionary-count">{dictionaryResults.length}</small></SectionTitle>
           {query && dictionaryResults[0]?.score >= 1 && <p className="dictionary-correction">{lang === "es" ? "¿Quisiste decir" : "Did you mean"} <button onClick={() => setQuery(lang === "es" ? dictionaryResults[0].entry.termEs : dictionaryResults[0].entry.term)}>{lang === "es" ? dictionaryResults[0].entry.termEs : dictionaryResults[0].entry.term}</button>?</p>}
           {dictionaryResults.map(({entry}, i) => (
-              <details className="dictionary-entry" key={i}>
+              <details className="dictionary-entry" key={`${entry.id}-${query}`} open={query ? i === 0 : undefined}>
                 <summary>
-                  <span><strong>{lang === "es" ? entry.termEs : entry.term}</strong><small className="dictionary-category">{entry.category}</small></span>
+                  <span className="dictionary-summary-copy"><strong>{lang === "es" ? entry.termEs : entry.term}</strong><small className="dictionary-category">{entry.category}</small></span>
+                  <span className="dictionary-summary-languages" aria-hidden="true">{entry.originalLanguages.map(note => note.symbol).filter((value,index,all)=>all.indexOf(value)===index).join(" ")}</span>
                   <Plus size={16} />
                 </summary>
-                <div className="body-copy">
-                  <Markdown>
-                    {(lang === "es" ? entry.definitionEs : entry.definition) ||
-                      entry.description ||
-                      entry.content ||
-                      ""}
-                  </Markdown>
+                <div className="body-copy dictionary-entry-body">
+                  <p className="dictionary-definition">{lang === "es" ? entry.definitionEs : entry.definition}</p>
+                  <div className="dictionary-word-grid">
+                    {entry.originalLanguages.map(note => <article className="dictionary-word-card" key={`${entry.id}-${note.strongs}`}>
+                      <header><span className="dictionary-language-symbol" aria-hidden="true">{note.symbol}</span><span>{note.language}</span><b>{note.strongs}</b></header>
+                      <div className="dictionary-script" lang={note.language === "Hebrew" ? "he" : "grc"} dir={note.language === "Hebrew" ? "rtl" : "ltr"}>{note.script}</div>
+                      <p><strong>{note.transliteration}</strong><span>{note.pronunciation}</span></p>
+                      <small>{note.meaning}</small>
+                    </article>)}
+                  </div>
+                  <section className="dictionary-reformed-note">
+                    <p className="eyebrow">{lang === "es" ? "POR QUE IMPORTA" : "WHY IT MATTERS"}</p>
+                    <p>{lang === "es" ? entry.reformedNoteEs : entry.reformedNote}</p>
+                    {entry.confession && <small>{lang === "es" ? "Estandares confesionales" : "Confessional standards"}: {entry.confession}</small>}
+                  </section>
+                  <p className="dictionary-proof-label">{lang === "es" ? "LEER EN CONTEXTO" : "READ IN CONTEXT"}</p>
                   <div className="dictionary-references">{entry.references?.map(reference => <button key={reference} onClick={() => {
                     const passage = parsePassageInput(reference,43);
                     if (passage) a.go("scripture", {book:passage.bookNum,chapter:passage.chapter,...(passage.verseStart ? {select:Array.from({length:(passage.verseEnd || passage.verseStart)-passage.verseStart+1},(_,i)=>passage.verseStart+i).join(",")} : {})});
@@ -108,6 +128,10 @@ if (screen === "study-tools" || screen === "dictionary")
               </details>
             ))}
           {query && dictionaryResults.length === 0 && <p role="status">{lang === "es" ? "No hay resultados. Prueba una palabra más corta." : "No matching words. Try a shorter spelling."}</p>}
+          <aside className="dictionary-editorial-note">
+            <p className="eyebrow">{lang === "es" ? "NORMA EDITORIAL" : "EDITORIAL STANDARD"}</p>
+            <p>{lang === "es" ? "La Escritura gobierna cada definicion. Las confesiones historicas de Westminster y Bautista de 1689 aclaran los contornos doctrinales. Los numeros de Strong identifican lemas para estudio, no reemplazan la lectura de cada palabra en su contexto." : "Scripture governs every definition. The historic Westminster and 1689 Baptist confessions clarify doctrinal contours. Strong's numbers identify study lemmas; they do not replace reading each word in its biblical context."}</p>
+          </aside>
           </div>}
           {screen === "study-tools" && <>
           <SectionTitle>Commentary</SectionTitle>

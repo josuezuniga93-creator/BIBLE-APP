@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { suggestPassages, parsePassageInput } from "../app/lib/passageParser";
 import { searchScore } from "../app/lib/searchSuggestions";
 import { paginateContent } from "../app/lib/pagination";
+import { REFORMED_DICTIONARY_ENTRIES } from "../app/lib/reformedDictionary";
 
 test("passage suggestions preserve verses and correct transposed letters", () => {
   const first = suggestPassages("Jhon 3:  14-18")[0];
@@ -28,4 +29,18 @@ test("whole-work page offsets use the reader's stable pagination", () => {
   assert.ok(counts[1] > 1);
   assert.deepEqual(counts, chapters.map(text => paginateContent(text, "xl", true).length));
   assert.equal(1 + counts.slice(0, 2).reduce((a, b) => a + b, 0), counts.reduce((a, b) => a + b, 0));
+});
+
+test("every theological dictionary entry includes original-language study data", () => {
+  assert.ok(REFORMED_DICTIONARY_ENTRIES.length >= 20);
+  for (const entry of REFORMED_DICTIONARY_ENTRIES) {
+    assert.ok(entry.definition.length > 40, `${entry.term} needs a substantial definition`);
+    assert.ok(entry.reformedNote.length > 40, `${entry.term} needs a Reformed note`);
+    assert.ok(entry.originalLanguages.length > 0, `${entry.term} needs Hebrew or Greek`);
+    assert.ok(entry.references.length >= 3, `${entry.term} needs proof texts`);
+    for (const note of entry.originalLanguages) {
+      assert.match(note.symbol, /^(א|Ω)$/);
+      assert.ok(note.script && note.transliteration && note.pronunciation && note.strongs && note.meaning);
+    }
+  }
 });

@@ -23,7 +23,7 @@ import {
   parseBibleBook,
   searchDictionary,
   type CommentarySearchResult,
-  type DictionaryEntry,
+  type ReformedDictionaryEntry,
   type MatthewHenryManifest,
   type MatthewHenryManifestBook,
 } from "../lib/studyToolsData";
@@ -266,14 +266,14 @@ function DictionaryIcon() {
   );
 }
 
-function categoryLabel(entry: DictionaryEntry, lang: "en" | "es") {
+function categoryLabel(entry: ReformedDictionaryEntry, lang: "en" | "es") {
   if (lang === "en") return entry.category;
-  const map: Record<DictionaryEntry["category"], string> = {
-    Person: "Persona",
-    Place: "Lugar",
+  const map: Record<ReformedDictionaryEntry["category"], string> = {
     Doctrine: "Doctrina",
-    Object: "Objeto",
-    Book: "Libro",
+    "Biblical theology": "Teologia biblica",
+    Church: "Iglesia",
+    Salvation: "Salvacion",
+    Scripture: "Escritura",
   };
   return map[entry.category];
 }
