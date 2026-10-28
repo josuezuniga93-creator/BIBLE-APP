@@ -65,7 +65,7 @@ export function AppNav() {
     <aside className="desktop-app-sidebar fixed inset-y-0 left-0 z-40 hidden w-[18rem] border-r lg:flex">
       <div className="flex h-full w-full flex-col px-5 py-6">
         <Link href="/" className="desktop-brand-card mb-7 block rounded-3xl p-4 transition-all">
-          <p className="text-[10px] font-black uppercase tracking-[0.24em]">Tulip Bible App</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.24em]">Bible</p>
           <h1 className="mt-2 text-2xl font-black tracking-tight">Bible</h1>
           <p className="mt-1 text-xs font-semibold leading-relaxed">
             Scripture, notes, books, and worship in one focused study space.

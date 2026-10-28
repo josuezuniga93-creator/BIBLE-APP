@@ -23,7 +23,7 @@ import {
 } from "../lib/notesData";
 import { AppSectionIcon } from "../components/AppSectionIcon";
 import { UiIcon } from "../components/UiIcon";
-import { getCloudUser, SYNC_COMPLETE_EVENT } from "../lib/cloudSync";
+import { getCloudUser, SYNC_COMPLETE_EVENT, SYNC_STATUS_EVENT, hasPendingSync } from "../lib/cloudSync";
 import { AUTH_CHANGE_EVENT } from "../lib/authSession";
 import type { User } from "@supabase/supabase-js";
 import { formatParsedPassage, parsePassageInput } from "../lib/passageParser";
@@ -1200,6 +1200,15 @@ export default function NotesPage() {
   const [accountUser, setAccountUser] = useState<User | null | undefined>(undefined);
   const [accountError, setAccountError] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  useEffect(() => {
+    const onSync = (event: Event) => {
+      if ((event as CustomEvent).detail?.status === "done" && !hasPendingSync("tulip_notes_v1")) {
+        setSaveStatus(previous => previous ? (lang === "es" ? "Guardado en tu cuenta" : "Saved to your account") : null);
+      }
+    };
+    window.addEventListener(SYNC_STATUS_EVENT, onSync);
+    return () => window.removeEventListener(SYNC_STATUS_EVENT, onSync);
+  }, [lang]);
 
   const refreshAccount = useCallback(() => {
     setAccountError(false);
@@ -1319,15 +1328,15 @@ export default function NotesPage() {
   const persistNotes = async (next: SermonNote[]) => {
     try {
       setSaveStatus(lang === "es" ? "Guardando en tu cuenta…" : "Saving to your account…");
-      await saveNotes(next);
+      const result = await saveNotes(next);
       setNotes(loadNotes());
       setStorageError(null);
-      setSaveStatus(lang === "es" ? "Guardado en tu cuenta" : "Saved to your account");
+      setSaveStatus(result === "synced" ? (lang === "es" ? "Guardado en tu cuenta" : "Saved to your account") : (lang === "es" ? "Guardado en este dispositivo. Respaldo pendiente; reintentaremos automáticamente." : "Saved on this device. Account backup pending; retrying automatically."));
       return true;
-    } catch {
+    } catch (error) {
       setNotes(loadNotes());
       setSaveStatus(null);
-      setStorageError(lang === "es" ? "No se pudo completar el respaldo. Tu borrador sigue abierto. Revisa tu conexion o inicia sesion e intenta otra vez." : "Account backup did not complete. Your draft is still open. Check your connection or sign in, then try again.");
+      setStorageError(error instanceof Error ? error.message : (lang === "es" ? "No se pudo guardar. Tu borrador sigue abierto." : "Could not save. Your draft is still open."));
       return false;
     }
   };
@@ -1449,6 +1458,7 @@ export default function NotesPage() {
       )}
 
       <StudyScreen screen="notes" notes={notes.map(note => ({ ...note, body: note.notes, reference: note.noteType === "general" ? "" : getNoteDisplayRef(note), updatedAt: note.updatedAt || note.date }))} onNoteAction={(type: string, data: {note?: SermonNote}) => { if (type === "note-view" && data.note) setViewingNote(data.note); else openNewNote(); }}/>
+      {saveStatus && !editorOpen && <div role="status" className="note-save-status"><span>{saveStatus}</span><button aria-label="Dismiss save status" onClick={() => setSaveStatus(null)}>×</button></div>}
 
     </>
   );

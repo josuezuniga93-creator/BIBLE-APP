@@ -111,6 +111,7 @@ export interface BookCatalogEntry {
 export interface BookChapterMeta {
   number: number;
   title: string;
+  page_count?: number;
 }
 
 export interface BookDetail extends BookCatalogEntry {

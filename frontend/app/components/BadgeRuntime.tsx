@@ -111,7 +111,7 @@ async function buildBadgeShareImage(badge: BadgeDefinition, lang: BadgeLang): Pr
     y += 46;
   }
 
-  const brandText = "Tulip Bible App";
+  const brandText = "Bible";
   ctx.font = "800 28px Inter, Arial, sans-serif";
   ctx.letterSpacing = "0px";
   const logoSize = 48;
@@ -157,8 +157,8 @@ async function buildBadgeShareImage(badge: BadgeDefinition, lang: BadgeLang): Pr
 export async function shareBadge(badge: BadgeDefinition, lang: BadgeLang) {
   const copy = badgeText(badge, lang);
   const text = lang === "es"
-    ? `Gané la insignia ${copy.name} en Tulip Bible App: ${copy.reason}.`
-    : `I earned the ${copy.name} badge in the Tulip Bible App: ${copy.reason}.`;
+    ? `Gané la insignia ${copy.name} en Bible: ${copy.reason}.`
+    : `I earned the ${copy.name} badge in the Bible: ${copy.reason}.`;
   try {
     const file = await buildBadgeShareImage(badge, lang);
     const nav = navigator as Navigator & {

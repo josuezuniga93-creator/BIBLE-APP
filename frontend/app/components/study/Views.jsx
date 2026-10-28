@@ -183,7 +183,7 @@ function PageHeading({ title = null, kicker = "", back = true, action = null }) 
             />
           ) : (
             <span className="wordmark notranslate" translate="no">
-              TULIP<span className="wordmark-period">.</span>
+              BIBLE<span className="wordmark-period">.</span>
             </span>
           )}
         </div>
@@ -421,7 +421,7 @@ function Jacket({ book, document = false, large = false, index = 0 }) {
       aria-label={book.title + " cover"}
     >
       <div className="jacket-top">
-        <span>TULIP</span>
+        <span>BIBLE</span>
         <span>{document ? "ARCHIVE" : "CLASSICS"}</span>
       </div>
       <div className="jacket-title">
@@ -541,35 +541,33 @@ function Home() {
         </div>
       </section>
       <section>
-        <SectionTitle action="Explore" onClick={() => a.go("videos")}>
+        <SectionTitle action="Explore" onClick={() => a.go("library")}>
           Featured
         </SectionTitle>
-        <div className="media-rail featured-video-only">
+        <div className="media-rail featured-resources">
           <button
             className="media-item"
-            onClick={() =>
-              a.open("video", {
-                title: "HeartCry Missionary's Testimony",
-                src: "/videos/featured-en.mp4",
-              })
-            }
+            onClick={() => a.go("history")}
           >
             <div className="media-photo">
               <img
                 src="/meditation-thumb.jpg"
-                alt="HeartCry missionary testimony"
+                alt="Missionary stories"
               />
-              <span className="play-well">
-                <Play size={17} fill="currentColor" />
-              </span>
             </div>
-            <small>MEDITATION</small>
+            <small>MISSIONARY STORIES</small>
             <h3>A life given to the gospel</h3>
+          </button>
+          <button className="media-item" onClick={() => a.go("documents")}>
+            <div className="media-photo featured-archive"><ScrollText size={48} strokeWidth={1.2} /></div>
+            <small>HISTORICAL DOCUMENTS</small>
+            <h3>Explore the foundations</h3>
           </button>
         </div>
       </section>
       <section className="memory-preview">
-        <SectionTitle>Keep the Word close</SectionTitle>
+        <VerseMotion dark={a.theme === "dark"} motion={a.motion} />
+        <SectionTitle>{lang === "es" ? "Memoricemos Su Palabra" : "Let's Memorize His Word"}</SectionTitle>
         <p className="reading-serif">
           “Thy word have I hid in mine heart, that I might not sin against
           thee.”
@@ -582,22 +580,12 @@ function Home() {
           </button>
         </div>
       </section>
-      <section>
-        <SectionTitle action="Library" onClick={() => a.go("library")}>
-          From your library
+      <section className="free-library-promotion">
+        <SectionTitle action="Explore" onClick={() => a.go("library")}>
+          {lang === "es" ? "Libros gratuitos" : "Free books for a deeper faith"}
         </SectionTitle>
-        <div className="book-rail compact">
-          {a.catalog.books.slice(0, 4).map((b, i) => (
-            <button
-              key={b.slug}
-              onClick={() => a.go("detail", { id: b.slug, kind: "book" })}
-            >
-              <Jacket book={b} index={i} />
-              <strong>{b.title}</strong>
-              <small>{b.author}</small>
-            </button>
-          ))}
-        </div>
+        <p>{lang === "es" ? "Clásicos cristianos, disponibles para leer sin costo." : "Christian classics, freely available to read and return to."}</p>
+        <Action icon={Library} onClick={() => a.go("library")}>{lang === "es" ? "Explorar biblioteca" : "Explore the resource library"}</Action>
       </section>
     </div>
   );
@@ -875,10 +863,10 @@ function Detail() {
 }
 
 const tools = [
-  ["study-tools", "Study tools", "Commentary & dictionary", BookOpen],
+  ["dictionary", "Bible dictionary", "Words & meanings", BookOpen],
+  ["study-tools", "Commentary", "Matthew Henry & J.C. Ryle", ScrollText],
   ["library", "Free books", "The reading room", Library],
   ["documents", "Historical documents", "Creeds & confessions", ScrollText],
-  ["videos", "Video library", "Teaching & testimony", Play],
   ["plans", "Reading plans", "One day at a time", CalendarDays],
   [
     "tracker",
@@ -1012,7 +1000,7 @@ function More() {
           onClick={() => a.go("privacy")}
         />
         <footer className="app-footer">
-          <span className="notranslate" translate="no">TULIP</span>
+          <span className="notranslate" translate="no">BIBLE</span>
           <span>Read. Reflect. Remain.</span>
         </footer>
       </div>

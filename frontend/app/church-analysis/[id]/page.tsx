@@ -506,7 +506,7 @@ function buildShareText(analysis: ChurchAnalysis): string {
     month: "long", day: "numeric", year: "numeric",
   });
   const header = [
-    "CHURCH ANALYSIS — Tulip Bible App",
+    "CHURCH ANALYSIS — Bible",
     `Church/Pastor: ${analysis.churchName}`,
     analysis.denomination ? `Tradition: ${analysis.denomination}` : "",
     `Date: ${date}`,
@@ -715,7 +715,7 @@ export default function AnalysisDetailPage() {
         {/* ── Print-only header (hidden on screen) ─────────────────────────── */}
         <div className="print-only" style={{ marginBottom: 8 }}>
           <div style={{ fontSize: 10, color: accent, fontWeight: 900, letterSpacing: "0.15em", textTransform: "uppercase", marginBottom: 4 }}>
-            Church Analysis — Tulip Bible App
+            Church Analysis — Bible
           </div>
           <h1 style={{ fontSize: 22, fontWeight: 800, marginBottom: 2 }}>{analysis.churchName}</h1>
           {analysis.denomination && <p className="print-meta">{analysis.denomination}</p>}

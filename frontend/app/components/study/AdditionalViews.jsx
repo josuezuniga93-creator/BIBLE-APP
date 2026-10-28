@@ -1,6 +1,9 @@
 "use client";
 import React, {useState} from "react";
 import Markdown from "react-markdown";
+import { searchScore } from "../../lib/searchSuggestions";
+import { useLanguage } from "../../lib/useLanguage";
+import { parsePassageInput } from "../../lib/passageParser";
 import {
   House,
   BookOpen,
@@ -60,6 +63,8 @@ export default function AdditionalViews(){
 const a = useApp(),
     screen = a.screen;
 const [query, setQuery] = useState("");
+const { lang } = useLanguage();
+const dictionaryResults = a.catalog.dictionary.map(entry => ({entry, score: Math.min(searchScore(query, entry.term), searchScore(query, entry.termEs || entry.term))})).filter(item => Number.isFinite(item.score)).sort((a,b) => a.score - b.score);
 const meta = null;
 const title =
     meta?.[1] ||
@@ -69,37 +74,42 @@ const title =
       history: "Church history",
     }[screen] ||
     "Study space";
-if (screen === "study-tools")
+if (screen === "study-tools" || screen === "dictionary")
     return (
       <>
-        <PageHeading title="Go deeper." kicker="STUDY TOOLS" />
+        <PageHeading title={screen === "dictionary" ? (lang === "es" ? "Diccionario bíblico" : "Bible dictionary") : "Commentary"} kicker="RESOURCES" />
         <div className="page-pad">
+          {screen === "dictionary" && <div className="dictionary-resource">
           <SearchField
             value={query}
             onChange={setQuery}
-            placeholder="Search the dictionary"
+            placeholder={lang === "es" ? "Buscar en el diccionario" : "Search the dictionary"}
           />
-          <SectionTitle>Dictionary</SectionTitle>
-          {a.catalog.dictionary
-            .filter((x) =>
-              JSON.stringify(x).toLowerCase().includes(query.toLowerCase()),
-            )
-            .map((entry, i) => (
+          <SectionTitle>{query ? (lang === "es" ? "Resultados" : "Matches") : (lang === "es" ? "Palabras de la fe" : "Words of the faith")} <small className="dictionary-count">{dictionaryResults.length}</small></SectionTitle>
+          {query && dictionaryResults[0]?.score >= 1 && <p className="dictionary-correction">{lang === "es" ? "¿Quisiste decir" : "Did you mean"} <button onClick={() => setQuery(lang === "es" ? dictionaryResults[0].entry.termEs : dictionaryResults[0].entry.term)}>{lang === "es" ? dictionaryResults[0].entry.termEs : dictionaryResults[0].entry.term}</button>?</p>}
+          {dictionaryResults.map(({entry}, i) => (
               <details className="dictionary-entry" key={i}>
                 <summary>
-                  {entry.term || entry.word || entry.title}
+                  <span><strong>{lang === "es" ? entry.termEs : entry.term}</strong><small className="dictionary-category">{entry.category}</small></span>
                   <Plus size={16} />
                 </summary>
                 <div className="body-copy">
                   <Markdown>
-                    {entry.definition ||
+                    {(lang === "es" ? entry.definitionEs : entry.definition) ||
                       entry.description ||
                       entry.content ||
                       ""}
                   </Markdown>
+                  <div className="dictionary-references">{entry.references?.map(reference => <button key={reference} onClick={() => {
+                    const passage = parsePassageInput(reference,43);
+                    if (passage) a.go("scripture", {book:passage.bookNum,chapter:passage.chapter,...(passage.verseStart ? {select:Array.from({length:(passage.verseEnd || passage.verseStart)-passage.verseStart+1},(_,i)=>passage.verseStart+i).join(",")} : {})});
+                  }}>{reference}</button>)}</div>
                 </div>
               </details>
             ))}
+          {query && dictionaryResults.length === 0 && <p role="status">{lang === "es" ? "No hay resultados. Prueba una palabra más corta." : "No matching words. Try a shorter spelling."}</p>}
+          </div>}
+          {screen === "study-tools" && <>
           <SectionTitle>Commentary</SectionTitle>
           <Row
             icon={BookOpen}
@@ -113,6 +123,7 @@ if (screen === "study-tools")
             sub="Commentary library"
             onClick={() => a.go("study-tools", {view: "commentary"})}
           />
+          </>}
         </div>
       </>
     );

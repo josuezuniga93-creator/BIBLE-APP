@@ -1,5 +1,21 @@
 import { BIBLE_BOOKS, type BibleBook } from "./bibleBooks";
 import { BIBLE_BOOK_ES } from "./spanishContent";
+import { searchScore } from "./searchSuggestions";
+
+export function suggestPassages(input: string, language = "en") {
+  const raw = input.trim().replace(/[–—]/g, "-");
+  const match = raw.match(/^(.*?\D)\s*(\d+\s*(?:[:.]\s*\d+(?:\s*-\s*\d+)?)?)?$/);
+  if (!match) return [];
+  const label = match[1].trim(), suffix = match[2] || "";
+  return BIBLE_BOOKS.map(book => ({
+    book,
+    score: Math.min(...getBookAliases(book).map(alias => searchScore(label, alias))),
+  })).filter(item => Number.isFinite(item.score)).sort((a, b) => a.score - b.score || a.book.num - b.book.num).slice(0, 5).map(({ book, score }) => ({
+    label: `${language === "es" ? BIBLE_BOOK_ES[book.num] : book.name}${suffix ? " " + suffix : ""}`,
+    passage: parsePassageInput(`${book.name} ${suffix || "1"}`, book.num),
+    score,
+  })).filter(item => item.passage);
+}
 
 export type ParsedPassage = {
   bookNum: number;

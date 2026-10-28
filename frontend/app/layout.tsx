@@ -40,8 +40,8 @@ const lora = localFont({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://tulip-bible-app.vercel.app"),
-  title: "Tulip Bible",
-  applicationName: "Tulip Bible",
+  title: "Bible",
+  applicationName: "Bible",
   description:
     "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   keywords: [
@@ -53,29 +53,29 @@ export const metadata: Metadata = {
     "Reformed theology",
     "Christian books",
   ],
-  authors: [{ name: "Tulip Bible App" }],
-  creator: "Tulip Bible App",
-  publisher: "Tulip Bible App",
+  authors: [{ name: "Bible" }],
+  creator: "Bible",
+  publisher: "Bible",
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Tulip Bible",
+    title: "Bible",
     description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
     url: "/",
-    siteName: "Tulip Bible App",
+    siteName: "Bible",
     type: "website",
   },
   twitter: {
     card: "summary",
-    title: "Tulip Bible",
+    title: "Bible",
     description: "Bible study app with Scripture, Matthew Henry Commentary, Strong's Concordance, family worship, and more. Free forever.",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Tulip Bible",
+    title: "Bible",
   },
   icons: {
     icon: [

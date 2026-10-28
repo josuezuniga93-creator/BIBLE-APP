@@ -202,7 +202,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   const contentRef = useRef<HTMLDivElement>(null);
 
   // ── In-chapter pagination ─────────────────────────────────────────────────
-  const chapterContent = chapter?.content ?? "";
+  const chapterContent = chapter?.chapter_number === currentChapter ? chapter.content : "";
   const paginatedChapterContent = lang === "es" && translatedChapter ? translatedChapter : chapterContent;
   const pageStorageKey = `axiom-page-${slug}-${currentChapter}`;
   const {
@@ -222,6 +222,12 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   });
 
   const pagePercent = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+  const readerContents = (book?.chapters || []).map((item, index, all) => ({
+    id: String(item.number), title: bookSectionTitle(slug, item.title, lang),
+    page: 1 + all.slice(0, index).reduce((sum, ch) => sum + (ch.page_count || 1), 0),
+  }));
+  const pageOffset = (readerContents.find(item => item.id === String(currentChapter))?.page || 1) - 1;
+  const workPages = (book?.chapters || []).reduce((sum, ch) => sum + (ch.number === currentChapter ? totalPages : ch.page_count || 1), 0);
   const bookPercent = book?.chapter_count
     ? Math.max(0, Math.min(100, Math.round((((currentChapter - 1) + (totalPages ? currentPage / totalPages : 1)) / book.chapter_count) * 100)))
     : 0;
@@ -239,7 +245,8 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     const target = getReaderHighlights(`book-${slug}-${currentChapter}`).find((highlight) => highlight.id === urlHlid);
     if (!target) return;
     const snippet = target.text.slice(0, 30);
-    const pageIdx = pages.findIndex((p) => p.includes(snippet));
+    const savedPage = Number(target.pageReference?.match(/(?:Page|Página) (\d+)$/)?.[1]);
+    const pageIdx = savedPage > 0 && savedPage <= pages.length ? savedPage - 1 : pages.findIndex((p) => p.includes(snippet));
     if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
       goToPage(pageIdx + 1);
     }
@@ -284,15 +291,18 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     if (!book) return;
     setTranslatedChapter(null);
     setChapterLoading(true);
+    let cancelled = false;
+    setError(null);
     fetchBookChapter(slug, currentChapter)
-      .then(setChapter)
-      .catch((e: Error) => setError(e.message))
-      .finally(() => setChapterLoading(false));
+      .then(value => { if (!cancelled) setChapter(value); })
+      .catch((e: Error) => { if (!cancelled) setError(e.message); })
+      .finally(() => { if (!cancelled) setChapterLoading(false); });
     if (showDetail) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       contentRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
+    return () => { cancelled = true; };
     // showDetail is read only to pick which container to scroll when a chapter loads —
     // toggling it alone shouldn't re-trigger a chapter refetch.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -306,6 +316,10 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   // Auto-save progress
   useEffect(() => {
     if (!book) return;
+    localStorage.setItem(BOOKMARK_KEY(slug), String(currentChapter));
+    const url = new URL(window.location.href);
+    url.searchParams.set("chapter", String(currentChapter));
+    window.history.replaceState(window.history.state, "", url);
     localStorage.setItem(PROGRESS_KEY(slug), JSON.stringify({
       chapter: currentChapter,
       total: book.chapter_count,
@@ -320,8 +334,17 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
     setFavorited(toggleFavorite("book", slug));
   }, [slug]);
 
-  const goPrev = () => { if (chapter?.has_prev) setCurrentChapter((n) => n - 1); };
-  const goNext = () => { if (chapter?.has_next) setCurrentChapter((n) => n + 1); };
+  const goPrev = () => {
+    if (!chapter?.has_prev) return;
+    const previous = currentChapter - 1;
+    localStorage.setItem(`axiom-page-${slug}-${previous}`, String(book?.chapters.find(item => item.number === previous)?.page_count || 1));
+    setCurrentChapter(previous);
+  };
+  const goNext = () => {
+    if (!chapter?.has_next) return;
+    localStorage.setItem(`axiom-page-${slug}-${currentChapter + 1}`, "1");
+    setCurrentChapter(currentChapter + 1);
+  };
 
   // Keyboard nav — pages first, then chapters
   useEffect(() => {
@@ -370,6 +393,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   if (presentationMode) {
     return (
       <AppReader
+        contents={readerContents} activeSectionId={String(currentChapter)} onSelectSection={id => { localStorage.setItem(`axiom-page-${slug}-${id}`, "1"); setCurrentChapter(Number(id)); goToPage(1); }} displayPage={pageOffset + currentPage} workTotalPages={workPages}
         title={chapter ? bookSectionTitle(slug, chapter.chapter_title, lang) : bookTitle(book, lang)}
         eyebrow={`${bookTitle(book, lang)} · ${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}
         sectionLabel={`${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}
@@ -399,6 +423,7 @@ export default function BookReaderPage({ params }: { params: Promise<{ slug: str
   if (!showDetail) {
     return (
       <AppReader
+        contents={readerContents} activeSectionId={String(currentChapter)} onSelectSection={id => { localStorage.setItem(`axiom-page-${slug}-${id}`, "1"); setCurrentChapter(Number(id)); goToPage(1); }} displayPage={pageOffset + currentPage} workTotalPages={workPages}
         title={bookTitle(book, lang)}
         eyebrow={lang === "es" ? "Libro gratis" : "Free Book"}
         sectionLabel={`${lang === "es" ? "Capítulo" : "Chapter"} ${currentChapter}`}

@@ -31,8 +31,10 @@ let storageBridgeInstalled = false;
 let applyingCloudData = false;
 let activeSync: Promise<void> | null = null;
 let currentStatus: SyncStatus = "idle";
+let retryAttempts = 0;
 
 export function getSyncStatus(): SyncStatus { return currentStatus; }
+export function hasPendingSync(key: string): boolean { return Boolean(readPendingSync()[key]); }
 
 export function assertAccount(user: User) {
   const owner = localStorage.getItem(SYNC_OWNER_KEY);
@@ -156,10 +158,10 @@ export function scheduleCloudFlush(delay = 800): void {
   }, delay);
 }
 
-async function flushPendingSyncForUser(user: User): Promise<void> {
+async function flushPendingSyncForUser(user: User, onlyKey?: string): Promise<void> {
   assertAccount(user);
   const pending = readPendingSync();
-  const entries = Object.entries(pending).filter(([key]) => isSyncKey(key));
+  const entries = Object.entries(pending).filter(([key]) => isSyncKey(key) && (!onlyKey || key === onlyKey));
   if (entries.length === 0) return;
 
   const supabase = createClient();
@@ -230,14 +232,16 @@ export async function pushToCloud(user: User): Promise<void> {
 }
 
 // Pull cloud data into localStorage without overwriting existing local state.
-export async function pullFromCloud(user: User): Promise<void> {
+export async function pullFromCloud(user: User, onlyKey?: string): Promise<void> {
   assertAccount(user);
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from("user_sync_data")
     .select("storage_key, value, updated_at")
     .eq("user_id", user.id);
+  if (onlyKey) query = query.eq("storage_key", onlyKey);
+  const { data, error } = await query;
 
   if (error) {
     throw error;
@@ -286,6 +290,7 @@ export async function pullFromCloud(user: User): Promise<void> {
     const cloudKeys = new Set(rows.map((row: { storage_key: string }) => row.storage_key));
     const localData = getAllSyncableLocalStorage();
     for (const [storageKey, value] of Object.entries(localData)) {
+      if (onlyKey && storageKey !== onlyKey) continue;
       if (cloudKeys.has(storageKey) || readPendingSync()[storageKey]) continue;
       if (mergeReadingValue(storageKey, value, null) !== undefined) {
         queuePendingSync(storageKey, value);
@@ -297,7 +302,7 @@ export async function pullFromCloud(user: User): Promise<void> {
       }
     }
 
-    await flushPendingSyncForUser(user);
+    await flushPendingSyncForUser(user, onlyKey);
     if (filledMissingLocalData) emitSyncComplete();
   } catch (err) {
     console.error("[cloudSync] merge error:", err);
@@ -365,6 +370,7 @@ export function syncReadingData(): Promise<void> {
       await pullFromCloud(user);
       await flushPendingSyncForUser(user);
       emitSyncStatus("done");
+      retryAttempts = 0;
     } catch (err) {
       console.error("[cloudSync] background sync error:", err);
       emitSyncStatus("error");
@@ -373,6 +379,7 @@ export function syncReadingData(): Promise<void> {
   })().finally(() => {
     activeSync = null;
     if (currentStatus === "done" && Object.keys(readPendingSync()).length > 0) scheduleCloudFlush();
+    if (currentStatus === "error" && navigator.onLine && retryAttempts < 5) scheduleCloudFlush(Math.min(60000, 2000 * 2 ** retryAttempts++));
   });
   return activeSync;
 }
@@ -383,10 +390,17 @@ export async function getCloudUser(): Promise<User | null> {
 
 export async function syncKeyToCloud(storageKey: string, value: string): Promise<void> {
   await syncKey(storageKey, value);
-  await syncReadingData();
-  // An already-running sync may have read its queue before this save.
-  if (readPendingSync()[storageKey]) await syncReadingData();
-  if (getSyncStatus() !== "done" || readPendingSync()[storageKey]) {
+  // Serialize with background work, but do not let another key's failure block notes.
+  while (activeSync) await activeSync.catch(() => {});
+  activeSync = (async () => {
+    const user = await getCloudUser();
+    if (!user) throw new Error("Sign in to back up your notes.");
+    emitSyncStatus("syncing");
+    await pullFromCloud(user, storageKey);
+    emitSyncStatus("done");
+  })().catch(error => { emitSyncStatus("error"); throw error; }).finally(() => { activeSync = null; });
+  await activeSync;
+  if (readPendingSync()[storageKey]) {
     throw new Error("Your note is on this device, but account backup has not completed. Please retry.");
   }
 }

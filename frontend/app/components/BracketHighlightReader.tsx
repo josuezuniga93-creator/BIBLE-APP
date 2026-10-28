@@ -15,6 +15,9 @@ import { UiIcon } from "./UiIcon";
 type HighlightColor = "gold" | "blue" | "rose" | "green";
 
 export type ReaderHighlight = {
+  pageReference?: string;
+  wordStart?: number;
+  wordEnd?: number;
   id: string;
   text: string;
   color: HighlightColor;
@@ -84,7 +87,7 @@ type Props = {
 };
 
 const HIGHLIGHT_COLORS: Record<HighlightColor, { label: string; labelEs: string; bg: string; dot: string }> = {
-  gold:  { label: "Highlight", labelEs: "Resaltar", bg: "rgba(201,169,97,0.58)", dot: "#c9a961" },
+  gold:  { label: "Yellow", labelEs: "Amarillo", bg: "rgba(250,204,21,0.28)", dot: "#facc15" },
   blue:  { label: "Blue",      labelEs: "Azul",      bg: "rgba(82,156,255,0.58)", dot: "#60a5fa" },
   rose:  { label: "Rose",      labelEs: "Rosa",      bg: "rgba(244,114,182,0.56)", dot: "#f472b6" },
   green: { label: "Green",     labelEs: "Verde",     bg: "rgba(74,222,128,0.52)", dot: "#4ade80" },
@@ -120,51 +123,33 @@ function selectedRange(selection: BracketSelection | null) {
   };
 }
 
-function splitTextByHighlights(text: string, highlights: ReaderHighlight[]) {
+function splitTextByHighlights(text: string, highlights: ReaderHighlight[], reference: string) {
   const cleanText = renderInlineText(text);
-  const normalizedHighlights = highlights
-    .map((highlight) => ({ ...highlight, normalized: normalizeText(highlight.text) }))
-    .filter((highlight) => highlight.normalized.length > 0)
-    .sort((a, b) => b.normalized.length - a.normalized.length);
-
+  const words = Array.from(cleanText.matchAll(/\S+/g));
+  const matches = highlights.flatMap(highlight => {
+    if (highlight.pageReference !== undefined) {
+      if (highlight.pageReference !== reference) return [];
+      const first = words[highlight.wordStart ?? -1], last = words[highlight.wordEnd ?? -1];
+      if (!first || !last || first.index === undefined || last.index === undefined) return [];
+      const end = last.index + last[0].length;
+      if (normalizeText(cleanText.slice(first.index, end)) !== normalizeText(highlight.text)) return [];
+      return [{ start: first.index, end, highlight }];
+    }
+    // Legacy highlights lack coordinates: match one occurrence, never the intervening text.
+    const escaped = normalizeText(highlight.text).split(" ").map(word => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+");
+    if (!escaped) return [];
+    const match = new RegExp(escaped, "i").exec(cleanText);
+    return match ? [{ start: match.index, end: match.index + match[0].length, highlight }] : [];
+  }).sort((a, b) => a.start - b.start || b.highlight.createdAt - a.highlight.createdAt);
   const parts: { text: string; highlight?: ReaderHighlight }[] = [];
   let cursor = 0;
-
-  while (cursor < cleanText.length) {
-    const remaining = cleanText.slice(cursor);
-    const normalizedRemaining = normalizeText(remaining);
-    const match = normalizedHighlights
-      .map((highlight) => {
-        const idx = normalizedRemaining.toLowerCase().indexOf(highlight.normalized.toLowerCase());
-        return idx >= 0 ? { highlight, idx } : null;
-      })
-      .filter(Boolean)
-      .sort((a, b) => a!.idx - b!.idx)[0];
-
-    if (!match) {
-      parts.push({ text: cleanText.slice(cursor) });
-      break;
-    }
-
-    const compactBefore = normalizedRemaining.slice(0, match.idx);
-    const rawStart = compactBefore.length === 0 ? 0 : Math.max(0, remaining.indexOf(compactBefore) + compactBefore.length);
-    const rawText = remaining.slice(rawStart);
-    const words = match.highlight.normalized.split(" ");
-    let rawEnd = rawStart;
-    let searchFrom = 0;
-
-    for (const word of words) {
-      const found = rawText.toLowerCase().indexOf(word.toLowerCase(), searchFrom);
-      if (found === -1) break;
-      rawEnd = rawStart + found + word.length;
-      searchFrom = found + word.length;
-    }
-
-    if (rawStart > 0) parts.push({ text: remaining.slice(0, rawStart) });
-    parts.push({ text: remaining.slice(rawStart, rawEnd), highlight: match.highlight });
-    cursor += Math.max(rawEnd, 1);
+  for (const match of matches) {
+    if (match.start < cursor) continue;
+    if (match.start > cursor) parts.push({ text: cleanText.slice(cursor, match.start) });
+    parts.push({ text: cleanText.slice(match.start, match.end), highlight: match.highlight });
+    cursor = match.end;
   }
-
+  if (cursor < cleanText.length) parts.push({ text: cleanText.slice(cursor) });
   return parts;
 }
 
@@ -176,7 +161,7 @@ function tokenize(parts: { text: string; highlight?: ReaderHighlight }[]): Reade
     part.text.split(/(\s+)/).forEach((chunk) => {
       if (!chunk) return;
       if (/^\s+$/.test(chunk)) {
-        tokens.push(chunk.includes("\n")
+        tokens.push(/\n\s*\n/.test(chunk)
           ? { type: "break", text: "\n\n" }
           : { type: "space", text: " ", highlight: part.highlight });
         return;
@@ -244,6 +229,9 @@ export function BracketHighlightReader({
   useEffect(() => {
     const loaded = highlightAdapter?.load(context) ?? getReaderHighlights(context);
     setHighlights(loaded.map((highlight) => ({
+      pageReference: highlight.pageReference,
+      wordStart: highlight.wordStart,
+      wordEnd: highlight.wordEnd,
       id: highlight.id,
       text: highlight.text,
       color: (highlight.color ?? "gold") as HighlightColor,
@@ -258,7 +246,7 @@ export function BracketHighlightReader({
     setHighlightSearchQuery("");
   }, [context, title, reference, highlightAdapter]);
 
-  const parts = useMemo(() => splitTextByHighlights(text, highlights), [text, highlights]);
+  const parts = useMemo(() => splitTextByHighlights(text, highlights, reference), [text, highlights, reference]);
   const tokens = useMemo(() => tokenize(parts), [parts]);
   const selectedText = useMemo(() => {
     const range = selectedRange(selection);
@@ -326,6 +314,9 @@ export function BracketHighlightReader({
     const selected = normalizeText(selectedText);
     if (selected.length < 2) return;
     const newHighlight: ReaderHighlight = {
+      pageReference: reference,
+      wordStart: selectedRange(selection)?.start,
+      wordEnd: selectedRange(selection)?.end,
       id: highlightAdapter?.createId?.() ?? `reader_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       text: selected,
       color,
@@ -584,9 +575,9 @@ export function BracketHighlightReader({
         onPointerDown={(event) => event.stopPropagation()}
       >
         <div
-          className="mx-auto w-full max-w-[360px] rounded-[30px] p-2.5"
+          className="mx-auto w-full max-w-[360px] rounded-lg p-2.5"
           style={{
-            background: isLight ? "rgba(255,255,255,0.96)" : "rgba(21,23,30,0.94)",
+            background: isLight ? "rgba(255,255,255,0.96)" : "rgba(25,25,25,0.98)",
             border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(255,255,255,0.10)",
             boxShadow: isLight
               ? "0 18px 45px rgba(16,17,20,0.16), inset 0 1px 0 rgba(255,255,255,0.86)"
@@ -602,14 +593,14 @@ export function BracketHighlightReader({
               </p>
               <button
                 onClick={() => removeHighlight(pendingRemoveId)}
-                className="h-10 rounded-[18px] px-4 text-sm font-black transition-transform active:scale-95"
+                className="h-10 rounded-lg px-4 text-sm font-black transition-transform active:scale-95"
                 style={{ background: "rgba(239,68,68,0.16)", color: "#ef4444" }}
               >
                 {lang === "es" ? "Eliminar" : "Remove"}
               </button>
               <button
                 onClick={() => setPendingRemoveId(null)}
-                className="flex h-10 w-10 items-center justify-center rounded-[18px] transition-transform active:scale-95"
+                className="flex h-10 w-10 items-center justify-center rounded-lg transition-transform active:scale-95"
                 style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.56)" }}
                 aria-label={lang === "es" ? "Cancelar" : "Cancel"}
               >
@@ -641,7 +632,7 @@ export function BracketHighlightReader({
                 </div>
                 <button
                   onClick={clearSelection}
-                  className="flex h-10 w-10 items-center justify-center rounded-[18px] transition-transform active:scale-95"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg transition-transform active:scale-95"
                   style={{ background: isLight ? "rgba(0,0,0,0.05)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.48)" : "rgba(255,255,255,0.56)" }}
                   aria-label={lang === "es" ? "Cerrar resaltador" : "Close highlighter"}
                 >
@@ -651,7 +642,7 @@ export function BracketHighlightReader({
               <div className="grid grid-cols-3 gap-2">
                 <button
                   onClick={copySelection}
-                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
+                  className="flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-black transition-transform active:scale-95"
                   style={{ background: isLight ? "rgba(0,0,0,0.055)" : "rgba(255,255,255,0.08)", color: isLight ? "rgba(0,0,0,0.76)" : "rgba(255,255,255,0.78)" }}
                 >
                   <UiIcon name="copy" size={16} strokeWidth={2.3} />
@@ -659,16 +650,16 @@ export function BracketHighlightReader({
                 </button>
                 <button
                   onClick={openUnifiedHighlights}
-                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
-                  style={{ background: isLight ? "rgba(0,0,0,0.055)" : "rgba(201,169,97,0.12)", color: isLight ? "rgba(0,0,0,0.76)" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(201,169,97,0.16)" }}
+                  className="flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-black transition-transform active:scale-95"
+                  style={{ background: isLight ? "rgba(0,0,0,0.055)" : "rgba(220,220,220,0.12)", color: isLight ? "rgba(0,0,0,0.76)" : "#dedede", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(220,220,220,0.16)" }}
                 >
                   <UiIcon name="archive" size={16} strokeWidth={2.3} />
                   {lang === "es" ? "Guardar" : "Saved"}
                 </button>
                 <button
                   onClick={() => { if (selectedText) setShowImageEditor(true); }}
-                  className="flex h-11 items-center justify-center gap-2 rounded-[20px] text-sm font-black transition-transform active:scale-95"
-                  style={{ background: isLight ? "#0a0a0a" : "#c9a961", color: isLight ? "#ffffff" : "#08090f" }}
+                  className="flex h-11 items-center justify-center gap-2 rounded-lg text-sm font-black transition-transform active:scale-95"
+                  style={{ background: isLight ? "#0a0a0a" : "#e5e5e5", color: isLight ? "#ffffff" : "#111111" }}
                 >
                   <UiIcon name="sparkle" size={16} strokeWidth={2.3} />
                   {lang === "es" ? "Imagen" : "Image"}
@@ -682,10 +673,10 @@ export function BracketHighlightReader({
       <button
         onClick={openUnifiedHighlights}
         className="reader-saved-command mb-4 inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-black"
-        style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(201,169,97,0.14)", color: isLight ? "#0a0a0a" : "#d7bd78", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(201,169,97,0.18)" }}
+        style={{ background: isLight ? "rgba(0,0,0,0.06)" : "rgba(220,220,220,0.14)", color: isLight ? "#0a0a0a" : "#dedede", border: isLight ? "1px solid rgba(0,0,0,0.10)" : "1px solid rgba(220,220,220,0.18)" }}
       >
         {highlights.length > 0
-          ? `${highlights.length} ${lang === "es" ? "resaltados guardados" : "saved highlights"}`
+          ? `${highlights.length} ${lang === "es" ? (highlights.length === 1 ? "resaltado guardado" : "resaltados guardados") : (highlights.length === 1 ? "saved highlight" : "saved highlights")}`
           : (lang === "es" ? "Mis resaltados" : "My highlights")}
       </button>
 
@@ -775,11 +766,11 @@ export function BracketHighlightReader({
       </div>
 
       {showPocket && (
-        <div className="fixed inset-0 z-[280]" style={{ background: isLight ? "#ffffff" : "#070b14", color: isLight ? "#0a0a0a" : "white" }}>
+        <div className="fixed inset-0 z-[280]" style={{ background: isLight ? "#ffffff" : "#111111", color: isLight ? "#0a0a0a" : "white" }}>
           <div className="max-w-lg mx-auto h-full overflow-hidden flex flex-col">
-            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
+            <div className="px-5 pb-4 flex items-center justify-between flex-shrink-0" style={{ borderBottom: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(220,220,220,0.14)", paddingTop: "max(env(safe-area-inset-top), 18px)" }}>
               <div>
-                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
+                <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#e5e5e5" }}>
                   {lang === "es" ? "En tu bolsillo" : "In your pocket"}
                 </p>
                 <h2 className="text-[30px] leading-none font-black mt-1">{lang === "es" ? "Mis Resaltados" : "My Highlights"}</h2>
@@ -810,14 +801,14 @@ export function BracketHighlightReader({
             </div>
             <div className="overflow-y-auto flex-1 px-5 py-5 space-y-7 pb-10">
               {highlights.length === 0 ? (
-                <div className="rounded-[30px] p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="rounded-lg p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="font-black" style={{ color: isLight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)" }}>{lang === "es" ? "Aun no hay resaltados" : "No highlights yet"}</p>
                   <p className="text-sm mt-2" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
                     {lang === "es" ? "Selecciona texto en el lector para guardarlo." : "Select text in the reader to save it."}
                   </p>
                 </div>
               ) : visibleHighlights.length === 0 ? (
-                <div className="rounded-[30px] p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="rounded-lg p-7 text-center" style={{ background: isLight ? "rgba(0,0,0,0.04)" : "rgba(255,255,255,0.045)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.08)" }}>
                   <p className="font-black" style={{ color: isLight ? "rgba(0,0,0,0.7)" : "rgba(255,255,255,0.7)" }}>{lang === "es" ? "Sin resultados" : "No results"}</p>
                   <p className="text-sm mt-2" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "rgba(255,255,255,0.38)" }}>
                     {lang === "es" ? "Prueba buscar otra seccion o frase." : "Try another section or phrase."}
@@ -828,7 +819,7 @@ export function BracketHighlightReader({
                   <section>
                     <div className="flex items-end justify-between gap-3 mb-3">
                       <div>
-                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
+                        <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#e5e5e5" }}>
                           {lang === "es" ? "Reciente" : "Recent"}
                         </p>
                         <h3 className="text-xl font-black">{lang === "es" ? "Mis resaltados recientes" : "My Most Recent Highlights"}</h3>
@@ -840,7 +831,7 @@ export function BracketHighlightReader({
                         <article
                           key={`recent-${highlight.id}`}
                           className="min-w-[82%] snap-start rounded-[26px] p-4"
-                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : "linear-gradient(135deg, rgba(201,169,97,0.10), rgba(255,255,255,0.045))", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(201,169,97,0.16)" }}
+                          style={{ background: isLight ? "rgba(0,0,0,0.03)" : "linear-gradient(135deg, rgba(220,220,220,0.10), rgba(255,255,255,0.045))", border: isLight ? "1px solid rgba(0,0,0,0.08)" : "1px solid rgba(220,220,220,0.16)" }}
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -859,7 +850,7 @@ export function BracketHighlightReader({
 
                   <section>
                     <div className="mb-3">
-                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#c9a961" }}>
+                      <p className="text-[10px] uppercase tracking-[0.22em] font-black" style={{ color: isLight ? "rgba(0,0,0,0.38)" : "#e5e5e5" }}>
                         {lang === "es" ? "Organizado" : "Organized"}
                       </p>
                       <h3 className="text-xl font-black">{lang === "es" ? "Por seccion" : "By Section"}</h3>
@@ -869,7 +860,7 @@ export function BracketHighlightReader({
                         <section key={section.sectionTitle} className="rounded-[28px] p-4" style={{ background: isLight ? "rgba(0,0,0,0.03)" : "rgba(255,255,255,0.035)", border: isLight ? "1px solid rgba(0,0,0,0.07)" : "1px solid rgba(255,255,255,0.08)" }}>
                           <div className="flex items-center justify-between gap-3 mb-3">
                             <h4 className="text-lg font-black">{section.sectionTitle}</h4>
-                            <span className="px-3 py-1 rounded-full text-xs font-black" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(201,169,97,0.13)", color: isLight ? "#0a0a0a" : "#d7bd78" }}>
+                            <span className="px-3 py-1 rounded-full text-xs font-black" style={{ background: isLight ? "rgba(0,0,0,0.07)" : "rgba(220,220,220,0.13)", color: isLight ? "#0a0a0a" : "#dedede" }}>
                               {section.items.length}
                             </span>
                           </div>

@@ -64,7 +64,7 @@ import {
 } from "./Views";
 import { useScriptureResource as useResource } from "./useScriptureResource";
 import { useReaderStore as useStore } from "./useReaderStore";
-import { parsePassageInput } from "../../lib/passageParser";
+import { parsePassageInput, suggestPassages } from "../../lib/passageParser";
 import { useLanguage } from "../../lib/useLanguage";
 import { bibleBookName } from "../../lib/spanishContent";
 import {
@@ -85,7 +85,7 @@ function Scripture() {
     serif: true,
     numbers: true,
   });
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState([]);
   const [marks, setMarks] = useStore("marks", {});
   useEffect(() => {
     if (lang === "es" && !SPANISH_VERSIONS.includes(version)) setVersion("lbla");
@@ -119,7 +119,7 @@ function Scripture() {
       c = 1;
     }
     if (c < 1 || b > 66 || (c > current.chapters && b === book)) return;
-    setSelected(null);
+    setSelected([]);
     a.go("scripture", { book: b, chapter: c }, true);
   };
   useEffect(() => {
@@ -130,18 +130,15 @@ function Scripture() {
     syncKey("ryc-last-position", value).catch(() => {});
   }, [book, chapter]);
   useEffect(() => {
-    if (isPassageView) setSelected(null);
-  }, [a.params.select, isPassageView]);
-  const chooseVerse = (verse, event) => {
-    setSelected(selected === verse.verse ? null : verse.verse);
-    event.currentTarget.scrollIntoView({
-      block: "center",
-      behavior: a.motion ? "smooth" : "auto",
-    });
+    setSelected([]);
+  }, [a.params.select, book, chapter, version]);
+  const chooseVerse = (verse) => {
+    setSelected(previous => previous.includes(verse.verse) ? previous.filter(n => n !== verse.verse) : [...previous, verse.verse].sort((a, b) => a - b));
+
   };
-  const reference = `${currentName} ${chapter}${selected ? ":" + selected : ""}`;
+  const reference = `${currentName} ${chapter}${selected.length ? ":" + selected.join(",") : ""}`;
   const selectedText =
-    data.data?.verses?.find((v) => v.verse === selected)?.text || "";
+    data.data?.verses?.filter(v => selected.includes(v.verse)).map(v => v.verse + " " + v.text).join("\n") || "";
   return (
     <div className="scripture-page">
       <header className="reader-topbar">
@@ -234,10 +231,10 @@ function Scripture() {
                   id={"verse-" + verse.verse}
                   key={verse.verse}
                   aria-label={`${currentName} ${chapter}:${verse.verse}`}
-                  aria-pressed={selected === verse.verse}
+                  aria-pressed={selected.includes(verse.verse)}
                   className={
                     "verse " +
-                    (selected === verse.verse ? "verse-selected " : "") +
+                    (selected.includes(verse.verse) ? "verse-selected " : "") +
                     (marks[key] ? "marked-" + marks[key] : "")
                   }
                   onClick={(e) => chooseVerse(verse, e)}
@@ -261,21 +258,21 @@ function Scripture() {
           </div>
         )}
       </div>
-      {selected && (
+      {selected.length > 0 && (
         <div className="annotation-dock" aria-label={lang === "es" ? "Acciones del versículo" : "Verse actions"}>
           <div className="highlight-strip">
-            <span>{lang === "es" ? "Resaltar" : "Highlight"}</span>
+            <span>{lang === "es" ? "Resaltar" : "Highlight"} ({selected.length})</span>
             <div className="swatches">
               {["yellow", "blue", "pink", "green"].map((tone) => (
                 <button
                   key={tone}
                   className={"swatch " + tone}
                   aria-label={(lang === "es" ? "Resaltar " : "Highlight ") + tone}
-                  aria-pressed={marks[`${book}:${chapter}:${selected}`] === tone}
+                  aria-pressed={selected.every(n => marks[`${book}:${chapter}:${n}`] === tone)}
                   onClick={() => {
                     setMarks({
                       ...marks,
-                      [`${book}:${chapter}:${selected}`]: tone,
+                      ...Object.fromEntries(selected.map(n => [`${book}:${chapter}:${n}`, tone])),
                     });
                     const storageKey = `ryc-vcolor-${book}-${chapter}`;
                     let existing = {};
@@ -286,18 +283,18 @@ function Scripture() {
                     } catch {}
                     const value = JSON.stringify({
                       ...existing,
-                      [selected]: tone,
+                      ...Object.fromEntries(selected.map(n => [n, tone])),
                     });
                     localStorage.setItem(storageKey, value);
                     syncKey(storageKey, value).catch(() => {});
-                    mirrorScriptureHighlight({
+                    selected.forEach(n => mirrorScriptureHighlight({
                       bookName: current.name,
                       bookNum: book,
                       chapter,
-                      verseNum: selected,
-                      verseText: selectedText,
+                      verseNum: n,
+                      verseText: data.data?.verses?.find(v => v.verse === n)?.text || "",
                       color: tone,
-                    });
+                    }));
                     a.notify(lang === "es" ? "Resaltado guardado" : "Highlight saved");
                   }}
                 />
@@ -323,11 +320,10 @@ function Scripture() {
             <IconButton
               icon={Eraser}
               label={lang === "es" ? "Quitar resaltado" : "Remove highlight"}
-              disabled={!marks[`${book}:${chapter}:${selected}`]}
+              disabled={!selected.some(n => marks[`${book}:${chapter}:${n}`])}
               onClick={() => {
-                const markKey = `${book}:${chapter}:${selected}`;
                 const nextMarks = { ...marks };
-                delete nextMarks[markKey];
+                selected.forEach(n => delete nextMarks[`${book}:${chapter}:${n}`]);
                 setMarks(nextMarks);
 
                 const storageKey = `ryc-vcolor-${book}-${chapter}`;
@@ -337,18 +333,18 @@ function Scripture() {
                     localStorage.getItem(storageKey) || "{}",
                   );
                 } catch {}
-                delete chapterMarks[selected];
+                selected.forEach(n => delete chapterMarks[n]);
                 const value = JSON.stringify(chapterMarks);
                 localStorage.setItem(storageKey, value);
                 syncKey(storageKey, value).catch(() => {});
-                removeMirroredScriptureHighlight(book, chapter, selected);
+                selected.forEach(n => removeMirroredScriptureHighlight(book, chapter, n));
                 a.notify(lang === "es" ? "Resaltado eliminado" : "Highlight removed");
               }}
             />
             <IconButton
               icon={X}
               label={lang === "es" ? "Cerrar acciones" : "Close verse actions"}
-              onClick={() => setSelected(null)}
+              onClick={() => setSelected([])}
             />
           </div>
         </div>
@@ -438,7 +434,9 @@ function ScriptureSearch({ book = 43 }) {
   const { lang } = useLanguage();
   const submit = (e) => {
     e.preventDefault();
-    const p = parsePassageInput(query, book);
+    const suggestions = suggestPassages(query, lang);
+    const best = suggestions[0];
+    const p = parsePassageInput(query, book) || (best && best.score >= 1 && (!suggestions[1] || suggestions[1].score > best.score) ? best.passage : null);
     if (!p) {
       setError(lang === "es" ? "Escribe un libro y capítulo, por ejemplo Juan 3:5-7." : "Enter a book and chapter, such as John 3:5-7.");
       return;
@@ -475,6 +473,13 @@ function ScriptureSearch({ book = 43 }) {
           label={lang === "es" ? "Referencia bíblica" : "Passage reference"}
         />
       </div>
+      {query.trim() && <div className="search-suggestions" aria-label="Passage suggestions">
+        {suggestPassages(query, lang).map(item => <button key={item.label} type="button" onClick={() => {
+          const p = item.passage;
+          a.go("scripture", {book: p.bookNum, chapter: p.chapter, ...(p.verseStart ? {select: Array.from({length: (p.verseEnd || p.verseStart) - p.verseStart + 1}, (_, i) => p.verseStart + i).join(",")} : {})});
+          a.close();
+        }}>{item.label}</button>)}
+      </div>}
       <p className="passage-search-example">{lang === "es" ? "Prueba Juan 3, Salmo 23 o Romanos 8:1-4" : "Try John 3, Psalm 23, or Romans 8:1-4"}</p>
       {error && (
         <p role="alert" className="field-error">

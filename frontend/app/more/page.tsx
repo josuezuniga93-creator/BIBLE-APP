@@ -385,7 +385,7 @@ function LegacyMorePage() {
 
   async function handleShare() {
     const data = {
-      title: "Tulip Bible App",
+      title: "Bible",
       text: "Study Scripture with commentaries, books, notes, and daily devotional tools.",
       url: "https://tulip-bible-app.vercel.app",
     };

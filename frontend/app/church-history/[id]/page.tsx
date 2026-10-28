@@ -45,22 +45,22 @@ export default function ChurchHistoryStory() {
   const isLight = theme === "white-noir";
 
   // Colors
-  const bg        = isLight ? "#ffffff"              : "#0f1023";
-  const surface   = isLight ? "#f3f4f6"              : "#1c1e36";
-  const accent    = isLight ? "#111111"              : "#c9a961";
-  const accentSub = isLight ? "rgba(10,10,10,0.42)"  : "#c9a961";
+  const bg        = isLight ? "#ffffff"              : "#111111";
+  const surface   = isLight ? "#f3f4f6"              : "#1b1b1b";
+  const accent    = isLight ? "#111111"              : "#e5e5e5";
+  const accentSub = isLight ? "rgba(10,10,10,0.42)"  : "#e5e5e5";
   const headerBorder = isLight ? "rgba(0,0,0,0.08)"  : "rgba(255,255,255,0.07)";
-  const badgeBg   = isLight ? "rgba(0,0,0,0.05)"    : "rgba(201,169,97,0.14)";
-  const badgeBorder = isLight ? "rgba(0,0,0,0.12)"  : "rgba(201,169,97,0.38)";
-  const yearBg    = isLight ? "rgba(0,0,0,0.03)"    : "rgba(201,169,97,0.07)";
-  const yearBorder = isLight ? "rgba(0,0,0,0.08)"   : "rgba(201,169,97,0.20)";
-  const yearColor = isLight ? "rgba(10,10,10,0.45)"  : "#a09070";
-  const titleColor = isLight ? "#0a0a0a"             : "#f5f0e8";
-  const quoteBar  = isLight ? "#111111"              : "#c9a961";
-  const quoteText = isLight ? "rgba(10,10,10,0.68)"  : "#d4cdb8";
-  const refColor  = isLight ? "rgba(10,10,10,0.48)"  : "#c9a961";
-  const sectionLabel = isLight ? "rgba(10,10,10,0.36)" : "rgba(201,169,97,0.45)";
-  const bodyText  = isLight ? "rgba(10,10,10,0.74)"  : "#c8c2b0";
+  const badgeBg   = isLight ? "rgba(0,0,0,0.05)"    : "rgba(220,220,220,0.14)";
+  const badgeBorder = isLight ? "rgba(0,0,0,0.12)"  : "rgba(220,220,220,0.38)";
+  const yearBg    = isLight ? "rgba(0,0,0,0.03)"    : "rgba(220,220,220,0.07)";
+  const yearBorder = isLight ? "rgba(0,0,0,0.08)"   : "rgba(220,220,220,0.20)";
+  const yearColor = isLight ? "rgba(10,10,10,0.45)"  : "#a3a3a3";
+  const titleColor = isLight ? "#0a0a0a"             : "#f5f5f5";
+  const quoteBar  = isLight ? "#111111"              : "#e5e5e5";
+  const quoteText = isLight ? "rgba(10,10,10,0.68)"  : "#d4d4d4";
+  const refColor  = isLight ? "rgba(10,10,10,0.48)"  : "#e5e5e5";
+  const sectionLabel = isLight ? "rgba(10,10,10,0.36)" : "rgba(220,220,220,0.45)";
+  const bodyText  = isLight ? "rgba(10,10,10,0.74)"  : "#c8c8c8";
 
   /* ── Not found ─────────────────────────────────────────────────────────── */
   if (!entry) {
@@ -251,7 +251,7 @@ export default function ChurchHistoryStory() {
         {/* Translating indicator */}
         {lang === "es" && translating && (
           <p style={{ fontSize: 11, color: accentSub, marginBottom: 14, display: "flex", alignItems: "center", gap: 6 }}>
-            <span className="animate-spin" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: `2px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(201,169,97,0.25)"}`, borderTopColor: accent }} />
+            <span className="animate-spin" style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", border: `2px solid ${isLight ? "rgba(0,0,0,0.12)" : "rgba(220,220,220,0.25)"}`, borderTopColor: accent }} />
             Traduciendo al español…
           </p>
         )}

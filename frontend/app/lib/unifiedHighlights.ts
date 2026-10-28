@@ -35,6 +35,9 @@ type StorageRow = {
 };
 
 export type UnifiedReaderHighlight = {
+  pageReference?: string;
+  wordStart?: number;
+  wordEnd?: number;
   id: string;
   text: string;
   color?: string;
@@ -207,6 +210,9 @@ export function mirrorReaderHighlight(context: string, highlight: UnifiedReaderH
         slug,
         chapter,
         title: highlight.title,
+        pageReference: highlight.pageReference,
+        wordStart: highlight.wordStart,
+        wordEnd: highlight.wordEnd,
       },
     });
     return;
@@ -238,6 +244,9 @@ export function mirrorReaderHighlight(context: string, highlight: UnifiedReaderH
         docId: doc.id,
         sectionId,
         title: section?.title ?? highlight.title,
+        pageReference: highlight.pageReference,
+        wordStart: highlight.wordStart,
+        wordEnd: highlight.wordEnd,
       },
     });
   }
@@ -327,6 +336,9 @@ function toReaderHighlight(highlight: UnifiedHighlight): UnifiedReaderHighlight 
     color: typeof highlight.meta?.colorName === "string" ? highlight.meta.colorName : "gold",
     createdAt: highlight.createdAt,
     context: readerContextFromUnified(highlight),
+    pageReference: typeof highlight.meta?.pageReference === "string" ? highlight.meta.pageReference : undefined,
+    wordStart: typeof highlight.meta?.wordStart === "number" ? highlight.meta.wordStart : undefined,
+    wordEnd: typeof highlight.meta?.wordEnd === "number" ? highlight.meta.wordEnd : undefined,
     title: typeof highlight.meta?.title === "string" ? highlight.meta.title : highlight.subtitle,
     reference: highlight.reference,
   };

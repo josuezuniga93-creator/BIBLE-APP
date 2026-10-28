@@ -106,7 +106,7 @@ export function OnboardingPopup({ onComplete }: OnboardingPopupProps) {
         {step === 1 ? (
           <>
             <p className="text-[11px] font-black uppercase" style={{ color: isDark ? "rgba(255,255,255,0.42)" : "#77736a" }}>
-              Tulip Bible App
+              Bible
             </p>
             <div className="mx-auto mt-10 mb-11 grid h-[74px] w-[74px] place-items-center rounded-[20px] bg-[#111]">
               <span className="font-serif text-[34px] font-black leading-none text-[#c9a961]">T</span>

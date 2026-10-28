@@ -177,7 +177,7 @@ function LoginContent() {
       >
         <div className="flex items-center justify-center px-5 pt-[58px] pb-2 flex-shrink-0">
           <p className="text-[12px] font-black uppercase" style={{ color: brandLabel }}>
-            Tulip Bible App
+            Bible
           </p>
         </div>
 

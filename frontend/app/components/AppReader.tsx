@@ -47,6 +47,11 @@ type AppReaderShellProps = {
 };
 
 export type AppReaderProps = {
+  contents?: { id: string; title: string; page: number }[];
+  activeSectionId?: string;
+  onSelectSection?: (id: string) => void;
+  displayPage?: number;
+  workTotalPages?: number;
   title: string;
   eyebrow?: string;
   sectionLabel?: string;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
-import { usePagination } from "../hooks/usePagination";
+import { usePagination, paginateContent } from "../hooks/usePagination";
 import { useSearchParams } from "next/navigation";
 import Image from "next/image";
 import { LEARN_DOCUMENTS, FULL_DOCUMENT_SECTIONS, LearnDocument, LearnSection } from "../lib/learnData";
@@ -154,7 +154,7 @@ const FONT_SIZES: Record<FontSize, string> = { sm: "text-sm", md: "text-base", l
 
 function SectionReader({
   doc, sections, section, completed, onToggle, onClose, onPrev, onNext, hasPrev, hasNext, modeLabel, readerMode,
-  targetHighlightId,
+  targetHighlightId, onSelectSection,
 }: {
   doc: LearnDocument; sections: LearnSection[]; section: LearnSection; completed: Set<string>;
   onToggle: (id: string) => void; onClose: () => void;
@@ -162,6 +162,7 @@ function SectionReader({
   modeLabel: string;
   readerMode: ReaderMode;
   targetHighlightId?: string;
+  onSelectSection: (id: string) => void;
 }) {
   const { theme } = useTheme();
   const isWhiteNoir = theme === "white-noir";
@@ -260,13 +261,16 @@ function SectionReader({
     const target = getReaderHighlights(`learn-${doc.id}-${section.id}`).find((highlight) => highlight.id === targetHighlightId);
     if (!target) return;
     const snippet = target.text.slice(0, 30);
-    const pageIdx = sectionPages.findIndex((page) => page.includes(snippet));
+    const savedPage = Number(target.pageReference?.match(/(?:Page|Página) (\d+)$/)?.[1]);
+    const pageIdx = savedPage > 0 && savedPage <= sectionPages.length ? savedPage - 1 : sectionPages.findIndex((page) => page.includes(snippet));
     if (pageIdx >= 0 && pageIdx + 1 !== currentPage) {
       goToPage(pageIdx + 1);
     }
   }, [targetHighlightId, sectionPages, currentPage, goToPage, doc.id, section.id]);
 
   const sectionIndex = sections.findIndex((s) => s.id === section.id);
+  const pageCounts = sections.map(s => s.id === section.id ? totalPages : paginateContent(s.content, fontSize, s.id.startsWith("md-luther-") || s.id.startsWith("md-edwards-")).length);
+  const contents = sections.map((s, index) => ({ id: s.id, title: documentSectionTitle(doc.id, s.title, lang), page: 1 + pageCounts.slice(0, index).reduce((sum, count) => sum + count, 0) }));
   const progressPct = sections.length > 0 && sectionIndex >= 0
     ? Math.round(((sectionIndex + (totalPages > 0 ? currentPage / totalPages : 1)) / sections.length) * 100)
     : 0;
@@ -312,6 +316,7 @@ function SectionReader({
 
   return (
     <AppReader
+      contents={contents} activeSectionId={section.id} onSelectSection={id => { localStorage.setItem(`axiom-page-learn-${doc.id}-${id}`, "1"); onSelectSection(id); goToPage(1); }} displayPage={(contents[sectionIndex]?.page || 1) + currentPage - 1} workTotalPages={pageCounts.reduce((sum, count) => sum + count, 0)}
       title={`${documentTitle(doc, lang)} · ${sectionTitleText}`}
       eyebrow={lang === "es" ? "Documento histórico" : "Historical Document"}
       sectionLabel={`${modeText} · ${sectionLabelText}`}
@@ -480,16 +485,20 @@ function DocumentDetail({
   if (currentSection) {
     return (
       <SectionReader
+        onSelectSection={id => { setReaderTargetHighlightId(null); setReading(id); }}
         doc={doc} sections={readerSections} section={currentSection} completed={completed} onToggle={toggleSection}
         onClose={() => { setReading(null); setReaderTargetHighlightId(null); }}
         onPrev={() => {
           if (sectionIndex > 0) {
+            const previous = readerSections[sectionIndex - 1];
+            localStorage.setItem(`axiom-page-learn-${doc.id}-${previous.id}`, String(paginateContent(previous.content, "md", previous.id.startsWith("md-luther-") || previous.id.startsWith("md-edwards-")).length));
             setReaderTargetHighlightId(null);
             setReading(readerSections[sectionIndex - 1].id);
           }
         }}
         onNext={() => {
           if (sectionIndex < readerSections.length - 1) {
+            localStorage.setItem(`axiom-page-learn-${doc.id}-${readerSections[sectionIndex + 1].id}`, "1");
             setReaderTargetHighlightId(null);
             setReading(readerSections[sectionIndex + 1].id);
           }

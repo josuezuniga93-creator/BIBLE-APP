@@ -144,7 +144,7 @@ export async function renderVerseToCanvas(
   (ctx as any).letterSpacing = "0px";
 
   // ── 8. Branding ─────────────────────────────────────────────────────────────
-  const brandText = opts.brandText ?? "Tulip Bible App";
+  const brandText = opts.brandText ?? "Bible";
   const brandColor = opts.brandColor ?? "rgba(255,255,255,0.34)";
   const brandY = HEIGHT - 64;
   const brandFont = "500 22px -apple-system, BlinkMacSystemFont, sans-serif";

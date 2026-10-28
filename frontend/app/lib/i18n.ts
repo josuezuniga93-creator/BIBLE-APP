@@ -346,7 +346,7 @@ const translations = {
     // Give page
     give_badge:        "Support the Mission",
     give_heading:      "This App Is 100% Free",
-    give_sub:          "Tulip Bible App is built on faith and sustained by generous supporters like you. There are no subscriptions, no ads, no paywalls — just the Word of God, freely given.",
+    give_sub:          "Bible is built on faith and sustained by generous supporters like you. There are no subscriptions, no ads, no paywalls — just the Word of God, freely given.",
     give_quote:        "“Freely you have received; freely give.” — Matthew 10:8",
     give_ways:         "Ways to Give",
     give_one_time:     "One-Time Gift",
@@ -753,7 +753,7 @@ const translations = {
     // Give page
     give_badge:        "Apoya la Misión",
     give_heading:      "Esta App Es 100% Gratis",
-    give_sub:          "Tulip Bible App se sostiene por fe y por colaboradores generosos como tú. No hay suscripciones, anuncios ni muros de pago — solo la Palabra de Dios, dada gratuitamente.",
+    give_sub:          "Bible se sostiene por fe y por colaboradores generosos como tú. No hay suscripciones, anuncios ni muros de pago — solo la Palabra de Dios, dada gratuitamente.",
     give_quote:        "«De gracia recibisteis, dad de gracia.» — Mateo 10:8",
     give_ways:         "Maneras de Dar",
     give_one_time:     "Donativo Único",
