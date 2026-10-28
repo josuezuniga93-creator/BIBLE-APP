@@ -36,6 +36,20 @@ const hebrew = (script: string, lemma: string, transliteration: string, pronunci
 
 export const REFORMED_DICTIONARY_ENTRIES: ReformedDictionaryEntry[] = [
   {
+    id: "love", term: "Love", termEs: "Amor", category: "Biblical theology",
+    definition: "The holy affection and committed goodwill by which God gives himself for the good of his people and commands them to seek his glory and their neighbor's true good. Biblical love includes delight, loyalty, mercy, sacrifice, and obedient action.",
+    definitionEs: "El afecto santo y la buena voluntad comprometida por los que Dios se entrega para el bien de su pueblo y manda que busquen su gloria y el verdadero bien del projimo. El amor biblico incluye deleite, lealtad, misericordia, sacrificio y accion obediente.",
+    reformedNote: "Agape is not a technical synonym for 'unconditional love,' nor is phileo merely 'general love.' The words overlap. Agape often emphasizes purposeful, self-giving goodwill; phileo commonly emphasizes affection or attachment. Their sentence, speaker, object, and biblical context determine the sense.",
+    reformedNoteEs: "Agape no es un sinonimo tecnico de 'amor incondicional', ni phileo significa meramente 'amor general'. Las palabras se superponen. Agape suele enfatizar buena voluntad decidida y abnegada; phileo suele enfatizar afecto o apego. La frase, el hablante, el objeto y el contexto biblico determinan el sentido.",
+    originalLanguages: [
+      hebrew("אָהַב", "ahav", "ahav", "ah-HAHV", "H157", "to love, desire, delight in, or show affection"),
+      greek("ἀγάπη", "agape", "agape", "ah-GAH-pay", "G26", "love, benevolence, committed goodwill"),
+      greek("ἀγαπάω", "agapao", "agapao", "ah-gah-PAH-oh", "G25", "to love, value, welcome, or seek another's good"),
+      greek("φιλέω", "phileo", "phileo", "fil-EH-oh", "G5368", "to love with affection, cherish, or be attached to"),
+    ],
+    references: ["Deuteronomy 6:5", "John 3:16", "John 21:15-17", "1 Corinthians 13", "1 John 4:7-10"], confession: "WCF 16 / 1689 16", aliases: ["agape", "phileo", "charity", "affection"],
+  },
+  {
     id: "adoption", term: "Adoption", termEs: "Adopcion", category: "Salvation",
     definition: "God's gracious act of receiving justified believers into his family, giving them the name, privileges, care, discipline, and inheritance of his children.",
     definitionEs: "El acto misericordioso de Dios de recibir a los creyentes justificados en su familia, dandoles el nombre, los privilegios, el cuidado, la disciplina y la herencia de sus hijos.",

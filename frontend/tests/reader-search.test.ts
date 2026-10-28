@@ -4,6 +4,7 @@ import { suggestPassages, parsePassageInput } from "../app/lib/passageParser";
 import { searchScore } from "../app/lib/searchSuggestions";
 import { paginateContent } from "../app/lib/pagination";
 import { REFORMED_DICTIONARY_ENTRIES } from "../app/lib/reformedDictionary";
+import dictionaryIndex from "../public/dictionary-data/index.json";
 
 test("passage suggestions preserve verses and correct transposed letters", () => {
   const first = suggestPassages("Jhon 3:  14-18")[0];
@@ -43,4 +44,12 @@ test("every theological dictionary entry includes original-language study data",
       assert.ok(note.script && note.transliteration && note.pronunciation && note.strongs && note.meaning);
     }
   }
+});
+
+test("public-domain dictionary ships broad historical and original-language coverage", () => {
+  assert.ok(dictionaryIndex.dictionary.length >= 5900);
+  assert.ok(dictionaryIndex.lexicon.length >= 14000);
+  assert.ok(dictionaryIndex.dictionary.some(([term]) => term === "Love"));
+  const strongs = new Set(dictionaryIndex.lexicon.map(([number]) => number));
+  for (const number of ["G25", "G26", "G5368", "H157", "H160"]) assert.ok(strongs.has(number));
 });

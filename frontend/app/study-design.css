@@ -3644,5 +3644,22 @@ html[data-theme-mode="light"] .study-design .account-row {
 .study-design .dictionary-editorial-note { margin: 28px 0 8px; padding: 18px; border: 1px solid var(--line); background: color-mix(in srgb, var(--surface) 88%, var(--ink) 2%); }
 .study-design .dictionary-editorial-note .eyebrow { margin: 0 0 8px; }
 .study-design .dictionary-editorial-note > p:last-child { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.study-design .dictionary-loading { margin: 20px 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.study-design .dictionary-retry { min-height: 38px; padding: 8px 12px; border: 1px solid var(--line); }
+.study-design .public-dictionary-results { margin-top: 30px; }
+.study-design .public-dictionary-results > section { margin-top: 28px; }
+.study-design .public-dictionary-heading { display: flex; align-items: baseline; gap: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.study-design .public-dictionary-heading h3 { margin: 0; font-size: 14px; }
+.study-design .public-dictionary-heading span { color: var(--muted); font-size: 11px; }
+.study-design .historical-dictionary-entry summary { min-height: 78px; }
+.study-design .historical-entry-body { padding-top: 4px; }
+.study-design .historical-definition { padding: 18px 0; border-top: 1px solid var(--line); }
+.study-design .historical-definition:first-of-type { border-top: 0; }
+.study-design .historical-definition .eyebrow { margin: 0 0 9px; }
+.study-design .historical-definition > p:last-child { margin: 0; color: var(--secondary); font-family: var(--font-cormorant), Georgia, serif; font-size: 19px; line-height: 1.6; white-space: pre-line; }
+.study-design .public-lexicon-card { min-width: 0; }
+.study-design .lexicon-usage { display: block !important; margin: 10px 0 0 !important; padding-top: 9px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px !important; line-height: 1.45; }
+.study-design .lexicon-usage b { color: var(--ink); }
+.study-design .dictionary-attribution { margin: 26px 0 0; color: var(--muted); font-size: 9px; text-align: center; letter-spacing: .04em; }
 @media (min-width: 460px) { .study-design .dictionary-word-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .study-reference-reader .reader-saved-command { font-family: var(--font-inter), sans-serif; border-radius: 6px; font-weight: 500; }

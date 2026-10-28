@@ -1,0 +1,11 @@
+Bible dictionary data
+
+Easton's Bible Dictionary (1897) and Smith's Bible Dictionary (1863) are public domain.
+Structured dataset copyright 2026 NEUU, licensed CC BY 4.0.
+https://github.com/neuu-org/bible-dictionary-dataset
+
+Original-language lexicon data
+
+Strong's Greek Dictionary (1890) and Hebrew Dictionary (1894) are public domain.
+Open Scriptures JSON editions are licensed CC BY-SA.
+https://github.com/openscriptures/strongs

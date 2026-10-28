@@ -58,11 +58,16 @@ import {
   PanelBottomClose,
 } from "lucide-react";
 import { useApp, PageHeading, SearchField, SectionTitle, Row, Action } from "./Views";
+import PublicDomainDictionary from "./PublicDomainDictionary";
 export default function AdditionalViews(){
 const a = useApp(),
     screen = a.screen;
 const [query, setQuery] = useState("");
 const { lang } = useLanguage();
+const openDictionaryReference = reference => {
+  const passage = parsePassageInput(reference,43);
+  if (passage) a.go("scripture", {book:passage.bookNum,chapter:passage.chapter,...(passage.verseStart ? {select:Array.from({length:(passage.verseEnd || passage.verseStart)-passage.verseStart+1},(_,i)=>passage.verseStart+i).join(",")} : {})});
+};
 const dictionaryResults = a.catalog.dictionary.map(entry => {
   const searchTerms = [entry.term, entry.termEs, ...(entry.aliases || []), ...entry.originalLanguages.flatMap(note => [note.script, note.lemma, note.transliteration, note.strongs])];
   return {entry, score: Math.min(...searchTerms.map(term => searchScore(query, term)))};
@@ -120,14 +125,11 @@ if (screen === "study-tools" || screen === "dictionary")
                     {entry.confession && <small>{lang === "es" ? "Estandares confesionales" : "Confessional standards"}: {entry.confession}</small>}
                   </section>
                   <p className="dictionary-proof-label">{lang === "es" ? "LEER EN CONTEXTO" : "READ IN CONTEXT"}</p>
-                  <div className="dictionary-references">{entry.references?.map(reference => <button key={reference} onClick={() => {
-                    const passage = parsePassageInput(reference,43);
-                    if (passage) a.go("scripture", {book:passage.bookNum,chapter:passage.chapter,...(passage.verseStart ? {select:Array.from({length:(passage.verseEnd || passage.verseStart)-passage.verseStart+1},(_,i)=>passage.verseStart+i).join(",")} : {})});
-                  }}>{reference}</button>)}</div>
+                  <div className="dictionary-references">{entry.references?.map(reference => <button key={reference} onClick={() => openDictionaryReference(reference)}>{reference}</button>)}</div>
                 </div>
               </details>
             ))}
-          {query && dictionaryResults.length === 0 && <p role="status">{lang === "es" ? "No hay resultados. Prueba una palabra más corta." : "No matching words. Try a shorter spelling."}</p>}
+          <PublicDomainDictionary query={query} lang={lang} onReference={openDictionaryReference}/>
           <aside className="dictionary-editorial-note">
             <p className="eyebrow">{lang === "es" ? "NORMA EDITORIAL" : "EDITORIAL STANDARD"}</p>
             <p>{lang === "es" ? "La Escritura gobierna cada definicion. Las confesiones historicas de Westminster y Bautista de 1689 aclaran los contornos doctrinales. Los numeros de Strong identifican lemas para estudio, no reemplazan la lectura de cada palabra en su contexto." : "Scripture governs every definition. The historic Westminster and 1689 Baptist confessions clarify doctrinal contours. Strong's numbers identify study lemmas; they do not replace reading each word in its biblical context."}</p>
