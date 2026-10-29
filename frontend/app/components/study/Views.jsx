@@ -559,7 +559,12 @@ function Home() {
             <h3>A life given to the gospel</h3>
           </button>
           <button className="media-item" onClick={() => a.go("documents")}>
-            <div className="media-photo featured-archive"><ScrollText size={48} strokeWidth={1.2} /></div>
+            <div className="media-photo featured-archive">
+              <img
+                src={a.theme === "dark" ? "/historical-documents-dark.png" : "/historical-documents-light.png"}
+                alt=""
+              />
+            </div>
             <small>HISTORICAL DOCUMENTS</small>
             <h3>Explore the foundations</h3>
           </button>
