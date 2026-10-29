@@ -1846,6 +1846,127 @@ html[data-theme-mode="light"] {
   width: 32px;
   height: 32px;
 }
+:where(.study-design) .shelf-appbar {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr) auto;
+  align-items: center;
+  min-height: 68px;
+  padding: max(8px, env(safe-area-inset-top)) 12px 8px;
+  border-bottom: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(18px);
+}
+:where(.study-design) .shelf-appbar > strong {
+  overflow: hidden;
+  padding-left: 3px;
+  font-size: 16px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:where(.study-design) .shelf-appbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+}
+:where(.study-design) .shelf-appbar .icon-button {
+  width: 38px;
+  height: 38px;
+}
+:where(.study-design) .shelf-controls {
+  padding: 0 12px;
+}
+:where(.study-design) .shelf-controls .search-field {
+  margin: 10px 0 0;
+}
+:where(.study-design) .shelf-controls .tabs {
+  margin-top: 0;
+}
+:where(.study-design) .shelf-collection {
+  padding: 7px 7px calc(118px + env(safe-area-inset-bottom));
+}
+:where(.study-design) .shelf-result-count {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+:where(.study-design) .shelf-collection .library-grid.library-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .library-item-copy,
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .favorite-corner {
+  display: none;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket {
+  border-radius: 2px;
+  padding: 12px 9px 10px 12px;
+  box-shadow: none;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket-top {
+  padding-bottom: 7px;
+  font-size: 5px;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket-title {
+  margin-top: 11px;
+  overflow: hidden;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket-title small {
+  margin-bottom: 5px;
+  font-size: 7px;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket-title strong {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 12px;
+  line-height: 1.12;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 6;
+}
+:where(.study-design) .shelf-collection .library-grid:not(.library-list) .jacket-bottom {
+  margin-top: 7px;
+  padding-top: 7px;
+  overflow: hidden;
+  font-size: 5.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+:where(.study-design) .shelf-collection .library-list {
+  display: flex;
+  margin: 5px 9px 0;
+  gap: 9px;
+}
+:where(.study-design) .archive-timeline-collapsed {
+  margin-bottom: calc(96px + env(safe-area-inset-bottom));
+  padding-top: 0;
+}
+:where(.study-design) .archive-timeline-collapsed > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 54px;
+  padding: 0 20px;
+  cursor: pointer;
+  list-style: none;
+  color: var(--secondary);
+  font-size: 12px;
+  font-weight: 600;
+}
+:where(.study-design) .archive-timeline-collapsed > summary::-webkit-details-marker {
+  display: none;
+}
+:where(.study-design) .archive-timeline-collapsed > summary span {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+:where(.study-design) .archive-timeline-collapsed[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
 :where(.study-design) .jacket {
   aspect-ratio: 0.69;
   width: 100%;

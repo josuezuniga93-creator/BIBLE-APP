@@ -600,7 +600,8 @@ function LibraryPage({ documents = false }) {
   const a = useApp();
   const [tab, setTab] = useState("All"),
     [query, setQuery] = useState(""),
-    [layout, setLayout] = useState("grid");
+    [layout, setLayout] = useState("grid"),
+    [searchOpen, setSearchOpen] = useState(false);
   const source = documents ? a.catalog.documents : a.catalog.books;
   const key = documents ? "doc" : "book";
   const data = source.filter(
@@ -615,121 +616,33 @@ function LibraryPage({ documents = false }) {
   );
   const [selectedYear, setSelectedYear] = useState(1647);
   const rail = useRef(null);
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem("bible-library-layout");
-      if (saved === "grid" || saved === "list") setLayout(saved);
-    } catch {}
-  }, []);
-  const changeLayout = (next) => {
-    setLayout(next);
-    try { localStorage.setItem("bible-library-layout", next); } catch {}
-  };
   const pick = (item) =>
     a.go("detail", { kind: key, id: item.slug || item.id });
   return (
     <>
-      <PageHeading
-        kicker={documents ? "THE ARCHIVE" : "THE LIBRARY"}
-        action={
-          <IconButton
-            icon={Heart}
-            label="Show favorites"
-            selected={tab === "Favorites"}
-            onClick={() => setTab(tab === "Favorites" ? "All" : "Favorites")}
-          />
-        }
-      />
-      <div className="page-pad library-heading">
-        <p className="eyebrow">
-          {documents ? "FAITH THROUGH THE CENTURIES" : "THE WRITTEN WORD"}
-        </p>
-        <h1>
-          {documents ? (
-            <>
-              Historical
-              <br />
-              documents.
-            </>
-          ) : (
-            <>
-              The reading
-              <br />
-              room.
-            </>
-          )}
-        </h1>
-        <p className="page-subtitle">
-          {documents
-            ? "Creeds, confessions and the voices that shaped the church."
-            : "Timeless Christian works. A place to read deeply."}
-        </p>
-        <SearchField
+      <header className="shelf-appbar">
+        <IconButton icon={ArrowLeft} label="Back" onClick={() => a.back ? a.back() : history.back()} />
+        <strong>{documents ? "Historical Documents" : "Free Books"}</strong>
+        <div className="shelf-appbar-actions">
+          <IconButton icon={Search} label="Search" selected={searchOpen} onClick={() => setSearchOpen((open) => !open)} />
+          <IconButton icon={layout === "grid" ? List : Grid2X2} label={layout === "grid" ? "List view" : "Grid view"} onClick={() => setLayout(layout === "grid" ? "list" : "grid")} />
+          <IconButton icon={Heart} label="Show favorites" selected={tab === "Favorites"} onClick={() => setTab(tab === "Favorites" ? "All" : "Favorites")} />
+        </div>
+      </header>
+      <div className="page-pad shelf-controls">
+        {searchOpen && <SearchField
           value={query}
           onChange={setQuery}
-          placeholder={
-            documents ? "Search the archive" : "Find a title or author"
-          }
-        />
+          placeholder={documents ? "Search the archive" : "Find a title or author"}
+        />}
         <Tabs
           items={["All", "Reading", "Favorites"]}
           value={tab}
           onChange={setTab}
         />
       </div>
-      {documents && tab === "All" && !query && (
-        <section className="archive-timeline">
-          <div className="timeline-year">
-            <span className="eyebrow">THROUGH TIME</span>
-            <strong>
-              {selectedYear < 0 ? Math.abs(selectedYear) + " BC" : selectedYear}
-            </strong>
-          </div>
-          <div
-            className="timeline-tape"
-            ref={rail}
-            onScroll={(e) => {
-              const index = Math.round(e.currentTarget.scrollLeft / 84);
-              const doc = [...source].sort((a, b) => a.year - b.year)[
-                Math.min(index, source.length - 1)
-              ];
-              if (doc) setSelectedYear(doc.year);
-            }}
-          >
-            {[...source]
-              .sort((a, b) => a.year - b.year)
-              .map((doc) => (
-                <button key={doc.id} onClick={() => pick(doc)}>
-                  <span className="tape-ticks" />
-                  <strong>{doc.year}</strong>
-                  <span>{doc.shortTitle}</span>
-                </button>
-              ))}
-          </div>
-        </section>
-      )}
-      <div className="page-pad">
-        <SectionTitle>
-          {tab === "Favorites"
-            ? "Your favorites"
-            : documents
-              ? "From the archive"
-              : tab === "Reading"
-                ? "Continue reading"
-                : "The collection"}
-          <span className="section-count">{data.length}</span>
-        </SectionTitle>
-        <div className="library-browse-bar">
-          <span>{documents ? "Archive view" : "Shelf view"}</span>
-          <div className="library-layout-switch" role="group" aria-label="Library layout">
-            <button aria-label="Grid view" aria-pressed={layout === "grid"} onClick={() => changeLayout("grid")}>
-              <Grid2X2 size={17} />
-            </button>
-            <button aria-label="List view" aria-pressed={layout === "list"} onClick={() => changeLayout("list")}>
-              <List size={18} />
-            </button>
-          </div>
-        </div>
+      <div className="page-pad shelf-collection">
+        <p className="shelf-result-count">{data.length} {documents ? "documents" : "books"}</p>
         {data.length ? (
           <div className={`library-grid library-${layout}`}>
             {data.map((item, index) => (
@@ -782,6 +695,28 @@ function LibraryPage({ documents = false }) {
           </Empty>
         )}
       </div>
+      {documents && tab === "All" && !query && (
+        <details className="archive-timeline archive-timeline-collapsed">
+          <summary>Browse the timeline <span>{selectedYear}</span></summary>
+          <div
+            className="timeline-tape"
+            ref={rail}
+            onScroll={(e) => {
+              const index = Math.round(e.currentTarget.scrollLeft / 84);
+              const doc = [...source].sort((a, b) => a.year - b.year)[Math.min(index, source.length - 1)];
+              if (doc) setSelectedYear(doc.year);
+            }}
+          >
+            {[...source].sort((a, b) => a.year - b.year).map((doc) => (
+              <button key={doc.id} onClick={() => pick(doc)}>
+                <span className="tape-ticks" />
+                <strong>{doc.year}</strong>
+                <span>{doc.shortTitle}</span>
+              </button>
+            ))}
+          </div>
+        </details>
+      )}
     </>
   );
 }
