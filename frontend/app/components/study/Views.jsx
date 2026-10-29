@@ -599,7 +599,8 @@ function Home() {
 function LibraryPage({ documents = false }) {
   const a = useApp();
   const [tab, setTab] = useState("All"),
-    [query, setQuery] = useState("");
+    [query, setQuery] = useState(""),
+    [layout, setLayout] = useState("grid");
   const source = documents ? a.catalog.documents : a.catalog.books;
   const key = documents ? "doc" : "book";
   const data = source.filter(
@@ -614,6 +615,16 @@ function LibraryPage({ documents = false }) {
   );
   const [selectedYear, setSelectedYear] = useState(1647);
   const rail = useRef(null);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bible-library-layout");
+      if (saved === "grid" || saved === "list") setLayout(saved);
+    } catch {}
+  }, []);
+  const changeLayout = (next) => {
+    setLayout(next);
+    try { localStorage.setItem("bible-library-layout", next); } catch {}
+  };
   const pick = (item) =>
     a.go("detail", { kind: key, id: item.slug || item.id });
   return (
@@ -708,11 +719,22 @@ function LibraryPage({ documents = false }) {
                 : "The collection"}
           <span className="section-count">{data.length}</span>
         </SectionTitle>
+        <div className="library-browse-bar">
+          <span>{documents ? "Archive view" : "Shelf view"}</span>
+          <div className="library-layout-switch" role="group" aria-label="Library layout">
+            <button aria-label="Grid view" aria-pressed={layout === "grid"} onClick={() => changeLayout("grid")}>
+              <Grid2X2 size={17} />
+            </button>
+            <button aria-label="List view" aria-pressed={layout === "list"} onClick={() => changeLayout("list")}>
+              <List size={18} />
+            </button>
+          </div>
+        </div>
         {data.length ? (
-          <div className="library-grid">
+          <div className={`library-grid library-${layout}`}>
             {data.map((item, index) => (
               <div className="library-item" key={item.slug || item.id}>
-                <button className="cover-command" onClick={() => pick(item)}>
+                <button className="cover-command" onClick={() => pick(item)} aria-label={`Open ${item.title}`}>
                   <Jacket book={item} document={documents} index={index} />
                 </button>
                 <IconButton
@@ -736,6 +758,12 @@ function LibraryPage({ documents = false }) {
                 >
                   <strong>{item.shortTitle || item.title}</strong>
                   <span>{item.author || item.origin}</span>
+                  <span className="library-reading-status">
+                    <i data-active={Boolean(a.progress[key + ":" + (item.slug || item.id)])} />
+                    {a.progress[key + ":" + (item.slug || item.id)]
+                      ? `${documents ? "Section" : "Chapter"} ${a.progress[key + ":" + (item.slug || item.id)]}`
+                      : documents ? "Historic text" : "Ready to read"}
+                  </span>
                 </button>
               </div>
             ))}
@@ -775,6 +803,9 @@ function Detail() {
   const favorite = a.favorites.includes(kind + ":" + id);
   const progress = a.progress[kind + ":" + id] || 0;
   const sections = kind === "doc" ? item.sections : bookMeta.data?.chapters;
+  const progressPercent = progress && sections?.length
+    ? Math.min(100, Math.round((progress / sections.length) * 100))
+    : 0;
   return (
     <>
       <PageHeading
@@ -822,21 +853,19 @@ function Detail() {
             onClick={() => a.toggleFavorite(kind + ":" + id)}
           />
         </div>
-        <div className="detail-progress">
-          <span>{progress ? "Chapter " + progress : "Not started"}</span>
-          <span>
-            {sections?.length || "—"} {kind === "doc" ? "sections" : "chapters"}
-          </span>
-        </div>
-        <div className="thin-progress">
-          <i
-            style={{
-              width:
-                (progress && sections
-                  ? (progress / sections.length) * 100
-                  : 0) + "%",
-            }}
-          />
+        <div className="detail-progress-card">
+          <div className="detail-reading-label">
+            <BookOpen size={15} />
+            <strong>{progress ? "Currently reading" : "Ready to read"}</strong>
+            <span>{progressPercent}%</span>
+          </div>
+          <div className="detail-progress">
+            <span>{progress ? `${kind === "doc" ? "Section" : "Chapter"} ${progress}` : "Not started"}</span>
+            <span>{sections?.length || "—"} {kind === "doc" ? "sections" : "chapters"}</span>
+          </div>
+          <div className="thin-progress">
+            <i style={{ width: progressPercent + "%" }} />
+          </div>
         </div>
       </div>
       <div className="page-pad detail-content">
